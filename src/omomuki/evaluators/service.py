@@ -2,8 +2,6 @@
 
 from datetime import UTC, datetime
 
-import yaml
-
 from omomuki.bridge.config import BridgeConfig
 from omomuki.bridge.service import resolve_profile_path
 from omomuki.core.candidate import CandidateEvaluation, CandidateUpdate
@@ -103,24 +101,21 @@ def approve_candidate(
         )
 
     profile_path = resolve_profile_path(config, candidate.target_profile_id)
-    profile = load_profile(profile_path)
+    from omomuki.storage.factory import open_storage
+
+    bundle = open_storage(profile=profile_path, home=config.home)
+    profile = bundle.profile.load()
     updated = merge_candidate_into_profile(
         profile,
         candidate,
         force_critical=force_critical,
     )
-    profile_path.write_text(
-        yaml.safe_dump(
-            updated.model_dump(mode="json"),
-            allow_unicode=True,
-            sort_keys=False,
-        ),
-        encoding="utf-8",
-    )
-    auto_commit_profile_store(
-        profile_path.parent,
-        f"omomuki: approve candidate {candidate.id}",
-    )
+    bundle.profile.save(updated)
+    if bundle.uses_git_auto_commit:
+        auto_commit_profile_store(
+            bundle.profile.profile_dir,
+            f"omomuki: approve candidate {candidate.id}",
+        )
 
     candidate.status = "approved"
     save_candidate(config, candidate)

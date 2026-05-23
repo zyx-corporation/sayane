@@ -51,19 +51,37 @@ def candidate_show(
 @candidate_app.command("evaluate")
 def candidate_evaluate(
     candidate_id: Annotated[str, typer.Argument(help="Candidate id")],
+    level: Annotated[
+        int,
+        typer.Option("--level", min=0, max=3, help="0=schema only, 1=heuristic, 2/3=+LLM judge"),
+    ] = 1,
 ) -> None:
-    """Run heuristic RDE + UIB evaluation."""
-    candidate = evaluate_candidate(_config(), candidate_id)
+    """Run RDE + UIB evaluation (Level 1 heuristic; Level 2/3 optional LLM judge)."""
+    if level == 0:
+        typer.echo("Level 0: schema validation occurs on candidate load; use --level 1+.")
+        raise typer.Exit(0)
+    candidate = evaluate_candidate(_config(), candidate_id, level=level)
     typer.echo(yaml.safe_dump(candidate.evaluation.model_dump(mode="json"), allow_unicode=True))
 
 
 @candidate_app.command("approve")
 def candidate_approve(
     candidate_id: Annotated[str, typer.Argument(help="Candidate id")],
+    force_critical: Annotated[
+        bool,
+        typer.Option(
+            "--force-critical",
+            help="Allow merge into values/voice/policy/roles (not identity.name)",
+        ),
+    ] = False,
 ) -> None:
-    """Approve and merge into profile (knowledge.concepts only in MVP)."""
+    """Approve and merge into profile (knowledge by default; critical with --force-critical)."""
     try:
-        candidate = approve_candidate(_config(), candidate_id)
+        candidate = approve_candidate(
+            _config(),
+            candidate_id,
+            force_critical=force_critical,
+        )
         typer.echo(f"Approved and merged: {candidate.id} → {candidate.target_profile_id}")
     except ValueError as exc:
         raise typer.BadParameter(str(exc)) from exc

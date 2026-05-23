@@ -107,7 +107,17 @@ Omomukiはlocal-firstを基本とする。
 
 ユーザーの人格的文脈は、外部SaaSではなくローカルのProfile Storeに保持する。
 
-Phase 5 以降、Obsidian vault との import/export（`omomuki storage`）、**Git による履歴化（Profile 変更時の自動コミット、SQLite 実装まで既定）**、環境変数 `OMOMUKI_OBSIDIAN_VAULT` による既定 vault 指定が利用できる。暗号化ストア・SQLite は Phase 6 以降を検討する。
+Phase 5 以降、Obsidian vault との import/export（`omomuki storage`）、**Git による履歴化（Profile 変更時の自動コミット、Commercial Edition の暗号化 SQLite 有効化まで既定）**、環境変数 `OMOMUKI_OBSIDIAN_VAULT` による既定 vault 指定が利用できる。
+
+### 5.1 エディション別ストレージ
+
+| エディション | ストレージ backend | ライセンス |
+|-------------|-------------------|-----------|
+| **Community**（OSS） | `filesystem`（YAML + Markdown）+ Git | Apache 2.0 |
+| **Commercial**（既定） | `encrypted-sqlite`（Rust 暗号化 + SQLite） | 商用ライセンスキー |
+| **Commercial**（任意） | `filesystem` — Community データをそのまま利用 | 不要 |
+
+Commercial Edition は Phase 6 以降。[omomuki-pro](https://github.com/zyx-corporation/omomuki-pro/blob/main/docs/commercial-edition.md) を参照。`filesystem` backend 選択時は Community 版と同一ディレクトリ・Git 履歴を維持する。暗号化 SQLite への移行は `omomuki storage migrate to encrypted-sqlite`（商用版 CLI）で行う。
 
 ## 6. 将来拡張
 
@@ -115,8 +125,8 @@ Phase 5 以降、Obsidian vault との import/export（`omomuki storage`）、**
 - VSCode extension
 - Tauri desktop app
 - Kotonoha連携
-- Rust製diff/index engine（Phase 6）
-- encrypted profile store
+- Rust製 diff/index engine（Commercial Edition）
+- encrypted profile store（**Commercial Edition コア**）
 - semantic lineage system連携
 
 **実装済み（Phase 0〜5）**: CLI、Local Bridge、MCP Server、Chrome Extension、RDE/Candidate 評価、Storage/Obsidian/Git。

@@ -377,7 +377,36 @@ omomuki storage commit -m "omomuki: sync context" --init
 
 `OMOMUKI_OBSIDIAN_VAULT` が存在するディレクトリを指す場合、`import` / `export` の vault 引数を省略できる。
 
-`import` / `index` 実行後、Profile Store に変更があれば **Git へ自動コミット**される（SQLite 実装までの既定。`init` 時も同様）。
+`import` / `index` 実行後、Profile Store に変更があれば **Git へ自動コミット**される（`filesystem` backend かつ SQLite 実装までの既定。`init` 時も同様）。
+
+---
+
+### 5.9 `omomuki storage backend` / `storage migrate`（Commercial Edition / Phase 6）
+
+**Commercial Edition**（[omomuki-pro](https://github.com/zyx-corporation/omomuki-pro)）のみ。詳細は [商用版ドキュメント](https://github.com/zyx-corporation/omomuki-pro/blob/main/docs/commercial-edition.md)。
+
+商用版は設定により **Community Edition の FileSystem データをそのまま利用**できる。暗号化 SQLite への移行は CLI で行う。
+
+```bash
+omomuki license activate <KEY>
+omomuki license status
+
+omomuki storage backend status
+omomuki storage backend filesystem          # Community データをそのまま利用（ライセンス不要）
+omomuki storage backend encrypted-sqlite    # 暗号化 SQLite（ライセンス要）
+
+omomuki storage migrate to encrypted-sqlite --dry-run
+omomuki storage migrate to encrypted-sqlite [--source PATH] [--keep-source]
+```
+
+| サブコマンド | 概要 | ライセンス |
+|-------------|------|-----------|
+| `backend status` | 現在の backend を表示 | 不要 |
+| `backend filesystem` | FileSystem + Git を正本にする | 不要 |
+| `backend encrypted-sqlite` | 暗号化 SQLite を正本にする | 要 |
+| `migrate to encrypted-sqlite` | FileSystem → 暗号化 SQLite へ import | 要 |
+
+`filesystem` backend 選択時は §5.8 の `import` / `export` / `index` / `commit` が Community Edition と同一に動作する。
 
 ## 6. 典型的なワークフロー
 

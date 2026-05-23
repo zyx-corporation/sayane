@@ -29,6 +29,20 @@ jobs:
       - name: Pytest
         run: pytest -v
 
+      - name: Validate install scripts
+        run: bash -n scripts/install.sh
+
+      - name: Install script smoke test
+        env:
+          OMOMUKI_INSTALL_DIR: /tmp/omomuki-install-test
+          OMOMUKI_BIN_DIR: /tmp/omomuki-install-test/bin
+          OMOMUKI_SOURCE_DIR: ${{ github.workspace }}
+          OMOMUKI_SKIP_INIT: "1"
+          OMOMUKI_YES: "1"
+        run: |
+          bash scripts/install.sh
+          /tmp/omomuki-install-test/bin/omomuki --version
+
   extension:
     name: Extension (typecheck & build)
     runs-on: ubuntu-latest

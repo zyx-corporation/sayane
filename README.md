@@ -6,13 +6,67 @@ It helps users extract, structure, migrate, and evaluate their personal context,
 
 Omomuki treats LLMs as execution substrates, not owners of persona.
 
-## Concept
+## Core principles
 
-Omomuki is built around a simple architectural principle:
+Omomuki rests on three design propositions.
+
+### 1. Separate persona from runtime
 
 > Separate persona from runtime.
 
-A user's persona, context, policy, and working memory should not be locked inside a single AI platform. Omomuki defines reusable intermediate representations for persona and prompts, then compiles them into model-specific formats through adapters.
+A user's values, voice, policy, and context live in an **Omomuki Profile** on the user's machine. Custom Instructions, project settings, and vendor "memory" are **projections per runtime**, not the source of truth for persona.
+
+LLMs do not *own* persona—they **execute** prompts compiled from the Profile.
+
+### 2. Everything goes through intermediate representation (IR)
+
+Omomuki does not copy prompt strings between platforms. It builds **Prompt IR** (an LLM-agnostic intermediate form) from the Profile, then **Adapters** compile to each target format.
+
+```text
+Same persona  ≠  same prompt
+One Profile  →  per-target optimized output
+```
+
+ChatGPT and Claude payloads differ in shape; identity, values, and policy still derive from the same Profile.
+
+### 3. Meaning changes are evaluated and recorded
+
+Updating the Profile is not a blind settings overwrite—it is a **meaning change**. Captured content becomes a **Candidate**, passes RDE/UIB evaluation, and merges only after explicit **approve**. Lineage records approvals and rejections.
+
+```text
+capture → Candidate → evaluate (RDE+UIB) → approve / reject → lineage
+          (no immediate merge)
+```
+
+```text
+Omomuki Profile  →  Prompt IR  →  Adapter  →  LLM output
+        ↑
+Candidate (capture) → RDE evaluation → approved merge → Lineage
+```
+
+**Local-first**: the canonical store is on the user's machine (`~/.omomuki/`). Community Edition uses Git history by default. **Commercial Edition** (Phase 6) — see [omomuki-pro](https://github.com/zyx-corporation/omomuki-pro/blob/main/docs/commercial-edition.md).
+
+---
+
+## Not just user profile exchange
+
+Exporting Custom Instructions and pasting them into another LLM, or moving a platform-specific settings blob, is **profile exchange**. Omomuki aims for something different.
+
+| Aspect | Typical profile exchange | Omomuki |
+|--------|-------------------------|---------|
+| **Data shape** | Platform-specific text or settings blob | LLM-agnostic **Omomuki Profile** + **Prompt IR** |
+| **Cross-LLM move** | Copy-paste the same string | **Re-compile per target** via Adapters |
+| **Updates** | Overwrite / sync success only | **Candidate → evaluate → approve** audits meaning change |
+| **History** | None or vendor-limited logs | **Lineage** kept by the user |
+| **Context location** | Scattered in each LLM's memory/projects | **context_index** + local Markdown |
+| **Ownership** | Often locked in vendor SaaS | **Local-first** (user holds the source of truth) |
+| **Immediate apply** | Paste and it applies | Capture does **not** merge immediately; Critical Distortion can be rejected |
+
+The Profile is not a bio field—it is a **structured medium** for LLMs to approach user context: identity, voice, values, policy, and context are separate sections, composed into Prompt IR at compile time.
+
+Design details: [architecture.md](docs/architecture.md) / [Profile and Prompt IR](docs/profile-ir.md)
+
+## Architecture flow
 
 ```text
 Omomuki Profile
@@ -50,6 +104,34 @@ The Chrome Extension captures and inserts context. The CLI and core library own 
 - Evaluate profile changes before merging them into long-term persona state.
 - Provide reusable modules for future Kotonoha, Obsidian, VSCode, MCP, and desktop integrations.
 
+## Installation
+
+**macOS / Linux:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/zyx-corporation/omomuki/main/scripts/install.sh | bash
+```
+
+**Windows (PowerShell):**
+
+```powershell
+irm https://raw.githubusercontent.com/zyx-corporation/omomuki/main/scripts/install.ps1 | iex
+```
+
+See [install.md](docs/install.md) for options and uninstall.
+
+## Quick start (from source)
+
+```bash
+git clone https://github.com/zyx-corporation/omomuki.git
+cd omomuki
+pip install -e ".[dev]"
+omomuki init
+omomuki compile --target chatgpt --profile examples/profiles/minimal.yaml
+```
+
+See [`docs/ci.md`](docs/ci.md) for development and CI.
+
 ## Documentation
 
 Project design documents are maintained in Japanese under [`docs/`](docs/).
@@ -58,20 +140,11 @@ Project design documents are maintained in Japanese under [`docs/`](docs/).
 
 | Topic | Manual |
 |-------|--------|
+| Install | [install.md](docs/install.md) |
 | CLI | [cli-manual.md](docs/cli-manual.md) |
 | Local Bridge | [bridge-manual.md](docs/bridge-manual.md) |
 | MCP Server | [mcp-manual.md](docs/mcp-manual.md) |
 | Chrome Extension | [extension-manual.md](docs/extension-manual.md) |
-
-```bash
-pip install -e ".[dev]"
-omomuki init
-omomuki compile --target chatgpt --profile examples/profiles/minimal.yaml
-```
-
-See [`docs/ci.md`](docs/ci.md) for development and CI.
-
-## License
 
 Omomuki is licensed under the Apache License, Version 2.0.
 

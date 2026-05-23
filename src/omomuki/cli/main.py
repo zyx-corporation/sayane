@@ -9,6 +9,8 @@ import typer
 import yaml
 
 from omomuki.adapters.factory import get_adapter
+from omomuki.bridge.auth import format_pairing_code, load_or_create_token
+from omomuki.bridge.config import BridgeConfig
 from omomuki.cli.paths import (
     context_dir,
     default_profile_dir,
@@ -163,6 +165,40 @@ def export(
     typer.echo("```json")
     typer.echo(json.dumps(compiled.payload, ensure_ascii=False, indent=2))
     typer.echo("```")
+
+
+@app.command()
+def serve(
+    host: Annotated[
+        str,
+        typer.Option("--host", help="Bind address (127.0.0.1 only in production)"),
+    ] = "127.0.0.1",
+    port: Annotated[
+        int,
+        typer.Option("--port", help="Listen port"),
+    ] = 38741,
+) -> None:
+    """Start the Local Bridge API server."""
+    import uvicorn
+
+    if host not in ("127.0.0.1", "localhost", "::1"):
+        raise typer.BadParameter("Bridge must bind to localhost only")
+
+    config = BridgeConfig(host=host, port=port)
+    token, created = load_or_create_token(config)
+    typer.echo(f"Local Bridge listening on http://{host}:{port}")
+    typer.echo(f"Bearer token file: {config.token_file}")
+    if created:
+        typer.echo(f"Pairing code: {format_pairing_code(token)}")
+        typer.echo("Use Authorization: Bearer <token> for protected endpoints")
+
+    uvicorn.run(
+        "omomuki.bridge.app:create_app",
+        factory=True,
+        host=host,
+        port=port,
+        log_level="info",
+    )
 
 
 def main() -> None:

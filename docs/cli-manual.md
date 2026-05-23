@@ -18,8 +18,9 @@ Phase 1 で利用できるコマンドは次のとおりである。
 | `omomuki profile inspect` | Profile の要約を表示する |
 | `omomuki compile` | 指定 LLM 向けにプロンプトをコンパイルする（JSON 出力） |
 | `omomuki export` | Prompt IR とコンパイル結果を Markdown で出力する |
+| `omomuki serve` | Local Bridge API を起動する（Phase 2） |
 
-未実装（ロードマップ参照）: `capture`, `diff`, `evaluate`, `serve` など。
+未実装（ロードマップ参照）: CLI の `capture`, `diff`, `evaluate` など。Bridge 経由の `POST /capture` は Phase 2 で利用可能。
 
 ## 2. インストール
 
@@ -235,6 +236,47 @@ omomuki export --format markdown --target chatgpt \
 
 `--format` に `markdown` 以外を指定すると `Unsupported format` エラー。
 
+---
+
+### 5.5 `omomuki serve`
+
+Local Bridge（localhost API）を起動する。Phase 2。
+
+```bash
+omomuki serve
+omomuki serve --port 38741 --host 127.0.0.1
+```
+
+| オプション | 既定値 | 説明 |
+|-----------|--------|------|
+| `--host` | `127.0.0.1` | バインドアドレス（localhost のみ） |
+| `--port` | `38741` | 待ち受けポート |
+
+初回起動時に `~/.omomuki/bridge.token` を生成し、Bearer トークンと pairing code を表示する。
+
+**HTTP エンドポイント**（保護系は `Authorization: Bearer <token>` 必須）
+
+| メソッド | パス | 認証 | 説明 |
+|---------|------|------|------|
+| GET | `/health` | 不要 | 死活確認（機微情報なし） |
+| GET | `/profiles` | 必須 | 登録 Profile 一覧 |
+| POST | `/capture` | 必須 | 文脈候補を Candidate として保存（merge しない） |
+| POST | `/compile` | 必須 | JSON body でコンパイル |
+| GET | `/context-packet` | 必須 | クエリ `target`, `profile`, `instruction` |
+
+**curl 例**
+
+```bash
+TOKEN=$(cat ~/.omomuki/bridge.token)
+curl -s http://127.0.0.1:38741/health
+curl -s -H "Authorization: Bearer $TOKEN" http://127.0.0.1:38741/profiles
+curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"target":"chatgpt","profile_id":"default"}' \
+  http://127.0.0.1:38741/compile
+```
+
+CORS は既定で許可しない。詳細は [Security Design](security.md)。
+
 ## 6. 典型的なワークフロー
 
 ### 6.1 初回セットアップ
@@ -298,4 +340,4 @@ omomuki compile --target claude \
 
 ## 10. バージョン
 
-本マニュアルは Omomuki **0.1.0**（Phase 1 CLI MVP）時点の実装に基づく。コマンド追加時は [実装ロードマップ](roadmap.md) と合わせて本書を更新する。
+本マニュアルは Omomuki **0.2.0**（Phase 1 CLI + Phase 2 Local Bridge）時点の実装に基づく。コマンド追加時は [実装ロードマップ](roadmap.md) と合わせて本書を更新する。

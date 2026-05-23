@@ -1,6 +1,6 @@
 # Dogfood 手順書（エンドツーエンド）
 
-Omomuki **0.5.4** 時点で、ローカル環境で一通り動作確認する手順である。  
+Omomuki **0.5.8** 時点で、ローカル環境で一通り動作確認する手順である。  
 前提: `pip install -e ".[dev]"` 済み。
 
 ## 1. 初期化と文脈の準備
@@ -12,7 +12,8 @@ omomuki init
 omomuki profile inspect
 
 # Obsidian vault がある場合
-omomuki storage import /path/to/your-vault
+export OMOMUKI_OBSIDIAN_VAULT="$HOME/Documents/MyVault"   # 任意
+omomuki storage import          # または omomuki storage import /path/to/vault
 omomuki storage index
 
 omomuki compile --target chatgpt

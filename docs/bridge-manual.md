@@ -162,4 +162,4 @@ curl -s -X POST -H "$AUTH" -H "Content-Type: application/json" \
 
 ## 7. バージョン
 
-Omomuki **0.5.2** 時点（Candidate evaluate/approve API 含む）。
+Omomuki **0.5.8** 時点（Candidate evaluate/approve API 含む）。

@@ -1,5 +1,11 @@
 import { loadConfig } from "./config.js";
-import type { CaptureResult, ContextPacket, ProfileSummary } from "./types.js";
+import type {
+  CandidateDiff,
+  CandidateSummary,
+  CaptureResult,
+  ContextPacket,
+  ProfileSummary,
+} from "./types.js";
 
 export class BridgeError extends Error {
   constructor(
@@ -72,6 +78,49 @@ export async function fetchContextPacket(
   const params = new URLSearchParams({ target, profile: profileId });
   const res = await bridgeFetch(`/context-packet?${params.toString()}`);
   return (await res.json()) as ContextPacket;
+}
+
+export async function listCandidates(): Promise<CandidateSummary[]> {
+  const res = await bridgeFetch("/candidates");
+  return (await res.json()) as CandidateSummary[];
+}
+
+export async function evaluateCandidate(
+  candidateId: string,
+  level: number,
+): Promise<Record<string, unknown>> {
+  const res = await bridgeFetch(`/candidates/${encodeURIComponent(candidateId)}/evaluate`, {
+    method: "POST",
+    body: JSON.stringify({ level }),
+  });
+  return (await res.json()) as Record<string, unknown>;
+}
+
+export async function diffCandidate(candidateId: string): Promise<CandidateDiff> {
+  const res = await bridgeFetch(`/candidates/${encodeURIComponent(candidateId)}/diff`);
+  return (await res.json()) as CandidateDiff;
+}
+
+export async function approveCandidate(
+  candidateId: string,
+  forceCritical = false,
+): Promise<Record<string, unknown>> {
+  const res = await bridgeFetch(`/candidates/${encodeURIComponent(candidateId)}/approve`, {
+    method: "POST",
+    body: JSON.stringify({ force_critical: forceCritical }),
+  });
+  return (await res.json()) as Record<string, unknown>;
+}
+
+export async function rejectCandidate(
+  candidateId: string,
+  reason?: string,
+): Promise<Record<string, unknown>> {
+  const res = await bridgeFetch(`/candidates/${encodeURIComponent(candidateId)}/reject`, {
+    method: "POST",
+    body: JSON.stringify({ reason: reason ?? null }),
+  });
+  return (await res.json()) as Record<string, unknown>;
 }
 
 export function formatContextPacketForInsert(packet: ContextPacket): string {

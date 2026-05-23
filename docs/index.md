@@ -13,6 +13,7 @@ Omomuki は、LLM間でユーザーの人格的文脈・価値観・応答様式
 - [Chrome Extension マニュアル](extension-manual.md)
 - [RDE / Candidate 評価マニュアル](evaluation-manual.md)
 - [Storage / Obsidian / Git マニュアル](storage-manual.md)
+- [Dogfood 手順書（エンドツーエンド）](dogfood-walkthrough.md)
 
 ## 設計・開発ドキュメント
 

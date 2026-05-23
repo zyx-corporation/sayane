@@ -44,13 +44,55 @@ async function bridgeFetch(path: string, init?: RequestInit): Promise<Response> 
   return response;
 }
 
-export async function checkHealth(): Promise<boolean> {
-  const config = await loadConfig();
+export async function checkHealthAt(bridgeUrl: string): Promise<boolean> {
   try {
-    const res = await fetch(`${config.bridgeUrl.replace(/\/$/, "")}/health`);
+    const res = await fetch(`${bridgeUrl.replace(/\/$/, "")}/health`);
     return res.ok;
   } catch {
     return false;
+  }
+}
+
+export async function checkHealth(): Promise<boolean> {
+  const config = await loadConfig();
+  return checkHealthAt(config.bridgeUrl);
+}
+
+export type BridgeProbeResult = { ok: true; message: string } | { ok: false; message: string };
+
+/** Options test: /health (no auth) then GET /profiles (requires bearer). */
+export async function probeBridge(
+  bridgeUrl: string,
+  bridgeToken: string,
+): Promise<BridgeProbeResult> {
+  const base = bridgeUrl.replace(/\/$/, "");
+  try {
+    const health = await fetch(`${base}/health`);
+    if (!health.ok) {
+      return { ok: false, message: "Bridge unreachable (/health failed)" };
+    }
+  } catch {
+    return { ok: false, message: "Bridge unreachable" };
+  }
+
+  const token = bridgeToken.trim();
+  if (!token) {
+    return { ok: false, message: "Bearer token not configured" };
+  }
+
+  try {
+    const res = await fetch(`${base}/profiles`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.status === 401 || res.status === 403) {
+      return { ok: false, message: "Invalid bearer token (unauthorized)" };
+    }
+    if (!res.ok) {
+      return { ok: false, message: `Bridge error (${res.status})` };
+    }
+    return { ok: true, message: "Bridge OK (/health + /profiles)" };
+  } catch {
+    return { ok: false, message: "Bridge unreachable (/profiles)" };
   }
 }
 

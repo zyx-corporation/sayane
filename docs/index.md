@@ -15,6 +15,7 @@ Omomuki は、LLM間でユーザーの人格的文脈・価値観・応答様式
 - [Chrome Extension 受け入れテスト手順書](extension-acceptance-test.md)
 - [RDE / Candidate 評価マニュアル](evaluation-manual.md)
 - [Storage / Obsidian / Git マニュアル](storage-manual.md)
+- [Storage backend プラグイン契約](storage-backend.md)
 - [Dogfood 手順書（エンドツーエンド）](dogfood-walkthrough.md)
 - [商用版（Commercial Edition / omomuki-pro）](https://github.com/zyx-corporation/omomuki-pro/blob/main/docs/commercial-edition.md) — backend 選択、移行 CLI、暗号化 SQLite、Windows MSI
 

@@ -33,6 +33,14 @@ omomuki init
 omomuki storage import /path/to/your-vault
 ```
 
+環境変数 **`OMOMUKI_OBSIDIAN_VAULT`** に vault のパスを設定し、そのディレクトリが存在する場合、`<vault>` 引数を省略できる。
+
+```bash
+export OMOMUKI_OBSIDIAN_VAULT="$HOME/Documents/MyVault"
+omomuki storage import
+omomuki storage export   # 同じ vault を既定に使用
+```
+
 - `.obsidian`、`.git`、`node_modules` 配下はスキップする
 - 取り込み時に markdown を正規化（改行・BOM・行末空白）
 - 取り込み後に `context_index` を自動更新する

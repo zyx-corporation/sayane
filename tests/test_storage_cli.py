@@ -33,3 +33,17 @@ def test_storage_import_dry_run(tmp_path: Path, monkeypatch) -> None:
     )
     assert result.exit_code == 0
     assert "from-vault.md" in result.stdout
+
+
+def test_storage_import_uses_obsidian_vault_env(tmp_path: Path, monkeypatch) -> None:
+    home = tmp_path / "home"
+    monkeypatch.setenv("HOME", str(home))
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    (vault / "env-note.md").write_text("# Env\n", encoding="utf-8")
+    monkeypatch.setenv("OMOMUKI_OBSIDIAN_VAULT", str(vault))
+
+    runner.invoke(app, ["init"])
+    result = runner.invoke(app, ["storage", "import", "--dry-run"])
+    assert result.exit_code == 0, result.stdout + result.stderr
+    assert "env-note.md" in result.stdout

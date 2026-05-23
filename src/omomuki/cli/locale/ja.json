@@ -7,6 +7,7 @@
   "error.profile_not_found": "Profile が見つかりません: {path}。先に `omomuki init` を実行してください。",
   "error.unsupported_format": "未対応の形式です: {format}",
   "error.bridge_localhost": "Bridge は localhost のみにバインドしてください",
+  "error.obsidian_vault_required": "Obsidian vault のパスを指定するか、存在するディレクトリを OMOMUKI_OBSIDIAN_VAULT に設定してください",
   "init.exists": "Profile Store は既に存在します: {path}",
   "init.done": "Profile Store を初期化しました: {path}",
   "inspect.path": "パス: {path}",

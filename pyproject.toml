@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "omomuki"
-version = "0.5.7"
+version = "0.5.8"
 description = "Local-first persona and context portability for cross-LLM collaboration"
 readme = "README.md"
 license = "Apache-2.0"

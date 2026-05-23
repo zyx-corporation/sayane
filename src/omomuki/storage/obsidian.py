@@ -1,10 +1,37 @@
 """Import and export context markdown with Obsidian vaults."""
 
+import os
 from pathlib import Path
 
 from omomuki.storage.markdown import normalize_markdown
 
+OMOMUKI_OBSIDIAN_VAULT_ENV = "OMOMUKI_OBSIDIAN_VAULT"
+
 _SKIP_DIR_NAMES = frozenset({".obsidian", ".trash", ".git", "node_modules", ".cursor"})
+
+
+def resolve_default_obsidian_vault() -> Path | None:
+    """Return vault path from OMOMUKI_OBSIDIAN_VAULT when set and the directory exists."""
+    raw = os.environ.get(OMOMUKI_OBSIDIAN_VAULT_ENV, "").strip()
+    if not raw:
+        return None
+    path = Path(raw).expanduser()
+    if path.is_dir():
+        return path.resolve()
+    return None
+
+
+def resolve_obsidian_vault(vault: Path | None) -> Path:
+    """CLI vault argument, or default from OMOMUKI_OBSIDIAN_VAULT when available."""
+    if vault is not None:
+        return vault
+    default = resolve_default_obsidian_vault()
+    if default is not None:
+        return default
+    raise FileNotFoundError(
+        "Obsidian vault path required. Pass <vault> or set "
+        f"{OMOMUKI_OBSIDIAN_VAULT_ENV} to an existing directory."
+    )
 
 
 def iter_vault_markdown(vault: Path) -> list[Path]:

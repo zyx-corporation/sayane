@@ -344,7 +344,12 @@ def _register_storage(app: typer.Typer) -> None:
     from omomuki.storage.context_index import apply_context_index
     from omomuki.storage.filesystem import FileSystemContextStore, FileSystemProfileStore
     from omomuki.storage.git_integration import GitError, commit_profile_store
-    from omomuki.storage.obsidian import export_to_vault, import_from_vault, iter_vault_markdown
+    from omomuki.storage.obsidian import (
+        export_to_vault,
+        import_from_vault,
+        iter_vault_markdown,
+        resolve_obsidian_vault,
+    )
 
     storage_app = typer.Typer(help=t("group.storage"), no_args_is_help=True)
 
@@ -354,22 +359,32 @@ def _register_storage(app: typer.Typer) -> None:
             raise typer.BadParameter(t("error.profile_not_found", path=path))
         return FileSystemProfileStore(path.parent)
 
+    def _vault_path(vault: Path | None) -> Path:
+        try:
+            return resolve_obsidian_vault(vault)
+        except FileNotFoundError as exc:
+            raise typer.BadParameter(t("error.obsidian_vault_required")) from exc
+
     @storage_app.command("import")
     def storage_import(
-        vault: Annotated[Path, typer.Argument()],
+        vault: Annotated[
+            Path | None,
+            typer.Argument(help="Obsidian vault (default: $OMOMUKI_OBSIDIAN_VAULT)"),
+        ] = None,
         profile: Annotated[Path | None, typer.Option("--profile")] = None,
         dry_run: Annotated[bool, typer.Option("--dry-run")] = False,
     ) -> None:
         """Import markdown from an Obsidian vault."""
+        vault_path = _vault_path(vault)
         store = _profile_store(profile)
         ctx = FileSystemContextStore(store.profile_dir)
         if dry_run:
-            paths = iter_vault_markdown(vault)
+            paths = iter_vault_markdown(vault_path)
             for p in paths:
-                typer.echo(p.relative_to(vault.resolve()).as_posix())
+                typer.echo(p.relative_to(vault_path.resolve()).as_posix())
             typer.echo(t("storage.would_import", count=len(paths)))
             return
-        imported = import_from_vault(vault, ctx.context_dir)
+        imported = import_from_vault(vault_path, ctx.context_dir)
         profile_obj = apply_context_index(store.load(), store.profile_dir)
         save_profile(store.profile_path, profile_obj)
         typer.echo(t("storage.imported", count=len(imported), path=ctx.context_dir))
@@ -377,15 +392,19 @@ def _register_storage(app: typer.Typer) -> None:
 
     @storage_app.command("export")
     def storage_export(
-        vault: Annotated[Path, typer.Argument()],
+        vault: Annotated[
+            Path | None,
+            typer.Argument(help="Obsidian vault (default: $OMOMUKI_OBSIDIAN_VAULT)"),
+        ] = None,
         profile: Annotated[Path | None, typer.Option("--profile")] = None,
         subdir: Annotated[str, typer.Option("--subdir")] = "omomuki",
     ) -> None:
         """Export context markdown into vault/<subdir>/."""
+        vault_path = _vault_path(vault)
         store = _profile_store(profile)
         ctx = FileSystemContextStore(store.profile_dir)
-        exported = export_to_vault(ctx.context_dir, vault, subdir=subdir)
-        typer.echo(t("storage.exported", count=len(exported), path=vault / subdir))
+        exported = export_to_vault(ctx.context_dir, vault_path, subdir=subdir)
+        typer.echo(t("storage.exported", count=len(exported), path=vault_path / subdir))
 
     @storage_app.command("index")
     def storage_index(

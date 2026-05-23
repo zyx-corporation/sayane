@@ -65,6 +65,40 @@ def test_review_with_llm_parses_json(mock_urlopen: MagicMock, examples_dir: Path
     assert review.uib is not None
 
 
+@patch("omomuki.evaluators.llm_judge.urllib.request.urlopen")
+def test_review_with_llm_partial_uib(mock_urlopen: MagicMock, examples_dir: Path) -> None:
+    payload = {
+        "choices": [
+            {
+                "message": {
+                    "content": json.dumps(
+                        {
+                            "rde_class": "Unresolved Gap",
+                            "notes": ["partial uib"],
+                            "uib": {"UD": 0.2, "MI": 0.3, "CH": 0.4},
+                        },
+                    ),
+                },
+            },
+        ],
+    }
+    mock_resp = MagicMock()
+    mock_resp.read.return_value = json.dumps(payload).encode()
+    mock_resp.__enter__ = lambda s: s
+    mock_resp.__exit__ = MagicMock(return_value=False)
+    mock_urlopen.return_value = mock_resp
+
+    profile = load_profile(examples_dir / "profiles" / "minimal.yaml")
+    proposal = build_proposal_from_content("Maybe uncertain extension")
+    cfg = JudgeConfig(base_url="http://127.0.0.1:11434/v1", api_key=None, model="test")
+    review = review_with_llm(cfg, 2, profile, "content", proposal)
+    assert review.rde_class == "Unresolved Gap"
+    assert review.uib is not None
+    assert review.uib.DT == 0.5
+    assert review.uib.VP == 0.5
+    assert review.uib.FG == 0.5
+
+
 @patch("omomuki.evaluators.service.review_with_llm")
 @patch("omomuki.evaluators.service.load_judge_config")
 def test_evaluate_level2_attaches_llm_review(

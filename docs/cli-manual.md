@@ -14,10 +14,30 @@ Omomuki CLI は、ローカルに保持した **Omomuki Profile** から **Promp
 omomuki.profile.yaml  →  Prompt IR  →  Adapter  →  JSON / Markdown 出力
 ```
 
+## 表示言語
+
+CLI のメッセージ（`typer.echo` 出力・`omomuki help` 一覧）は次で切り替える。
+
+```bash
+export OMOMUKI_LANG=ja          # または LANG=ja_JP.UTF-8
+omomuki --lang ja candidate list
+```
+
+対応: `en`（既定）、`ja`。`omomuki compile --help` など Typer 標準ヘルプの説明文は英語のまま。
+
+階層的ヘルプ:
+
+```bash
+omomuki help                      # 全体一覧（コマンド・グループ）
+omomuki help candidate evaluate   # 特定サブコマンドの詳細
+omomuki candidate --help          # グループ単位（Typer 標準）
+```
+
 利用可能な主なコマンドは次のとおりである。
 
 | コマンド | 概要 |
 |---------|------|
+| `omomuki help [TOPIC...]` | 階層的ヘルプ（上記） |
 | `omomuki init` | ローカル Profile Store を初期化する |
 | `omomuki profile inspect` | Profile の要約を表示する |
 | `omomuki compile` | 指定 LLM 向けにプロンプトをコンパイルする（JSON 出力） |

@@ -1,9 +1,9 @@
 import json
 from pathlib import Path
 
-import omomuki
 from typer.testing import CliRunner
 
+import omomuki
 from omomuki.cli.main import app
 
 runner = CliRunner()

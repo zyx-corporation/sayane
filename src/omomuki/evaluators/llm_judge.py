@@ -10,6 +10,9 @@ from omomuki.core.candidate import CandidateProposal, LLMReview, RDEClass, UIBSc
 from omomuki.core.models import OmomukiProfile
 from omomuki.evaluators.judge_config import JudgeConfig
 
+_UIB_KEYS = ("UD", "MI", "CH", "DT", "VP", "FG")
+_DEFAULT_UIB_AXIS = 0.5
+
 _RDE_CLASSES: tuple[RDEClass, ...] = (
     "Preserved",
     "Authorized Transformation",
@@ -116,5 +119,18 @@ def _parse_judge_json(text: str) -> dict[str, Any]:
     if not isinstance(notes, list):
         notes = [str(notes)]
     uib_raw = data.get("uib")
-    uib = UIBScores.model_validate(uib_raw) if isinstance(uib_raw, dict) else None
+    uib = _coerce_uib_scores(uib_raw) if isinstance(uib_raw, dict) else None
     return {"rde_class": rde, "notes": [str(n) for n in notes], "uib": uib}
+
+
+def _coerce_uib_scores(raw: dict[str, Any]) -> UIBScores:
+    """Fill missing UIB axes (small models often return partial JSON)."""
+    values: dict[str, float] = {}
+    for key in _UIB_KEYS:
+        val = raw.get(key, _DEFAULT_UIB_AXIS)
+        try:
+            num = float(val)
+        except (TypeError, ValueError):
+            num = _DEFAULT_UIB_AXIS
+        values[key] = max(0.0, min(1.0, num))
+    return UIBScores(**values)

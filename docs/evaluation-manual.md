@@ -218,6 +218,7 @@ omomuki candidate show <candidate-id>
 |------|----------|
 | `LLM judge skipped` と出る | Level 3 では `base_url` + `api_key` が両方設定されているか |
 | `LLM judge failed: ...` | Ollama / API が起動しているか、モデル名が存在するか |
+| `llm_review: null`（UIB validation） | LLM が UIB 6 軸の一部だけ返した場合。最新版は欠損軸（DT/VP/FG 等）を 0.5 で補完 |
 | `401` / `403` | `OMOMUKI_JUDGE_API_KEY` が正しいか、URL が `/v1` 付きか |
 | 評価は通るが `llm_review` が null | Level 1 のみ実行されている（`--level 2` 以上を指定したか） |
 | タイムアウト | `judge.yaml` の `timeout_sec` を増やす、またはモデルを軽量化 |

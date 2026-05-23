@@ -54,6 +54,33 @@ The Chrome Extension captures and inserts context. The CLI and core library own 
 
 Project design documents are maintained in Japanese under [`docs/`](docs/).
 
+## Development (Phase 0)
+
+Repository layout:
+
+```text
+schemas/          JSON Schema (Profile, Prompt IR)
+src/omomuki/      Python core package (subpackages by layer)
+extension/        Chrome Extension skeleton (TypeScript)
+examples/         Sample profiles and fixtures
+tests/            pytest
+```
+
+Setup:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+pytest -v
+```
+
+```bash
+cd extension && npm install && npm run build
+```
+
+See [`docs/ci.md`](docs/ci.md) for CI policy. Phase 1 implements CLI and Pydantic models.
+
 ## License
 
 Omomuki is licensed under the Apache License, Version 2.0.

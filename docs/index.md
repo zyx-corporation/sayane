@@ -15,6 +15,7 @@ Omomuki は、LLM間でユーザーの人格的文脈・価値観・応答様式
 - [Security Design](security.md)
 - [RDE / UIB 評価と Lineage](evaluation-lineage.md)
 - [開発原則](development-principles.md)
+- [CI方針](ci.md)
 - [実装ロードマップ](roadmap.md)
 
 ## 基本方針

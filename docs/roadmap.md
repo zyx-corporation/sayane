@@ -29,9 +29,17 @@ Schema / IR         : JSON Schema + Pydantic
 - pyproject.toml追加
 - extension/package.json追加
 - 基本ディレクトリ作成
-- CI方針検討
-- security方針の明文化
-- MVP範囲の明文化
+- CI方針検討（[`ci.md`](ci.md)、`.github/workflows/ci.yml`）
+- security方針の明文化（[`security.md`](security.md)）
+- MVP範囲の明文化（[`mvp-scope.md`](mvp-scope.md)）
+
+Phase 0 完了時点で整備済み:
+
+- `schemas/` — Omomuki Profile / Prompt IR の JSON Schema
+- `src/omomuki/` — core, cli, bridge, adapters, strategies, evaluators, storage, mcp
+- `examples/profiles/minimal.yaml`
+- `tests/` — パッケージ import と schema 検証
+- `extension/` — Manifest V3 スケルトン
 
 想定ディレクトリ:
 

@@ -150,6 +150,33 @@ Schema / IR         : JSON Schema + Pydantic
 
 初期段階ではPythonで仕様を柔軟に固め、性能・配布・暗号化・indexingなどの必要が明確になった段階でRustによる切り出しを検討します。
 
+## 開発（Phase 0）
+
+リポジトリ構成:
+
+```text
+schemas/          JSON Schema（Profile, Prompt IR）
+src/omomuki/      Python Core（層ごとのサブパッケージ）
+extension/        Chrome Extension スケルトン（TypeScript）
+examples/         サンプル profile と fixtures
+tests/            pytest
+```
+
+セットアップ:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+pytest -v
+```
+
+```bash
+cd extension && npm install && npm run build
+```
+
+CI 方針は [`docs/ci.md`](docs/ci.md)。Phase 1 で CLI と Pydantic model を実装する。
+
 ## ドキュメント
 
 詳細な設計文書は [`docs/`](docs/) にあります。
@@ -165,6 +192,7 @@ Schema / IR         : JSON Schema + Pydantic
 - [RDE / UIB 評価と Lineage](docs/evaluation-lineage.md)
 - [開発原則](docs/development-principles.md)
 - [実装ロードマップ](docs/roadmap.md)
+- [CI方針](docs/ci.md)
 
 ## ライセンス
 

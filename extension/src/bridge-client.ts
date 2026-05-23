@@ -58,7 +58,9 @@ export async function checkHealth(): Promise<boolean> {
   return checkHealthAt(config.bridgeUrl);
 }
 
-export type BridgeProbeResult = { ok: true; message: string } | { ok: false; message: string };
+export type BridgeProbeResult =
+  | { ok: true; messageKey: string }
+  | { ok: false; messageKey: string; params?: Record<string, string | number> };
 
 /** Options test: /health (no auth) then GET /profiles (requires bearer). */
 export async function probeBridge(
@@ -69,15 +71,15 @@ export async function probeBridge(
   try {
     const health = await fetch(`${base}/health`);
     if (!health.ok) {
-      return { ok: false, message: "Bridge unreachable (/health failed)" };
+      return { ok: false, messageKey: "options.probe.health_failed" };
     }
   } catch {
-    return { ok: false, message: "Bridge unreachable" };
+    return { ok: false, messageKey: "options.probe.unreachable" };
   }
 
   const token = bridgeToken.trim();
   if (!token) {
-    return { ok: false, message: "Bearer token not configured" };
+    return { ok: false, messageKey: "options.probe.token_missing" };
   }
 
   try {
@@ -85,14 +87,14 @@ export async function probeBridge(
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.status === 401 || res.status === 403) {
-      return { ok: false, message: "Invalid bearer token (unauthorized)" };
+      return { ok: false, messageKey: "options.probe.unauthorized" };
     }
     if (!res.ok) {
-      return { ok: false, message: `Bridge error (${res.status})` };
+      return { ok: false, messageKey: "options.probe.error", params: { status: res.status } };
     }
-    return { ok: true, message: "Bridge OK (/health + /profiles)" };
+    return { ok: true, messageKey: "options.probe.ok" };
   } catch {
-    return { ok: false, message: "Bridge unreachable (/profiles)" };
+    return { ok: false, messageKey: "options.probe.profiles_unreachable" };
   }
 }
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <title>Omomuki Options</title>
@@ -14,7 +14,8 @@
         margin-top: 12px;
         font-weight: 600;
       }
-      input {
+      input,
+      select {
         width: 100%;
         box-sizing: border-box;
         margin-top: 4px;
@@ -35,23 +36,29 @@
     </style>
   </head>
   <body>
-    <h1>Omomuki Options</h1>
-    <p class="hint">
-      Run <code>omomuki serve</code> locally. Copy the bearer token from
-      <code>~/.omomuki/bridge.token</code> (pairing code shown on first start).
+    <h1 data-i18n="options.title">Omomuki Options</h1>
+    <p class="hint" data-i18n="options.hint">
+      Run omomuki serve locally. Copy the bearer token from ~/.omomuki/bridge.token.
     </p>
 
-    <label for="bridge-url">Bridge URL</label>
+    <label for="display-language" data-i18n="options.language">Display language</label>
+    <select id="display-language">
+      <option value="auto" data-i18n="options.lang.auto">Auto (browser)</option>
+      <option value="en" data-i18n="options.lang.en">English</option>
+      <option value="ja" data-i18n="options.lang.ja">Japanese</option>
+    </select>
+
+    <label for="bridge-url" data-i18n="options.bridge_url">Bridge URL</label>
     <input id="bridge-url" type="url" placeholder="http://127.0.0.1:38741" />
 
-    <label for="bridge-token">Bearer token</label>
+    <label for="bridge-token" data-i18n="options.bearer_token">Bearer token</label>
     <input id="bridge-token" type="password" autocomplete="off" />
 
-    <label for="default-profile">Default profile id</label>
+    <label for="default-profile" data-i18n="options.default_profile">Default profile id</label>
     <input id="default-profile" type="text" placeholder="default" />
 
-    <button type="button" id="save">Save</button>
-    <button type="button" id="test-bridge">Test connection</button>
+    <button type="button" id="save" data-i18n="options.save">Save</button>
+    <button type="button" id="test-bridge" data-i18n="options.test">Test connection</button>
     <p id="status"></p>
 
     <script type="module" src="dist/options.js"></script>

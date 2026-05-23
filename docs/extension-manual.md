@@ -23,6 +23,18 @@ cd extension && npm install && npm run build
 
 Chrome の「パッケージ化されていない拡張機能を読み込む」→ `extension/` ディレクトリ。
 
+## 2.1 表示言語（i18n）
+
+popup / Options の UI 文言は **英語（既定）** と **日本語** に対応する。
+
+1. **Options** → **表示言語**（Display language）
+   - **自動（ブラウザ）** — `navigator.language` が `ja` なら日本語、それ以外は英語
+   - **English** / **日本語** — 固定
+2. **Save** で `chrome.storage.sync` に保存（CLI の `OMOMUKI_LANG` とは独立）
+3. 言語を変更したら popup を開き直す
+
+カタログ: `extension/locale/en.json`, `extension/locale/ja.json`。実装: `extension/src/i18n.ts`。
+
 ## 3. Popup 操作
 
 | ボタン | 動作 |

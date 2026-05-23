@@ -1,4 +1,4 @@
-import type { ExtensionConfig } from "./types.js";
+import type { DisplayLanguage, ExtensionConfig } from "./types.js";
 
 export const DEFAULT_BRIDGE_URL = "http://127.0.0.1:38741";
 
@@ -6,12 +6,14 @@ export const STORAGE_KEYS = {
   bridgeUrl: "bridgeUrl",
   bridgeToken: "bridgeToken",
   defaultProfileId: "defaultProfileId",
+  displayLanguage: "displayLanguage",
 } as const;
 
 export const DEFAULT_CONFIG: ExtensionConfig = {
   bridgeUrl: DEFAULT_BRIDGE_URL,
   bridgeToken: "",
   defaultProfileId: "default",
+  displayLanguage: "auto",
 };
 
 export async function loadConfig(): Promise<ExtensionConfig> {
@@ -19,12 +21,17 @@ export async function loadConfig(): Promise<ExtensionConfig> {
     STORAGE_KEYS.bridgeUrl,
     STORAGE_KEYS.bridgeToken,
     STORAGE_KEYS.defaultProfileId,
+    STORAGE_KEYS.displayLanguage,
   ]);
+  const lang = stored[STORAGE_KEYS.displayLanguage] as string | undefined;
+  const displayLanguage: DisplayLanguage =
+    lang === "en" || lang === "ja" || lang === "auto" ? lang : DEFAULT_CONFIG.displayLanguage;
   return {
     bridgeUrl: (stored[STORAGE_KEYS.bridgeUrl] as string) || DEFAULT_CONFIG.bridgeUrl,
     bridgeToken: (stored[STORAGE_KEYS.bridgeToken] as string) || DEFAULT_CONFIG.bridgeToken,
     defaultProfileId:
       (stored[STORAGE_KEYS.defaultProfileId] as string) || DEFAULT_CONFIG.defaultProfileId,
+    displayLanguage,
   };
 }
 

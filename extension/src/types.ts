@@ -4,7 +4,11 @@ export interface ExtensionConfig {
   bridgeUrl: string;
   bridgeToken: string;
   defaultProfileId: string;
+  displayLanguage: DisplayLanguage;
 }
+
+export type DisplayLanguage = "auto" | "en" | "ja";
+export type SupportedLocale = "en" | "ja";
 
 export interface ProfileSummary {
   id: string;

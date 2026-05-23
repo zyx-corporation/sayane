@@ -49,7 +49,11 @@ def compile_prompt(
 ) -> ContextPacketResponse:
     profile_path = resolve_profile_path(config, request.profile_id)
     profile = load_profile(profile_path)
-    ir = build_prompt_ir(profile, instruction=request.instruction)
+    ir = build_prompt_ir(
+        profile,
+        instruction=request.instruction,
+        profile_root=profile_path.parent,
+    )
     compiled = get_adapter(request.target).compile(ir)
     return ContextPacketResponse(
         target=compiled.target,

@@ -93,7 +93,11 @@
       "additionalProperties": false,
       "properties": {
         "entrypoint": { "type": "string" },
-        "handoff": { "type": "string" }
+        "handoff": { "type": "string" },
+        "entries": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
       }
     },
     "lineage": {

@@ -12,6 +12,7 @@ Omomuki は、LLM間でユーザーの人格的文脈・価値観・応答様式
 - [MCP Server マニュアル](mcp-manual.md)
 - [Chrome Extension マニュアル](extension-manual.md)
 - [RDE / Candidate 評価マニュアル](evaluation-manual.md)
+- [Storage / Obsidian / Git マニュアル](storage-manual.md)
 
 ## 設計・開発ドキュメント
 

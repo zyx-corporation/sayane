@@ -19,6 +19,7 @@ from omomuki.cli.paths import (
     default_profile_file,
     resolve_profile_path,
 )
+from omomuki.cli.storage_cli import storage_app
 from omomuki.core.builder import build_prompt_ir
 from omomuki.core.loader import load_profile
 
@@ -27,6 +28,7 @@ profile_app = typer.Typer(help="Profile operations.")
 app.add_typer(profile_app, name="profile")
 app.add_typer(mcp_app, name="mcp")
 app.add_typer(candidate_app, name="candidate")
+app.add_typer(storage_app, name="storage")
 
 INIT_TEMPLATE = """\
 version: "0.1.0"
@@ -139,8 +141,8 @@ def compile(
     ] = None,
 ) -> None:
     """Build Prompt IR and compile to the target LLM format."""
-    _, loaded = _load(profile)
-    ir = build_prompt_ir(loaded, instruction=instruction)
+    path, loaded = _load(profile)
+    ir = build_prompt_ir(loaded, instruction=instruction, profile_root=path.parent)
     compiled = get_adapter(target).compile(ir)
     typer.echo(json.dumps(compiled.payload, ensure_ascii=False, indent=2))
 
@@ -168,8 +170,8 @@ def export(
     if format != "markdown":
         raise typer.BadParameter(f"Unsupported format: {format}")
 
-    _, loaded = _load(profile)
-    ir = build_prompt_ir(loaded, instruction=instruction)
+    path, loaded = _load(profile)
+    ir = build_prompt_ir(loaded, instruction=instruction, profile_root=path.parent)
     compiled = get_adapter(target).compile(ir)
 
     typer.echo("# Omomuki Compiled Prompt\n")

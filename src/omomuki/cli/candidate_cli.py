@@ -38,6 +38,7 @@ def candidate_list() -> None:
         except Exception:
             typer.echo(f"{cid}\t?")
 
+
 @candidate_app.command("show")
 def candidate_show(
     candidate_id: Annotated[str, typer.Argument(help="Candidate id")],

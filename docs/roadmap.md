@@ -236,6 +236,8 @@ Level 3: external LLM assisted review
 - Profile更新をGit履歴に残せる
 - context_indexを自動生成できる
 
+**マニュアル**: [Storage / Obsidian / Git マニュアル](storage-manual.md)
+
 ## 9. Phase 6: Rust Extraction
 
 目的は、安定した高負荷部分をRustへ切り出すこと。

@@ -51,6 +51,7 @@ class ContextIndex(BaseModel):
 
     entrypoint: str | None = None
     handoff: str | None = None
+    entries: list[str] = Field(default_factory=list)
 
 
 class Lineage(BaseModel):

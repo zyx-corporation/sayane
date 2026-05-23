@@ -6,6 +6,7 @@ import type {
   InsertTarget,
   ProfileSummary,
 } from "./types.js";
+import { applyDataI18n, initI18n, localizeError, t } from "./i18n.js";
 
 function $(id: string): HTMLElement {
   const el = document.getElementById(id);
@@ -25,7 +26,7 @@ async function send(message: BackgroundMessage): Promise<BackgroundResponse> {
 
 async function getActiveTabId(): Promise<number> {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (!tab?.id) throw new Error("No active tab");
+  if (!tab?.id) throw new Error(t("error.no_active_tab"));
   return tab.id;
 }
 
@@ -54,7 +55,7 @@ async function loadProfiles(): Promise<void> {
   const select = $("profile-select") as HTMLSelectElement;
   const res = await send({ type: "BRIDGE_LIST_PROFILES" });
   if (!res.ok) {
-    setStatus(res.error, true);
+    setStatus(localizeError(res.error), true);
     return;
   }
   const profiles = res.data as ProfileSummary[];
@@ -62,7 +63,7 @@ async function loadProfiles(): Promise<void> {
   if (profiles.length === 0) {
     const opt = document.createElement("option");
     opt.value = "default";
-    opt.textContent = "default (not found)";
+    opt.textContent = t("profile.not_found");
     select.appendChild(opt);
     return;
   }
@@ -78,7 +79,7 @@ async function loadCandidates(preferId?: string): Promise<void> {
   const select = $("candidate-select") as HTMLSelectElement;
   const res = await send({ type: "BRIDGE_LIST_CANDIDATES" });
   if (!res.ok) {
-    setStatus(res.error, true);
+    setStatus(localizeError(res.error), true);
     return;
   }
   const items = res.data as CandidateSummary[];
@@ -86,7 +87,7 @@ async function loadCandidates(preferId?: string): Promise<void> {
   if (items.length === 0) {
     const opt = document.createElement("option");
     opt.value = "";
-    opt.textContent = "(no candidates)";
+    opt.textContent = t("candidate.none");
     select.appendChild(opt);
     return;
   }
@@ -113,17 +114,22 @@ function evaluationSummary(data: Record<string, unknown>): string {
 }
 
 async function init(): Promise<void> {
+  await initI18n();
+  applyDataI18n();
+  document.title = t("app.title");
+  setStatus(t("status.loading"));
+
   const health = await send({ type: "BRIDGE_HEALTH" });
   if (!health.ok) {
-    setStatus(health.error, true);
+    setStatus(localizeError(health.error), true);
     return;
   }
   const healthy = (health.data as { healthy: boolean }).healthy;
   if (!healthy) {
-    setStatus("Bridge unreachable. Run: omomuki serve", true);
+    setStatus(t("status.bridge_unreachable"), true);
     return;
   }
-  setStatus("Bridge connected");
+  setStatus(t("status.bridge_connected"));
   await loadProfiles();
   await loadCandidates();
 }
@@ -133,14 +139,14 @@ $("btn-capture-selection").addEventListener("click", async () => {
     const tabId = await getActiveTabId();
     const res = await send({ type: "CAPTURE_SELECTION", tabId });
     if (!res.ok) {
-      setStatus(res.error, true);
+      setStatus(localizeError(res.error), true);
       return;
     }
     const id = (res.data as { id: string }).id;
-    setStatus(`Captured: ${id}`);
+    setStatus(t("status.captured", { id }));
     await loadCandidates(id);
   } catch (e) {
-    setStatus(String(e), true);
+    setStatus(localizeError(String(e)), true);
   }
 });
 
@@ -149,14 +155,14 @@ $("btn-capture-page").addEventListener("click", async () => {
     const tabId = await getActiveTabId();
     const res = await send({ type: "CAPTURE_PAGE", tabId });
     if (!res.ok) {
-      setStatus(res.error, true);
+      setStatus(localizeError(res.error), true);
       return;
     }
     const id = (res.data as { id: string }).id;
-    setStatus(`Captured: ${id}`);
+    setStatus(t("status.captured", { id }));
     await loadCandidates(id);
   } catch (e) {
-    setStatus(String(e), true);
+    setStatus(localizeError(String(e)), true);
   }
 });
 
@@ -169,9 +175,9 @@ async function insertContext(target: InsertTarget): Promise<void> {
       target,
       profileId: selectedProfileId(),
     });
-    setStatus(res.ok ? `Inserted (${target})` : res.error, !res.ok);
+    setStatus(res.ok ? t("status.inserted", { target }) : localizeError(res.error), !res.ok);
   } catch (e) {
-    setStatus(String(e), true);
+    setStatus(localizeError(String(e)), true);
   }
 }
 
@@ -181,66 +187,71 @@ $("btn-insert-claude").addEventListener("click", () => insertContext("claude"));
 $("btn-refresh-candidates").addEventListener("click", async () => {
   try {
     await loadCandidates(selectedCandidateId() ?? undefined);
-    setStatus("Candidates refreshed");
+    setStatus(t("status.candidates_refreshed"));
   } catch (e) {
-    setStatus(String(e), true);
+    setStatus(localizeError(String(e)), true);
   }
 });
 
 $("btn-evaluate").addEventListener("click", async () => {
   const cid = selectedCandidateId();
   if (!cid) {
-    setStatus("Select a candidate", true);
+    setStatus(t("status.select_candidate"), true);
     return;
   }
   const level = Number(($("eval-level") as HTMLSelectElement).value) || 1;
   try {
     const res = await send({ type: "BRIDGE_EVALUATE_CANDIDATE", candidateId: cid, level });
-    setStatus(res.ok ? `Evaluated: ${evaluationSummary(res.data as Record<string, unknown>)}` : res.error, !res.ok);
+    setStatus(
+      res.ok
+        ? t("status.evaluated", { summary: evaluationSummary(res.data as Record<string, unknown>) })
+        : localizeError(res.error),
+      !res.ok,
+    );
     if (res.ok) await loadCandidates(cid);
   } catch (e) {
-    setStatus(String(e), true);
+    setStatus(localizeError(String(e)), true);
   }
 });
 
 $("btn-diff").addEventListener("click", async () => {
   const cid = selectedCandidateId();
   if (!cid) {
-    setStatus("Select a candidate", true);
+    setStatus(t("status.select_candidate"), true);
     return;
   }
   try {
     const res = await send({ type: "BRIDGE_DIFF_CANDIDATE", candidateId: cid });
     if (!res.ok) {
-      setStatus(res.error, true);
+      setStatus(localizeError(res.error), true);
       return;
     }
     showDiff(res.data as CandidateDiff);
-    setStatus(`Diff for ${cid.slice(0, 8)}…`);
+    setStatus(t("status.diff_for", { id: cid.slice(0, 8) }));
   } catch (e) {
-    setStatus(String(e), true);
+    setStatus(localizeError(String(e)), true);
   }
 });
 
 $("btn-approve").addEventListener("click", async () => {
   const cid = selectedCandidateId();
   if (!cid) {
-    setStatus("Select a candidate", true);
+    setStatus(t("status.select_candidate"), true);
     return;
   }
   try {
     const res = await send({ type: "BRIDGE_APPROVE_CANDIDATE", candidateId: cid });
-    setStatus(res.ok ? `Approved: ${cid.slice(0, 8)}…` : res.error, !res.ok);
+    setStatus(res.ok ? t("status.approved", { id: cid.slice(0, 8) }) : localizeError(res.error), !res.ok);
     if (res.ok) await loadCandidates(cid);
   } catch (e) {
-    setStatus(String(e), true);
+    setStatus(localizeError(String(e)), true);
   }
 });
 
 $("btn-reject").addEventListener("click", async () => {
   const cid = selectedCandidateId();
   if (!cid) {
-    setStatus("Select a candidate", true);
+    setStatus(t("status.select_candidate"), true);
     return;
   }
   try {
@@ -249,10 +260,10 @@ $("btn-reject").addEventListener("click", async () => {
       candidateId: cid,
       reason: "rejected from extension",
     });
-    setStatus(res.ok ? `Rejected: ${cid.slice(0, 8)}…` : res.error, !res.ok);
+    setStatus(res.ok ? t("status.rejected", { id: cid.slice(0, 8) }) : localizeError(res.error), !res.ok);
     if (res.ok) await loadCandidates(cid);
   } catch (e) {
-    setStatus(String(e), true);
+    setStatus(localizeError(String(e)), true);
   }
 });
 

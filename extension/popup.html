@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <title>Omomuki</title>
@@ -64,42 +64,42 @@
     </style>
   </head>
   <body>
-    <h1>Omomuki</h1>
-    <p id="status" class="status">Loading…</p>
+    <h1 data-i18n="app.title">Omomuki</h1>
+    <p id="status" class="status" data-i18n="status.loading">Loading…</p>
 
-    <label for="profile-select">Profile</label>
+    <label for="profile-select" data-i18n="profile.label">Profile</label>
     <select id="profile-select"></select>
 
     <div class="section">
-      <button type="button" id="btn-capture-selection">Capture selection</button>
-      <button type="button" id="btn-capture-page">Capture this page</button>
+      <button type="button" id="btn-capture-selection" data-i18n="capture.selection">Capture selection</button>
+      <button type="button" id="btn-capture-page" data-i18n="capture.page">Capture this page</button>
     </div>
 
     <div class="section">
-      <button type="button" id="btn-insert-chatgpt">Insert context (ChatGPT)</button>
-      <button type="button" id="btn-insert-claude">Insert context (Claude)</button>
+      <button type="button" id="btn-insert-chatgpt" data-i18n="insert.chatgpt">Insert context (ChatGPT)</button>
+      <button type="button" id="btn-insert-claude" data-i18n="insert.claude">Insert context (Claude)</button>
     </div>
 
     <div class="section">
-      <label for="candidate-select">Candidate</label>
+      <label for="candidate-select" data-i18n="candidate.label">Candidate</label>
       <select id="candidate-select"></select>
       <div class="row">
-        <select id="eval-level" title="Evaluation level">
-          <option value="1">Level 1</option>
-          <option value="2">Level 2</option>
+        <select id="eval-level" data-i18n-title="candidate.evaluate">
+          <option value="1" data-i18n="candidate.level1">Level 1</option>
+          <option value="2" data-i18n="candidate.level2">Level 2</option>
         </select>
-        <button type="button" id="btn-refresh-candidates">Refresh</button>
+        <button type="button" id="btn-refresh-candidates" data-i18n="candidate.refresh">Refresh</button>
       </div>
-      <button type="button" id="btn-evaluate">Evaluate</button>
-      <button type="button" id="btn-diff">Show diff</button>
+      <button type="button" id="btn-evaluate" data-i18n="candidate.evaluate">Evaluate</button>
+      <button type="button" id="btn-diff" data-i18n="candidate.diff">Show diff</button>
       <pre id="diff-preview" class="diff" hidden></pre>
       <div class="row">
-        <button type="button" id="btn-approve">Approve</button>
-        <button type="button" id="btn-reject">Reject</button>
+        <button type="button" id="btn-approve" data-i18n="candidate.approve">Approve</button>
+        <button type="button" id="btn-reject" data-i18n="candidate.reject">Reject</button>
       </div>
     </div>
 
-    <button type="button" id="btn-options">Options / Pairing</button>
+    <button type="button" id="btn-options" data-i18n="options.button">Options / Pairing</button>
 
     <script type="module" src="dist/popup.js"></script>
   </body>

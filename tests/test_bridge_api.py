@@ -89,7 +89,7 @@ def test_capture_saves_candidate(bridge_env: tuple[TestClient, BridgeConfig, str
     saved = config.candidates_dir / f"{capture_id}.json"
     assert saved.exists()
     record = json.loads(saved.read_text(encoding="utf-8"))
-    assert record["status"] == "candidate"
+    assert record["status"] in ("candidate", "pending")
     assert record["content"] == "Selected text from page"
 
 

@@ -25,6 +25,7 @@ omomuki.profile.yaml  →  Prompt IR  →  Adapter  →  JSON / Markdown 出力
 | `omomuki serve` | Local Bridge API を起動する（Phase 2） |
 | `omomuki mcp serve` | MCP Server（stdio）起動（Phase 2.5） |
 | `omomuki mcp list-profiles` など | MCP Tools と同等の CLI 操作 |
+| `omomuki candidate …` | Candidate 評価・approve（Phase 4） |
 
 Bridge HTTP API の詳細は [Bridge マニュアル](bridge-manual.md)。MCP Tools / Cursor 設定は [MCP マニュアル](mcp-manual.md)。
 
@@ -381,4 +382,6 @@ cd extension && npm run build
 
 ## 10. バージョン
 
-本マニュアルは Omomuki **0.3.0**（Phase 1〜2.5 CLI）時点。Extension は [Extension マニュアル](extension-manual.md) を参照。
+Candidate 評価: [evaluation-manual.md](evaluation-manual.md)。
+
+本マニュアルは Omomuki **0.4.0** 時点。Extension は [Extension マニュアル](extension-manual.md) を参照。

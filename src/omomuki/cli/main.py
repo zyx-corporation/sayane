@@ -11,6 +11,7 @@ import yaml
 from omomuki.adapters.factory import get_adapter
 from omomuki.bridge.auth import format_pairing_code, load_or_create_token
 from omomuki.bridge.config import BridgeConfig
+from omomuki.cli.candidate_cli import candidate_app
 from omomuki.cli.mcp_cli import mcp_app
 from omomuki.cli.paths import (
     context_dir,
@@ -25,6 +26,7 @@ app = typer.Typer(no_args_is_help=True, help="Omomuki — persona and context po
 profile_app = typer.Typer(help="Profile operations.")
 app.add_typer(profile_app, name="profile")
 app.add_typer(mcp_app, name="mcp")
+app.add_typer(candidate_app, name="candidate")
 
 INIT_TEMPLATE = """\
 version: "0.1.0"
@@ -108,6 +110,20 @@ def profile_inspect(
         typer.echo(f"Concepts: {', '.join(p.knowledge.concepts)}")
     if p.context_index.entrypoint:
         typer.echo(f"Context entrypoint: {p.context_index.entrypoint}")
+
+
+@profile_app.command("diff")
+def profile_diff(
+    candidate_id: Annotated[
+        str,
+        typer.Option("--candidate", help="Candidate id to diff against profile"),
+    ],
+) -> None:
+    """Show profile diff for a candidate (alias for omomuki candidate diff)."""
+    from omomuki.evaluators.service import diff_candidate
+
+    diff = diff_candidate(BridgeConfig(), candidate_id)
+    typer.echo(json.dumps(diff, ensure_ascii=False, indent=2))
 
 
 @app.command()

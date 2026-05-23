@@ -3,9 +3,57 @@
   <head>
     <meta charset="UTF-8" />
     <title>Omomuki Options</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 480px;
+        margin: 24px;
+      }
+      label {
+        display: block;
+        margin-top: 12px;
+        font-weight: 600;
+      }
+      input {
+        width: 100%;
+        box-sizing: border-box;
+        margin-top: 4px;
+        padding: 8px;
+      }
+      button {
+        margin-top: 16px;
+        margin-right: 8px;
+        padding: 8px 16px;
+      }
+      .hint {
+        font-size: 0.85rem;
+        color: #555;
+      }
+      #status.error {
+        color: #b00020;
+      }
+    </style>
   </head>
   <body>
     <h1>Omomuki Options</h1>
-    <p>Bridge pairing and profile selection will be configured here (Phase 3).</p>
+    <p class="hint">
+      Run <code>omomuki serve</code> locally. Copy the bearer token from
+      <code>~/.omomuki/bridge.token</code> (pairing code shown on first start).
+    </p>
+
+    <label for="bridge-url">Bridge URL</label>
+    <input id="bridge-url" type="url" placeholder="http://127.0.0.1:38741" />
+
+    <label for="bridge-token">Bearer token</label>
+    <input id="bridge-token" type="password" autocomplete="off" />
+
+    <label for="default-profile">Default profile id</label>
+    <input id="default-profile" type="text" placeholder="default" />
+
+    <button type="button" id="save">Save</button>
+    <button type="button" id="test-bridge">Test /health</button>
+    <p id="status"></p>
+
+    <script type="module" src="dist/options.js"></script>
   </body>
 </html>

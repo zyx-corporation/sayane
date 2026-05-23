@@ -7,12 +7,61 @@
       body {
         font-family: system-ui, sans-serif;
         margin: 12px;
-        min-width: 200px;
+        min-width: 280px;
+      }
+      h1 {
+        font-size: 1rem;
+        margin: 0 0 8px;
+      }
+      label {
+        font-size: 0.85rem;
+        display: block;
+        margin-bottom: 4px;
+      }
+      select,
+      button {
+        width: 100%;
+        margin-bottom: 8px;
+        box-sizing: border-box;
+      }
+      button {
+        padding: 8px;
+        cursor: pointer;
+      }
+      .status {
+        font-size: 0.8rem;
+        color: #333;
+        min-height: 2.5em;
+      }
+      .status.error {
+        color: #b00020;
+      }
+      .section {
+        margin-top: 12px;
+        border-top: 1px solid #ddd;
+        padding-top: 8px;
       }
     </style>
   </head>
   <body>
-    <p><strong>Omomuki</strong></p>
-    <p>Phase 0 skeleton. Capture and insert arrive in Phase 3.</p>
+    <h1>Omomuki</h1>
+    <p id="status" class="status">Loading…</p>
+
+    <label for="profile-select">Profile</label>
+    <select id="profile-select"></select>
+
+    <div class="section">
+      <button type="button" id="btn-capture-selection">Capture selection</button>
+      <button type="button" id="btn-capture-page">Capture this page</button>
+    </div>
+
+    <div class="section">
+      <button type="button" id="btn-insert-chatgpt">Insert context (ChatGPT)</button>
+      <button type="button" id="btn-insert-claude">Insert context (Claude)</button>
+    </div>
+
+    <button type="button" id="btn-options">Options / Pairing</button>
+
+    <script type="module" src="dist/popup.js"></script>
   </body>
 </html>

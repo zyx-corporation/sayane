@@ -54,45 +54,22 @@ The Chrome Extension captures and inserts context. The CLI and core library own 
 
 Project design documents are maintained in Japanese under [`docs/`](docs/).
 
-## Development (Phase 0)
+**New users**: [Getting started guide](docs/getting-started.md) (Japanese)
 
-Repository layout:
-
-```text
-schemas/          JSON Schema (Profile, Prompt IR)
-src/omomuki/      Python core package (subpackages by layer)
-extension/        Chrome Extension skeleton (TypeScript)
-examples/         Sample profiles and fixtures
-tests/            pytest
-```
-
-Setup:
+| Topic | Manual |
+|-------|--------|
+| CLI | [cli-manual.md](docs/cli-manual.md) |
+| Local Bridge | [bridge-manual.md](docs/bridge-manual.md) |
+| MCP Server | [mcp-manual.md](docs/mcp-manual.md) |
+| Chrome Extension | [extension-manual.md](docs/extension-manual.md) |
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
 pip install -e ".[dev]"
-pytest -v
-```
-
-```bash
-cd extension && npm install && npm run build
-```
-
-See [`docs/ci.md`](docs/ci.md) for CI policy.
-
-### CLI (Phase 1)
-
-See the [CLI manual](docs/cli-manual.md) (Japanese) for full usage.
-
-```bash
-pip install -e .
 omomuki init
-omomuki profile inspect --profile examples/profiles/minimal.yaml
 omomuki compile --target chatgpt --profile examples/profiles/minimal.yaml
-omomuki compile --target claude --profile examples/profiles/minimal.yaml
-omomuki export --format markdown --target claude --profile examples/profiles/minimal.yaml
 ```
+
+See [`docs/ci.md`](docs/ci.md) for development and CI.
 
 ## License
 

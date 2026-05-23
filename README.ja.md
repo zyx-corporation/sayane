@@ -150,74 +150,36 @@ Schema / IR         : JSON Schema + Pydantic
 
 初期段階ではPythonで仕様を柔軟に固め、性能・配布・暗号化・indexingなどの必要が明確になった段階でRustによる切り出しを検討します。
 
-## 開発（Phase 0）
+## クイックスタート
 
-リポジトリ構成:
-
-```text
-schemas/          JSON Schema（Profile, Prompt IR）
-src/omomuki/      Python Core（層ごとのサブパッケージ）
-extension/        Chrome Extension スケルトン（TypeScript）
-examples/         サンプル profile と fixtures
-tests/            pytest
-```
-
-セットアップ:
+**初めての方**: [はじめに（利用者ガイド）](docs/getting-started.md)
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
 pip install -e ".[dev]"
-pytest -v
-```
-
-```bash
-cd extension && npm install && npm run build
-```
-
-CI 方針は [`docs/ci.md`](docs/ci.md)。
-
-### CLI（Phase 1）
-
-詳細は [CLI マニュアル](docs/cli-manual.md) を参照。
-
-```bash
-pip install -e .
 omomuki init
-omomuki profile inspect --profile examples/profiles/minimal.yaml
 omomuki compile --target chatgpt --profile examples/profiles/minimal.yaml
-omomuki compile --target claude --profile examples/profiles/minimal.yaml
-omomuki export --format markdown --target claude --profile examples/profiles/minimal.yaml
 ```
 
-### MCP Server（Phase 2.5）
+| 用途 | マニュアル |
+|------|-----------|
+| CLI | [cli-manual.md](docs/cli-manual.md) |
+| Local Bridge | [bridge-manual.md](docs/bridge-manual.md) |
+| MCP（Cursor 等） | [mcp-manual.md](docs/mcp-manual.md) |
+| Chrome Extension | [extension-manual.md](docs/extension-manual.md) |
 
-```bash
-omomuki mcp serve              # stdio（Cursor / Claude Desktop 向け）
-omomuki mcp list-profiles
-omomuki mcp compile --target chatgpt --profile-id default
-```
-
-詳細は [MCP Server マニュアル](docs/mcp-manual.md)。
-
-### Chrome Extension（Phase 3）
-
-```bash
-cd extension && npm install && npm run build
-# omomuki serve を起動し、Options に bridge.token を設定して拡張機能を読み込む
-```
-
-[Chrome Extension マニュアル](docs/extension-manual.md)
+開発者向け: [開発原則](docs/development-principles.md) / [CI方針](docs/ci.md)
 
 ## ドキュメント
 
 詳細な設計文書は [`docs/`](docs/) にあります。
 
+- [はじめに（利用者ガイド）](docs/getting-started.md)
 - [ドキュメント索引](docs/index.md)
 - [設計概要](docs/architecture.md)
 - [Omomuki Profile と Prompt IR](docs/profile-ir.md)
 - [MVP範囲](docs/mvp-scope.md)
 - [CLI マニュアル](docs/cli-manual.md)
+- [Local Bridge マニュアル](docs/bridge-manual.md)
 - [CLI / Local Bridge / Chrome Extension 設計](docs/cli-chrome-extension.md)
 - [MCP Server マニュアル](docs/mcp-manual.md)
 - [MCP Server Integration](docs/mcp-integration.md)

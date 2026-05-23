@@ -79,7 +79,18 @@ pytest -v
 cd extension && npm install && npm run build
 ```
 
-See [`docs/ci.md`](docs/ci.md) for CI policy. Phase 1 implements CLI and Pydantic models.
+See [`docs/ci.md`](docs/ci.md) for CI policy.
+
+### CLI (Phase 1)
+
+```bash
+pip install -e .
+omomuki init
+omomuki profile inspect --profile examples/profiles/minimal.yaml
+omomuki compile --target chatgpt --profile examples/profiles/minimal.yaml
+omomuki compile --target claude --profile examples/profiles/minimal.yaml
+omomuki export --format markdown --target claude --profile examples/profiles/minimal.yaml
+```
 
 ## License
 

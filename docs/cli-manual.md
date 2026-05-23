@@ -1,6 +1,10 @@
 # Omomuki CLI マニュアル
 
-Phase 1 で提供される `omomuki` コマンドの利用者向けマニュアルである。設計上の全体像は [CLI / Local Bridge / Chrome Extension 設計](cli-chrome-extension.md)、データ構造は [Omomuki Profile と Prompt IR](profile-ir.md) を参照する。
+`omomuki` コマンドの利用者向けマニュアルである（Phase 1 CLI + Phase 2 Bridge + Phase 2.5 MCP サブコマンド）。
+
+初めて使う場合は [はじめに](getting-started.md) を先に読むこと。Bridge 詳細は [Bridge マニュアル](bridge-manual.md)、MCP 詳細は [MCP マニュアル](mcp-manual.md)。
+
+設計: [CLI / Local Bridge / Chrome Extension 設計](cli-chrome-extension.md) / データ: [Profile と Prompt IR](profile-ir.md)
 
 ## 1. 概要
 
@@ -10,7 +14,7 @@ Omomuki CLI は、ローカルに保持した **Omomuki Profile** から **Promp
 omomuki.profile.yaml  →  Prompt IR  →  Adapter  →  JSON / Markdown 出力
 ```
 
-Phase 1 で利用できるコマンドは次のとおりである。
+利用可能な主なコマンドは次のとおりである。
 
 | コマンド | 概要 |
 |---------|------|
@@ -19,11 +23,12 @@ Phase 1 で利用できるコマンドは次のとおりである。
 | `omomuki compile` | 指定 LLM 向けにプロンプトをコンパイルする（JSON 出力） |
 | `omomuki export` | Prompt IR とコンパイル結果を Markdown で出力する |
 | `omomuki serve` | Local Bridge API を起動する（Phase 2） |
-| `omomuki mcp …` | MCP Server / 同等 CLI 操作（Phase 2.5） |
+| `omomuki mcp serve` | MCP Server（stdio）起動（Phase 2.5） |
+| `omomuki mcp list-profiles` など | MCP Tools と同等の CLI 操作 |
 
-MCP の詳細は [MCP Server マニュアル](mcp-manual.md)。
+Bridge HTTP API の詳細は [Bridge マニュアル](bridge-manual.md)。MCP Tools / Cursor 設定は [MCP マニュアル](mcp-manual.md)。
 
-未実装（ロードマップ参照）: CLI の `capture`, `diff`, `evaluate` など。Bridge 経由の `POST /capture` は Phase 2 で利用可能。
+未実装（ロードマップ参照）: CLI の `capture`, `diff`, `evaluate` など。文脈 capture は Bridge `POST /capture` または Extension から可能。
 
 ## 2. インストール
 
@@ -278,7 +283,24 @@ curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/
   http://127.0.0.1:38741/compile
 ```
 
-CORS は既定で許可しない。詳細は [Security Design](security.md)。
+CORS は既定で許可しない。詳細は [Bridge マニュアル](bridge-manual.md) および [Security Design](security.md)。
+
+---
+
+### 5.6 `omomuki mcp`（Phase 2.5）
+
+MCP Server と同一ロジックを CLI から実行する。read-only。
+
+```bash
+omomuki mcp serve
+omomuki mcp list-profiles
+omomuki mcp inspect-profile --profile-id default
+omomuki mcp compile --target chatgpt --profile-id default
+omomuki mcp context-packet --target claude --instruction "タスク"
+omomuki mcp list-candidates
+```
+
+Cursor 等から使う場合は `mcp serve` のみ起動し、クライアント側で子プロセスとして登録する（[MCP マニュアル](mcp-manual.md) 参照）。
 
 ## 6. 典型的なワークフロー
 
@@ -309,6 +331,18 @@ omomuki compile --target claude \
   --instruction "次のミーティング用に論点を3つに整理して"
 ```
 
+### 6.4 Extension + Bridge（Phase 2 + 3）
+
+```bash
+# ターミナル 1
+omomuki serve
+
+# ターミナル 2 — Extension ビルド後、Options に ~/.omomuki/bridge.token を設定
+cd extension && npm run build
+```
+
+→ [Chrome Extension マニュアル](extension-manual.md)
+
 ## 7. Profile YAML の編集
 
 `omomuki.profile.yaml` は [Omomuki Profile と Prompt IR](profile-ir.md) の構造に従う。主要フィールドと CLI への影響は次のとおり。
@@ -333,14 +367,18 @@ omomuki compile --target claude \
 | `Unsupported format` | `export` の format 誤り | `--format markdown` のみ |
 | ValidationError（pytest 等） | YAML がスキーマ不整合 | `schemas/omomuki-profile.schema.json` と照合 |
 | 文脈ファイルの中身がプロンプトに出ない | Phase 1 仕様 | `context_index` はパス参照のみ。本文取り込みは将来 Phase |
+| Bridge `401` | token 未設定・不一致 | `~/.omomuki/bridge.token` と Authorization ヘッダ |
+| `omomuki mcp` で Profile なし | init 未実施 | `omomuki init` |
 
 ## 9. 関連ドキュメント
 
-- [MVP範囲](mvp-scope.md) — Phase 1 のスコープ
-- [実装ロードマップ](roadmap.md) — Phase 2 以降（Bridge, Extension）
-- [開発原則](development-principles.md) — Issue / Branch / TDD
-- [CI方針](ci.md) — ローカルでの `pytest` / `ruff`
+- [はじめに](getting-started.md) — 全体像・シナリオ別手順
+- [Bridge マニュアル](bridge-manual.md) — HTTP API リファレンス
+- [MCP マニュアル](mcp-manual.md)
+- [Chrome Extension マニュアル](extension-manual.md)
+- [MVP範囲](mvp-scope.md) / [実装ロードマップ](roadmap.md)
+- [開発原則](development-principles.md) / [CI方針](ci.md)
 
 ## 10. バージョン
 
-本マニュアルは Omomuki **0.2.0**（Phase 1 CLI + Phase 2 Local Bridge）時点の実装に基づく。コマンド追加時は [実装ロードマップ](roadmap.md) と合わせて本書を更新する。
+本マニュアルは Omomuki **0.3.0**（Phase 1〜2.5 CLI）時点。Extension は [Extension マニュアル](extension-manual.md) を参照。

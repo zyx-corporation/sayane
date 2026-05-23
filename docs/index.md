@@ -4,14 +4,19 @@ Omomuki は、LLM間でユーザーの人格的文脈・価値観・応答様式
 
 本リポジトリでは、README と LICENSE は英語で管理し、設計・実装方針・評価方針などの詳細ドキュメントは日本語で記述する。
 
-## ドキュメント構成
+## 利用者向けマニュアル（Phase 0〜3）
+
+- [**はじめに（利用者ガイド）**](getting-started.md)
+- [CLI マニュアル](cli-manual.md)
+- [Local Bridge マニュアル](bridge-manual.md)
+- [MCP Server マニュアル](mcp-manual.md)
+- [Chrome Extension マニュアル](extension-manual.md)
+
+## 設計・開発ドキュメント
 
 - [設計概要](architecture.md)
 - [Omomuki Profile と Prompt IR](profile-ir.md)
 - [MVP範囲](mvp-scope.md)
-- [CLI マニュアル](cli-manual.md)
-- [MCP Server マニュアル](mcp-manual.md)
-- [Chrome Extension マニュアル](extension-manual.md)
 - [CLI / Local Bridge / Chrome Extension 設計](cli-chrome-extension.md)
 - [MCP Server Integration](mcp-integration.md)
 - [Conversation Extract / Reverse Compile Pipeline](extraction-pipeline.md)

@@ -45,8 +45,19 @@ Extension は行わない:
 - RDE 評価の本体
 - API key 管理
 
-## 6. 関連
+## 6. トラブルシューティング
 
-- [CLI / Bridge 設計](cli-chrome-extension.md)
+| 症状 | 対処 |
+|------|------|
+| Bridge unreachable | `omomuki serve` 起動、Options の URL/port |
+| `401` / capture 失敗 | Bearer token を `~/.omomuki/bridge.token` からコピー |
+| Insert 失敗 `INPUT_NOT_FOUND` | ChatGPT/Claude の DOM 変更。`extension/src/sites/` を更新 |
+| 選択 capture でテキストなし | ページ上でテキストを選択してから実行 |
+
+## 7. 関連
+
+- [はじめに](getting-started.md)
+- [Bridge マニュアル](bridge-manual.md)
 - [CLI マニュアル](cli-manual.md) — `omomuki serve`
+- [CLI / Bridge 設計](cli-chrome-extension.md)
 - [Security Design](security.md)

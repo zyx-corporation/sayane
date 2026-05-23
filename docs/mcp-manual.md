@@ -73,6 +73,21 @@ omomuki mcp list-candidates
 | 主な利用者 | Chrome Extension | AI クライアント |
 | 認証 | Bearer token | ローカルプロセス（stdio） |
 
-## 7. バージョン
+## 7. トラブルシューティング
+
+| 症状 | 対処 |
+|------|------|
+| クライアントがサーバーに接続できない | `omomuki` の PATH、venv のフルパス指定 |
+| `Profile not found` | `omomuki init`、または `profiles/default/` の存在 |
+| `Unknown target` | `chatgpt` / `claude` のみ（`gemini` は未対応） |
+| Bridge と混同 | MCP は `mcp serve`（stdio）。HTTP は `omomuki serve` |
+
+## 8. 関連
+
+- [はじめに](getting-started.md)
+- [CLI マニュアル](cli-manual.md) — `omomuki mcp` サブコマンド
+- [Bridge マニュアル](bridge-manual.md)
+
+## 9. バージョン
 
 Omomuki **0.3.0**（Phase 2.5）時点。

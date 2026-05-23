@@ -216,6 +216,8 @@ Level 3: external LLM assisted review
 - lineageに更新履歴が残る
 - LLM評価なしでも最小評価が動作する
 
+**マニュアル**: [RDE / Candidate 評価マニュアル](evaluation-manual.md)
+
 ## 8. Phase 5: Storage / Obsidian / Git
 
 目的は、ProfileとContextを長期運用可能な形で保存すること。

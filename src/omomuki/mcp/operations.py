@@ -1,6 +1,5 @@
 """Shared read-only operations for MCP tools and CLI."""
 
-import json
 from typing import Any
 
 from omomuki.bridge.config import BridgeConfig
@@ -77,25 +76,26 @@ class McpOperations:
         return self.compile_prompt(target=target, profile_id=profile_id, instruction=instruction)
 
     def list_candidate_updates(self) -> list[dict[str, Any]]:
-        candidates_dir = self.config.candidates_dir
-        if not candidates_dir.exists():
-            return []
+        from omomuki.storage.candidates import list_candidate_ids, load_candidate
+
         results: list[dict[str, Any]] = []
-        for path in sorted(candidates_dir.glob("*.json")):
-            data = json.loads(path.read_text(encoding="utf-8"))
-            content = data.get("content", "")
-            preview = content if len(content) <= 200 else content[:200] + "..."
-            results.append(
-                {
-                    "id": data.get("id", path.stem),
-                    "status": data.get("status", "candidate"),
-                    "source": data.get("source"),
-                    "source_url": data.get("source_url"),
-                    "captured_at": data.get("captured_at"),
-                    "content_preview": preview,
-                    "path": str(path),
-                },
-            )
+        for cid in list_candidate_ids(self.config):
+            try:
+                c = load_candidate(self.config, cid)
+                preview = c.content if len(c.content) <= 200 else c.content[:200] + "..."
+                results.append(
+                    {
+                        "id": c.id,
+                        "status": c.status,
+                        "source": c.source.type,
+                        "source_url": c.source.uri,
+                        "captured_at": c.source.captured_at.isoformat(),
+                        "rde_class": c.evaluation.rde_class if c.evaluation else None,
+                        "content_preview": preview,
+                    },
+                )
+            except Exception:
+                continue
         return results
 
 

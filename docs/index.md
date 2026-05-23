@@ -10,6 +10,7 @@ Omomuki は、LLM間でユーザーの人格的文脈・価値観・応答様式
 - [Omomuki Profile と Prompt IR](profile-ir.md)
 - [CLI / Local Bridge / Chrome Extension 設計](cli-chrome-extension.md)
 - [RDE / UIB 評価と Lineage](evaluation-lineage.md)
+- [開発原則](development-principles.md)
 - [実装ロードマップ](roadmap.md)
 
 ## 基本方針
@@ -35,6 +36,15 @@ Chrome Extension は入口と出口を担う。CLI と Core Library は、人格
 ```
 
 LLM は人格や文脈の所有者ではなく、実行基盤である。Omomuki Profile は、ユーザーの人格的文脈・価値観・応答様式・作業方針を、特定LLMに依存しない形で保持する。
+
+## 開発上の中核命題
+
+```text
+変更は機能追加ではなく、意味変化である。
+意味変化は記録され、評価され、必要に応じて差し戻せなければならない。
+```
+
+Omomuki の開発は、RDE原則、Issue first、Branch first、TDD/test first、デザインパターン重視を基本とする。
 
 ## 用語
 

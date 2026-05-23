@@ -26,8 +26,9 @@ omomuki.profile.yaml  →  Prompt IR  →  Adapter  →  JSON / Markdown 出力
 | `omomuki mcp serve` | MCP Server（stdio）起動（Phase 2.5） |
 | `omomuki mcp list-profiles` など | MCP Tools と同等の CLI 操作 |
 | `omomuki candidate …` | Candidate 評価・approve（Phase 4） |
+| `omomuki storage …` | Obsidian import/export・index・Git commit（Phase 5） |
 
-Bridge HTTP API の詳細は [Bridge マニュアル](bridge-manual.md)。MCP Tools / Cursor 設定は [MCP マニュアル](mcp-manual.md)。
+Bridge HTTP API の詳細は [Bridge マニュアル](bridge-manual.md)。MCP Tools / Cursor 設定は [MCP マニュアル](mcp-manual.md)。Storage 詳細は [Storage マニュアル](storage-manual.md)。
 
 未実装（ロードマップ参照）: CLI の `capture`, `diff`, `evaluate` など。文脈 capture は Bridge `POST /capture` または Extension から可能。
 
@@ -384,4 +385,4 @@ cd extension && npm run build
 
 Candidate 評価: [evaluation-manual.md](evaluation-manual.md)。
 
-本マニュアルは Omomuki **0.4.0** 時点。Extension は [Extension マニュアル](extension-manual.md) を参照。
+本マニュアルは Omomuki **0.5.0** 時点。Extension は [Extension マニュアル](extension-manual.md) を参照。

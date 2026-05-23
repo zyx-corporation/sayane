@@ -22,3 +22,15 @@ def test_build_prompt_ir_with_instruction(examples_dir: Path) -> None:
     ir = build_prompt_ir(profile, instruction="Summarize the handoff document.")
 
     assert any("Summarize" in line for line in ir.instruction)
+
+
+def test_build_prompt_ir_loads_context_bodies(examples_dir: Path) -> None:
+    profile_path = examples_dir / "profiles" / "minimal.yaml"
+    profile = load_profile(profile_path)
+    ir = build_prompt_ir(
+        profile,
+        profile_root=profile_path.parent,
+        load_context_bodies=True,
+    )
+    joined = "\n".join(ir.context)
+    assert "Example context" in joined or "Handoff notes" in joined

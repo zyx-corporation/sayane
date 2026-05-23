@@ -1,10 +1,16 @@
 {
   "manifest_version": 3,
   "name": "Omomuki",
-  "version": "0.0.0",
-  "description": "Capture web context and insert Omomuki context packets into LLM UIs (Phase 3).",
-  "permissions": ["storage", "activeTab"],
-  "host_permissions": ["http://127.0.0.1/*", "http://localhost/*"],
+  "version": "0.3.0",
+  "description": "Capture web context and insert Omomuki context packets into LLM UIs.",
+  "permissions": ["storage", "activeTab", "scripting", "tabs"],
+  "host_permissions": [
+    "http://127.0.0.1/*",
+    "http://localhost/*",
+    "https://chatgpt.com/*",
+    "https://chat.openai.com/*",
+    "https://claude.ai/*"
+  ],
   "action": {
     "default_title": "Omomuki",
     "default_popup": "popup.html"
@@ -13,5 +19,12 @@
     "service_worker": "dist/background.js",
     "type": "module"
   },
-  "options_page": "options.html"
+  "options_page": "options.html",
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["dist/content.js"],
+      "run_at": "document_idle"
+    }
+  ]
 }

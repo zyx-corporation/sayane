@@ -200,6 +200,15 @@ omomuki mcp compile --target chatgpt --profile-id default
 
 詳細は [MCP Server マニュアル](docs/mcp-manual.md)。
 
+### Chrome Extension（Phase 3）
+
+```bash
+cd extension && npm install && npm run build
+# omomuki serve を起動し、Options に bridge.token を設定して拡張機能を読み込む
+```
+
+[Chrome Extension マニュアル](docs/extension-manual.md)
+
 ## ドキュメント
 
 詳細な設計文書は [`docs/`](docs/) にあります。

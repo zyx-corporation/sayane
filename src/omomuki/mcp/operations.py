@@ -76,27 +76,43 @@ class McpOperations:
         return self.compile_prompt(target=target, profile_id=profile_id, instruction=instruction)
 
     def list_candidate_updates(self) -> list[dict[str, Any]]:
-        from omomuki.storage.candidates import list_candidate_ids, load_candidate
+        from omomuki.bridge.candidate_api import list_candidates
 
-        results: list[dict[str, Any]] = []
-        for cid in list_candidate_ids(self.config):
-            try:
-                c = load_candidate(self.config, cid)
-                preview = c.content if len(c.content) <= 200 else c.content[:200] + "..."
-                results.append(
-                    {
-                        "id": c.id,
-                        "status": c.status,
-                        "source": c.source.type,
-                        "source_url": c.source.uri,
-                        "captured_at": c.source.captured_at.isoformat(),
-                        "rde_class": c.evaluation.rde_class if c.evaluation else None,
-                        "content_preview": preview,
-                    },
-                )
-            except Exception:
-                continue
-        return results
+        return list_candidates(self.config)
+
+    def show_candidate(self, candidate_id: str) -> dict[str, Any]:
+        from omomuki.bridge.candidate_api import get_candidate
+
+        return get_candidate(self.config, candidate_id)
+
+    def evaluate_candidate(self, candidate_id: str, level: int = 1) -> dict[str, Any]:
+        from omomuki.bridge.candidate_api import post_evaluate
+
+        return post_evaluate(self.config, candidate_id, level=level)
+
+    def approve_candidate(
+        self,
+        candidate_id: str,
+        *,
+        force_critical: bool = False,
+    ) -> dict[str, Any]:
+        from omomuki.bridge.candidate_api import post_approve
+
+        return post_approve(self.config, candidate_id, force_critical=force_critical)
+
+    def reject_candidate(
+        self,
+        candidate_id: str,
+        reason: str | None = None,
+    ) -> dict[str, Any]:
+        from omomuki.bridge.candidate_api import post_reject
+
+        return post_reject(self.config, candidate_id, reason=reason)
+
+    def diff_candidate(self, candidate_id: str) -> dict[str, Any]:
+        from omomuki.bridge.candidate_api import get_diff
+
+        return get_diff(self.config, candidate_id)
 
 
 def get_operations(config: BridgeConfig | None = None) -> McpOperations:

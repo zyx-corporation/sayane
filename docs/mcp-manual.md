@@ -1,6 +1,6 @@
 # Omomuki MCP Server マニュアル
 
-Phase 2.5 の MCP Server は、Cursor・Claude Desktop・Cline などの MCP クライアントから、Omomuki Profile を **read-only** で利用するための安定接続面である。
+Phase 2.5 の MCP Server は、Cursor・Claude Desktop・Cline などの MCP クライアントから Omomuki を利用する安定接続面である。Profile の compile・参照に加え、Candidate の評価・承認も可能（`approve_candidate` は明示呼び出し時のみ merge）。
 
 設計: [MCP Server Integration](mcp-integration.md) / セキュリティ: [Security Design](security.md)
 
@@ -11,7 +11,7 @@ Phase 2.5 の MCP Server は、Cursor・Claude Desktop・Cline などの MCP ク
 | **MCP Server（stdio）** | AI クライアントが `omomuki mcp serve` を子プロセス起動 |
 | **CLI `omomuki mcp`** | 同じ操作をターミナルから直接実行（デバッグ・スクリプト用） |
 
-Profile の merge・policy 変更・identity 上書きは **行わない**。
+Profile への任意編集は **行わない**。Candidate の `approve_candidate` のみ、承認済み提案を Profile へ merge する。
 
 ## 2. MCP Tools
 
@@ -21,7 +21,12 @@ Profile の merge・policy 変更・identity 上書きは **行わない**。
 | `inspect_profile` | Profile 要約（`profile_id` 既定: `default`） |
 | `compile_prompt` | `target`（chatgpt / claude）向けコンパイル |
 | `generate_context_packet` | `compile_prompt` と同等（LLM クライアント向け） |
-| `list_candidate_updates` | 未 merge の Candidate 一覧 |
+| `list_candidate_updates` | Candidate 一覧 |
+| `show_candidate` | Candidate 全文 |
+| `evaluate_candidate` | RDE/UIB 評価（`level` 1–3） |
+| `diff_candidate` | Profile との diff |
+| `approve_candidate` | 承認して merge（`force_critical` 任意） |
+| `reject_candidate` | 却下 |
 
 ## 3. CLI コマンド（MCP と同等）
 
@@ -32,7 +37,13 @@ omomuki mcp inspect-profile --profile-id default
 omomuki mcp compile --target chatgpt --profile-id default
 omomuki mcp context-packet --target claude --instruction "タスク"
 omomuki mcp list-candidates
+omomuki mcp evaluate-candidate <id> --level 1
+omomuki mcp diff-candidate <id>
+omomuki mcp approve-candidate <id>
+omomuki mcp reject-candidate <id> --reason "..."
 ```
+
+Candidate フロー詳細: [RDE / Candidate 評価マニュアル](evaluation-manual.md)
 
 ## 4. Cursor / Claude Desktop 設定例
 

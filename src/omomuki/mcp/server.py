@@ -9,9 +9,10 @@ from omomuki.mcp.operations import get_operations
 mcp = FastMCP(
     "Omomuki",
     instructions=(
-        "Read-only Omomuki persona and context tools. "
-        "Lists profiles, inspects summaries, compiles prompts, and lists candidate "
-        "captures. Does not merge or modify profiles."
+        "Omomuki persona and context tools. Lists profiles, compiles prompts, "
+        "and manages candidate captures (evaluate / approve / reject). "
+        "approve_candidate merges into the profile only when explicitly called; "
+        "use force_critical only after reviewing RDE classification."
     ),
 )
 
@@ -75,8 +76,58 @@ def generate_context_packet(
 
 @mcp.tool()
 def list_candidate_updates() -> str:
-    """List pending candidate captures (not merged into profile)."""
+    """List candidate captures (not necessarily merged into profile)."""
     return _dump(get_operations().list_candidate_updates())
+
+
+@mcp.tool()
+def show_candidate(candidate_id: str) -> str:
+    """Show full candidate record by id."""
+    try:
+        return _dump(get_operations().show_candidate(candidate_id))
+    except FileNotFoundError as exc:
+        return _dump({"error": str(exc)})
+
+
+@mcp.tool()
+def evaluate_candidate(candidate_id: str, level: int = 1) -> str:
+    """Run RDE/UIB evaluation (level 1 heuristic; 2/3 optional LLM judge)."""
+    try:
+        return _dump(get_operations().evaluate_candidate(candidate_id, level=level))
+    except FileNotFoundError as exc:
+        return _dump({"error": str(exc)})
+
+
+@mcp.tool()
+def approve_candidate(candidate_id: str, force_critical: bool = False) -> str:
+    """Approve candidate and merge into profile. Requires prior evaluation."""
+    try:
+        return _dump(
+            get_operations().approve_candidate(
+                candidate_id,
+                force_critical=force_critical,
+            ),
+        )
+    except (FileNotFoundError, ValueError) as exc:
+        return _dump({"error": str(exc)})
+
+
+@mcp.tool()
+def reject_candidate(candidate_id: str, reason: str | None = None) -> str:
+    """Reject candidate without merging into profile."""
+    try:
+        return _dump(get_operations().reject_candidate(candidate_id, reason=reason))
+    except FileNotFoundError as exc:
+        return _dump({"error": str(exc)})
+
+
+@mcp.tool()
+def diff_candidate(candidate_id: str) -> str:
+    """Rule-based diff between candidate proposal and current profile."""
+    try:
+        return _dump(get_operations().diff_candidate(candidate_id))
+    except FileNotFoundError as exc:
+        return _dump({"error": str(exc)})
 
 
 def run_stdio() -> None:

@@ -11,6 +11,7 @@ import yaml
 from omomuki.adapters.factory import get_adapter
 from omomuki.bridge.auth import format_pairing_code, load_or_create_token
 from omomuki.bridge.config import BridgeConfig
+from omomuki.cli.mcp_cli import mcp_app
 from omomuki.cli.paths import (
     context_dir,
     default_profile_dir,
@@ -23,6 +24,7 @@ from omomuki.core.loader import load_profile
 app = typer.Typer(no_args_is_help=True, help="Omomuki — persona and context portability for LLMs.")
 profile_app = typer.Typer(help="Profile operations.")
 app.add_typer(profile_app, name="profile")
+app.add_typer(mcp_app, name="mcp")
 
 INIT_TEMPLATE = """\
 version: "0.1.0"

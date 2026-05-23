@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "omomuki"
-version = "0.2.0"
+version = "0.3.0"
 description = "Local-first persona and context portability for cross-LLM collaboration"
 readme = "README.md"
 license = "Apache-2.0"
@@ -27,6 +27,7 @@ dependencies = [
     "pyyaml>=6.0",
     "typer>=0.15",
     "uvicorn[standard]>=0.32",
+    "mcp>=1.6",
 ]
 
 [project.scripts]

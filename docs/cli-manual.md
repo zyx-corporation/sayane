@@ -19,6 +19,9 @@ Phase 1 で利用できるコマンドは次のとおりである。
 | `omomuki compile` | 指定 LLM 向けにプロンプトをコンパイルする（JSON 出力） |
 | `omomuki export` | Prompt IR とコンパイル結果を Markdown で出力する |
 | `omomuki serve` | Local Bridge API を起動する（Phase 2） |
+| `omomuki mcp …` | MCP Server / 同等 CLI 操作（Phase 2.5） |
+
+MCP の詳細は [MCP Server マニュアル](mcp-manual.md)。
 
 未実装（ロードマップ参照）: CLI の `capture`, `diff`, `evaluate` など。Bridge 経由の `POST /capture` は Phase 2 で利用可能。
 

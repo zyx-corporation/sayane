@@ -19,7 +19,8 @@ omomuki.profile.yaml  →  Prompt IR  →  Adapter  →  JSON / Markdown 出力
 CLI のメッセージ（`typer.echo` 出力・`omomuki help` 一覧）は次で切り替える。
 
 ```bash
-export OMOMUKI_LANG=ja          # または LANG=ja_JP.UTF-8
+export OMOMUKI_LANG=ja          # 優先: --lang > OMOMUKI_LANG > LANG
+export LANG=ja_JP.UTF-8         # OMOMUKI_LANG 未設定時のみ参照
 omomuki --lang ja candidate list
 ```
 
@@ -58,6 +59,7 @@ Bridge HTTP API の詳細は [Bridge マニュアル](bridge-manual.md)。MCP To
 | 変数 | 用途 |
 |------|------|
 | `OMOMUKI_LANG` | CLI メッセージの表示言語（`en` / `ja`）。`--lang` でも指定可 |
+| `LANG` | `OMOMUKI_LANG` 未設定時のフォールバック（例: `ja_JP.UTF-8` → `ja`） |
 | `OMOMUKI_OBSIDIAN_VAULT` | Obsidian vault の既定パス。ディレクトリが存在する場合 `storage import` / `export` で `<vault>` 引数を省略可 |
 | `OMOMUKI_JUDGE_BASE_URL` | Level 2/3 LLM judge の API ベース URL（任意） |
 | `OMOMUKI_JUDGE_API_KEY` | Level 2/3 judge の API キー（任意） |
@@ -375,6 +377,8 @@ omomuki storage commit -m "omomuki: sync context" --init
 
 `OMOMUKI_OBSIDIAN_VAULT` が存在するディレクトリを指す場合、`import` / `export` の vault 引数を省略できる。
 
+`import` / `index` 実行後、Profile Store に変更があれば **Git へ自動コミット**される（SQLite 実装までの既定。`init` 時も同様）。
+
 ## 6. 典型的なワークフロー
 
 ### 6.1 初回セットアップ
@@ -456,4 +460,4 @@ cd extension && npm run build
 
 Candidate 評価: [evaluation-manual.md](evaluation-manual.md)。
 
-本マニュアルは Omomuki **0.5.8** 時点。Extension は [Extension マニュアル](extension-manual.md) を参照。
+本マニュアルは Omomuki **0.5.9** 時点。Extension は [Extension マニュアル](extension-manual.md) を参照。

@@ -2,6 +2,8 @@
 
 Phase 5 で提供される、Profile Store のファイルシステム運用・Obsidian vault 連携・Git 履歴化の利用者向けマニュアルである。
 
+**SQLite 実装までは Git 連携が既定動作**である。Profile Store を変更する操作（`init`、`storage import` / `index`、`candidate approve` など）のあと、プロファイルディレクトリで Git リポジトリを自動初期化し、変更があればコミットする。手動の `storage commit` も利用できる。
+
 ## 1. 概要
 
 | コマンド | 概要 |
@@ -46,6 +48,7 @@ omomuki storage export   # 同じ vault を既定に使用
 - `.obsidian`、`.git`、`node_modules` 配下はスキップする
 - 取り込み時に markdown を正規化（改行・BOM・行末空白）
 - 取り込み後に `context_index` を自動更新する
+- 取り込み後に **Git へ自動コミット**（リポジトリ未作成なら `git init`）
 
 ドライラン:
 
@@ -75,27 +78,39 @@ omomuki storage export /path/to/vault --subdir export
 omomuki storage index
 ```
 
+`context_index` 更新後、変更があれば **Git へ自動コミット**される。
+
 ## 6. Git 連携
 
-プロファイルディレクトリで初回:
+### 6.1 既定動作（SQLite 実装まで）
 
-```bash
-cd ~/.omomuki/profiles/default
-omomuki storage commit -m "omomuki: initial context" --init
-```
+| 操作 | Git 動作 |
+|------|---------|
+| `omomuki init` | リポジトリ初期化 + 初回コミット |
+| `storage import` / `index` | 変更があれば自動コミット |
+| `candidate approve` | Profile 更新後に自動コミット |
+| `storage commit -m "..."` | 任意メッセージで手動コミット |
 
-以降:
+プロファイルディレクトリ（例: `~/.omomuki/profiles/default/`）が Git リポジトリでない場合、初回の自動コミット時に `git init` する。コミット対象は `omomuki.profile.yaml` と `context/` のみ。
+
+### 6.2 手動コミット
+
+任意メッセージでコミットしたい場合:
 
 ```bash
 omomuki storage commit -m "omomuki: add handoff notes"
 ```
 
-`omomuki.profile.yaml` と `context/` のみステージする。
+初回のみ `--init` を付けることもできる（自動初期化後は通常不要）:
+
+```bash
+omomuki storage commit -m "omomuki: initial context" --init
+```
 
 ## 7. 制限（Phase 5 MVP）
 
 - vault ルートへの直接 export はしない（`--subdir` 必須の安全側）
 - 双方向同期・競合解決は未実装
-- 暗号化ストア・SQLite は Phase 6 以降
+- 暗号化ストア・SQLite は Phase 6 以降（SQLite 導入後は Git 自動コミット方針を見直す）
 
 関連: [はじめに](getting-started.md)、[実装ロードマップ](roadmap.md)

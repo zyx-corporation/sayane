@@ -169,7 +169,12 @@ def _register_core_commands(app: typer.Typer) -> None:
         profile_file.write_text(INIT_TEMPLATE.format(now=now), encoding="utf-8")
         (ctx / "MyContext.md").write_text("# My Context\n", encoding="utf-8")
         (ctx / "AI_HANDOFF.md").write_text("# AI Handoff\n", encoding="utf-8")
+        from omomuki.storage.git_integration import auto_commit_profile_store
+
+        commit_hash = auto_commit_profile_store(profile_dir, "omomuki: initial profile")
         typer.echo(t("init.done", path=profile_dir))
+        if commit_hash:
+            typer.echo(t("storage.committed", hash=commit_hash[:8]))
 
     @app.command()
     def compile(
@@ -343,7 +348,7 @@ def _register_storage(app: typer.Typer) -> None:
     from omomuki.core.loader import save_profile
     from omomuki.storage.context_index import apply_context_index
     from omomuki.storage.filesystem import FileSystemContextStore, FileSystemProfileStore
-    from omomuki.storage.git_integration import GitError, commit_profile_store
+    from omomuki.storage.git_integration import GitError, auto_commit_profile_store, commit_profile_store
     from omomuki.storage.obsidian import (
         export_to_vault,
         import_from_vault,
@@ -364,6 +369,11 @@ def _register_storage(app: typer.Typer) -> None:
             return resolve_obsidian_vault(vault)
         except FileNotFoundError as exc:
             raise typer.BadParameter(t("error.obsidian_vault_required")) from exc
+
+    def _maybe_auto_commit(profile_dir: Path, message: str) -> None:
+        commit_hash = auto_commit_profile_store(profile_dir, message)
+        if commit_hash:
+            typer.echo(t("storage.committed", hash=commit_hash[:8]))
 
     @storage_app.command("import")
     def storage_import(
@@ -389,6 +399,7 @@ def _register_storage(app: typer.Typer) -> None:
         save_profile(store.profile_path, profile_obj)
         typer.echo(t("storage.imported", count=len(imported), path=ctx.context_dir))
         typer.echo(t("storage.index_updated"))
+        _maybe_auto_commit(store.profile_dir, "omomuki: storage import")
 
     @storage_app.command("export")
     def storage_export(
@@ -418,6 +429,7 @@ def _register_storage(app: typer.Typer) -> None:
         typer.echo(t("storage.entrypoint", path=idx.entrypoint))
         typer.echo(t("storage.handoff", path=idx.handoff))
         typer.echo(t("storage.entries", count=len(idx.entries)))
+        _maybe_auto_commit(store.profile_dir, "omomuki: storage index")
 
     @storage_app.command("commit")
     def storage_commit(

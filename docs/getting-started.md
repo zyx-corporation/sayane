@@ -1,6 +1,6 @@
 # Omomuki はじめに（利用者ガイド）
 
-Omomuki **0.5.8** 時点で、Phase 0〜5 の成果物が利用可能である。本書は「何ができて」「どこから始めるか」をまとめる。
+Omomuki **0.5.9** 時点で、Phase 0〜5 の成果物が利用可能である。本書は「何ができて」「どこから始めるか」をまとめる。
 
 設計の詳細は [設計概要](architecture.md)、開発者向けは [開発原則](development-principles.md) を参照。
 
@@ -129,7 +129,7 @@ export OMOMUKI_OBSIDIAN_VAULT="$HOME/Documents/MyVault"   # 任意: 存在する
 omomuki storage import          # または omomuki storage import /path/to/vault
 omomuki storage index
 omomuki compile --target chatgpt   # context 本文を Prompt IR に含める
-omomuki storage commit -m "omomuki: sync context" --init
+# Git は init / import / index / approve 時に自動コミット（0.5.9+）
 ```
 
 → [Storage マニュアル](storage-manual.md)

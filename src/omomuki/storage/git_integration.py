@@ -73,3 +73,14 @@ def commit_profile_store(
     _ensure_local_git_identity(profile_dir)
     _run_git(profile_dir, "commit", "-m", message)
     return _run_git(profile_dir, "rev-parse", "HEAD")
+
+
+def auto_commit_profile_store(profile_dir: Path, message: str) -> str:
+    """Auto-init Git and commit profile changes (default until SQLite storage).
+
+    Returns commit hash, or empty string if nothing to commit or Git is unavailable.
+    """
+    try:
+        return commit_profile_store(profile_dir, message, init=True)
+    except GitError:
+        return ""

@@ -44,13 +44,25 @@ class UIBScores(BaseModel):
     FG: float = Field(ge=0.0, le=1.0)
 
 
+class LLMReview(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    model: str
+    level: int = Field(ge=2, le=3)
+    rde_class: RDEClass | None = None
+    notes: list[str] = Field(default_factory=list)
+    uib: UIBScores | None = None
+
+
 class CandidateEvaluation(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    level: int = Field(default=1, ge=0, le=3)
     rde_class: RDEClass
     notes: list[str] = Field(default_factory=list)
     uib: UIBScores
     evaluated_at: datetime
+    llm_review: LLMReview | None = None
 
 
 class CandidateUpdate(BaseModel):

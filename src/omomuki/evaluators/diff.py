@@ -21,15 +21,31 @@ def profile_diff_for_candidate(
         "already_present": [],
     }
 
-    if section == "knowledge.concepts":
-        existing = set(profile.knowledge.concepts if profile.knowledge else [])
-        for item in proposal.add:
-            if item in existing:
-                result["already_present"].append(item)
-            else:
-                result["add"].append(item)
+    existing = _existing_items(profile, section)
+    if existing is None:
+        result["note"] = f"Diff for section {section} is not automated."
+        result["proposed_add"] = proposal.add
         return result
 
-    result["note"] = f"Diff for section {section} is not automated in Phase 4 MVP."
-    result["proposed_add"] = proposal.add
+    for item in proposal.add:
+        if item in existing:
+            result["already_present"].append(item)
+        else:
+            result["add"].append(item)
     return result
+
+
+def _existing_items(profile: OmomukiProfile, section: str) -> set[str] | None:
+    if section == "knowledge.concepts":
+        return set(profile.knowledge.concepts if profile.knowledge else [])
+    if section == "values.core":
+        return set(profile.values.core)
+    if section == "voice.tone":
+        return set(profile.voice.tone)
+    if section == "identity.roles":
+        return set(profile.identity.roles)
+    if section == "policy.response.avoid":
+        return set(profile.policy.response.avoid if profile.policy.response else [])
+    if section == "policy.response.prefer":
+        return set(profile.policy.response.prefer if profile.policy.response else [])
+    return None

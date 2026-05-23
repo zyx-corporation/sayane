@@ -218,6 +218,8 @@ Level 3: external LLM assisted review
 
 **マニュアル**: [RDE / Candidate 評価マニュアル](evaluation-manual.md)
 
+Phase 4 拡張（0.5.1）: Level 2/3 LLM-as-a-Judge、`--force-critical` による values/voice/policy/roles の merge。
+
 ## 8. Phase 5: Storage / Obsidian / Git
 
 目的は、ProfileとContextを長期運用可能な形で保存すること。

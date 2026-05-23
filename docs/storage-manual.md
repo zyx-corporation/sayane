@@ -30,7 +30,77 @@ Phase 5 で提供される、Profile Store のファイルシステム運用・O
 
 `context_index` は entrypoint / handoff に加え、任意で `entries`（`context/` 配下の相対パス一覧）を持つ。
 
-## 3. Obsidian 取り込み
+## 3. ファイル形式と直接編集
+
+SQLite 実装までは、storage の本体は **ローカル上のプレーンファイル** である。エディタや Obsidian から直接編集してよい。
+
+### 3.1 書式
+
+| 種類 | パス | 形式 | 内容 |
+|------|------|------|------|
+| **Profile** | `omomuki.profile.yaml` | **YAML**（UTF-8） | `identity`, `voice`, `values`, `context_index` など構造化メタデータ |
+| **文脈** | `context/*.md` | **Markdown**（UTF-8） | 自由記述のノート（Obsidian と同じ `.md` でよい） |
+
+**Profile YAML**
+
+- `kind: OmomukiProfile` が必須
+- [Omomuki Profile と Prompt IR](profile-ir.md) および `schemas/omomuki-profile.schema.json` に従う
+- スキーマ不整合の YAML は `profile inspect` / `compile` 時にエラーになる
+
+**文脈 Markdown**
+
+- 決まった front matter や専用 DSL は **ない**（通常の Markdown テキスト）
+- `storage import` / `export` 時のみ次を正規化する: BOM 除去、改行を LF、行末空白のトリム
+- エディタで直接保存したファイルは、そのままの内容が使われる（正規化は import/export 経由時のみ）
+
+Obsidian から `storage import` した内容も、最終的には `context/` 配下の Markdown として保持される。
+
+### 3.2 編集後の手順
+
+**`context/` の既存 `.md` の中身だけを変えた場合**
+
+- `context_index` に載っているファイルであれば、追加コマンドなしで `omomuki compile` の Prompt IR に反映される
+- Git 履歴に残すには `omomuki storage commit -m "..."` を実行する（`storage index` を実行しても `context/` の変更は自動コミットされる）
+
+**`context/` に新しい `.md` を追加した場合**
+
+```bash
+omomuki storage index          # context_index.entries を再生成
+omomuki compile --target chatgpt
+```
+
+`storage index` 実行後、変更があれば **Git へ自動コミット**される（0.5.9 以降）。
+
+**`omomuki.profile.yaml` を直接編集した場合**
+
+```bash
+omomuki profile inspect        # 読み込み・要約の確認
+omomuki storage commit -m "omomuki: edit profile"   # 任意: Git に記録
+```
+
+YAML の直接編集は **自動 Git コミットの対象外**である。履歴に残す場合は `storage commit` を明示的に実行する。
+
+**Candidate（`~/.omomuki/candidates/`）**
+
+- storage とは別ディレクトリ。Profile へ反映するには [評価マニュアル](evaluation-manual.md) の evaluate → approve フローを使う
+
+### 3.3 おすすめの編集フロー
+
+| 編集したい内容 | 手段 |
+|---------------|------|
+| 長文メモ・文脈ノート | `context/*.md` をエディタ / Obsidian で編集（または `storage import`） |
+| 人格・方針の構造化フィールド | `omomuki.profile.yaml`、または Candidate → approve |
+| 新規 Markdown の取り込み | ファイル追加後に `storage index` |
+| 動作確認 | `profile inspect` / `compile` |
+
+### 3.4 制限
+
+- `compile` が読む本文は **プロファイルディレクトリ内**のファイルに限定される
+- `context_index` に載っていないファイルは `compile` では読まれない
+- 1 ファイルあたり最大 **約 32KB**（超過分は切り詰めて `…(truncated)` を付与）
+- Obsidian vault との **リアルタイム双方向同期は未実装**（`import` / `export` は CLI 経由）
+
+## 4. Obsidian 取り込み
 
 ```bash
 omomuki init
@@ -56,7 +126,7 @@ omomuki storage export   # 同じ vault を既定に使用
 omomuki storage import /path/to/vault --dry-run
 ```
 
-## 4. Obsidian への書き出し
+## 5. Obsidian への書き出し
 
 ```bash
 omomuki storage export /path/to/your-vault
@@ -70,7 +140,7 @@ omomuki storage export /path/to/your-vault
 omomuki storage export /path/to/vault --subdir export
 ```
 
-## 5. context_index の再生成
+## 6. context_index の再生成
 
 `context/` にファイルを手動追加したあと:
 
@@ -80,9 +150,9 @@ omomuki storage index
 
 `context_index` 更新後、変更があれば **Git へ自動コミット**される。
 
-## 6. Git 連携
+## 7. Git 連携
 
-### 6.1 既定動作（SQLite 実装まで）
+### 7.1 既定動作（SQLite 実装まで）
 
 | 操作 | Git 動作 |
 |------|---------|
@@ -93,7 +163,7 @@ omomuki storage index
 
 プロファイルディレクトリ（例: `~/.omomuki/profiles/default/`）が Git リポジトリでない場合、初回の自動コミット時に `git init` する。コミット対象は `omomuki.profile.yaml` と `context/` のみ。
 
-### 6.2 手動コミット
+### 7.2 手動コミット
 
 任意メッセージでコミットしたい場合:
 
@@ -107,10 +177,11 @@ omomuki storage commit -m "omomuki: add handoff notes"
 omomuki storage commit -m "omomuki: initial context" --init
 ```
 
-## 7. 制限（Phase 5 MVP）
+## 8. 制限（Phase 5 MVP）
 
 - vault ルートへの直接 export はしない（`--subdir` 必須の安全側）
 - 双方向同期・競合解決は未実装
-- 暗号化ストア・SQLite は Phase 6 以降（SQLite 導入後は Git 自動コミット方針を見直す）
+- 暗号化 SQLite ストア・移行 CLI は **[商用版（omomuki-pro）](https://github.com/zyx-corporation/omomuki-pro/blob/main/docs/commercial-edition.md)**（Phase 6）。Community 版は FileSystem + Git を継続
+- 商用版でも `storage backend filesystem` により本マニュアルの操作をそのまま利用可能
 
 関連: [はじめに](getting-started.md)、[実装ロードマップ](roadmap.md)

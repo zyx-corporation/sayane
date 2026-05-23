@@ -244,17 +244,35 @@ Phase 5 拡張（0.5.8）: 環境変数 `OMOMUKI_OBSIDIAN_VAULT` により `stor
 
 Phase 5 拡張（0.5.9）: SQLite 実装まで Profile Store 変更時の **Git 自動コミット**を既定とする（`init`、storage import/index、candidate approve）。
 
-## 9. Phase 6: Rust Extraction
+## 9. Phase 6: Commercial Edition — Rust 暗号化 + SQLite
 
-目的は、安定した高負荷部分をRustへ切り出すこと。
+Phase 6 は **Omomuki Commercial Edition** のストレージ・性能層として位置づける。詳細: [omomuki-pro](https://github.com/zyx-corporation/omomuki-pro/blob/main/docs/commercial-edition.md)。
 
-候補:
+目的:
 
-- semantic diff engine
-- markdown vault indexer
-- encrypted profile store
-- local daemon
-- WASM module for extension-side lightweight processing
+- **暗号化 SQLite** による Profile / context の単一 DB 永続化（Rust 製 engine）
+- **backend 選択** — 商用版でも `filesystem` で Community データをそのまま利用可能
+- **`storage migrate to encrypted-sqlite`** — FileSystem → 暗号化 SQLite 移行 CLI
+- **Windows MSI インストーラ** — Commercial Edition の第一配布方式
+- **ローカル Web UI** — `encrypted-sqlite` 正本時の Profile / context 管理
+- **機密データ基準・逸脱監査** — Confidentiality Policy と登録時コンプライアンス
+- **ライセンスキー** による商用機能の解錠・保護
+- 高負荷コンポーネントの Rust 化
+
+| 候補 | エディション |
+|------|-------------|
+| encrypted SQLite profile store | **Commercial（コア）** |
+| storage backend 選択（filesystem / encrypted-sqlite） | **Commercial** |
+| `storage migrate to encrypted-sqlite` | **Commercial** |
+| Windows MSI インストーラ | **Commercial** |
+| ローカル Web UI（SQLite 正本管理） | **Commercial** |
+| 機密データ基準・逸脱監査 | **Commercial** |
+| local daemon（Bridge 常駐） | Commercial 優先 |
+| semantic diff engine | Commercial 優先 |
+| markdown vault indexer（大規模） | Commercial 優先 |
+| WASM module（Extension） | 要件次第 |
+
+Community Edition（Apache 2.0）は FileSystem + Git + Python Core を **継続メンテ** する。Rust/SQLite backend・移行 CLI・MSI の実装本体は [omomuki-pro](https://github.com/zyx-corporation/omomuki-pro) とし、Storage 抽象の契約のみ OSS に残す。
 
 Rust化は、Python実装で仕様とボトルネックが明確になってから行う。
 

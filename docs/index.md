@@ -6,6 +6,7 @@ Omomuki は、LLM間でユーザーの人格的文脈・価値観・応答様式
 
 ## 利用者向けマニュアル（Phase 0〜5）
 
+- [**インストール**](install.md) — macOS / Linux / Windows
 - [**はじめに（利用者ガイド）**](getting-started.md)
 - [CLI マニュアル](cli-manual.md)
 - [Local Bridge マニュアル](bridge-manual.md)
@@ -15,6 +16,7 @@ Omomuki は、LLM間でユーザーの人格的文脈・価値観・応答様式
 - [RDE / Candidate 評価マニュアル](evaluation-manual.md)
 - [Storage / Obsidian / Git マニュアル](storage-manual.md)
 - [Dogfood 手順書（エンドツーエンド）](dogfood-walkthrough.md)
+- [商用版（Commercial Edition / omomuki-pro）](https://github.com/zyx-corporation/omomuki-pro/blob/main/docs/commercial-edition.md) — backend 選択、移行 CLI、暗号化 SQLite、Windows MSI
 
 ## 設計・開発ドキュメント
 

@@ -76,7 +76,7 @@ def commit_profile_store(
 
 
 def auto_commit_profile_store(profile_dir: Path, message: str) -> str:
-    """Auto-init Git and commit profile changes (default until SQLite storage).
+    """Auto-init Git and commit profile changes (default until Commercial Edition encrypted SQLite).
 
     Returns commit hash, or empty string if nothing to commit or Git is unavailable.
     """

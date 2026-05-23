@@ -31,6 +31,19 @@ def is_git_repo(path: Path) -> bool:
 
 def init_repo(path: Path) -> None:
     _run_git(path, "init")
+    _ensure_local_git_identity(path)
+
+
+def _ensure_local_git_identity(profile_dir: Path) -> None:
+    """Set repo-local author if missing (CI-friendly; does not touch global config)."""
+    for key, value in (
+        ("user.name", "Omomuki"),
+        ("user.email", "omomuki@local"),
+    ):
+        try:
+            _run_git(profile_dir, "config", key)
+        except GitError:
+            _run_git(profile_dir, "config", key, value)
 
 
 def commit_profile_store(
@@ -57,5 +70,6 @@ def commit_profile_store(
     if not status:
         return ""
 
+    _ensure_local_git_identity(profile_dir)
     _run_git(profile_dir, "commit", "-m", message)
     return _run_git(profile_dir, "rev-parse", "HEAD")

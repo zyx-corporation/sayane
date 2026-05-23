@@ -190,6 +190,16 @@ omomuki compile --target claude --profile examples/profiles/minimal.yaml
 omomuki export --format markdown --target claude --profile examples/profiles/minimal.yaml
 ```
 
+### MCP Server（Phase 2.5）
+
+```bash
+omomuki mcp serve              # stdio（Cursor / Claude Desktop 向け）
+omomuki mcp list-profiles
+omomuki mcp compile --target chatgpt --profile-id default
+```
+
+詳細は [MCP Server マニュアル](docs/mcp-manual.md)。
+
 ## ドキュメント
 
 詳細な設計文書は [`docs/`](docs/) にあります。
@@ -200,6 +210,7 @@ omomuki export --format markdown --target claude --profile examples/profiles/min
 - [MVP範囲](docs/mvp-scope.md)
 - [CLI マニュアル](docs/cli-manual.md)
 - [CLI / Local Bridge / Chrome Extension 設計](docs/cli-chrome-extension.md)
+- [MCP Server マニュアル](docs/mcp-manual.md)
 - [MCP Server Integration](docs/mcp-integration.md)
 - [Conversation Extract / Reverse Compile Pipeline](docs/extraction-pipeline.md)
 - [Security Design](docs/security.md)

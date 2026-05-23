@@ -10,6 +10,7 @@ Omomuki は、LLM間でユーザーの人格的文脈・価値観・応答様式
 - [Omomuki Profile と Prompt IR](profile-ir.md)
 - [MVP範囲](mvp-scope.md)
 - [CLI マニュアル](cli-manual.md)
+- [MCP Server マニュアル](mcp-manual.md)
 - [CLI / Local Bridge / Chrome Extension 設計](cli-chrome-extension.md)
 - [MCP Server Integration](mcp-integration.md)
 - [Conversation Extract / Reverse Compile Pipeline](extraction-pipeline.md)

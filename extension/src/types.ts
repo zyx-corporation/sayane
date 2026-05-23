@@ -25,6 +25,26 @@ export interface CaptureResult {
   path: string;
 }
 
+export interface CandidateSummary {
+  id: string;
+  status: string;
+  target_profile_id: string;
+  source: string;
+  source_url: string | null;
+  captured_at: string;
+  rde_class: string | null;
+  evaluation_level: number | null;
+  content_preview: string;
+}
+
+export interface CandidateDiff {
+  add?: unknown[];
+  remove?: unknown[];
+  modify?: unknown[];
+  already_present?: boolean;
+  [key: string]: unknown;
+}
+
 export type InsertTarget = "chatgpt" | "claude";
 
 export type ContentMessage =
@@ -53,7 +73,12 @@ export type BackgroundMessage =
       tabId: number;
       target: InsertTarget;
       profileId: string;
-    };
+    }
+  | { type: "BRIDGE_LIST_CANDIDATES" }
+  | { type: "BRIDGE_EVALUATE_CANDIDATE"; candidateId: string; level: number }
+  | { type: "BRIDGE_DIFF_CANDIDATE"; candidateId: string }
+  | { type: "BRIDGE_APPROVE_CANDIDATE"; candidateId: string; forceCritical?: boolean }
+  | { type: "BRIDGE_REJECT_CANDIDATE"; candidateId: string; reason?: string };
 
 export type BackgroundResponse =
   | { ok: true; data?: unknown }

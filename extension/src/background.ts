@@ -4,11 +4,16 @@
 
 import {
   BridgeError,
+  approveCandidate,
   captureContent,
   checkHealth,
+  diffCandidate,
+  evaluateCandidate,
   fetchContextPacket,
   formatContextPacketForInsert,
+  listCandidates,
   listProfiles,
+  rejectCandidate,
 } from "./bridge-client.js";
 import type { BackgroundMessage, BackgroundResponse, ContentMessage, ContentResponse } from "./types.js";
 
@@ -41,6 +46,28 @@ chrome.runtime.onMessage.addListener(
             const packet = await fetchContextPacket(message.target, message.profileId);
             return { ok: true, data: packet };
           }
+          case "BRIDGE_LIST_CANDIDATES":
+            return { ok: true, data: await listCandidates() };
+          case "BRIDGE_EVALUATE_CANDIDATE":
+            return {
+              ok: true,
+              data: await evaluateCandidate(message.candidateId, message.level),
+            };
+          case "BRIDGE_DIFF_CANDIDATE":
+            return { ok: true, data: await diffCandidate(message.candidateId) };
+          case "BRIDGE_APPROVE_CANDIDATE":
+            return {
+              ok: true,
+              data: await approveCandidate(
+                message.candidateId,
+                message.forceCritical ?? false,
+              ),
+            };
+          case "BRIDGE_REJECT_CANDIDATE":
+            return {
+              ok: true,
+              data: await rejectCandidate(message.candidateId, message.reason),
+            };
           case "CAPTURE_SELECTION": {
             const sel = await queryContentScript<ContentResponse>(message.tabId, {
               type: "GET_SELECTION",

@@ -51,7 +51,19 @@ omomuki candidate --help          # グループ単位（Typer 標準）
 
 Bridge HTTP API の詳細は [Bridge マニュアル](bridge-manual.md)。MCP Tools / Cursor 設定は [MCP マニュアル](mcp-manual.md)。Storage 詳細は [Storage マニュアル](storage-manual.md)。
 
-未実装（ロードマップ参照）: CLI の `capture`, `diff`, `evaluate` など。文脈 capture は Bridge `POST /capture` または Extension から可能。
+未実装（ロードマップ参照）: CLI の `capture` など。文脈 capture は Bridge `POST /capture` または Extension から可能。`candidate evaluate` / `approve` は CLI から利用可（[評価マニュアル](evaluation-manual.md)）。
+
+## 環境変数
+
+| 変数 | 用途 |
+|------|------|
+| `OMOMUKI_LANG` | CLI メッセージの表示言語（`en` / `ja`）。`--lang` でも指定可 |
+| `OMOMUKI_OBSIDIAN_VAULT` | Obsidian vault の既定パス。ディレクトリが存在する場合 `storage import` / `export` で `<vault>` 引数を省略可 |
+| `OMOMUKI_JUDGE_BASE_URL` | Level 2/3 LLM judge の API ベース URL（任意） |
+| `OMOMUKI_JUDGE_API_KEY` | Level 2/3 judge の API キー（任意） |
+| `OMOMUKI_JUDGE_MODEL` | Level 2/3 judge のモデル名（任意） |
+
+Extension の表示言語（`displayLanguage`）は CLI とは独立し、Chrome Options で設定する（[Extension マニュアル](extension-manual.md)）。
 
 ## 2. インストール
 
@@ -115,7 +127,7 @@ Profile
   └─ --instruction（任意）                  →  Prompt IR.instruction
 ```
 
-Phase 1 では `context_index` に記載されたファイルの**中身は読み込まない**。パス文字列を文脈参照として Prompt IR に載せるのみである。
+Phase 5 以降、`context_index` に記載されたファイルがプロファイルディレクトリ内に存在すれば **本文を読み込み** Prompt IR の `context` に含める（最大約 32KB/ファイル）。それ以前はパス参照のみだった。
 
 ### 4.2 Adapter と出力形式
 
@@ -325,6 +337,44 @@ omomuki mcp list-candidates
 
 Cursor 等から使う場合は `mcp serve` のみ起動し、クライアント側で子プロセスとして登録する（[MCP マニュアル](mcp-manual.md) 参照）。
 
+---
+
+### 5.7 `omomuki candidate`（Phase 4）
+
+Candidate の一覧・評価・差分・承認。詳細は [RDE / Candidate 評価マニュアル](evaluation-manual.md)。
+
+```bash
+omomuki candidate list
+omomuki candidate evaluate <id> --level 1
+omomuki candidate evaluate <id> --level 2   # OMOMUKI_JUDGE_* 要
+omomuki candidate diff <id>
+omomuki candidate approve <id>
+omomuki candidate reject <id>
+```
+
+---
+
+### 5.8 `omomuki storage`（Phase 5）
+
+Obsidian vault 連携と Git commit。詳細は [Storage マニュアル](storage-manual.md)。
+
+```bash
+export OMOMUKI_OBSIDIAN_VAULT="$HOME/Documents/MyVault"   # 任意
+omomuki storage import          # または omomuki storage import /path/to/vault
+omomuki storage export
+omomuki storage index
+omomuki storage commit -m "omomuki: sync context" --init
+```
+
+| サブコマンド | 概要 |
+|-------------|------|
+| `import [vault]` | vault の `.md` を `context/` へ取り込む |
+| `export [vault]` | `context/` を vault 内 `omomuki/` へ書き出す |
+| `index` | `context_index.entries` を再生成 |
+| `commit -m "..."` | Profile + context を Git コミット |
+
+`OMOMUKI_OBSIDIAN_VAULT` が存在するディレクトリを指す場合、`import` / `export` の vault 引数を省略できる。
+
 ## 6. 典型的なワークフロー
 
 ### 6.1 初回セットアップ
@@ -389,7 +439,7 @@ cd extension && npm run build
 | `Unknown target` | 未実装 Adapter | `chatgpt` / `claude` のみ Phase 1 対応 |
 | `Unsupported format` | `export` の format 誤り | `--format markdown` のみ |
 | ValidationError（pytest 等） | YAML がスキーマ不整合 | `schemas/omomuki-profile.schema.json` と照合 |
-| 文脈ファイルの中身がプロンプトに出ない | Phase 1 仕様 | `context_index` はパス参照のみ。本文取り込みは将来 Phase |
+| 文脈ファイルの中身がプロンプトに出ない | パス外・サイズ超過 | ファイルがプロファイルディレクトリ内か、`context_index` に載っているか確認（最大約 32KB/ファイル） |
 | Bridge `401` | token 未設定・不一致 | `~/.omomuki/bridge.token` と Authorization ヘッダ |
 | `omomuki mcp` で Profile なし | init 未実施 | `omomuki init` |
 
@@ -406,4 +456,4 @@ cd extension && npm run build
 
 Candidate 評価: [evaluation-manual.md](evaluation-manual.md)。
 
-本マニュアルは Omomuki **0.5.0** 時点。Extension は [Extension マニュアル](extension-manual.md) を参照。
+本マニュアルは Omomuki **0.5.8** 時点。Extension は [Extension マニュアル](extension-manual.md) を参照。

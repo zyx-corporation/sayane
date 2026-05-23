@@ -6,10 +6,12 @@ Phase 5 で提供される、Profile Store のファイルシステム運用・O
 
 | コマンド | 概要 |
 |---------|------|
-| `omomuki storage import <vault>` | Obsidian vault の `.md` を `context/` へ取り込む |
-| `omomuki storage export <vault>` | `context/` を vault 内 `omomuki/` へ書き出す |
+| `omomuki storage import [<vault>]` | Obsidian vault の `.md` を `context/` へ取り込む |
+| `omomuki storage export [<vault>]` | `context/` を vault 内 `omomuki/` へ書き出す |
 | `omomuki storage index` | `context/` を走査し `context_index.entries` を再生成する |
 | `omomuki storage commit -m "..."` | Profile と context を Git コミットする |
+
+`<vault>` は省略可。環境変数 **`OMOMUKI_OBSIDIAN_VAULT`** に存在するディレクトリを設定している場合、そのパスが既定 vault になる。
 
 `compile` / `export` / Bridge の `compile` は、プロファイルディレクトリ内に文脈ファイルがあれば **本文を Prompt IR の context に含める**（Phase 5 以降）。
 

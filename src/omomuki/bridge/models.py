@@ -34,3 +34,15 @@ class ContextPacketResponse(BaseModel):
     format: str
     payload: dict[str, Any]
     profile_id: str
+
+
+class EvaluateCandidateRequest(BaseModel):
+    level: int = Field(default=1, ge=1, le=3)
+
+
+class ApproveCandidateRequest(BaseModel):
+    force_critical: bool = False
+
+
+class RejectCandidateRequest(BaseModel):
+    reason: str | None = None

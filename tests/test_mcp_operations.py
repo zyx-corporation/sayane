@@ -70,3 +70,18 @@ def test_list_candidate_updates(mcp_ops: McpOperations) -> None:
 def test_unsupported_target(mcp_ops: McpOperations) -> None:
     with pytest.raises(ValueError, match="Unsupported target"):
         mcp_ops.compile_prompt("gemini")
+
+
+def test_mcp_candidate_evaluate_and_diff(mcp_ops: McpOperations) -> None:
+    evaluated = mcp_ops.evaluate_candidate("abc123", level=1)
+    assert evaluated["status"] == "evaluated"
+    assert evaluated["evaluation"]["rde_class"]
+
+    diff = mcp_ops.diff_candidate("abc123")
+    assert diff["candidate_id"] == "abc123"
+
+
+def test_mcp_show_candidate(mcp_ops: McpOperations) -> None:
+    detail = mcp_ops.show_candidate("abc123")
+    assert detail["id"] == "abc123"
+    assert "Captured" in detail["content"]

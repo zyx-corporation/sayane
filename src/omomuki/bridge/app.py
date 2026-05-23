@@ -5,24 +5,29 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, status
 from fastapi.responses import JSONResponse
 
+from omomuki.bridge import candidate_api
 from omomuki.bridge.auth import verify_token
 from omomuki.bridge.capture_store import save_capture
 from omomuki.bridge.config import BridgeConfig
 from omomuki.bridge.models import (
+    ApproveCandidateRequest,
     CaptureRequest,
     CaptureResponse,
     CompileRequest,
     ContextPacketResponse,
+    EvaluateCandidateRequest,
     ProfileSummary,
+    RejectCandidateRequest,
 )
 from omomuki.bridge.service import compile_prompt, list_profiles
+from omomuki.storage.candidates import load_candidate
 
 
 def create_app(config: BridgeConfig | None = None) -> FastAPI:
     cfg = config or BridgeConfig()
     app = FastAPI(
         title="Omomuki Local Bridge",
-        version="0.2.0",
+        version="0.5.2",
         docs_url="/docs" if False else None,
         redoc_url=None,
     )
@@ -68,6 +73,72 @@ def create_app(config: BridgeConfig | None = None) -> FastAPI:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @app.get("/candidates")
+    def get_candidates(
+        _: Annotated[None, Depends(require_bearer)],
+    ) -> list[dict]:
+        return candidate_api.list_candidates(cfg)
+
+    @app.get("/candidates/{candidate_id}")
+    def get_candidate(
+        candidate_id: str,
+        _: Annotated[None, Depends(require_bearer)],
+    ) -> dict:
+        try:
+            return candidate_api.get_candidate(cfg, candidate_id)
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    @app.post("/candidates/{candidate_id}/evaluate")
+    def post_candidate_evaluate(
+        candidate_id: str,
+        body: EvaluateCandidateRequest,
+        _: Annotated[None, Depends(require_bearer)],
+    ) -> dict:
+        try:
+            return candidate_api.post_evaluate(cfg, candidate_id, level=body.level)
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    @app.post("/candidates/{candidate_id}/approve")
+    def post_candidate_approve(
+        candidate_id: str,
+        body: ApproveCandidateRequest,
+        _: Annotated[None, Depends(require_bearer)],
+    ) -> dict:
+        try:
+            return candidate_api.post_approve(
+                cfg,
+                candidate_id,
+                force_critical=body.force_critical,
+            )
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @app.post("/candidates/{candidate_id}/reject")
+    def post_candidate_reject(
+        candidate_id: str,
+        body: RejectCandidateRequest,
+        _: Annotated[None, Depends(require_bearer)],
+    ) -> dict:
+        try:
+            return candidate_api.post_reject(cfg, candidate_id, reason=body.reason)
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    @app.get("/candidates/{candidate_id}/diff")
+    def get_candidate_diff(
+        candidate_id: str,
+        _: Annotated[None, Depends(require_bearer)],
+    ) -> dict:
+        try:
+            load_candidate(cfg, candidate_id)
+            return candidate_api.get_diff(cfg, candidate_id)
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
 
     @app.get("/context-packet", response_model=ContextPacketResponse)
     def get_context_packet(

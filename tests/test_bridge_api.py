@@ -97,3 +97,51 @@ def test_invalid_token_rejected(bridge_env: tuple[TestClient, BridgeConfig, str]
     client, _, _ = bridge_env
     response = client.get("/profiles", headers={"Authorization": "Bearer invalid"})
     assert response.status_code == 401
+
+
+def test_candidate_evaluate_approve_flow(
+    bridge_env: tuple[TestClient, BridgeConfig, str],
+) -> None:
+    client, config, token = bridge_env
+    capture = client.post(
+        "/capture",
+        headers=_auth(token),
+        json={"content": "New concept: Bridge-driven evaluation flow", "source": "test"},
+    )
+    assert capture.status_code == 200
+    cid = capture.json()["id"]
+
+    listed = client.get("/candidates", headers=_auth(token))
+    assert listed.status_code == 200
+    assert any(c["id"] == cid for c in listed.json())
+
+    detail = client.get(f"/candidates/{cid}", headers=_auth(token))
+    assert detail.status_code == 200
+    assert detail.json()["id"] == cid
+
+    evaluated = client.post(
+        f"/candidates/{cid}/evaluate",
+        headers=_auth(token),
+        json={"level": 1},
+    )
+    assert evaluated.status_code == 200
+    assert evaluated.json()["status"] == "evaluated"
+    assert evaluated.json()["evaluation"]["rde_class"]
+
+    diff = client.get(f"/candidates/{cid}/diff", headers=_auth(token))
+    assert diff.status_code == 200
+    assert "add" in diff.json()
+
+    approved = client.post(
+        f"/candidates/{cid}/approve",
+        headers=_auth(token),
+        json={"force_critical": False},
+    )
+    assert approved.status_code == 200
+    assert approved.json()["status"] == "approved"
+
+    from omomuki.core.loader import load_profile
+
+    profile = load_profile(config.profiles_dir / "default" / "omomuki.profile.yaml")
+    concepts = profile.knowledge.concepts if profile.knowledge else []
+    assert any("Bridge-driven" in c for c in concepts)

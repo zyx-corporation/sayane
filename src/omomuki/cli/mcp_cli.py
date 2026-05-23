@@ -8,7 +8,7 @@ import typer
 from omomuki.mcp.operations import get_operations
 
 mcp_app = typer.Typer(
-    help="MCP Server tools and stdio server (read-only).",
+    help="MCP Server tools and stdio server.",
     no_args_is_help=True,
 )
 
@@ -88,3 +88,66 @@ def mcp_context_packet(
 def mcp_list_candidates() -> None:
     """List candidate captures (same as MCP tool list_candidate_updates)."""
     _echo_json(get_operations().list_candidate_updates())
+
+
+@mcp_app.command("show-candidate")
+def mcp_show_candidate(
+    candidate_id: Annotated[str, typer.Argument(help="Candidate id")],
+) -> None:
+    """Show candidate record (same as MCP tool show_candidate)."""
+    try:
+        _echo_json(get_operations().show_candidate(candidate_id))
+    except FileNotFoundError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+
+@mcp_app.command("evaluate-candidate")
+def mcp_evaluate_candidate(
+    candidate_id: Annotated[str, typer.Argument(help="Candidate id")],
+    level: Annotated[int, typer.Option("--level", min=1, max=3)] = 1,
+) -> None:
+    """Evaluate candidate (same as MCP tool evaluate_candidate)."""
+    try:
+        _echo_json(get_operations().evaluate_candidate(candidate_id, level=level))
+    except FileNotFoundError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+
+@mcp_app.command("approve-candidate")
+def mcp_approve_candidate(
+    candidate_id: Annotated[str, typer.Argument(help="Candidate id")],
+    force_critical: Annotated[bool, typer.Option("--force-critical")] = False,
+) -> None:
+    """Approve and merge candidate (same as MCP tool approve_candidate)."""
+    try:
+        _echo_json(
+            get_operations().approve_candidate(
+                candidate_id,
+                force_critical=force_critical,
+            ),
+        )
+    except (FileNotFoundError, ValueError) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+
+@mcp_app.command("reject-candidate")
+def mcp_reject_candidate(
+    candidate_id: Annotated[str, typer.Argument(help="Candidate id")],
+    reason: Annotated[str | None, typer.Option("--reason")] = None,
+) -> None:
+    """Reject candidate (same as MCP tool reject_candidate)."""
+    try:
+        _echo_json(get_operations().reject_candidate(candidate_id, reason=reason))
+    except FileNotFoundError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+
+@mcp_app.command("diff-candidate")
+def mcp_diff_candidate(
+    candidate_id: Annotated[str, typer.Argument(help="Candidate id")],
+) -> None:
+    """Diff candidate vs profile (same as MCP tool diff_candidate)."""
+    try:
+        _echo_json(get_operations().diff_candidate(candidate_id))
+    except FileNotFoundError as exc:
+        raise typer.BadParameter(str(exc)) from exc

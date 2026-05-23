@@ -102,12 +102,35 @@ curl -s -H "$AUTH" \
 | `profile` | Profile id（既定 `default`） |
 | `instruction` | 任意。タスク指示 |
 
+#### Candidate 評価・承認（Phase 4+ / Bridge API）
+
+capture 後、CLI と同等の評価フローを HTTP から実行できる。いずれも Bearer 必須。
+
+| メソッド | パス | 説明 |
+|---------|------|------|
+| `GET` | `/candidates` | Candidate 一覧（要約） |
+| `GET` | `/candidates/{id}` | Candidate 全文 |
+| `POST` | `/candidates/{id}/evaluate` | RDE/UIB 評価（body: `{"level": 1}`） |
+| `GET` | `/candidates/{id}/diff` | Profile との rule-based diff |
+| `POST` | `/candidates/{id}/approve` | 承認して merge（body: `{"force_critical": false}`） |
+| `POST` | `/candidates/{id}/reject` | 却下（body: `{"reason": "..."}` 任意） |
+
+```bash
+# capture 後
+CID=<candidate-id>
+curl -s -X POST -H "$AUTH" -H "Content-Type: application/json" \
+  -d '{"level": 2}' "http://127.0.0.1:38741/candidates/$CID/evaluate"
+curl -s -H "$AUTH" "http://127.0.0.1:38741/candidates/$CID/diff"
+curl -s -X POST -H "$AUTH" -H "Content-Type: application/json" \
+  -d '{"force_critical": false}' "http://127.0.0.1:38741/candidates/$CID/approve"
+```
+
+詳細: [RDE / Candidate 評価マニュアル](evaluation-manual.md)
+
 ### 3.3 意図的に未提供
 
-- Profile merge
-- policy / identity / values の直接書き換え
-
-Phase 4 以降で明示承認付きエンドポイントを検討。
+- Profile への任意フィールド直接 PATCH
+- RDE 評価なしの bulk merge
 
 ## 4. Chrome Extension 連携
 
@@ -139,4 +162,4 @@ Phase 4 以降で明示承認付きエンドポイントを検討。
 
 ## 7. バージョン
 
-Omomuki **0.3.0**（Phase 2）時点。
+Omomuki **0.5.2** 時点（Candidate evaluate/approve API 含む）。

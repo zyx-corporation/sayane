@@ -56,5 +56,5 @@
   "help.commands_title": "コマンド:",
   "help.groups_title": "グループ:",
   "help.docs": "ドキュメント: docs/getting-started.md",
-  "lang.option_help": "表示言語 (en, ja)。環境変数 OMOMUKI_LANG / LANG も可。"
+  "lang.option_help": "表示言語 (en, ja)。優先順: --lang、OMOMUKI_LANG、LANG。"
 }

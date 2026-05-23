@@ -1,6 +1,6 @@
 # Omomuki
 
-Omomuki は、LLM間でユーザーの人格的文脈・価値観・応答様式・作業方針を可搬化するための **local-first** ツールです（現行 **0.5.8**）。
+Omomuki は、LLM間でユーザーの人格的文脈・価値観・応答様式・作業方針を可搬化するための **local-first** ツールです（現行 **0.5.9**）。
 
 ChatGPT、Claude など異なる LLM 実行基盤のあいだで、ユーザーの文脈を構造化し、評価を挟んで Profile へ反映します。LLM は人格の所有者ではなく、**実行基盤**として扱います。
 
@@ -40,7 +40,7 @@ git clone <repository>
 cd omomuki
 pip install -e ".[dev]"
 
-export OMOMUKI_LANG=ja              # 任意: CLI 日本語表示
+export OMOMUKI_LANG=ja              # 任意: CLI 日本語（未設定時は LANG を参照）
 export OMOMUKI_OBSIDIAN_VAULT=~/…   # 任意: storage import/export の既定 vault
 omomuki init
 omomuki help
@@ -70,10 +70,10 @@ omomuki candidate approve <id>
 
 # Storage（Obsidian / Git）
 export OMOMUKI_OBSIDIAN_VAULT="$HOME/Documents/MyVault"  # 存在する vault
-omomuki storage import          # vault 引数省略可
+omomuki storage import          # vault 引数省略可（import/index は Git 自動コミット）
 omomuki storage export
 omomuki storage index
-omomuki storage commit -m "omomuki: update context" --init
+# storage commit は任意（自動コミットで足りない場合）
 
 # ヘルプ
 omomuki help

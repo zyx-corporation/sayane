@@ -18,10 +18,12 @@ def resolve_locale(explicit: str | None = None) -> str:
     """Resolve locale from explicit value or environment."""
     if explicit:
         return _normalize(explicit)
-    for var in ("OMOMUKI_LANG", "LANG", "LC_ALL"):
-        val = os.environ.get(var)
-        if val:
-            return _normalize(val)
+    omomuki_lang = os.environ.get("OMOMUKI_LANG")
+    if omomuki_lang:
+        return _normalize(omomuki_lang)
+    lang = os.environ.get("LANG")
+    if lang:
+        return _normalize(lang)
     return _DEFAULT
 
 

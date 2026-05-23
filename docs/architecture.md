@@ -107,7 +107,7 @@ Omomukiはlocal-firstを基本とする。
 
 ユーザーの人格的文脈は、外部SaaSではなくローカルのProfile Storeに保持する。
 
-Phase 5 以降、Obsidian vault との import/export（`omomuki storage`）、Git による履歴化、環境変数 `OMOMUKI_OBSIDIAN_VAULT` による既定 vault 指定が利用できる。暗号化ストア・SQLite は Phase 6 以降を検討する。
+Phase 5 以降、Obsidian vault との import/export（`omomuki storage`）、**Git による履歴化（Profile 変更時の自動コミット、SQLite 実装まで既定）**、環境変数 `OMOMUKI_OBSIDIAN_VAULT` による既定 vault 指定が利用できる。暗号化ストア・SQLite は Phase 6 以降を検討する。
 
 ## 6. 将来拡張
 

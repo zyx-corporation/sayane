@@ -56,5 +56,5 @@
   "help.commands_title": "Commands:",
   "help.groups_title": "Groups:",
   "help.docs": "Docs: docs/getting-started.md",
-  "lang.option_help": "UI language (en, ja). Also OMOMUKI_LANG / LANG."
+  "lang.option_help": "UI language (en, ja). Priority: --lang, OMOMUKI_LANG, LANG."
 }

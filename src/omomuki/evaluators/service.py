@@ -18,6 +18,7 @@ from omomuki.evaluators.rde_merge import merge_rde_class
 from omomuki.evaluators.sections import can_merge_section
 from omomuki.evaluators.uib import score_uib
 from omomuki.storage.candidates import load_candidate, save_candidate
+from omomuki.storage.git_integration import auto_commit_profile_store
 from omomuki.storage.lineage_store import append_record
 
 
@@ -115,6 +116,10 @@ def approve_candidate(
             sort_keys=False,
         ),
         encoding="utf-8",
+    )
+    auto_commit_profile_store(
+        profile_path.parent,
+        f"omomuki: approve candidate {candidate.id}",
     )
 
     candidate.status = "approved"

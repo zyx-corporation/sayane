@@ -20,7 +20,9 @@ Profile Store / Context Store / Lineage
 
 CLIはOmomukiの信頼できる制御面である。
 
-初期コマンド案は以下である。
+**Phase 1 実装済みコマンドの操作手順**は [CLI マニュアル](cli-manual.md) を参照する。
+
+初期コマンド案（ロードマップ含む）は以下である。
 
 ```bash
 omomuki init

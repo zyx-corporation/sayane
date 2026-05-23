@@ -83,6 +83,8 @@ See [`docs/ci.md`](docs/ci.md) for CI policy.
 
 ### CLI (Phase 1)
 
+See the [CLI manual](docs/cli-manual.md) (Japanese) for full usage.
+
 ```bash
 pip install -e .
 omomuki init

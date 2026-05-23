@@ -179,6 +179,8 @@ CI 方針は [`docs/ci.md`](docs/ci.md)。
 
 ### CLI（Phase 1）
 
+詳細は [CLI マニュアル](docs/cli-manual.md) を参照。
+
 ```bash
 pip install -e .
 omomuki init
@@ -196,6 +198,7 @@ omomuki export --format markdown --target claude --profile examples/profiles/min
 - [設計概要](docs/architecture.md)
 - [Omomuki Profile と Prompt IR](docs/profile-ir.md)
 - [MVP範囲](docs/mvp-scope.md)
+- [CLI マニュアル](docs/cli-manual.md)
 - [CLI / Local Bridge / Chrome Extension 設計](docs/cli-chrome-extension.md)
 - [MCP Server Integration](docs/mcp-integration.md)
 - [Conversation Extract / Reverse Compile Pipeline](docs/extraction-pipeline.md)

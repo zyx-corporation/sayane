@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Omomuki",
+  "version": "0.0.0",
+  "description": "Capture web context and insert Omomuki context packets into LLM UIs (Phase 3).",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["http://127.0.0.1/*", "http://localhost/*"],
+  "action": {
+    "default_title": "Omomuki",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "dist/background.js",
+    "type": "module"
+  },
+  "options_page": "options.html"
+}

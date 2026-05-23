@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omomuki.dev/schemas/prompt-ir.schema.json",
+  "title": "PromptIR",
+  "description": "Intermediate representation compiled from Omomuki Profile and task context.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "kind", "system", "context", "instruction", "constraints", "examples"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "kind": {
+      "type": "string",
+      "const": "PromptIR"
+    },
+    "system": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "context": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "instruction": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "constraints": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "examples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    }
+  }
+}

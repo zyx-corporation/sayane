@@ -348,7 +348,11 @@ def _register_storage(app: typer.Typer) -> None:
     from omomuki.core.loader import save_profile
     from omomuki.storage.context_index import apply_context_index
     from omomuki.storage.filesystem import FileSystemContextStore, FileSystemProfileStore
-    from omomuki.storage.git_integration import GitError, auto_commit_profile_store, commit_profile_store
+    from omomuki.storage.git_integration import (
+        GitError,
+        auto_commit_profile_store,
+        commit_profile_store,
+    )
     from omomuki.storage.obsidian import (
         export_to_vault,
         import_from_vault,

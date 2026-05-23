@@ -34,6 +34,20 @@ Chrome → Extensions → Load unpacked → select this `extension/` folder.
 
 DOM logic lives in `src/sites/` (`chatgpt.ts`, `claude.ts`). If LLM UIs change, update selectors there. Failure codes: `INPUT_NOT_FOUND`, `SITE_MISMATCH`, `UNSUPPORTED_SITE`.
 
+## Permissions
+
+| Permission | Purpose |
+|------------|---------|
+| `storage` | Bridge URL / token in Options |
+| `activeTab` | Read selection on the tab where you opened the popup |
+| `scripting` | Inject helpers for capture / LLM insert |
+| Host: `127.0.0.1` | Local Bridge |
+| Host: ChatGPT / Claude | Context insert adapters |
+
+Chrome (JA) may label removed `tabs` as 「閲覧履歴の読み取り」— this extension does **not** use the history API.
+
+After manifest changes: remove the extension and **Load unpacked** again (Update alone may not refresh permission UI).
+
 ## Security
 
 - Extension does not edit Profile directly; capture → Candidate only.

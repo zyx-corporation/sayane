@@ -12,7 +12,7 @@ from omomuki import (
 
 
 def test_version() -> None:
-    assert omomuki.__version__ == "0.5.5"
+    assert omomuki.__version__ == "0.5.6"
 
 
 def test_subpackages_importable() -> None:

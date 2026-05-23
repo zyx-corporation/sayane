@@ -15,14 +15,12 @@ import {
   listProfiles,
   rejectCandidate,
 } from "./bridge-client.js";
-import type { BackgroundMessage, BackgroundResponse, ContentMessage, ContentResponse } from "./types.js";
-
-async function queryContentScript<T extends ContentResponse>(
-  tabId: number,
-  message: ContentMessage,
-): Promise<T> {
-  return chrome.tabs.sendMessage(tabId, message) as Promise<T>;
-}
+import {
+  insertTextInTab,
+  readPageFromTab,
+  readSelectionFromTab,
+} from "./content-script-client.js";
+import type { BackgroundMessage, BackgroundResponse } from "./types.js";
 
 chrome.runtime.onMessage.addListener(
   (
@@ -69,30 +67,26 @@ chrome.runtime.onMessage.addListener(
               data: await rejectCandidate(message.candidateId, message.reason),
             };
           case "CAPTURE_SELECTION": {
-            const sel = await queryContentScript<ContentResponse>(message.tabId, {
-              type: "GET_SELECTION",
-            });
-            if (!sel.ok || !("text" in sel) || !sel.text) {
+            const text = await readSelectionFromTab(message.tabId);
+            if (!text) {
               return { ok: false, error: "No text selected" };
             }
             const tab = await chrome.tabs.get(message.tabId);
             const captured = await captureContent(
-              sel.text,
+              text,
               "selection",
               tab.url ?? undefined,
             );
             return { ok: true, data: captured };
           }
           case "CAPTURE_PAGE": {
-            const snap = await queryContentScript<ContentResponse>(message.tabId, {
-              type: "GET_PAGE_SNAPSHOT",
-            });
-            if (!snap.ok || !("text" in snap)) {
+            const text = await readPageFromTab(message.tabId);
+            if (!text) {
               return { ok: false, error: "Could not read page" };
             }
             const tab = await chrome.tabs.get(message.tabId);
             const captured = await captureContent(
-              snap.text,
+              text,
               "page",
               tab.url ?? undefined,
             );
@@ -101,11 +95,7 @@ chrome.runtime.onMessage.addListener(
           case "INSERT_CONTEXT_PACKET": {
             const packet = await fetchContextPacket(message.target, message.profileId);
             const text = formatContextPacketForInsert(packet);
-            const inserted = await queryContentScript<ContentResponse>(message.tabId, {
-              type: "INSERT_TEXT",
-              text,
-              target: message.target,
-            });
+            const inserted = await insertTextInTab(message.tabId, text, message.target);
             if (!inserted.ok) {
               const hint = "hint" in inserted ? inserted.hint : undefined;
               const code = "code" in inserted ? inserted.code : undefined;

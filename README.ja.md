@@ -108,7 +108,7 @@ capture → Candidate → evaluate（RDE+UIB）→ approve / reject → lineage
 | CLI | [cli-manual.md](docs/cli-manual.md) |
 | Bridge | [bridge-manual.md](docs/bridge-manual.md) |
 | MCP | [mcp-manual.md](docs/mcp-manual.md) |
-| Extension | [extension-manual.md](docs/extension-manual.md) |
+| Extension | [extension-manual.md](docs/extension-manual.md) / [受け入れテスト](docs/extension-acceptance-test.md) |
 | 評価 / Candidate | [evaluation-manual.md](docs/evaluation-manual.md) |
 | Storage | [storage-manual.md](docs/storage-manual.md) |
 | Dogfood | [dogfood-walkthrough.md](docs/dogfood-walkthrough.md) |

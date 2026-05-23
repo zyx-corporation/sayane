@@ -64,7 +64,11 @@ Extension は行わない:
 | Insert 失敗 `INPUT_NOT_FOUND` | ChatGPT/Claude の DOM 変更。`extension/src/sites/` を更新 |
 | 選択 capture でテキストなし | ページ上でテキストを選択してから実行 |
 
-## 7. 関連
+## 7. 受け入れテスト
+
+リリース前・popup / サイトアダプタ変更後は [Chrome Extension 受け入れテスト手順書](extension-acceptance-test.md) に従い手動 UAT を実施する。
+
+## 8. 関連
 
 - [はじめに](getting-started.md)
 - [Bridge マニュアル](bridge-manual.md)

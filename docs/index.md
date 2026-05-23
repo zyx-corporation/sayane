@@ -11,6 +11,7 @@ Omomuki は、LLM間でユーザーの人格的文脈・価値観・応答様式
 - [Local Bridge マニュアル](bridge-manual.md)
 - [MCP Server マニュアル](mcp-manual.md)
 - [Chrome Extension マニュアル](extension-manual.md)
+- [Chrome Extension 受け入れテスト手順書](extension-acceptance-test.md)
 - [RDE / Candidate 評価マニュアル](evaluation-manual.md)
 - [Storage / Obsidian / Git マニュアル](storage-manual.md)
 - [Dogfood 手順書（エンドツーエンド）](dogfood-walkthrough.md)

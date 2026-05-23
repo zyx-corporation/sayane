@@ -93,8 +93,8 @@ omomuki compile --target claude
 | 4 | Bridge `capture` → `evaluate` → `approve` | ☐ |
 | 5 | `candidate lineage` に記録 | ☐ |
 | 6 | Level 2 judge（任意） | ☐ |
-| 7 | Extension capture / insert（[Extension マニュアル](extension-manual.md)） | ☐ |
-| 8 | Extension evaluate / approve（popup） | ☐ |
+| 7 | Extension capture / insert（[受け入れテスト](extension-acceptance-test.md) §5, §7） | ☐ |
+| 8 | Extension evaluate / approve（[受け入れテスト](extension-acceptance-test.md) §6） | ☐ |
 
 ## 8. よくある状態
 

@@ -37,6 +37,7 @@ omomuki candidate --help          # グループ単位（Typer 標準）
 
 | コマンド | 概要 |
 |---------|------|
+| `omomuki --version` / `-V` | パッケージ版を表示して終了 |
 | `omomuki help [TOPIC...]` | 階層的ヘルプ（上記） |
 | `omomuki init` | ローカル Profile Store を初期化する |
 | `omomuki profile inspect` | Profile の要約を表示する |

@@ -1,11 +1,18 @@
 import json
 from pathlib import Path
 
+import omomuki
 from typer.testing import CliRunner
 
 from omomuki.cli.main import app
 
 runner = CliRunner()
+
+
+def test_version_flag() -> None:
+    result = runner.invoke(app, ["--version"])
+    assert result.exit_code == 0
+    assert result.stdout.strip() == f"omomuki {omomuki.__version__}"
 
 
 def test_compile_chatgpt_from_example_profile(examples_dir: Path, tmp_path: Path) -> None:

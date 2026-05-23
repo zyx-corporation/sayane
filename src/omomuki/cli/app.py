@@ -10,6 +10,7 @@ from typing import Annotated
 import typer
 import yaml
 
+import omomuki
 from omomuki.adapters.factory import get_adapter
 from omomuki.bridge.auth import format_pairing_code, load_or_create_token
 from omomuki.bridge.config import BridgeConfig
@@ -51,6 +52,12 @@ lineage:
 """
 
 
+def _version_callback(value: bool) -> None:
+    if value:
+        typer.echo(f"omomuki {omomuki.__version__}")
+        raise typer.Exit()
+
+
 def build_app() -> typer.Typer:
     """Construct CLI app using the active locale."""
     app = typer.Typer(
@@ -69,9 +76,19 @@ def build_app() -> typer.Typer:
                 envvar="OMOMUKI_LANG",
             ),
         ] = None,
+        version: Annotated[
+            bool | None,
+            typer.Option(
+                "--version",
+                "-V",
+                callback=_version_callback,
+                is_eager=True,
+                help="Show version and exit.",
+            ),
+        ] = None,
     ) -> None:
         """Global options (locale is applied before Typer runs via main())."""
-        del lang
+        del lang, version
 
     _register_profile(app)
     _register_core_commands(app)

@@ -1,6 +1,8 @@
 # Sayane はじめに（利用者ガイド）
 
-Sayane **0.5.9** 時点で、Phase 0〜5 の成果物が利用可能である。本書は「何ができて」「どこから始めるか」をまとめる。
+Sayane **0.6.0** 時点で、Phase 0〜5 の成果物が利用可能である。本書は「何ができて」「どこから始めるか」をまとめる。
+
+**Omomuki からアップグレードする場合**: [Omomuki から Sayane への移行](migration-omomuki-to-sayane.md) を先に読む。
 
 設計の詳細は [設計概要](architecture.md)、開発者向けは [開発原則](development-principles.md) を参照。
 

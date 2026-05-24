@@ -15,7 +15,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Schema kind `OmomukiProfile` → `SayaneProfile`
 - Environment variables `OMOMUKI_*` → `SAYANE_*`
 - GitHub repository: `zyx-corporation/sayane` (formerly `omomuki`)
-- Commercial Edition references: `sayane-pro` (formerly `omomuki-pro`)
+- Commercial Edition package name: licensed separately (formerly `omomuki-pro`)
 
 ### Added
 

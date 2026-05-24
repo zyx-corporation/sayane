@@ -117,7 +117,7 @@ Phase 5 以降、Obsidian vault との import/export（`sayane storage`）、**G
 | **Commercial**（既定） | `encrypted-sqlite`（Rust 暗号化 + SQLite） | 商用ライセンスキー |
 | **Commercial**（任意） | `filesystem` — Community データをそのまま利用 | 不要 |
 
-Commercial Edition は Phase 6 以降。[sayane-pro](https://github.com/zyx-corporation/sayane-pro/blob/main/docs/commercial-edition.md) を参照。`filesystem` backend 選択時は Community 版と同一ディレクトリ・Git 履歴を維持する。暗号化 SQLite への移行は `sayane storage migrate to encrypted-sqlite`（商用版 CLI）で行う。
+Commercial Edition は Phase 6 以降（sayane-pro 側で管理）。`filesystem` backend 選択時は Community 版と同一ディレクトリ・Git 履歴を維持する。
 
 ## 6. 将来拡張
 

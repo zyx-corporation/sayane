@@ -181,7 +181,6 @@ sayane storage commit -m "sayane: initial context" --init
 
 - vault ルートへの直接 export はしない（`--subdir` 必須の安全側）
 - 双方向同期・競合解決は未実装
-- 暗号化 SQLite ストア・移行 CLI は **[商用版（sayane-pro）](https://github.com/zyx-corporation/sayane-pro/blob/main/docs/commercial-edition.md)**（Phase 6）。Community 版は FileSystem + Git を継続
-- 商用版でも `storage backend filesystem` により本マニュアルの操作をそのまま利用可能
+- 暗号化 SQLite ストア・移行 CLI・ライセンスは **Commercial Edition**（Phase 6、sayane-pro 側マニュアル）。Community 版は FileSystem + Git を継続
 
 関連: [はじめに](getting-started.md)、[実装ロードマップ](roadmap.md)

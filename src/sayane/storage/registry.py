@@ -46,7 +46,7 @@ def get_backend_factory(name: str) -> BackendFactory:
         raise StorageBackendError(
             f"Storage backend '{name}' is not registered. "
             f"Available: {registered}. "
-            "Install sayane-pro for encrypted-sqlite.",
+            "Install the Commercial Edition encrypted-sqlite backend plugin.",
         ) from exc
 
 

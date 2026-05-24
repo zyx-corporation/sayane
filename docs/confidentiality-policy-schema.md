@@ -1,6 +1,6 @@
 # Confidentiality Policy スキーマ契約
 
-Commercial Edition（[sayane-pro](https://github.com/zyx-corporation/sayane-pro)）の **機密データ基準・逸脱監査** 向け JSON Schema 契約。検出 engine と監査 store の実装は pro 側、スキーマとサンプルは OSS に公開する。
+Commercial Edition の **機密データ基準・逸脱監査** 向け JSON Schema 契約。検出 engine と監査 store の実装は Commercial Edition 側、スキーマとサンプルは OSS に公開する。
 
 ## スキーマ
 
@@ -26,7 +26,7 @@ Commercial Edition（[sayane-pro](https://github.com/zyx-corporation/sayane-pro)
 ~/.sayane/confidentiality/default.policy.yaml
 ```
 
-Profile 本文とは **別ファイル** で保持する（[confidentiality-audit.md（pro）](https://github.com/zyx-corporation/sayane-pro/blob/main/docs/confidentiality-audit.md)）。
+Profile 本文とは **別ファイル** で保持する。監査 CLI の操作手順は sayane-pro 側マニュアルを参照。
 
 ## 検証
 

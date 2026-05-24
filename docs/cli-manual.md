@@ -381,32 +381,11 @@ sayane storage commit -m "sayane: sync context" --init
 
 ---
 
-### 5.9 `sayane storage backend` / `storage migrate`（Commercial Edition / Phase 6）
+### 5.9 Commercial Edition 拡張（sayane-pro 側マニュアル）
 
-**Commercial Edition**（[sayane-pro](https://github.com/zyx-corporation/sayane-pro)）のみ。詳細は [商用版ドキュメント](https://github.com/zyx-corporation/sayane-pro/blob/main/docs/commercial-edition.md)。
+`license` / `storage backend` / `storage migrate` / `confidentiality` 等の商用版サブコマンドは **sayane-pro** リポジトリの CLI マニュアルで管理する。
 
-商用版は設定により **Community Edition の FileSystem データをそのまま利用**できる。暗号化 SQLite への移行は CLI で行う。
-
-```bash
-sayane license activate <KEY>
-sayane license status
-
-sayane storage backend status
-sayane storage backend filesystem          # Community データをそのまま利用（ライセンス不要）
-sayane storage backend encrypted-sqlite    # 暗号化 SQLite（ライセンス要）
-
-sayane storage migrate to encrypted-sqlite --dry-run
-sayane storage migrate to encrypted-sqlite [--source PATH] [--keep-source]
-```
-
-| サブコマンド | 概要 | ライセンス |
-|-------------|------|-----------|
-| `backend status` | 現在の backend を表示 | 不要 |
-| `backend filesystem` | FileSystem + Git を正本にする | 不要 |
-| `backend encrypted-sqlite` | 暗号化 SQLite を正本にする | 要 |
-| `migrate to encrypted-sqlite` | FileSystem → 暗号化 SQLite へ import | 要 |
-
-`filesystem` backend 選択時は §5.8 の `import` / `export` / `index` / `commit` が Community Edition と同一に動作する。
+Community Edition（本書 §5.8 まで）では `filesystem` backend のみを対象とする。Phase 6 の位置づけは [roadmap.md §9](roadmap.md)。
 
 ## 6. 典型的なワークフロー
 

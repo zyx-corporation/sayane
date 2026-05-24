@@ -44,7 +44,7 @@ Sayane Profile  →  Prompt IR  →  Adapter  →  LLM output
 Candidate (capture) → RDE evaluation → approved merge → Lineage
 ```
 
-**Local-first**: the canonical store is on the user's machine (`~/.sayane/`). Community Edition uses Git history by default. **Commercial Edition** (Phase 6) — see [sayane-pro](https://github.com/zyx-corporation/sayane-pro/blob/main/docs/commercial-edition.md).
+**Local-first**: the canonical store is on the user's machine (`~/.sayane/`). Community Edition uses Git history by default. **Commercial Edition** (Phase 6, licensed separately) — see [roadmap.md](docs/roadmap.md).
 
 ---
 

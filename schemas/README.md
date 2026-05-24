@@ -10,4 +10,4 @@ JSON Schema definitions for Sayane data structures.
 
 Example policies: `examples/confidentiality/default.policy.yaml`
 
-Detection engine and audit store implementations live in [sayane-pro](https://github.com/zyx-corporation/sayane-pro). OSS publishes the schema contract only (Issue [#66](https://github.com/zyx-corporation/sayane/issues/66)).
+Detection engine and audit store implementations are provided by Commercial Edition (not in this OSS repo). OSS publishes the schema contract only (Issue [#66](https://github.com/zyx-corporation/sayane/issues/66)).

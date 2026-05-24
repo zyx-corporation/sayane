@@ -1,0 +1,53 @@
+version: "1.0.0"
+kind: SayaneConfidentialityPolicy
+profile: default
+
+classification_levels:
+  - id: public
+    label: 公開可
+  - id: internal
+    label: 社内限
+  - id: confidential
+    label: 機密
+  - id: restricted
+    label: 極秘
+
+profile_ceiling: confidential
+
+section_limits:
+  identity: internal
+  voice: internal
+  values: internal
+  policy: internal
+  knowledge: internal
+  context: confidential
+
+rules:
+  - id: no-credentials
+    description: 認証情報の禁止
+    patterns:
+      - '(?i)(api[_-]?key|password|secret|token|private[_-]?key)\s*[:=]'
+    action: reject
+    applies_to: [profile, context, candidate]
+
+  - id: pii-email
+    description: メールアドレス（警告）
+    patterns:
+      - '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+    action: warn
+    applies_to: [context, candidate]
+
+  - id: financial-account
+    description: 口座・カード番号パターン
+    patterns:
+      - '\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b'
+    action: reject
+    applies_to: [profile, context, candidate]
+
+context_classifications:
+  context/handoff.md: internal
+
+enforcement:
+  mode: enforce
+  block_on_reject: true
+  log_violations: true

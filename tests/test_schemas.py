@@ -22,7 +22,11 @@ def test_minimal_profile_matches_schema(schemas_dir: Path, examples_dir: Path) -
 
 
 def test_schema_files_are_valid_json(schemas_dir: Path) -> None:
-    for name in ("sayane-profile.schema.json", "prompt-ir.schema.json"):
+    for name in (
+        "sayane-profile.schema.json",
+        "prompt-ir.schema.json",
+        "sayane-confidentiality-policy.schema.json",
+    ):
         schema = _load_schema(schemas_dir / name)
         assert "$schema" in schema
         assert "title" in schema

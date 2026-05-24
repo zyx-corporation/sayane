@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sayane.dev/schemas/sayane-confidentiality-policy.schema.json",
+  "title": "SayaneConfidentialityPolicy",
+  "description": "Classification levels, section limits, and detection rules for confidentiality audit (Commercial Edition contract).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "profile",
+    "classification_levels",
+    "profile_ceiling",
+    "section_limits",
+    "rules",
+    "enforcement"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "kind": {
+      "type": "string",
+      "const": "SayaneConfidentialityPolicy"
+    },
+    "profile": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Target profile id (e.g. default)."
+    },
+    "classification_levels": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]*$",
+            "description": "Stable level identifier (ordered ascending = stronger restriction)."
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable label."
+          }
+        }
+      }
+    },
+    "profile_ceiling": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Maximum classification level allowed for the profile as a whole."
+    },
+    "section_limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["identity", "voice", "values", "policy", "knowledge", "context"],
+      "properties": {
+        "identity": { "type": "string", "minLength": 1 },
+        "voice": { "type": "string", "minLength": 1 },
+        "values": { "type": "string", "minLength": 1 },
+        "policy": { "type": "string", "minLength": 1 },
+        "knowledge": { "type": "string", "minLength": 1 },
+        "context": { "type": "string", "minLength": 1 }
+      }
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "description", "patterns", "action", "applies_to"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "patterns": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Regular expression patterns (engine-specific; validated at runtime)."
+          },
+          "action": {
+            "type": "string",
+            "enum": ["reject", "warn", "audit_only"]
+          },
+          "applies_to": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": ["profile", "context", "candidate"]
+            }
+          }
+        }
+      }
+    },
+    "context_classifications": {
+      "type": "object",
+      "description": "Optional declared classification per context file path.",
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "enforcement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["enforce", "warn_only", "audit_only"]
+        },
+        "block_on_reject": {
+          "type": "boolean",
+          "default": true
+        },
+        "log_violations": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    }
+  }
+}

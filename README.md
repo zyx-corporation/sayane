@@ -1,4 +1,4 @@
-# Sayane
+# Sayane (紗綾音)
 
 Sayane is a local-first persona and context portability tool for cross-LLM collaboration.
 

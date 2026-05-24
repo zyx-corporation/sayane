@@ -1,22 +1,22 @@
-# Omomuki MVP範囲
+# Sayane MVP範囲
 
 ## 1. 目的
 
-この文書は、Omomukiの初期MVPを過剰に広げないための範囲定義である。
+この文書は、Sayaneの初期MVPを過剰に広げないための範囲定義である。
 
-Omomukiは、CLI、Local Bridge、MCP Server、Chrome Extension、RDE/UIB評価、Obsidian連携など複数の方向へ拡張できる。しかし初期段階で全てを同時に実装すると、最小価値の検証が遅れる。
+Sayaneは、CLI、Local Bridge、MCP Server、Chrome Extension、RDE/UIB評価、Obsidian連携など複数の方向へ拡張できる。しかし初期段階で全てを同時に実装すると、最小価値の検証が遅れる。
 
 したがって、Phase 1では以下の最小価値に集中する。
 
 ```text
-Omomuki Profile から Prompt IR を生成し、ChatGPT / Claude 向けpromptへcompileできること。
+Sayane Profile から Prompt IR を生成し、ChatGPT / Claude 向けpromptへcompileできること。
 ```
 
 ## 2. Phase 1 MVPで実装するもの
 
 ### 2.1 Core model
 
-- OmomukiProfile
+- SayaneProfile
 - PromptIR
 - Policy
 - ContextIndex
@@ -27,16 +27,16 @@ Omomuki Profile から Prompt IR を生成し、ChatGPT / Claude 向けpromptへ
 ### 2.2 CLI command
 
 ```bash
-omomuki init
-omomuki profile inspect
-omomuki compile --target chatgpt
-omomuki compile --target claude
-omomuki export --format markdown
+sayane init
+sayane profile inspect
+sayane compile --target chatgpt
+sayane compile --target claude
+sayane export --format markdown
 ```
 
 ### 2.3 Schema / Validation
 
-- Omomuki Profile schema
+- Sayane Profile schema
 - Prompt IR schema
 - Pydantic model validation
 
@@ -77,7 +77,7 @@ Phase 1では以下を実装しない。
 Phase 1は以下を満たしたら完了とする。
 
 ```text
-sample Omomuki Profile を読み込める
+sample Sayane Profile を読み込める
 schema validation が通る
 Prompt IR を生成できる
 ChatGPT向けpromptを生成できる

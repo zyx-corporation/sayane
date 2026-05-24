@@ -1,10 +1,10 @@
-# Omomuki Profile と Prompt IR
+# Sayane Profile と Prompt IR
 
 ## 1. 概要
 
-Omomuki Profile は、ユーザーの人格的文脈・価値観・応答様式・作業方針を、LLM非依存に保持する構造化プロファイルである。
+Sayane Profile は、ユーザーの人格的文脈・価値観・応答様式・作業方針を、LLM非依存に保持する構造化プロファイルである。
 
-Prompt IR は、Omomuki Profile とタスク文脈から生成される中間表現である。各LLMへ直接渡すプロンプトではなく、Adapterが各LLM向けに変換する前段階の構造である。
+Prompt IR は、Sayane Profile とタスク文脈から生成される中間表現である。各LLMへ直接渡すプロンプトではなく、Adapterが各LLM向けに変換する前段階の構造である。
 
 ## 2. 設計原則
 
@@ -15,13 +15,13 @@ Prompt IR は、Omomuki Profile とタスク文脈から生成される中間表
 状態はProfileとLineageに保持する
 ```
 
-同じOmomuki Profileであっても、ChatGPT、Claude、Gemini、OSSモデルに対して同一プロンプトを渡す必要はない。重要なのは、同一の人格的文脈・価値観・制約が、それぞれのLLM特性に応じて適切に変換されることである。
+同じSayane Profileであっても、ChatGPT、Claude、Gemini、OSSモデルに対して同一プロンプトを渡す必要はない。重要なのは、同一の人格的文脈・価値観・制約が、それぞれのLLM特性に応じて適切に変換されることである。
 
-## 3. Omomuki Profile 初期構造
+## 3. Sayane Profile 初期構造
 
 ```yaml
 version: "0.1.0"
-kind: "OmomukiProfile"
+kind: "SayaneProfile"
 identity:
   name: "Tomoyuki Kano"
   preferred_name: "tomyuk"
@@ -161,7 +161,7 @@ Prompt IR
 
 ## 7. RDEとの関係
 
-Omomuki Profile は更新候補を即時mergeしない。
+Sayane Profile は更新候補を即時mergeしない。
 
 ```text
 Captured Context
@@ -175,8 +175,8 @@ Captured Context
 
 ## 8. 注意点
 
-Omomuki Profile は人格そのものではない。
+Sayane Profile は人格そのものではない。
 
 それは、LLMがユーザーの人格的文脈へ接近するための構造化媒介である。
 
-したがって、「人格コピー」「人格保存」「意識再現」のような強い主張は避ける。Omomukiはあくまで文脈・価値観・応答様式の可搬化基盤である。
+したがって、「人格コピー」「人格保存」「意識再現」のような強い主張は避ける。Sayaneはあくまで文脈・価値観・応答様式の可搬化基盤である。

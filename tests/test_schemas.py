@@ -16,13 +16,13 @@ def _load_schema(path: Path) -> dict:
 
 
 def test_minimal_profile_matches_schema(schemas_dir: Path, examples_dir: Path) -> None:
-    schema = _load_schema(schemas_dir / "omomuki-profile.schema.json")
+    schema = _load_schema(schemas_dir / "sayane-profile.schema.json")
     profile = _load_yaml(examples_dir / "profiles" / "minimal.yaml")
     jsonschema.validate(instance=profile, schema=schema)
 
 
 def test_schema_files_are_valid_json(schemas_dir: Path) -> None:
-    for name in ("omomuki-profile.schema.json", "prompt-ir.schema.json"):
+    for name in ("sayane-profile.schema.json", "prompt-ir.schema.json"):
         schema = _load_schema(schemas_dir / name)
         assert "$schema" in schema
         assert "title" in schema

@@ -2,9 +2,9 @@
 
 ## 1. 位置づけ
 
-Omomukiでは、MCP ServerをPhase 2.5に配置する。
+Sayaneでは、MCP ServerをPhase 2.5に配置する。
 
-Chrome Extensionは便利な入口・出口であるが、Web UIのDOM変更に弱い。ChatGPT、Claude、GeminiなどのWeb UIは頻繁に変更されるため、DOM注入をOmomukiの安定接続面にしてはならない。
+Chrome Extensionは便利な入口・出口であるが、Web UIのDOM変更に弱い。ChatGPT、Claude、GeminiなどのWeb UIは頻繁に変更されるため、DOM注入をSayaneの安定接続面にしてはならない。
 
 MCP Serverは、DOMに依存しない安定接続面として設計する。
 
@@ -18,7 +18,7 @@ Chrome Extension   MCP Client
 
 ## 2. 目的
 
-MCP Serverの目的は、MCP対応クライアントからOmomuki Coreを利用できるようにすることである。
+MCP Serverの目的は、MCP対応クライアントからSayane Coreを利用できるようにすることである。
 
 対象クライアント例:
 
@@ -49,7 +49,7 @@ Profileの要約を返す。
 
 ### 4.3 compile_prompt
 
-Omomuki Profileとtask instructionから、指定target向けpromptを生成する。
+Sayane Profileとtask instructionから、指定target向けpromptを生成する。
 
 target例:
 
@@ -113,7 +113,7 @@ Core        : 意味処理面
 
 ## 8. RDE観点
 
-MCP Server経由で生成されるcontext packetは、Omomuki Profileの一部を外部LLMへ提示する変換結果である。
+MCP Server経由で生成されるcontext packetは、Sayane Profileの一部を外部LLMへ提示する変換結果である。
 
 したがって、MCP Serverは単なるAPIではなく、意味変換の出口である。
 

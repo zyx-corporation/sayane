@@ -4,19 +4,19 @@ from pathlib import Path
 
 import pytest
 
-from omomuki.bridge.config import BridgeConfig
-from omomuki.mcp.operations import McpOperations
+from sayane.bridge.config import BridgeConfig
+from sayane.mcp.operations import McpOperations
 
 
 @pytest.fixture
 def mcp_ops(tmp_path: Path) -> McpOperations:
-    home = tmp_path / "omomuki"
+    home = tmp_path / "sayane"
     config = BridgeConfig(home=home)
     profile_dir = config.profiles_dir / "default"
     profile_dir.mkdir(parents=True)
     shutil.copy(
         Path("examples/profiles/minimal.yaml"),
-        profile_dir / "omomuki.profile.yaml",
+        profile_dir / "sayane.profile.yaml",
     )
     candidates = config.candidates_dir
     candidates.mkdir(parents=True)

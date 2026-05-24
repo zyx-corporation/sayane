@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://omomuki.dev/schemas/prompt-ir.schema.json",
+  "$id": "https://sayane.dev/schemas/prompt-ir.schema.json",
   "title": "PromptIR",
-  "description": "Intermediate representation compiled from Omomuki Profile and task context.",
+  "description": "Intermediate representation compiled from Sayane Profile and task context.",
   "type": "object",
   "additionalProperties": false,
   "required": ["version", "kind", "system", "context", "instruction", "constraints", "examples"],

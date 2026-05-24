@@ -1,8 +1,8 @@
 {
-  "name": "omomuki-extension",
+  "name": "sayane-extension",
   "version": "0.3.0",
   "private": true,
-  "description": "Omomuki Chrome Extension — capture and insert context (Phase 3)",
+  "description": "Sayane Chrome Extension — capture and insert context (Phase 3)",
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",

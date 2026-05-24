@@ -1,26 +1,26 @@
-# Omomuki
+# Sayane
 
-Omomuki is a local-first persona and context portability tool for cross-LLM collaboration.
+Sayane is a local-first persona and context portability tool for cross-LLM collaboration.
 
 It helps users extract, structure, migrate, and evaluate their personal context, working style, values, and response preferences across different LLM runtimes such as ChatGPT, Claude, Gemini, and open-source models.
 
-Omomuki treats LLMs as execution substrates, not owners of persona.
+Sayane treats LLMs as execution substrates, not owners of persona.
 
 ## Core principles
 
-Omomuki rests on three design propositions.
+Sayane rests on three design propositions.
 
 ### 1. Separate persona from runtime
 
 > Separate persona from runtime.
 
-A user's values, voice, policy, and context live in an **Omomuki Profile** on the user's machine. Custom Instructions, project settings, and vendor "memory" are **projections per runtime**, not the source of truth for persona.
+A user's values, voice, policy, and context live in an **Sayane Profile** on the user's machine. Custom Instructions, project settings, and vendor "memory" are **projections per runtime**, not the source of truth for persona.
 
 LLMs do not *own* persona—they **execute** prompts compiled from the Profile.
 
 ### 2. Everything goes through intermediate representation (IR)
 
-Omomuki does not copy prompt strings between platforms. It builds **Prompt IR** (an LLM-agnostic intermediate form) from the Profile, then **Adapters** compile to each target format.
+Sayane does not copy prompt strings between platforms. It builds **Prompt IR** (an LLM-agnostic intermediate form) from the Profile, then **Adapters** compile to each target format.
 
 ```text
 Same persona  ≠  same prompt
@@ -39,22 +39,22 @@ capture → Candidate → evaluate (RDE+UIB) → approve / reject → lineage
 ```
 
 ```text
-Omomuki Profile  →  Prompt IR  →  Adapter  →  LLM output
+Sayane Profile  →  Prompt IR  →  Adapter  →  LLM output
         ↑
 Candidate (capture) → RDE evaluation → approved merge → Lineage
 ```
 
-**Local-first**: the canonical store is on the user's machine (`~/.omomuki/`). Community Edition uses Git history by default. **Commercial Edition** (Phase 6) — see [omomuki-pro](https://github.com/zyx-corporation/omomuki-pro/blob/main/docs/commercial-edition.md).
+**Local-first**: the canonical store is on the user's machine (`~/.sayane/`). Community Edition uses Git history by default. **Commercial Edition** (Phase 6) — see [sayane-pro](https://github.com/zyx-corporation/sayane-pro/blob/main/docs/commercial-edition.md).
 
 ---
 
 ## Not just user profile exchange
 
-Exporting Custom Instructions and pasting them into another LLM, or moving a platform-specific settings blob, is **profile exchange**. Omomuki aims for something different.
+Exporting Custom Instructions and pasting them into another LLM, or moving a platform-specific settings blob, is **profile exchange**. Sayane aims for something different.
 
-| Aspect | Typical profile exchange | Omomuki |
+| Aspect | Typical profile exchange | Sayane |
 |--------|-------------------------|---------|
-| **Data shape** | Platform-specific text or settings blob | LLM-agnostic **Omomuki Profile** + **Prompt IR** |
+| **Data shape** | Platform-specific text or settings blob | LLM-agnostic **Sayane Profile** + **Prompt IR** |
 | **Cross-LLM move** | Copy-paste the same string | **Re-compile per target** via Adapters |
 | **Updates** | Overwrite / sync success only | **Candidate → evaluate → approve** audits meaning change |
 | **History** | None or vendor-limited logs | **Lineage** kept by the user |
@@ -69,7 +69,7 @@ Design details: [architecture.md](docs/architecture.md) / [Profile and Prompt IR
 ## Architecture flow
 
 ```text
-Omomuki Profile
+Sayane Profile
         ↓
 Prompt IR
         ↓
@@ -86,7 +86,7 @@ Evaluation / Lineage
 
 ## Initial Product Shape
 
-Omomuki will begin as a standalone application composed of:
+Sayane will begin as a standalone application composed of:
 
 - a Python core library
 - a Python CLI
@@ -109,13 +109,13 @@ The Chrome Extension captures and inserts context. The CLI and core library own 
 **macOS / Linux:**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/zyx-corporation/omomuki/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/zyx-corporation/sayane/main/scripts/install.sh | bash
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-irm https://raw.githubusercontent.com/zyx-corporation/omomuki/main/scripts/install.ps1 | iex
+irm https://raw.githubusercontent.com/zyx-corporation/sayane/main/scripts/install.ps1 | iex
 ```
 
 See [install.md](docs/install.md) for options and uninstall.
@@ -123,11 +123,11 @@ See [install.md](docs/install.md) for options and uninstall.
 ## Quick start (from source)
 
 ```bash
-git clone https://github.com/zyx-corporation/omomuki.git
-cd omomuki
+git clone https://github.com/zyx-corporation/sayane.git
+cd sayane
 pip install -e ".[dev]"
-omomuki init
-omomuki compile --target chatgpt --profile examples/profiles/minimal.yaml
+sayane init
+sayane compile --target chatgpt --profile examples/profiles/minimal.yaml
 ```
 
 See [`docs/ci.md`](docs/ci.md) for development and CI.
@@ -146,6 +146,6 @@ Project design documents are maintained in Japanese under [`docs/`](docs/).
 | MCP Server | [mcp-manual.md](docs/mcp-manual.md) |
 | Chrome Extension | [extension-manual.md](docs/extension-manual.md) |
 
-Omomuki is licensed under the Apache License, Version 2.0.
+Sayane is licensed under the Apache License, Version 2.0.
 
 SPDX-License-Identifier: Apache-2.0

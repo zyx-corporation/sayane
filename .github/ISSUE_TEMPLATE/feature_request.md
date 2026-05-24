@@ -1,6 +1,6 @@
 ---
 name: Feature request
-description: Propose a new Omomuki feature or capability
+description: Propose a new Sayane feature or capability
 title: "[Feature]: "
 labels: ["type: feature", "needs: triage"]
 assignees: []
@@ -44,7 +44,7 @@ assignees: []
 
 ```text
 例:
-omomuki compile --target claude
+sayane compile --target claude
 ```
 
 ## 受け入れ条件

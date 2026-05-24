@@ -1,5 +1,5 @@
-from omomuki.core.candidate import LLMReview
-from omomuki.evaluators.rde_merge import merge_rde_class
+from sayane.core.candidate import LLMReview
+from sayane.evaluators.rde_merge import merge_rde_class
 
 
 def test_merge_rde_takes_more_conservative_llm() -> None:

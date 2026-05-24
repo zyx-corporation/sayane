@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from omomuki.core.builder import build_prompt_ir
-from omomuki.core.loader import load_profile
-from omomuki.core.models import PromptIR
+from sayane.core.builder import build_prompt_ir
+from sayane.core.loader import load_profile
+from sayane.core.models import PromptIR
 
 
 def test_build_prompt_ir_from_minimal_profile(examples_dir: Path) -> None:

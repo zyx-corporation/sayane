@@ -3,8 +3,8 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-import omomuki
-from omomuki.cli.main import app
+import sayane
+from sayane.cli.main import app
 
 runner = CliRunner()
 
@@ -12,7 +12,7 @@ runner = CliRunner()
 def test_version_flag() -> None:
     result = runner.invoke(app, ["--version"])
     assert result.exit_code == 0
-    assert result.stdout.strip() == f"omomuki {omomuki.__version__}"
+    assert result.stdout.strip() == f"sayane {sayane.__version__}"
 
 
 def test_compile_chatgpt_from_example_profile(examples_dir: Path, tmp_path: Path) -> None:
@@ -42,7 +42,7 @@ def test_profile_inspect(examples_dir: Path) -> None:
     result = runner.invoke(app, ["profile", "inspect", "--profile", str(profile_path)])
     assert result.exit_code == 0
     assert "Example User" in result.stdout
-    assert "OmomukiProfile" in result.stdout
+    assert "SayaneProfile" in result.stdout
 
 
 def test_init_creates_profile_store(tmp_path: Path, monkeypatch) -> None:
@@ -50,7 +50,7 @@ def test_init_creates_profile_store(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setenv("HOME", str(home))
     result = runner.invoke(app, ["init"])
     assert result.exit_code == 0, result.stdout + result.stderr
-    profile_file = home / ".omomuki" / "profiles" / "default" / "omomuki.profile.yaml"
+    profile_file = home / ".sayane" / "profiles" / "default" / "sayane.profile.yaml"
     assert profile_file.exists()
 
 
@@ -69,5 +69,5 @@ def test_export_markdown(examples_dir: Path) -> None:
         ],
     )
     assert result.exit_code == 0
-    assert "# Omomuki Compiled Prompt" in result.stdout
+    assert "# Sayane Compiled Prompt" in result.stdout
     assert "system" in result.stdout.lower()

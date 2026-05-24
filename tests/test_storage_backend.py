@@ -8,11 +8,11 @@ from typing import Any
 
 import pytest
 
-from omomuki.core.models import OmomukiProfile
-from omomuki.storage.base import StorageBackendError, StorageBundle
-from omomuki.storage.config import StorageConfig, load_storage_config, save_storage_config
-from omomuki.storage.factory import open_storage, set_storage_backend
-from omomuki.storage.registry import (
+from sayane.core.models import SayaneProfile
+from sayane.storage.base import StorageBackendError, StorageBundle
+from sayane.storage.config import StorageConfig, load_storage_config, save_storage_config
+from sayane.storage.factory import open_storage, set_storage_backend
+from sayane.storage.registry import (
     get_backend_factory,
     list_backends,
     register_backend,
@@ -25,14 +25,14 @@ from omomuki.storage.registry import (
 class _MemoryProfileRepo:
     profile_dir: Path
     profile_path: Path
-    _profile: OmomukiProfile | None = None
+    _profile: SayaneProfile | None = None
 
-    def load(self) -> OmomukiProfile:
+    def load(self) -> SayaneProfile:
         if self._profile is None:
             raise FileNotFoundError(self.profile_path)
         return self._profile
 
-    def save(self, profile: OmomukiProfile) -> None:
+    def save(self, profile: SayaneProfile) -> None:
         self._profile = profile
 
 
@@ -82,7 +82,7 @@ def _memory_backend_factory(
     root.mkdir(parents=True, exist_ok=True)
     context_dir = root / "context"
     context_dir.mkdir(exist_ok=True)
-    profile_path = root / "omomuki.profile.yaml"
+    profile_path = root / "sayane.profile.yaml"
     return StorageBundle(
         backend="memory",
         profile_id=storage_config.profile_id,
@@ -117,11 +117,11 @@ def test_filesystem_backend_open_storage(tmp_path: Path, monkeypatch) -> None:
     home = tmp_path / "home"
     profile_dir = home / "profiles" / "default"
     profile_dir.mkdir(parents=True)
-    (profile_dir / "omomuki.profile.yaml").write_text(
-        'version: "0.1.0"\nkind: OmomukiProfile\nidentity:\n  name: "Test"\n',
+    (profile_dir / "sayane.profile.yaml").write_text(
+        'version: "0.1.0"\nkind: SayaneProfile\nidentity:\n  name: "Test"\n',
         encoding="utf-8",
     )
-    monkeypatch.setattr("omomuki.storage.factory.omomuki_home", lambda: home)
+    monkeypatch.setattr("sayane.storage.factory.sayane_home", lambda: home)
 
     bundle = open_storage(home=home)
     assert bundle.backend == "filesystem"
@@ -145,7 +145,7 @@ def test_unknown_backend_raises() -> None:
 
 
 def test_set_storage_backend_persists(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.setattr("omomuki.storage.factory.omomuki_home", lambda: tmp_path)
+    monkeypatch.setattr("sayane.storage.factory.sayane_home", lambda: tmp_path)
     config = set_storage_backend("filesystem", home=tmp_path)
     assert config.backend == "filesystem"
     assert load_storage_config(tmp_path).backend == "filesystem"
@@ -154,16 +154,16 @@ def test_set_storage_backend_persists(tmp_path: Path, monkeypatch) -> None:
 def test_storage_backend_status_cli(tmp_path: Path, monkeypatch) -> None:
     from typer.testing import CliRunner
 
-    from omomuki.cli.app import build_app
+    from sayane.cli.app import build_app
 
     home = tmp_path / "home"
     profile_dir = home / "profiles" / "default"
     profile_dir.mkdir(parents=True)
-    (profile_dir / "omomuki.profile.yaml").write_text(
-        'version: "0.1.0"\nkind: OmomukiProfile\nidentity:\n  name: "Test"\n',
+    (profile_dir / "sayane.profile.yaml").write_text(
+        'version: "0.1.0"\nkind: SayaneProfile\nidentity:\n  name: "Test"\n',
         encoding="utf-8",
     )
-    monkeypatch.setattr("omomuki.storage.factory.omomuki_home", lambda: home)
+    monkeypatch.setattr("sayane.storage.factory.sayane_home", lambda: home)
 
     runner = CliRunner()
     result = runner.invoke(build_app(), ["storage", "backend", "status"])

@@ -1,5 +1,5 @@
-import omomuki
-from omomuki import (
+import sayane
+from sayane import (
     adapters,
     bridge,
     cli,
@@ -12,7 +12,7 @@ from omomuki import (
 
 
 def test_version() -> None:
-    assert omomuki.__version__ == "0.5.9"
+    assert sayane.__version__ == "0.5.9"
 
 
 def test_subpackages_importable() -> None:

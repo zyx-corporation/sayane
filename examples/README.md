@@ -4,7 +4,7 @@ Sample artifacts for development and regression tests.
 
 ## Profiles
 
-- `profiles/minimal.yaml` — minimal valid Omomuki Profile (Phase 0 fixture)
+- `profiles/minimal.yaml` — minimal valid Sayane Profile (Phase 0 fixture)
 
 ## Compiled prompts
 

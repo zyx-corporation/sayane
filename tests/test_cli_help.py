@@ -1,6 +1,6 @@
 from typer.testing import CliRunner
 
-from omomuki.cli.main import app
+from sayane.cli.main import app
 
 runner = CliRunner()
 
@@ -8,7 +8,7 @@ runner = CliRunner()
 def test_help_root_overview() -> None:
     result = runner.invoke(app, ["help"])
     assert result.exit_code == 0, result.stdout + result.stderr
-    assert "Omomuki" in result.stdout
+    assert "Sayane" in result.stdout
     assert "candidate" in result.stdout
     assert "profile" in result.stdout
     assert "evaluate" in result.stdout

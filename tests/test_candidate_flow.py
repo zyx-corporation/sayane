@@ -2,21 +2,21 @@ import json
 import shutil
 from pathlib import Path
 
-from omomuki.bridge.config import BridgeConfig
-from omomuki.core.loader import load_profile
-from omomuki.evaluators.service import approve_candidate, evaluate_candidate
-from omomuki.storage.candidates import create_from_capture, load_candidate
-from omomuki.storage.lineage_store import list_records
+from sayane.bridge.config import BridgeConfig
+from sayane.core.loader import load_profile
+from sayane.evaluators.service import approve_candidate, evaluate_candidate
+from sayane.storage.candidates import create_from_capture, load_candidate
+from sayane.storage.lineage_store import list_records
 
 
 def test_evaluate_and_approve_merges_knowledge(tmp_path: Path) -> None:
-    home = tmp_path / "omomuki"
+    home = tmp_path / "sayane"
     config = BridgeConfig(home=home)
     profile_dir = config.profiles_dir / "default"
     profile_dir.mkdir(parents=True)
     shutil.copy(
         Path("examples/profiles/minimal.yaml"),
-        profile_dir / "omomuki.profile.yaml",
+        profile_dir / "sayane.profile.yaml",
     )
 
     candidate = create_from_capture(
@@ -31,7 +31,7 @@ def test_evaluate_and_approve_merges_knowledge(tmp_path: Path) -> None:
     approved = approve_candidate(config, candidate.id)
     assert approved.status == "approved"
 
-    profile = load_profile(profile_dir / "omomuki.profile.yaml")
+    profile = load_profile(profile_dir / "sayane.profile.yaml")
     concepts = profile.knowledge.concepts if profile.knowledge else []
     assert any("Resonanceverse" in c for c in concepts)
 
@@ -40,7 +40,7 @@ def test_evaluate_and_approve_merges_knowledge(tmp_path: Path) -> None:
 
 
 def test_legacy_capture_upgraded_on_load(tmp_path: Path) -> None:
-    config = BridgeConfig(home=tmp_path / "omomuki")
+    config = BridgeConfig(home=tmp_path / "sayane")
     config.candidates_dir.mkdir(parents=True)
     legacy = {
         "id": "legacy1",

@@ -2,14 +2,14 @@
 # Dogfood: capture → evaluate (level 1) → diff → optional approve
 set -euo pipefail
 
-BRIDGE_URL="${OMOMUKI_BRIDGE_URL:-http://127.0.0.1:38741}"
-TOKEN_FILE="${OMOMUKI_BRIDGE_TOKEN_FILE:-$HOME/.omomuki/bridge.token}"
+BRIDGE_URL="${SAYANE_BRIDGE_URL:-http://127.0.0.1:38741}"
+TOKEN_FILE="${SAYANE_BRIDGE_TOKEN_FILE:-$HOME/.sayane/bridge.token}"
 LEVEL="${1:-1}"
 APPROVE="${2:-}"
-CONTENT="${OMOMUKI_DOGFOOD_CONTENT:-Explicit uncertainty and local-first context portability.}"
+CONTENT="${SAYANE_DOGFOOD_CONTENT:-Explicit uncertainty and local-first context portability.}"
 
 if [[ ! -f "$TOKEN_FILE" ]]; then
-  echo "Missing token: $TOKEN_FILE (run: omomuki serve)" >&2
+  echo "Missing token: $TOKEN_FILE (run: sayane serve)" >&2
   exit 1
 fi
 

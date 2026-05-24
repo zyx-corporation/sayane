@@ -3,18 +3,18 @@ import shutil
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from omomuki.bridge.config import BridgeConfig
-from omomuki.core.loader import load_profile
-from omomuki.evaluators.judge_config import JudgeConfig, load_judge_config
-from omomuki.evaluators.llm_judge import review_with_llm
-from omomuki.evaluators.proposal import build_proposal_from_content
-from omomuki.evaluators.service import evaluate_candidate
-from omomuki.storage.candidates import create_from_capture
+from sayane.bridge.config import BridgeConfig
+from sayane.core.loader import load_profile
+from sayane.evaluators.judge_config import JudgeConfig, load_judge_config
+from sayane.evaluators.llm_judge import review_with_llm
+from sayane.evaluators.proposal import build_proposal_from_content
+from sayane.evaluators.service import evaluate_candidate
+from sayane.storage.candidates import create_from_capture
 
 
 def test_load_judge_config_level2_default_local(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.delenv("OMOMUKI_JUDGE_BASE_URL", raising=False)
+    monkeypatch.delenv("SAYANE_JUDGE_BASE_URL", raising=False)
     cfg = load_judge_config(2)
     assert cfg is not None
     assert "11434" in cfg.base_url
@@ -22,12 +22,12 @@ def test_load_judge_config_level2_default_local(monkeypatch, tmp_path: Path) -> 
 
 def test_load_judge_config_level3_requires_key(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.setenv("OMOMUKI_JUDGE_BASE_URL", "https://api.example.com/v1")
-    monkeypatch.delenv("OMOMUKI_JUDGE_API_KEY", raising=False)
+    monkeypatch.setenv("SAYANE_JUDGE_BASE_URL", "https://api.example.com/v1")
+    monkeypatch.delenv("SAYANE_JUDGE_API_KEY", raising=False)
     assert load_judge_config(3) is None
 
 
-@patch("omomuki.evaluators.llm_judge.urllib.request.urlopen")
+@patch("sayane.evaluators.llm_judge.urllib.request.urlopen")
 def test_review_with_llm_parses_json(mock_urlopen: MagicMock, examples_dir: Path) -> None:
     payload = {
         "choices": [
@@ -65,7 +65,7 @@ def test_review_with_llm_parses_json(mock_urlopen: MagicMock, examples_dir: Path
     assert review.uib is not None
 
 
-@patch("omomuki.evaluators.llm_judge.urllib.request.urlopen")
+@patch("sayane.evaluators.llm_judge.urllib.request.urlopen")
 def test_review_with_llm_partial_uib(mock_urlopen: MagicMock, examples_dir: Path) -> None:
     payload = {
         "choices": [
@@ -99,23 +99,23 @@ def test_review_with_llm_partial_uib(mock_urlopen: MagicMock, examples_dir: Path
     assert review.uib.FG == 0.5
 
 
-@patch("omomuki.evaluators.service.review_with_llm")
-@patch("omomuki.evaluators.service.load_judge_config")
+@patch("sayane.evaluators.service.review_with_llm")
+@patch("sayane.evaluators.service.load_judge_config")
 def test_evaluate_level2_attaches_llm_review(
     mock_cfg: MagicMock,
     mock_review: MagicMock,
     tmp_path: Path,
     examples_dir: Path,
 ) -> None:
-    from omomuki.core.candidate import LLMReview, UIBScores
+    from sayane.core.candidate import LLMReview, UIBScores
 
-    home = tmp_path / "omomuki"
+    home = tmp_path / "sayane"
     config = BridgeConfig(home=home)
     profile_dir = config.profiles_dir / "default"
     profile_dir.mkdir(parents=True)
     shutil.copy(
         examples_dir / "profiles" / "minimal.yaml",
-        profile_dir / "omomuki.profile.yaml",
+        profile_dir / "sayane.profile.yaml",
     )
 
     mock_cfg.return_value = JudgeConfig(

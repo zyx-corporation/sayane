@@ -1,7 +1,7 @@
 from typer.testing import CliRunner
 
-from omomuki.cli.app import build_app
-from omomuki.cli.i18n import init_locale_from_argv, set_locale
+from sayane.cli.app import build_app
+from sayane.cli.i18n import init_locale_from_argv, set_locale
 
 
 def test_init_locale_from_argv() -> None:

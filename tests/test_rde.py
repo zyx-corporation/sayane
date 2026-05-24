@@ -1,11 +1,11 @@
-from omomuki.core.candidate import CandidateProposal
-from omomuki.evaluators.proposal import build_proposal_from_content
-from omomuki.evaluators.rde import classify_rde
-from omomuki.evaluators.uib import score_uib
+from sayane.core.candidate import CandidateProposal
+from sayane.evaluators.proposal import build_proposal_from_content
+from sayane.evaluators.rde import classify_rde
+from sayane.evaluators.uib import score_uib
 
 
 def test_rde_inferred_extension_for_knowledge() -> None:
-    content = "Omomuki provides context portability across LLM platforms."
+    content = "Sayane provides context portability across LLM platforms."
     proposal = build_proposal_from_content(content)
     rde_class, _ = classify_rde(content, proposal)
     assert rde_class == "Inferred Extension"

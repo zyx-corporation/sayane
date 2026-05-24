@@ -1,5 +1,5 @@
-from omomuki.evaluators.proposal import build_proposal_from_content
-from omomuki.evaluators.sections import infer_proposal_section
+from sayane.evaluators.proposal import build_proposal_from_content
+from sayane.evaluators.sections import infer_proposal_section
 
 
 def test_infer_values_section() -> None:

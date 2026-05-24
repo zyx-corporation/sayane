@@ -5,13 +5,13 @@ import pytest
 import yaml
 from pydantic import ValidationError
 
-from omomuki.core.loader import load_profile
-from omomuki.core.models import OmomukiProfile, PromptIR
+from sayane.core.loader import load_profile
+from sayane.core.models import PromptIR, SayaneProfile
 
 
 def test_load_minimal_example_profile(examples_dir: Path) -> None:
     profile = load_profile(examples_dir / "profiles" / "minimal.yaml")
-    assert profile.kind == "OmomukiProfile"
+    assert profile.kind == "SayaneProfile"
     assert profile.identity.name == "Example User"
     assert profile.identity.preferred_name == "example"
     assert "RDE" in profile.knowledge.concepts
@@ -21,7 +21,7 @@ def test_profile_rejects_wrong_kind(examples_dir: Path) -> None:
     data = yaml.safe_load((examples_dir / "profiles" / "minimal.yaml").read_text(encoding="utf-8"))
     data["kind"] = "WrongKind"
     with pytest.raises(ValidationError):
-        OmomukiProfile.model_validate(data)
+        SayaneProfile.model_validate(data)
 
 
 def test_prompt_ir_rejects_wrong_kind() -> None:

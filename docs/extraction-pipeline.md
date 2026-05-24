@@ -2,9 +2,9 @@
 
 ## 1. 概要
 
-Omomukiは、ProfileからLLM向けpromptを生成するだけでは不十分である。
+Sayaneは、ProfileからLLM向けpromptを生成するだけでは不十分である。
 
-LLMとの会話やWeb上の作業から新しい文脈が生まれた場合、それをどのようにOmomuki Profileへ戻すかが重要になる。
+LLMとの会話やWeb上の作業から新しい文脈が生まれた場合、それをどのようにSayane Profileへ戻すかが重要になる。
 
 この逆方向の流れを、Conversation Extract / Reverse Compile Pipeline と呼ぶ。
 
@@ -33,7 +33,7 @@ LLMとの対話では、以下のような情報が生まれる。
 
 一方で、すべて手作業で整理すると、文脈再説明コストが残る。
 
-したがって、Omomukiでは、抽出は支援し、mergeは評価と承認を通す。
+したがって、Sayaneでは、抽出は支援し、mergeは評価と承認を通す。
 
 ## 3. Extractorの役割
 
@@ -70,7 +70,7 @@ ExtractorはProfileを直接変更しない。
 - RDE
 - UIB
 - Kotonoha
-- Omomuki
+- Sayane
 - 独自理論や用語
 
 ### 4.4 Correction

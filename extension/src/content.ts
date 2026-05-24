@@ -5,7 +5,7 @@
 import { insertTextIntoPage } from "./sites/registry.js";
 import type { ContentMessage, ContentResponse } from "./types.js";
 
-const LOADED_KEY = "__omomukiContentScript";
+const LOADED_KEY = "__sayaneContentScript";
 
 function getSelectionText(): string {
   const selection = window.getSelection();

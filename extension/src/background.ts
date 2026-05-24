@@ -121,5 +121,5 @@ chrome.runtime.onMessage.addListener(
 );
 
 chrome.runtime.onInstalled.addListener(() => {
-  console.info("[Omomuki] extension installed (Phase 3)");
+  console.info("[Sayane] extension installed (Phase 3)");
 });

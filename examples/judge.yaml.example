@@ -1,9 +1,9 @@
-# Copy to ~/.omomuki/judge.yaml for Level 2/3 LLM-as-a-Judge
+# Copy to ~/.sayane/judge.yaml for Level 2/3 LLM-as-a-Judge
 # Level 2: local OpenAI-compatible API (e.g. Ollama)
 base_url: "http://127.0.0.1:11434/v1"
 model: "llama3.2"
 
-# Level 3: external API — set api_key (or OMOMUKI_JUDGE_API_KEY)
+# Level 3: external API — set api_key (or SAYANE_JUDGE_API_KEY)
 # base_url: "https://api.openai.com/v1"
 # api_key: "sk-..."
 # model: "gpt-4o-mini"

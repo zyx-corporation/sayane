@@ -1,4 +1,4 @@
-from omomuki.storage.markdown import normalize_markdown
+from sayane.storage.markdown import normalize_markdown
 
 
 def test_normalize_strips_bom_and_trailing_whitespace() -> None:

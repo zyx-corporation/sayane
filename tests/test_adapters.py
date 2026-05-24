@@ -1,10 +1,10 @@
 from pathlib import Path
 
-from omomuki.adapters.chatgpt import ChatGPTAdapter
-from omomuki.adapters.claude import ClaudeAdapter
-from omomuki.adapters.factory import get_adapter
-from omomuki.core.builder import build_prompt_ir
-from omomuki.core.loader import load_profile
+from sayane.adapters.chatgpt import ChatGPTAdapter
+from sayane.adapters.claude import ClaudeAdapter
+from sayane.adapters.factory import get_adapter
+from sayane.core.builder import build_prompt_ir
+from sayane.core.loader import load_profile
 
 
 def _minimal_ir(examples_dir: Path):

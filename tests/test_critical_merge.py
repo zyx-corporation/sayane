@@ -4,12 +4,12 @@ from pathlib import Path
 
 import pytest
 
-from omomuki.bridge.config import BridgeConfig
-from omomuki.core.candidate import CandidateProposal, CandidateSource, CandidateUpdate
-from omomuki.core.loader import load_profile
-from omomuki.evaluators.merge import merge_candidate_into_profile
-from omomuki.evaluators.service import approve_candidate
-from omomuki.storage.candidates import save_candidate
+from sayane.bridge.config import BridgeConfig
+from sayane.core.candidate import CandidateProposal, CandidateSource, CandidateUpdate
+from sayane.core.loader import load_profile
+from sayane.evaluators.merge import merge_candidate_into_profile
+from sayane.evaluators.service import approve_candidate
+from sayane.storage.candidates import save_candidate
 
 
 def _candidate(section: str, items: list[str]) -> CandidateUpdate:
@@ -36,13 +36,13 @@ def test_merge_values_with_force(examples_dir: Path) -> None:
 
 
 def test_approve_critical_via_cli_flow(tmp_path: Path) -> None:
-    home = tmp_path / "omomuki"
+    home = tmp_path / "sayane"
     config = BridgeConfig(home=home)
     profile_dir = config.profiles_dir / "default"
     profile_dir.mkdir(parents=True)
     shutil.copy(
         Path("examples/profiles/minimal.yaml"),
-        profile_dir / "omomuki.profile.yaml",
+        profile_dir / "sayane.profile.yaml",
     )
     candidate = CandidateUpdate(
         id="c-voice",
@@ -54,5 +54,5 @@ def test_approve_critical_via_cli_flow(tmp_path: Path) -> None:
     save_candidate(config, candidate)
     approved = approve_candidate(config, candidate.id, force_critical=True)
     assert approved.status == "approved"
-    profile = load_profile(profile_dir / "omomuki.profile.yaml")
+    profile = load_profile(profile_dir / "sayane.profile.yaml")
     assert "collaborative" in profile.voice.tone

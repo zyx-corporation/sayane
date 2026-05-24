@@ -1,18 +1,18 @@
-# Omomuki
+# Sayane
 
-Omomuki は、LLM間でユーザーの人格的文脈・価値観・応答様式・作業方針を可搬化するための **local-first** ツールです（現行 **0.5.9**）。
+Sayane は、LLM間でユーザーの人格的文脈・価値観・応答様式・作業方針を可搬化するための **local-first** ツールです（現行 **0.5.9**）。
 
 ChatGPT、Claude など異なる LLM 実行基盤のあいだで、ユーザーの文脈を構造化し、評価を挟んで Profile へ反映します。LLM は人格の所有者ではなく、**実行基盤**として扱います。
 
 ## 中核原則
 
-Omomuki の設計は、次の 3 つの命題に支えられています。
+Sayane の設計は、次の 3 つの命題に支えられています。
 
 ### 1. 人格と実行を分離する
 
 > 人格と実行を分離する。
 
-ユーザーの価値観・文体・方針・文脈は **Omomuki Profile** としてローカルに保持する。ChatGPT の Custom Instructions、Claude の Project 設定、各 SaaS の「メモリ」などは **実行基盤ごとの投影** に過ぎず、人格の正本ではない。
+ユーザーの価値観・文体・方針・文脈は **Sayane Profile** としてローカルに保持する。ChatGPT の Custom Instructions、Claude の Project 設定、各 SaaS の「メモリ」などは **実行基盤ごとの投影** に過ぎず、人格の正本ではない。
 
 LLM は人格を「覚えている」主体ではなく、Profile からコンパイルされたプロンプトを **実行する** 側である。
 
@@ -37,22 +37,22 @@ capture → Candidate → evaluate（RDE+UIB）→ approve / reject → lineage
 ```
 
 ```text
-Omomuki Profile  →  Prompt IR  →  Adapter  →  LLM 出力
+Sayane Profile  →  Prompt IR  →  Adapter  →  LLM 出力
         ↑
 Candidate（capture）→ RDE 評価 → 承認 merge → Lineage
 ```
 
-**local-first**: 正本はユーザーのマシン上（`~/.omomuki/`）。Community Edition では Git 履歴を既定とする。**Commercial Edition**（Phase 6）— [omomuki-pro](https://github.com/zyx-corporation/omomuki-pro/blob/main/docs/commercial-edition.md)。
+**local-first**: 正本はユーザーのマシン上（`~/.sayane/`）。Community Edition では Git 履歴を既定とする。**Commercial Edition**（Phase 6）— [sayane-pro](https://github.com/zyx-corporation/sayane-pro/blob/main/docs/commercial-edition.md)。
 
 ---
 
 ## 単なるユーザープロファイル交換との違い
 
-「Custom Instructions をエクスポートして別 LLM に貼る」「アカウント設定 JSON を丸ごと移す」ような **プロファイル交換** とは、Omomuki が目指すものは異なります。
+「Custom Instructions をエクスポートして別 LLM に貼る」「アカウント設定 JSON を丸ごと移す」ような **プロファイル交換** とは、Sayane が目指すものは異なります。
 
-| 観点 | 典型的なプロファイル交換 | Omomuki |
+| 観点 | 典型的なプロファイル交換 | Sayane |
 |------|------------------------|---------|
-| **データの形** | プラットフォーム固有のテキストや設定 blob | LLM 非依存の **Omomuki Profile** + **Prompt IR** |
+| **データの形** | プラットフォーム固有のテキストや設定 blob | LLM 非依存の **Sayane Profile** + **Prompt IR** |
 | **LLM 間の移行** | 同じ文字列をコピー＆ペースト | Adapter 経由で **target ごとに再コンパイル** |
 | **更新の扱い** | 上書き・同期の成否のみ | **Candidate → 評価 → approve** で意味変化を監査 |
 | **履歴** | なし、または SaaS 側の限定的ログ | **Lineage** で更新・拒否の記録をユーザーが保持 |
@@ -60,7 +60,7 @@ Candidate（capture）→ RDE 評価 → 承認 merge → Lineage
 | **所有** | ベンダー SaaS 内に閉じがち | **local-first**（ユーザーが正本を保持） |
 | **即時反映** | 貼り付け即生效 | capture は **即 merge しない**（Critical Distortion 等は拒否可能） |
 
-Omomuki Profile は「自己紹介文の置き場」ではなく、LLM がユーザーの文脈へ **構造的に接近するための媒介** です。単一フィールドの交換ではなく、identity / voice / values / policy / context を分離して保持し、compile 時に Prompt IR へ合成します。
+Sayane Profile は「自己紹介文の置き場」ではなく、LLM がユーザーの文脈へ **構造的に接近するための媒介** です。単一フィールドの交換ではなく、identity / voice / values / policy / context を分離して保持し、compile 時に Prompt IR へ合成します。
 
 設計の詳細: [architecture.md](docs/architecture.md) / [Profile と Prompt IR](docs/profile-ir.md)
 
@@ -76,8 +76,8 @@ Omomuki Profile は「自己紹介文の置き場」ではなく、LLM がユー
 | Phase | 内容 |
 |-------|------|
 | 1 | `init`, `compile`, `export`, Profile → Prompt IR |
-| 2 | `omomuki serve`（Bridge） |
-| 2.5 | `omomuki mcp serve` |
+| 2 | `sayane serve`（Bridge） |
+| 2.5 | `sayane mcp serve` |
 | 3 | Chrome Extension（capture / insert） |
 | 4 | Candidate + RDE/UIB + approve + lineage |
 | 4 拡張 | Level 2/3 LLM judge、`--force-critical` merge |
@@ -88,13 +88,13 @@ Omomuki Profile は「自己紹介文の置き場」ではなく、LLM がユー
 **macOS / Linux:**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/zyx-corporation/omomuki/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/zyx-corporation/sayane/main/scripts/install.sh | bash
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-irm https://raw.githubusercontent.com/zyx-corporation/omomuki/main/scripts/install.ps1 | iex
+irm https://raw.githubusercontent.com/zyx-corporation/sayane/main/scripts/install.ps1 | iex
 ```
 
 → [インストール](docs/install.md)
@@ -103,14 +103,14 @@ irm https://raw.githubusercontent.com/zyx-corporation/omomuki/main/scripts/insta
 
 ```bash
 git clone <repository>
-cd omomuki
+cd sayane
 pip install -e ".[dev]"
 
-export OMOMUKI_LANG=ja              # 任意: CLI 日本語（未設定時は LANG を参照）
-export OMOMUKI_OBSIDIAN_VAULT=~/…   # 任意: storage import/export の既定 vault
-omomuki init
-omomuki help
-omomuki compile --target chatgpt --profile examples/profiles/minimal.yaml
+export SAYANE_LANG=ja              # 任意: CLI 日本語（未設定時は LANG を参照）
+export SAYANE_OBSIDIAN_VAULT=~/…   # 任意: storage import/export の既定 vault
+sayane init
+sayane help
+sayane compile --target chatgpt --profile examples/profiles/minimal.yaml
 ```
 
 **初めての方**: [はじめに（利用者ガイド）](docs/getting-started.md)  
@@ -120,33 +120,33 @@ omomuki compile --target chatgpt --profile examples/profiles/minimal.yaml
 
 ```bash
 # Profile / プロンプト
-omomuki --version
-omomuki profile inspect
-omomuki compile --target chatgpt
-omomuki export --format markdown --target claude
+sayane --version
+sayane profile inspect
+sayane compile --target chatgpt
+sayane export --format markdown --target claude
 
 # Bridge
-omomuki serve
+sayane serve
 
 # Candidate（評価・merge）
-omomuki candidate list
-omomuki candidate evaluate <id> --level 2
-omomuki candidate diff <id>
-omomuki candidate approve <id>
+sayane candidate list
+sayane candidate evaluate <id> --level 2
+sayane candidate diff <id>
+sayane candidate approve <id>
 
 # Storage（Obsidian / Git）
-export OMOMUKI_OBSIDIAN_VAULT="$HOME/Documents/MyVault"  # 存在する vault
-omomuki storage import          # vault 引数省略可（import/index は Git 自動コミット）
-omomuki storage export
-omomuki storage index
+export SAYANE_OBSIDIAN_VAULT="$HOME/Documents/MyVault"  # 存在する vault
+sayane storage import          # vault 引数省略可（import/index は Git 自動コミット）
+sayane storage export
+sayane storage index
 # storage commit は任意（自動コミットで足りない場合）
 
 # ヘルプ
-omomuki help
-omomuki help candidate evaluate
+sayane help
+sayane help candidate evaluate
 ```
 
-## Omomuki Profile が持つもの
+## Sayane Profile が持つもの
 
 - **identity** — 基本情報
 - **voice** — 文体・口調
@@ -183,7 +183,7 @@ capture → Candidate → evaluate（RDE+UIB）→ approve / reject → lineage
 | 評価 / Candidate | [evaluation-manual.md](docs/evaluation-manual.md) |
 | Storage | [storage-manual.md](docs/storage-manual.md) |
 | Dogfood | [dogfood-walkthrough.md](docs/dogfood-walkthrough.md) |
-| 設計 | [architecture.md](docs/architecture.md) / [roadmap.md](docs/roadmap.md) / [商用版（omomuki-pro）](https://github.com/zyx-corporation/omomuki-pro/blob/main/docs/commercial-edition.md) |
+| 設計 | [architecture.md](docs/architecture.md) / [roadmap.md](docs/roadmap.md) / [商用版（sayane-pro）](https://github.com/zyx-corporation/sayane-pro/blob/main/docs/commercial-edition.md) |
 | 開発 | [development-principles.md](docs/development-principles.md) |
 
 索引: [docs/index.md](docs/index.md)
@@ -194,7 +194,7 @@ capture → Candidate → evaluate（RDE+UIB）→ approve / reject → lineage
 Core / CLI / Bridge : Python
 Chrome Extension  : TypeScript
 Schema / IR       : JSON Schema + Pydantic
-将来の高速化・商用ストレージ : [Commercial Edition（omomuki-pro）](https://github.com/zyx-corporation/omomuki-pro/blob/main/docs/commercial-edition.md)
+将来の高速化・商用ストレージ : [Commercial Edition（sayane-pro）](https://github.com/zyx-corporation/sayane-pro/blob/main/docs/commercial-edition.md)
 ```
 
 ## ライセンス

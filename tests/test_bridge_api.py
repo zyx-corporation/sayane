@@ -5,14 +5,14 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from omomuki.bridge.app import create_app
-from omomuki.bridge.auth import load_or_create_token
-from omomuki.bridge.config import BridgeConfig
+from sayane.bridge.app import create_app
+from sayane.bridge.auth import load_or_create_token
+from sayane.bridge.config import BridgeConfig
 
 
 @pytest.fixture
 def bridge_env(tmp_path: Path) -> tuple[TestClient, BridgeConfig, str]:
-    home = tmp_path / "omomuki"
+    home = tmp_path / "sayane"
     config = BridgeConfig(home=home)
     token, _ = load_or_create_token(config)
 
@@ -20,7 +20,7 @@ def bridge_env(tmp_path: Path) -> tuple[TestClient, BridgeConfig, str]:
     profile_dir.mkdir(parents=True)
     shutil.copy(
         Path("examples/profiles/minimal.yaml"),
-        profile_dir / "omomuki.profile.yaml",
+        profile_dir / "sayane.profile.yaml",
     )
 
     client = TestClient(create_app(config))
@@ -140,8 +140,8 @@ def test_candidate_evaluate_approve_flow(
     assert approved.status_code == 200
     assert approved.json()["status"] == "approved"
 
-    from omomuki.core.loader import load_profile
+    from sayane.core.loader import load_profile
 
-    profile = load_profile(config.profiles_dir / "default" / "omomuki.profile.yaml")
+    profile = load_profile(config.profiles_dir / "default" / "sayane.profile.yaml")
     concepts = profile.knowledge.concepts if profile.knowledge else []
     assert any("Bridge-driven" in c for c in concepts)

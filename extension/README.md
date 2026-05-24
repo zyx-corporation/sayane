@@ -1,4 +1,4 @@
-# Omomuki Chrome Extension
+# Sayane Chrome Extension
 
 Phase 3 MVP: capture web context via Local Bridge and insert context packets into ChatGPT / Claude.
 
@@ -6,11 +6,11 @@ Phase 3 MVP: capture web context via Local Bridge and insert context packets int
 
 ```bash
 pip install -e .
-omomuki init
-omomuki serve   # keep running — http://127.0.0.1:38741
+sayane init
+sayane serve   # keep running — http://127.0.0.1:38741
 ```
 
-Copy bearer token from `~/.omomuki/bridge.token` into extension **Options**.
+Copy bearer token from `~/.sayane/bridge.token` into extension **Options**.
 
 ## Build & load
 

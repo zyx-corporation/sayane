@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Omomuki documentation
-    url: https://github.com/zyx-corporation/omomuki/tree/main/docs
+  - name: Sayane documentation
+    url: https://github.com/zyx-corporation/sayane/tree/main/docs
     about: Please read the design documents before opening a broad architectural issue.

@@ -1,12 +1,12 @@
 # Chrome Extension マニュアル
 
-Phase 3 の Omomuki Chrome Extension は **補助 UI** である。判断・保存・merge は Core / Bridge 側で行う。
+Phase 3 の Sayane Chrome Extension は **補助 UI** である。判断・保存・merge は Core / Bridge 側で行う。
 
 ## 1. 前提
 
-1. `omomuki init` で Profile Store を作成
-2. `omomuki serve` で Local Bridge を起動（`127.0.0.1:38741`）
-3. Extension Options に Bridge URL と Bearer token を設定（`~/.omomuki/bridge.token`）
+1. `sayane init` で Profile Store を作成
+2. `sayane serve` で Local Bridge を起動（`127.0.0.1:38741`）
+3. Extension Options に Bridge URL と Bearer token を設定（`~/.sayane/bridge.token`）
 
 ### 権限について
 
@@ -30,7 +30,7 @@ popup / Options の UI 文言は **英語（既定）** と **日本語** に対
 1. **Options** → **表示言語**（Display language）
    - **自動（ブラウザ）** — `navigator.language` が `ja` なら日本語、それ以外は英語
    - **English** / **日本語** — 固定
-2. **Save** で `chrome.storage.sync` に保存（CLI の `OMOMUKI_LANG` とは独立）
+2. **Save** で `chrome.storage.sync` に保存（CLI の `SAYANE_LANG` とは独立）
 3. 言語を変更したら popup を開き直す
 
 カタログ: `extension/locale/en.json`, `extension/locale/ja.json`。実装: `extension/src/i18n.ts`。
@@ -78,8 +78,8 @@ Extension は行わない:
 
 | 症状 | 対処 |
 |------|------|
-| Bridge unreachable | `omomuki serve` 起動、Options の URL/port |
-| `401` / capture 失敗 | Bearer token を `~/.omomuki/bridge.token` からコピー |
+| Bridge unreachable | `sayane serve` 起動、Options の URL/port |
+| `401` / capture 失敗 | Bearer token を `~/.sayane/bridge.token` からコピー |
 | Insert 失敗 `INPUT_NOT_FOUND` | ChatGPT/Claude の DOM 変更。`extension/src/sites/` を更新 |
 | 選択 capture でテキストなし | ページ上でテキストを選択してから実行 |
 | `Receiving end does not exist` | `https://example.com` 等の通常ページを開き、Extension 更新後はタブを再読み込み（F5） |
@@ -92,7 +92,7 @@ Extension は行わない:
 
 - [はじめに](getting-started.md)
 - [Bridge マニュアル](bridge-manual.md)
-- [CLI マニュアル](cli-manual.md) — `omomuki serve`
+- [CLI マニュアル](cli-manual.md) — `sayane serve`
 - [評価マニュアル](evaluation-manual.md) — Level 2 judge
 - [Dogfood 手順書](dogfood-walkthrough.md)
 - [CLI / Bridge 設計](cli-chrome-extension.md)

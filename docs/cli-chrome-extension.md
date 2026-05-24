@@ -2,7 +2,7 @@
 
 ## 1. 概要
 
-Omomuki は初期形として、CLI、Local Bridge、Chrome Extensionを組み合わせた単体アプリケーションを目指す。
+Sayane は初期形として、CLI、Local Bridge、Chrome Extensionを組み合わせた単体アプリケーションを目指す。
 
 ただし、各UIや連携面は交換可能とし、Core Libraryを中心に据える。
 
@@ -18,24 +18,24 @@ Profile Store / Context Store / Lineage
 
 ## 2. CLI
 
-CLIはOmomukiの信頼できる制御面である。
+CLIはSayaneの信頼できる制御面である。
 
 **Phase 1 実装済みコマンドの操作手順**は [CLI マニュアル](cli-manual.md) を参照する。
 
 初期コマンド案（ロードマップ含む）は以下である。
 
 ```bash
-omomuki init
-omomuki profile build
-omomuki profile inspect
-omomuki capture ./note.md
-omomuki compile --target chatgpt
-omomuki compile --target claude
-omomuki compile --target gemini
-omomuki diff old.yaml new.yaml
-omomuki evaluate --mode rde
-omomuki export --format markdown
-omomuki serve --port 38741
+sayane init
+sayane profile build
+sayane profile inspect
+sayane capture ./note.md
+sayane compile --target chatgpt
+sayane compile --target claude
+sayane compile --target gemini
+sayane diff old.yaml new.yaml
+sayane evaluate --mode rde
+sayane export --format markdown
+sayane serve --port 38741
 ```
 
 ### 2.1 init
@@ -43,10 +43,10 @@ omomuki serve --port 38741
 Profile Storeを初期化する。
 
 ```text
-~/.omomuki/
+~/.sayane/
   profiles/
     default/
-      omomuki.profile.yaml
+      sayane.profile.yaml
       context/
       knowledge/
       policy/
@@ -62,7 +62,7 @@ Markdown、テキスト、ブラウザから送られた文脈候補を取り込
 
 ### 2.3 compile
 
-Omomuki Profileとタスク文脈からPrompt IRを生成し、指定target向けのプロンプトへ変換する。
+Sayane Profileとタスク文脈からPrompt IRを生成し、指定target向けのプロンプトへ変換する。
 
 ### 2.4 diff
 
@@ -106,7 +106,7 @@ localhost APIには認証トークンを必須とする。
 初回接続では、CLIがpairing codeを表示し、Extension側で入力する。
 
 ```text
-omomuki serve
+sayane serve
 Pairing code: 123-456
 ```
 
@@ -170,7 +170,7 @@ Allowed domains
 
 ## 5. Extensionの責任制限
 
-Extensionは便利なUIであり、Omomukiの本体ではない。
+Extensionは便利なUIであり、Sayaneの本体ではない。
 
 Extensionは以下を行わない。
 

@@ -2,11 +2,11 @@
 
 ## 1. 概要
 
-Omomuki は、文脈を集めるだけのツールではない。
+Sayane は、文脈を集めるだけのツールではない。
 
 重要なのは、収集された文脈をどのようにProfileへ昇格させるかである。Webページ、LLM出力、会話履歴、メモから得られた情報を無条件にProfileへmergeすると、ユーザーの人格的文脈が外部情報やLLMの推測によって汚染される危険がある。
 
-そのためOmomukiでは、captureされた情報をまずCandidate Updateとして扱い、RDE / UIB評価を通してからProfileへmergeする。
+そのためSayaneでは、captureされた情報をまずCandidate Updateとして扱い、RDE / UIB評価を通してからProfileへmergeする。
 
 ```text
 Captured Context
@@ -21,7 +21,7 @@ Captured Context
 
 RDEは、生成物や更新候補が元の意図・価値・文脈からどのように変化したかを評価する層である。
 
-OmomukiにおけるRDEは、主に以下を評価する。
+SayaneにおけるRDEは、主に以下を評価する。
 
 - Profile更新候補が既存Profileと整合しているか
 - 新しい文脈がユーザーの価値観を過剰に上書きしていないか
@@ -188,7 +188,7 @@ critical sectionとは以下である。
 
 ## 8. RDE的注意点
 
-Omomukiは、ユーザーを過去のProfileへ固定する装置になってはならない。
+Sayaneは、ユーザーを過去のProfileへ固定する装置になってはならない。
 
 Profileは変化してよい。ただし、その変化は記録され、評価され、必要に応じて撤回可能であるべきである。
 

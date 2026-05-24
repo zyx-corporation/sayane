@@ -4,7 +4,7 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from omomuki.cli.main import app
+from sayane.cli.main import app
 
 runner = CliRunner()
 
@@ -12,11 +12,11 @@ runner = CliRunner()
 def test_mcp_list_profiles_cli(tmp_path: Path, monkeypatch) -> None:
     home = tmp_path / "home"
     monkeypatch.setenv("HOME", str(home))
-    profile_dir = home / ".omomuki" / "profiles" / "default"
+    profile_dir = home / ".sayane" / "profiles" / "default"
     profile_dir.mkdir(parents=True)
     shutil.copy(
         Path("examples/profiles/minimal.yaml"),
-        profile_dir / "omomuki.profile.yaml",
+        profile_dir / "sayane.profile.yaml",
     )
     result = runner.invoke(app, ["mcp", "list-profiles"])
     assert result.exit_code == 0, result.stdout + result.stderr
@@ -27,11 +27,11 @@ def test_mcp_list_profiles_cli(tmp_path: Path, monkeypatch) -> None:
 def test_mcp_compile_cli(tmp_path: Path, monkeypatch) -> None:
     home = tmp_path / "home"
     monkeypatch.setenv("HOME", str(home))
-    profile_dir = home / ".omomuki" / "profiles" / "default"
+    profile_dir = home / ".sayane" / "profiles" / "default"
     profile_dir.mkdir(parents=True)
     shutil.copy(
         Path("examples/profiles/minimal.yaml"),
-        profile_dir / "omomuki.profile.yaml",
+        profile_dir / "sayane.profile.yaml",
     )
     result = runner.invoke(
         app,
@@ -44,11 +44,11 @@ def test_mcp_compile_cli(tmp_path: Path, monkeypatch) -> None:
 def test_mcp_inspect_profile_cli(tmp_path: Path, monkeypatch) -> None:
     home = tmp_path / "home"
     monkeypatch.setenv("HOME", str(home))
-    profile_dir = home / ".omomuki" / "profiles" / "default"
+    profile_dir = home / ".sayane" / "profiles" / "default"
     profile_dir.mkdir(parents=True)
     shutil.copy(
         Path("examples/profiles/minimal.yaml"),
-        profile_dir / "omomuki.profile.yaml",
+        profile_dir / "sayane.profile.yaml",
     )
     result = runner.invoke(app, ["mcp", "inspect-profile"])
     assert result.exit_code == 0

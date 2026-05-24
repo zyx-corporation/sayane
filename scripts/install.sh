@@ -1,28 +1,28 @@
 #!/usr/bin/env bash
-# Omomuki installer for macOS and Linux.
+# Sayane installer for macOS and Linux.
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/zyx-corporation/omomuki/main/scripts/install.sh | bash
-#   OMOMUKI_REF=v0.5.9 bash scripts/install.sh
+#   curl -fsSL https://raw.githubusercontent.com/zyx-corporation/sayane/main/scripts/install.sh | bash
+#   SAYANE_REF=v0.5.9 bash scripts/install.sh
 #
 # Environment:
-#   OMOMUKI_REPO          GitHub repo (default: zyx-corporation/omomuki)
-#   OMOMUKI_REF           Git ref to install (default: main)
-#   OMOMUKI_INSTALL_DIR   Install root (default: ~/.local/share/omomuki)
-#   OMOMUKI_BIN_DIR       Wrapper scripts (default: ~/.local/bin)
-#   OMOMUKI_SOURCE_DIR    Local checkout; pip install -e instead of git URL (CI/dev)
-#   OMOMUKI_DEV           Set to 1 to install [dev] extras
-#   OMOMUKI_SKIP_INIT     Set to 1 to skip `omomuki init`
-#   OMOMUKI_YES           Set to 1 to skip confirmation prompts
+#   SAYANE_REPO          GitHub repo (default: zyx-corporation/sayane)
+#   SAYANE_REF           Git ref to install (default: main)
+#   SAYANE_INSTALL_DIR   Install root (default: ~/.local/share/sayane)
+#   SAYANE_BIN_DIR       Wrapper scripts (default: ~/.local/bin)
+#   SAYANE_SOURCE_DIR    Local checkout; pip install -e instead of git URL (CI/dev)
+#   SAYANE_DEV           Set to 1 to install [dev] extras
+#   SAYANE_SKIP_INIT     Set to 1 to skip `sayane init`
+#   SAYANE_YES           Set to 1 to skip confirmation prompts
 
 set -euo pipefail
 
-OMOMUKI_REPO="${OMOMUKI_REPO:-zyx-corporation/omomuki}"
-OMOMUKI_REF="${OMOMUKI_REF:-main}"
-OMOMUKI_INSTALL_DIR="${OMOMUKI_INSTALL_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/omomuki}"
-OMOMUKI_BIN_DIR="${OMOMUKI_BIN_DIR:-${XDG_BIN_HOME:-$HOME/.local/bin}}"
-OMOMUKI_GIT_URL="https://github.com/${OMOMUKI_REPO}.git"
-VENV_DIR="${OMOMUKI_INSTALL_DIR}/venv"
-WRAPPER="${OMOMUKI_BIN_DIR}/omomuki"
+SAYANE_REPO="${SAYANE_REPO:-zyx-corporation/sayane}"
+SAYANE_REF="${SAYANE_REF:-main}"
+SAYANE_INSTALL_DIR="${SAYANE_INSTALL_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/sayane}"
+SAYANE_BIN_DIR="${SAYANE_BIN_DIR:-${XDG_BIN_HOME:-$HOME/.local/bin}}"
+SAYANE_GIT_URL="https://github.com/${SAYANE_REPO}.git"
+VENV_DIR="${SAYANE_INSTALL_DIR}/venv"
+WRAPPER="${SAYANE_BIN_DIR}/sayane"
 
 info() { printf '==> %s\n' "$*"; }
 warn() { printf 'warning: %s\n' "$*" >&2; }
@@ -80,32 +80,32 @@ install_package() {
   info "Upgrading pip"
   "$pip" install --upgrade pip wheel >/dev/null
 
-  if [[ -n "${OMOMUKI_SOURCE_DIR:-}" ]]; then
-    info "Installing from local source: ${OMOMUKI_SOURCE_DIR}"
-    if [[ "${OMOMUKI_DEV:-0}" == "1" ]]; then
-      "$pip" install -e "${OMOMUKI_SOURCE_DIR}[dev]"
+  if [[ -n "${SAYANE_SOURCE_DIR:-}" ]]; then
+    info "Installing from local source: ${SAYANE_SOURCE_DIR}"
+    if [[ "${SAYANE_DEV:-0}" == "1" ]]; then
+      "$pip" install -e "${SAYANE_SOURCE_DIR}[dev]"
     else
-      "$pip" install -e "${OMOMUKI_SOURCE_DIR}"
+      "$pip" install -e "${SAYANE_SOURCE_DIR}"
     fi
   else
     need_cmd git
     local spec
-    if [[ "${OMOMUKI_DEV:-0}" == "1" ]]; then
-      spec="omomuki[dev] @ git+${OMOMUKI_GIT_URL}@${OMOMUKI_REF}"
+    if [[ "${SAYANE_DEV:-0}" == "1" ]]; then
+      spec="sayane[dev] @ git+${SAYANE_GIT_URL}@${SAYANE_REF}"
     else
-      spec="omomuki @ git+${OMOMUKI_GIT_URL}@${OMOMUKI_REF}"
+      spec="sayane @ git+${SAYANE_GIT_URL}@${SAYANE_REF}"
     fi
-    info "Installing ${OMOMUKI_REPO}@${OMOMUKI_REF}"
+    info "Installing ${SAYANE_REPO}@${SAYANE_REF}"
     "$pip" install "$spec"
   fi
 }
 
 install_wrapper() {
-  mkdir -p "$OMOMUKI_BIN_DIR"
+  mkdir -p "$SAYANE_BIN_DIR"
   cat >"$WRAPPER" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
-exec "${VENV_DIR}/bin/omomuki" "\$@"
+exec "${VENV_DIR}/bin/sayane" "\$@"
 EOF
   chmod +x "$WRAPPER"
   info "Installed wrapper: ${WRAPPER}"
@@ -113,35 +113,35 @@ EOF
 
 path_hint() {
   case ":$PATH:" in
-    *":${OMOMUKI_BIN_DIR}:"*) ;;
+    *":${SAYANE_BIN_DIR}:"*) ;;
     *)
-      warn "${OMOMUKI_BIN_DIR} is not on PATH."
-      printf 'Add to your shell profile:\n  export PATH="%s:$PATH"\n' "$OMOMUKI_BIN_DIR"
+      warn "${SAYANE_BIN_DIR} is not on PATH."
+      printf 'Add to your shell profile:\n  export PATH="%s:$PATH"\n' "$SAYANE_BIN_DIR"
       ;;
   esac
 }
 
 maybe_init() {
-  if [[ "${OMOMUKI_SKIP_INIT:-0}" == "1" ]]; then
+  if [[ "${SAYANE_SKIP_INIT:-0}" == "1" ]]; then
     return 0
   fi
-  if [[ -f "${HOME}/.omomuki/profiles/default/omomuki.profile.yaml" ]]; then
-    info "Profile store already exists; skipping omomuki init"
+  if [[ -f "${HOME}/.sayane/profiles/default/sayane.profile.yaml" ]]; then
+    info "Profile store already exists; skipping sayane init"
     return 0
   fi
-  info "Initializing profile store (~/.omomuki)"
+  info "Initializing profile store (~/.sayane)"
   "$WRAPPER" init
 }
 
 confirm() {
-  if [[ "${OMOMUKI_YES:-0}" == "1" ]]; then
+  if [[ "${SAYANE_YES:-0}" == "1" ]]; then
     return 0
   fi
   if [[ ! -t 0 ]]; then
-    OMOMUKI_YES=1
+    SAYANE_YES=1
     return 0
   fi
-  printf 'Install Omomuki to %s? [y/N] ' "$OMOMUKI_INSTALL_DIR"
+  printf 'Install Sayane to %s? [y/N] ' "$SAYANE_INSTALL_DIR"
   read -r reply
   case "$reply" in
     y | Y | yes | YES) ;;
@@ -156,13 +156,13 @@ main() {
   local py
   py="$(find_python)"
   info "Using Python: $("$py" --version)"
-  mkdir -p "$OMOMUKI_INSTALL_DIR"
+  mkdir -p "$SAYANE_INSTALL_DIR"
   ensure_venv "$py"
   install_package
   install_wrapper
   path_hint
   maybe_init
-  info "Done. Run: omomuki --version"
+  info "Done. Run: sayane --version"
   if [[ "$PLATFORM" == "macos" ]]; then
     info "Bridge daemon (optional): see docs/install.md#bridge-daemon"
   fi

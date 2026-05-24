@@ -1,3 +1,3 @@
 # My Context
 
-Example context for Omomuki minimal profile.
+Example context for Sayane minimal profile.

@@ -44,7 +44,7 @@ OS:
 Python:
 Node:
 Browser:
-Omomuki version / commit:
+Sayane version / commit:
 ```
 
 ## ログ / 出力

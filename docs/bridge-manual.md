@@ -1,32 +1,32 @@
 # Local Bridge マニュアル
 
-Phase 2 の **Local Bridge** は、`127.0.0.1` 上の HTTP API である。Chrome Extension や curl から Omomuki Core を呼び出す。
+Phase 2 の **Local Bridge** は、`127.0.0.1` 上の HTTP API である。Chrome Extension や curl から Sayane Core を呼び出す。
 
-CLI からの起動: `omomuki serve`（[CLI マニュアル](cli-manual.md) 5.5 節と同等）。設計: [Security Design](security.md) 第 4 節。
+CLI からの起動: `sayane serve`（[CLI マニュアル](cli-manual.md) 5.5 節と同等）。設計: [Security Design](security.md) 第 4 節。
 
 ## 1. 概要
 
 | 項目 | 値 |
 |------|-----|
 | 既定 URL | `http://127.0.0.1:38741` |
-| バインド | `127.0.0.1` のみ（`omomuki serve --host` で変更可） |
+| バインド | `127.0.0.1` のみ（`sayane serve --host` で変更可） |
 | 認証 | `Authorization: Bearer <token>` |
-| トークン保存 | `~/.omomuki/bridge.token` |
+| トークン保存 | `~/.sayane/bridge.token` |
 | CORS | 既定 deny（ブラウザ拡張は host_permissions で localhost へアクセス） |
 
-**capture は merge ではない。** `POST /capture` は `~/.omomuki/candidates/` に Candidate として保存する。
+**capture は merge ではない。** `POST /capture` は `~/.sayane/candidates/` に Candidate として保存する。
 
 ## 2. 起動
 
 ```bash
-omomuki init    # 未実施の場合
-omomuki serve
-omomuki serve --port 38741 --host 127.0.0.1
+sayane init    # 未実施の場合
+sayane serve
+sayane serve --port 38741 --host 127.0.0.1
 ```
 
 初回起動時:
 
-- `~/.omomuki/bridge.token` を生成
+- `~/.sayane/bridge.token` を生成
 - コンソールに pairing code（表示用ヒント）と token ファイルパスを出力
 
 ## 3. エンドポイント
@@ -47,7 +47,7 @@ curl -s http://127.0.0.1:38741/health
 ヘッダ例:
 
 ```bash
-TOKEN=$(cat ~/.omomuki/bridge.token)
+TOKEN=$(cat ~/.sayane/bridge.token)
 AUTH="Authorization: Bearer $TOKEN"
 ```
 
@@ -63,7 +63,7 @@ curl -s -H "$AUTH" http://127.0.0.1:38741/profiles
 
 ```json
 [
-  {"id": "default", "path": "/Users/.../omomuki.profile.yaml", "name": "Example User"}
+  {"id": "default", "path": "/Users/.../sayane.profile.yaml", "name": "Example User"}
 ]
 ```
 
@@ -134,7 +134,7 @@ curl -s -X POST -H "$AUTH" -H "Content-Type: application/json" \
 
 ## 4. Chrome Extension 連携
 
-1. `omomuki serve` を常時起動
+1. `sayane serve` を常時起動
 2. Extension Options に Bridge URL と Bearer token を設定
 3. Popup から capture / insert
 
@@ -145,7 +145,7 @@ curl -s -X POST -H "$AUTH" -H "Content-Type: application/json" \
 | | Bridge | MCP Server |
 |--|--------|------------|
 | プロトコル | HTTP | MCP (stdio) |
-| 起動 | `omomuki serve` | `omomuki mcp serve` |
+| 起動 | `sayane serve` | `sayane mcp serve` |
 | 主なクライアント | Extension、curl | Cursor、Claude Desktop |
 | 認証 | Bearer token 必須（`/health` 除く） | ローカル子プロセス |
 
@@ -156,10 +156,10 @@ curl -s -X POST -H "$AUTH" -H "Content-Type: application/json" \
 | 症状 | 対処 |
 |------|------|
 | `401 Unauthorized` | `bridge.token` を確認。`Authorization: Bearer` 形式 |
-| `404 Profile not found` | `omomuki init`、または `profiles/default/omomuki.profile.yaml` の存在 |
-| Extension が Bridge unreachable | `omomuki serve` 起動中か、URL/port、token |
+| `404 Profile not found` | `sayane init`、または `profiles/default/sayane.profile.yaml` の存在 |
+| Extension が Bridge unreachable | `sayane serve` 起動中か、URL/port、token |
 | curl から接続できない | `127.0.0.1` のみバインド。ファイアウォールは通常不要 |
 
 ## 7. バージョン
 
-Omomuki **0.5.8** 時点（Candidate evaluate/approve API 含む）。
+Sayane **0.5.8** 時点（Candidate evaluate/approve API 含む）。

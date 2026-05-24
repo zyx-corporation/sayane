@@ -1,22 +1,22 @@
 # Dogfood 手順書（エンドツーエンド）
 
-Omomuki **0.5.8** 時点で、ローカル環境で一通り動作確認する手順である。  
+Sayane **0.5.8** 時点で、ローカル環境で一通り動作確認する手順である。  
 前提: `pip install -e ".[dev]"` 済み。
 
 ## 1. 初期化と文脈の準備
 
 ```bash
-export OMOMUKI_LANG=ja   # 任意: CLI メッセージを日本語に
+export SAYANE_LANG=ja   # 任意: CLI メッセージを日本語に
 
-omomuki init
-omomuki profile inspect
+sayane init
+sayane profile inspect
 
 # Obsidian vault がある場合
-export OMOMUKI_OBSIDIAN_VAULT="$HOME/Documents/MyVault"   # 任意
-omomuki storage import          # または omomuki storage import /path/to/vault
-omomuki storage index
+export SAYANE_OBSIDIAN_VAULT="$HOME/Documents/MyVault"   # 任意
+sayane storage import          # または sayane storage import /path/to/vault
+sayane storage index
 
-omomuki compile --target chatgpt
+sayane compile --target chatgpt
 ```
 
 ## 2. Local Bridge の起動
@@ -24,8 +24,8 @@ omomuki compile --target chatgpt
 **ターミナル A**（常駐）:
 
 ```bash
-omomuki serve
-# ~/.omomuki/bridge.token を Extension Options にコピー
+sayane serve
+# ~/.sayane/bridge.token を Extension Options にコピー
 ```
 
 ## 3. Capture → 評価 → merge（HTTP）
@@ -33,7 +33,7 @@ omomuki serve
 **ターミナル B**:
 
 ```bash
-TOKEN=$(cat ~/.omomuki/bridge.token)
+TOKEN=$(cat ~/.sayane/bridge.token)
 AUTH="Authorization: Bearer $TOKEN"
 
 # 意味のある文面で capture（プレースホルダーは避ける）
@@ -59,10 +59,10 @@ curl -s -X POST -H "$AUTH" -H "Content-Type: application/json" \
 
 ```bash
 ollama list
-export OMOMUKI_JUDGE_MODEL=llama3.2:1b   # 環境のモデル名に合わせる
+export SAYANE_JUDGE_MODEL=llama3.2:1b   # 環境のモデル名に合わせる
 
-omomuki candidate evaluate "$CID" --level 2
-omomuki candidate show "$CID"
+sayane candidate evaluate "$CID" --level 2
+sayane candidate show "$CID"
 ```
 
 `llm_review` が入れば成功。`Suspicious Drift` / `Unresolved Gap` のときは diff を確認してから approve。
@@ -70,25 +70,25 @@ omomuki candidate show "$CID"
 ## 5. CLI でも同じフロー
 
 ```bash
-omomuki candidate list
-omomuki candidate evaluate "$CID" --level 1
-omomuki candidate diff "$CID"
-omomuki candidate approve "$CID"
-omomuki candidate lineage --profile-id default
+sayane candidate list
+sayane candidate evaluate "$CID" --level 1
+sayane candidate diff "$CID"
+sayane candidate approve "$CID"
+sayane candidate lineage --profile-id default
 ```
 
 ## 6. Git と再 compile
 
 ```bash
-omomuki storage commit -m "dogfood: context sync" --init   # 初回のみ --init
-omomuki compile --target claude
+sayane storage commit -m "dogfood: context sync" --init   # 初回のみ --init
+sayane compile --target claude
 ```
 
 ## 7. チェックリスト
 
 | # | 項目 | OK |
 |---|------|-----|
-| 1 | `omomuki init` / `profile inspect` | ☐ |
+| 1 | `sayane init` / `profile inspect` | ☐ |
 | 2 | `storage import` + `index`（任意） | ☐ |
 | 3 | `compile` に context 本文が含まれる | ☐ |
 | 4 | Bridge `capture` → `evaluate` → `approve` | ☐ |
@@ -103,6 +103,6 @@ omomuki compile --target claude
 |------|------|
 | `diff.add` が空 / `already_present` | 同じ文言が既に `knowledge.concepts` にある |
 | `llm_review: null` + UIB validation | 旧版。0.5.3+ で UIB 欠損軸を補完 |
-| Ollama 404 | `OMOMUKI_JUDGE_MODEL` を `ollama list` の名前に合わせる |
+| Ollama 404 | `SAYANE_JUDGE_MODEL` を `ollama list` の名前に合わせる |
 
 関連: [はじめに](getting-started.md) / [評価マニュアル](evaluation-manual.md) / [Bridge マニュアル](bridge-manual.md)

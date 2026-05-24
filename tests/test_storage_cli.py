@@ -2,7 +2,7 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from omomuki.cli.main import app
+from sayane.cli.main import app
 
 runner = CliRunner()
 
@@ -11,7 +11,7 @@ def test_storage_index_updates_profile(tmp_path: Path, monkeypatch) -> None:
     home = tmp_path / "home"
     monkeypatch.setenv("HOME", str(home))
     runner.invoke(app, ["init"])
-    ctx = home / ".omomuki" / "profiles" / "default" / "context"
+    ctx = home / ".sayane" / "profiles" / "default" / "context"
     (ctx / "extra.md").write_text("# Extra\n", encoding="utf-8")
 
     result = runner.invoke(app, ["storage", "index"])
@@ -41,7 +41,7 @@ def test_storage_import_uses_obsidian_vault_env(tmp_path: Path, monkeypatch) -> 
     vault = tmp_path / "vault"
     vault.mkdir()
     (vault / "env-note.md").write_text("# Env\n", encoding="utf-8")
-    monkeypatch.setenv("OMOMUKI_OBSIDIAN_VAULT", str(vault))
+    monkeypatch.setenv("SAYANE_OBSIDIAN_VAULT", str(vault))
 
     runner.invoke(app, ["init"])
     result = runner.invoke(app, ["storage", "import", "--dry-run"])

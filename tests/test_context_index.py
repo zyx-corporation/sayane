@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from omomuki.core.loader import load_profile
-from omomuki.storage.context_index import apply_context_index, generate_context_index
+from sayane.core.loader import load_profile
+from sayane.storage.context_index import apply_context_index, generate_context_index
 
 
 def test_generate_context_index_from_context_dir(tmp_path: Path, examples_dir: Path) -> None:

@@ -1,5 +1,5 @@
 version: "0.1.0"
-kind: "OmomukiProfile"
+kind: "SayaneProfile"
 identity:
   name: "Example User"
   preferred_name: "example"
@@ -17,7 +17,7 @@ values:
 knowledge:
   concepts:
     - "RDE"
-    - "Omomuki"
+    - "Sayane"
 policy:
   response:
     avoid:

@@ -3,13 +3,13 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "omomuki"
+name = "sayane"
 version = "0.5.9"
 description = "Local-first persona and context portability for cross-LLM collaboration"
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.11"
-authors = [{ name = "Omomuki Contributors" }]
+authors = [{ name = "Sayane Contributors" }]
 keywords = ["llm", "persona", "prompt", "local-first", "mcp"]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
@@ -31,10 +31,10 @@ dependencies = [
 ]
 
 [project.scripts]
-omomuki = "omomuki.cli.main:main"
+sayane = "sayane.cli.main:main"
 
-[project.entry-points."omomuki.storage_backends"]
-filesystem = "omomuki.storage.backends.filesystem:create_backend"
+[project.entry-points."sayane.storage_backends"]
+filesystem = "sayane.storage.backends.filesystem:create_backend"
 
 [project.optional-dependencies]
 dev = [
@@ -45,11 +45,11 @@ dev = [
 ]
 
 [project.urls]
-Documentation = "https://github.com/Omomuki/omomuki/tree/main/docs"
-Repository = "https://github.com/Omomuki/omomuki"
+Documentation = "https://github.com/zyx-corporation/sayane/tree/main/docs"
+Repository = "https://github.com/zyx-corporation/sayane"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/omomuki"]
+packages = ["src/sayane"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

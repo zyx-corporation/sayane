@@ -42,7 +42,7 @@ Sayane Profile  →  Prompt IR  →  Adapter  →  LLM 出力
 Candidate（capture）→ RDE 評価 → 承認 merge → Lineage
 ```
 
-**local-first**: 正本はユーザーのマシン上（`~/.sayane/`）。Community Edition では Git 履歴を既定とする。**Commercial Edition**（Phase 6）— [sayane-pro](https://github.com/zyx-corporation/sayane-pro/blob/main/docs/commercial-edition.md)。
+**local-first**: 正本はユーザーのマシン上（`~/.sayane/`）。Community Edition では Git 履歴を既定とする。**Commercial Edition**（Phase 6、別途ライセンス提供）— 概要は [roadmap.md](docs/roadmap.md)。
 
 ---
 
@@ -183,7 +183,7 @@ capture → Candidate → evaluate（RDE+UIB）→ approve / reject → lineage
 | 評価 / Candidate | [evaluation-manual.md](docs/evaluation-manual.md) |
 | Storage | [storage-manual.md](docs/storage-manual.md) |
 | Dogfood | [dogfood-walkthrough.md](docs/dogfood-walkthrough.md) |
-| 設計 | [architecture.md](docs/architecture.md) / [roadmap.md](docs/roadmap.md) / [商用版（sayane-pro）](https://github.com/zyx-corporation/sayane-pro/blob/main/docs/commercial-edition.md) |
+| 設計 | [architecture.md](docs/architecture.md) / [roadmap.md](docs/roadmap.md) |
 | 開発 | [development-principles.md](docs/development-principles.md) |
 
 索引: [docs/index.md](docs/index.md)
@@ -194,7 +194,7 @@ capture → Candidate → evaluate（RDE+UIB）→ approve / reject → lineage
 Core / CLI / Bridge : Python
 Chrome Extension  : TypeScript
 Schema / IR       : JSON Schema + Pydantic
-将来の高速化・商用ストレージ : [Commercial Edition（sayane-pro）](https://github.com/zyx-corporation/sayane-pro/blob/main/docs/commercial-edition.md)
+将来の高速化・商用ストレージ : Commercial Edition（Phase 6、別途ライセンス提供）
 ```
 
 ## ライセンス

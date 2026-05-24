@@ -1,4 +1,4 @@
-"""Discover optional CLI extensions (sayane-pro, etc.)."""
+"""Discover optional CLI extensions (Commercial Edition plugins, etc.)."""
 
 from __future__ import annotations
 

@@ -1,6 +1,6 @@
 # Storage Backend プラグイン契約
 
-Commercial Edition（[sayane-pro](https://github.com/zyx-corporation/sayane-pro)）が `encrypted-sqlite` backend を提供するための **OSS 側インターフェース契約**。
+Commercial Edition が `encrypted-sqlite` backend を提供するための **OSS 側インターフェース契約**。
 
 ## リポジトリ抽象
 
@@ -41,13 +41,13 @@ sayane storage backend list
 sayane storage backend set filesystem
 ```
 
-## プラグイン登録（sayane-pro）
+## プラグイン登録（Commercial Edition）
 
 `pyproject.toml` の entry point グループ `sayane.storage_backends` に factory を登録する:
 
 ```toml
 [project.entry-points."sayane.storage_backends"]
-encrypted-sqlite = "sayane_pro.storage:create_backend"
+encrypted-sqlite = "<commercial-package>.storage:create_backend"
 ```
 
 Factory シグネチャ:
@@ -66,15 +66,15 @@ def create_backend(
 | backend | 提供 | Git 自動コミット |
 |---------|------|-----------------|
 | `filesystem` | OSS（Community） | あり |
-| `encrypted-sqlite` | sayane-pro | なし |
+| `encrypted-sqlite` | Commercial Edition プラグイン | なし |
 
 ## 契約テスト
 
-`tests/test_storage_backend.py` に mock backend 登録テストあり。sayane-pro は同一 factory シグネチャで CI 契約テストを追加可能。
+`tests/test_storage_backend.py` に mock backend 登録テストあり。Commercial Edition プラグインは同一 factory シグネチャで CI 契約テストを追加可能。
 
 ## 関連
 
 - [Storage マニュアル](storage-manual.md)
-- [商用版（sayane-pro）](https://github.com/zyx-corporation/sayane-pro/blob/main/docs/commercial-edition.md)
+- [roadmap.md §9](roadmap.md)
 - [development-principles.md §8.7](development-principles.md)
 - Issue: [#65](https://github.com/zyx-corporation/sayane/issues/65)

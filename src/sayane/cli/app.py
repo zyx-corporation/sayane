@@ -96,6 +96,9 @@ def build_app() -> typer.Typer:
     _register_candidate(app)
     _register_storage(app)
     _register_mcp(app)
+    from sayane.cli.plugins import register_cli_extensions
+
+    register_cli_extensions(app)
     return app
 
 

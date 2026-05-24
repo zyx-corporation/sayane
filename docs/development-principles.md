@@ -137,6 +137,12 @@ RDE Review : 意味変化を確認する
 - Storage
 - Diff / Merge
 
+### 7.5 Acceptance Test
+
+Community Edition の受け入れ条件・手動シナリオ・CI 証拠の対応は [acceptance-spec.md](acceptance-spec.md) を正とする。
+
+Chrome Extension 専用 UAT は [extension-acceptance-test.md](extension-acceptance-test.md) を参照する。
+
 ### 7.2 Contract Test
 
 AdapterやBridge APIは契約を明確にする。

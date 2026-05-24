@@ -4,6 +4,8 @@
 
 Phase 0 では、以降の Phase で破壊しやすい基盤（Python パッケージ、JSON Schema、Extension スケルトン）を継続的に検証する最小 CI を整える。
 
+L1 自動受け入れの要件対応は [acceptance-spec.md §5](acceptance-spec.md) を参照する。
+
 ## ワークフロー
 
 `.github/workflows/ci.yml` で以下を実行する。

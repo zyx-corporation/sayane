@@ -51,6 +51,9 @@ Repository = "https://github.com/zyx-corporation/sayane"
 [tool.hatch.build.targets.wheel]
 packages = ["src/sayane"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"schemas" = "sayane/bundled_schemas"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]

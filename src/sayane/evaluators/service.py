@@ -93,6 +93,10 @@ def approve_candidate(
                 "Reject or edit profile manually.",
             )
 
+    from sayane.plugins.hooks import run_before_candidate_approve
+
+    run_before_candidate_approve(config, candidate)
+
     section = candidate.proposal.section
     if not can_merge_section(section, force_critical=force_critical):
         raise ValueError(

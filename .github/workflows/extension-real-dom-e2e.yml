@@ -12,6 +12,8 @@ jobs:
     defaults:
       run:
         working-directory: extension
+    env:
+      SAYANE_DIR: ${{ github.workspace }}/.sayane-e2e
     steps:
       - uses: actions/checkout@v4
 
@@ -30,9 +32,6 @@ jobs:
 
       - name: Run real DOM E2E
         run: npm run test:e2e:real
-        env:
-          SAYANE_E2E_CHATGPT_USER_DATA_DIR: ${{ secrets.SAYANE_E2E_CHATGPT_USER_DATA_DIR }}
-          SAYANE_E2E_CLAUDE_USER_DATA_DIR: ${{ secrets.SAYANE_E2E_CLAUDE_USER_DATA_DIR }}
 
       - name: Upload real DOM E2E artifacts
         if: always()

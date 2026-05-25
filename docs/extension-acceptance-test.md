@@ -1,7 +1,9 @@
 # Chrome Extension 受け入れテスト手順書
 
 Sayane Chrome Extension の **手動受け入れテスト（UAT）** 手順である。  
-自動テスト（`npm run build` / pytest）を補完し、Bridge・ブラウザ DOM・popup UI の結合を確認する。
+自動テスト（`npm run build` / pytest / Playwright E2E）を補完し、Bridge・ブラウザ DOM・popup UI の結合を確認する。
+
+**Playwright（INS-CG-02 / INS-CL-02）**: [extension-e2e.md](extension-e2e.md) — `cd extension && npm run test:e2e`
 
 | 項目 | 値 |
 |------|-----|

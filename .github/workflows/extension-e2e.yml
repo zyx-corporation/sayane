@@ -1,0 +1,50 @@
+name: Extension E2E (Playwright)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1"
+  pull_request:
+    branches: [main]
+    paths:
+      - "extension/**"
+      - "src/sayane/bridge/**"
+      - "examples/profiles/**"
+      - ".github/workflows/extension-e2e.yml"
+
+jobs:
+  playwright:
+    name: Extension DOM insert (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: extension
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Sayane (dev)
+        run: pip install -e ".[dev]"
+        working-directory: ${{ github.workspace }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: extension/package-lock.json
+
+      - name: Install extension dependencies
+        run: npm ci
+
+      - name: Build extension
+        run: npm run build
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright E2E
+        run: npm run test:e2e

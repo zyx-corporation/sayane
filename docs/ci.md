@@ -43,6 +43,18 @@ npm run typecheck
 npm run build
 ```
 
+### Extension E2E（Playwright, #91）
+
+```bash
+pip install -e ".[dev]"   # sayane ルート
+cd extension
+npm ci && npm run build
+npm run test:e2e:install
+npm run test:e2e
+```
+
+詳細: [extension-e2e.md](extension-e2e.md)。CI ワークフロー: `.github/workflows/extension-e2e.yml`（週次 + PR path filter）。
+
 ## Phase 別の拡張予定
 
 | Phase | CI 追加 |

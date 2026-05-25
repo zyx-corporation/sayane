@@ -20,6 +20,16 @@ npm install
 npm run build
 ```
 
+### E2E (Playwright)
+
+```bash
+pip install -e ".[dev]"   # from sayane repo root
+npm run test:e2e:install
+npm run test:e2e
+```
+
+See [../docs/extension-e2e.md](../docs/extension-e2e.md).
+
 Chrome → Extensions → Load unpacked → select this `extension/` folder.
 
 ## Features

@@ -2,7 +2,7 @@
 
 `sayane` コマンドの利用者向けマニュアルである（Phase 1 CLI + Phase 2 Bridge + Phase 2.5 MCP サブコマンド）。
 
-初めて使う場合は [はじめに](getting-started.md) を先に読むこと。Bridge 詳細は [Bridge マニュアル](bridge-manual.md)、MCP 詳細は [MCP マニュアル](mcp-manual.md)。
+初めて使う場合は [はじめに](getting-started.md) を先に読むこと。Bridge 詳細は [Bridge マニュアル](bridge-manual.md)、MCP 詳細は [MCP マニュアル](mcp-manual.md)。受け入れテストは [CLI 受け入れテスト](cli-acceptance-test.md) を参照。
 
 設計: [CLI / Local Bridge / Chrome Extension 設計](cli-chrome-extension.md) / データ: [Profile と Prompt IR](profile-ir.md)
 

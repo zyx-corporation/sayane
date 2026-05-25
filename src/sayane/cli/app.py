@@ -17,6 +17,7 @@ from sayane.bridge.auth import format_pairing_code, load_or_create_token
 from sayane.bridge.config import BridgeConfig
 from sayane.cli.help_cmd import register_help
 from sayane.cli.i18n import t
+from sayane.cli.layout import ensure_sayane_layout
 from sayane.cli.paths import (
     context_dir,
     default_profile_dir,
@@ -170,6 +171,7 @@ def _register_core_commands(app: typer.Typer) -> None:
         profile_dir = default_profile_dir()
         profile_file = default_profile_file()
         ctx = context_dir()
+        ensure_sayane_layout()
 
         if profile_file.exists() and not force:
             typer.echo(t("init.exists", path=profile_dir))

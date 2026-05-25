@@ -11,6 +11,7 @@ import typer
 import yaml
 
 import sayane
+from sayane.adapters.base import Adapter
 from sayane.adapters.factory import get_adapter
 from sayane.bridge.auth import format_pairing_code, load_or_create_token
 from sayane.bridge.config import BridgeConfig
@@ -56,6 +57,14 @@ def _version_callback(value: bool) -> None:
     if value:
         typer.echo(f"sayane {sayane.__version__}")
         raise typer.Exit()
+
+
+def _adapter_or_error(target: str) -> Adapter:
+    """Resolve an adapter and convert adapter errors into CLI-friendly diagnostics."""
+    try:
+        return get_adapter(target)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
 
 
 def build_app() -> typer.Typer:
@@ -165,6 +174,8 @@ def _register_core_commands(app: typer.Typer) -> None:
         if profile_file.exists() and not force:
             typer.echo(t("init.exists", path=profile_dir))
             raise typer.Exit(0)
+        if profile_file.exists() and force:
+            typer.echo(t("init.force_warning", path=profile_dir), err=True)
 
         now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S+00:00")
         profile_dir.mkdir(parents=True, exist_ok=True)
@@ -188,7 +199,7 @@ def _register_core_commands(app: typer.Typer) -> None:
         """Build Prompt IR and compile to the target LLM format."""
         path, loaded = _load(profile)
         ir = build_prompt_ir(loaded, instruction=instruction, profile_root=path.parent)
-        compiled = get_adapter(target).compile(ir)
+        compiled = _adapter_or_error(target).compile(ir)
         typer.echo(json.dumps(compiled.payload, ensure_ascii=False, indent=2))
 
     @app.command()
@@ -204,7 +215,7 @@ def _register_core_commands(app: typer.Typer) -> None:
 
         path, loaded = _load(profile)
         ir = build_prompt_ir(loaded, instruction=instruction, profile_root=path.parent)
-        compiled = get_adapter(target).compile(ir)
+        compiled = _adapter_or_error(target).compile(ir)
 
         typer.echo(t("export.title") + "\n")
         typer.echo(t("export.target", target=compiled.target))
@@ -444,11 +455,29 @@ def _register_storage(app: typer.Typer) -> None:
         ] = None,
         profile: Annotated[Path | None, typer.Option("--profile")] = None,
         subdir: Annotated[str, typer.Option("--subdir")] = "sayane",
+        dry_run: Annotated[bool, typer.Option("--dry-run")] = False,
     ) -> None:
         """Export context markdown into vault/<subdir>/."""
         vault_path = _vault_path(vault)
         bundle = _open_store(profile)
-        exported = export_to_vault(bundle.context.context_dir, vault_path, subdir=subdir)
+        if dry_run:
+            context_root = bundle.context.context_dir.resolve()
+            if not context_root.is_dir():
+                raise typer.BadParameter(t("error.context_dir_not_found", path=context_root))
+            planned: list[str] = []
+            for src in sorted(context_root.rglob("*.md")):
+                if not src.is_file():
+                    continue
+                rel = src.relative_to(context_root).as_posix()
+                planned.append(f"{subdir}/{rel}")
+            for rel in planned:
+                typer.echo(rel)
+            typer.echo(t("storage.would_export", count=len(planned), path=vault_path / subdir))
+            return
+        try:
+            exported = export_to_vault(bundle.context.context_dir, vault_path, subdir=subdir)
+        except FileNotFoundError as exc:
+            raise typer.BadParameter(str(exc)) from exc
         typer.echo(t("storage.exported", count=len(exported), path=vault_path / subdir))
 
     @storage_app.command("index")

@@ -6,9 +6,13 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
+    "test:e2e:real": "playwright test -c e2e/playwright.real.config.ts",
+    "test:e2e:real:chatgpt": "playwright test -c e2e/playwright.real.config.ts chatgpt.real.spec.ts",
+    "test:e2e:real:claude": "playwright test -c e2e/playwright.real.config.ts claude.real.spec.ts",
     "clean": "rm -rf dist"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
     "@types/chrome": "^0.0.287",
     "typescript": "^5.7.3"
   }

@@ -21,6 +21,10 @@ function authProfileDir(spec: RealSiteSpec): string | undefined {
   return path.resolve(raw);
 }
 
+function siteOrigin(spec: RealSiteSpec): string {
+  return new URL(spec.url).origin;
+}
+
 async function readEditableText(spec: RealSiteSpec, page: import("@playwright/test").Page): Promise<string> {
   return page.evaluate((selectors) => {
     for (const selector of selectors) {
@@ -76,7 +80,7 @@ export function defineRealSiteInsertTest(spec: RealSiteSpec): void {
         }
         await waitForRealSiteReady(page, spec);
 
-        const tabId = await findTabIdForUrl(extension.context, extension.extensionId, spec.url);
+        const tabId = await findTabIdForUrl(extension.context, extension.extensionId, siteOrigin(spec));
         const response = await sendInsertMessage(extension.context, extension.extensionId, {
           tabId,
           target: spec.target,

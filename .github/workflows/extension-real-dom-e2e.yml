@@ -1,0 +1,42 @@
+name: Extension Real DOM E2E
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 20 * * 1"
+
+jobs:
+  real-dom-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: extension
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build extension
+        run: npm run build
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium
+
+      - name: Run real DOM E2E
+        run: npm run test:e2e:real
+        env:
+          SAYANE_E2E_CHATGPT_STORAGE_STATE: ${{ secrets.SAYANE_E2E_CHATGPT_STORAGE_STATE }}
+          SAYANE_E2E_CLAUDE_STORAGE_STATE: ${{ secrets.SAYANE_E2E_CLAUDE_STORAGE_STATE }}
+
+      - name: Upload real DOM E2E artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-real-dom-e2e-artifacts
+          path: extension/test-results/

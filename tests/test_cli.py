@@ -99,7 +99,9 @@ def test_init_respects_sayane_dir_and_creates_prompt_e2e_layout(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
+    home = tmp_path / "home"
     sayane_dir = tmp_path / "custom-sayane"
+    monkeypatch.setenv("HOME", str(home))
     monkeypatch.setenv("SAYANE_DIR", str(sayane_dir))
 
     result = runner.invoke(app, ["init"])
@@ -111,7 +113,7 @@ def test_init_respects_sayane_dir_and_creates_prompt_e2e_layout(
     assert (sayane_dir / "prompts" / "providers" / "README.md").exists()
     assert (sayane_dir / "e2e" / "user-data" / "README.md").exists()
     assert (sayane_dir / "e2e" / "prompts" / "README.md").exists()
-    assert not (Path.home() / ".sayane" / "profiles" / "default" / "sayane.profile.yaml").exists()
+    assert not (home / ".sayane" / "profiles" / "default" / "sayane.profile.yaml").exists()
 
 
 def test_init_existing_store_is_non_destructive_and_explains_force(

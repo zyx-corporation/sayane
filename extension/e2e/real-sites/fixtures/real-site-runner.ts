@@ -1,3 +1,4 @@
+import os from "node:os";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { startMockBridge } from "./bridge";
@@ -15,12 +16,15 @@ import {
 } from "./diagnostics";
 import type { RealSiteSpec } from "./types";
 
-const USER_DATA_DIR_ENV = "SAYANE_E2E_USER_DATA_DIR";
+const SAYANE_DIR_ENV = "SAYANE_DIR";
 
-function authProfileDir(spec: RealSiteSpec): string | undefined {
-  const baseDir = process.env[USER_DATA_DIR_ENV];
-  if (!baseDir) return undefined;
-  return path.resolve(baseDir, spec.profileKey);
+function sayaneDir(): string {
+  const raw = process.env[SAYANE_DIR_ENV]?.trim();
+  return raw ? path.resolve(raw) : path.join(os.homedir(), ".sayane");
+}
+
+function authProfileDir(spec: RealSiteSpec): string {
+  return path.resolve(sayaneDir(), "e2e", "user-data", spec.profileKey);
 }
 
 function siteOrigin(spec: RealSiteSpec): string {
@@ -51,10 +55,6 @@ function assertMarkerInserted(pageText: string, marker: string, siteId: string):
 export function defineRealSiteInsertTest(spec: RealSiteSpec): void {
   test(`${spec.id}: insert Sayane context packet into real DOM`, async ({}, testInfo) => {
     const userDataDir = authProfileDir(spec);
-    test.skip(
-      !userDataDir,
-      `${USER_DATA_DIR_ENV} is not set; create a logged-in Chromium profile under ${USER_DATA_DIR_ENV}/${spec.profileKey}`,
-    );
 
     const bridge = await startMockBridge(spec.target);
     const extension = await loadSayaneExtension({ userDataDir });
@@ -77,7 +77,7 @@ export function defineRealSiteInsertTest(spec: RealSiteSpec): void {
         if (await detectAuthRequired(page, spec)) {
           throw new ClassifiedE2EError(
             "AUTH_REQUIRED",
-            `${spec.id}: login/session is required before running real DOM E2E`,
+            `${spec.id}: login/session is required before running real DOM E2E. Use a logged-in Chromium profile at ${userDataDir}`,
           );
         }
         await waitForRealSiteReady(page, spec);

@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium, type BrowserContext } from "@playwright/test";
@@ -12,14 +13,18 @@ export type LoadedExtension = {
 };
 
 export async function loadSayaneExtension(options?: {
-  storageStatePath?: string;
+  userDataDir?: string;
 }): Promise<LoadedExtension> {
   const extensionDir = path.resolve(__dirname, "../../../");
-  const userDataDir = path.resolve(
-    process.cwd(),
-    ".playwright-real-dom-user-data",
-    `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-  );
+  const userDataDir = options?.userDataDir
+    ? path.resolve(options.userDataDir)
+    : path.resolve(
+        process.cwd(),
+        ".playwright-real-dom-user-data",
+        `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      );
+
+  fs.mkdirSync(userDataDir, { recursive: true });
 
   const context = await chromium.launchPersistentContext(userDataDir, {
     headless: false,
@@ -27,7 +32,6 @@ export async function loadSayaneExtension(options?: {
       `--disable-extensions-except=${extensionDir}`,
       `--load-extension=${extensionDir}`,
     ],
-    storageState: options?.storageStatePath,
   });
 
   let [serviceWorker] = context.serviceWorkers();
@@ -61,4 +65,42 @@ export async function configureExtension(
   }, config);
 
   await page.close();
+}
+
+export async function findTabIdForUrl(
+  context: BrowserContext,
+  extensionId: string,
+  urlPrefix: string,
+): Promise<number> {
+  const page = await context.newPage();
+  await page.goto(`chrome-extension://${extensionId}/options.html`);
+  const tabId = await page.evaluate(async (prefix) => {
+    const tabs = await chrome.tabs.query({});
+    const match = tabs.find((tab) => typeof tab.url === "string" && tab.url.startsWith(prefix));
+    if (!match?.id) {
+      throw new Error(`Could not find tab for ${prefix}`);
+    }
+    return match.id;
+  }, urlPrefix);
+  await page.close();
+  return tabId;
+}
+
+export async function sendInsertMessage(
+  context: BrowserContext,
+  extensionId: string,
+  payload: { tabId: number; target: "chatgpt" | "claude"; profileId?: string },
+): Promise<{ ok: boolean; data?: unknown; error?: string }> {
+  const page = await context.newPage();
+  await page.goto(`chrome-extension://${extensionId}/options.html`);
+  const response = await page.evaluate(async (messagePayload) => {
+    return chrome.runtime.sendMessage({
+      type: "INSERT_CONTEXT_PACKET",
+      tabId: messagePayload.tabId,
+      target: messagePayload.target,
+      profileId: messagePayload.profileId ?? "default",
+    });
+  }, payload);
+  await page.close();
+  return response as { ok: boolean; data?: unknown; error?: string };
 }

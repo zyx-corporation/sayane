@@ -11,14 +11,18 @@ ACCEPTANCE_L1_COVERAGE: dict[str, str] = {
     "ERR-01": "tests.test_acceptance_cli::test_compile_unknown_target",
     "ERR-02": "tests.test_acceptance_cli::test_compile_missing_profile",
     "CAND-flow": "tests.test_acceptance_cli::test_candidate_show_diff_approve_reject_lineage",
-    "CAND-critical": "tests.test_acceptance_cli::test_candidate_approve_critical_without_force_rejected",
+    "CAND-critical": (
+        "tests.test_acceptance_cli::test_candidate_approve_critical_without_force_rejected"
+    ),
     "SEC-02": "tests.test_acceptance_cli::test_sec02_profile_not_merged_before_approve",
     "STOR-export-commit": "tests.test_acceptance_cli::test_storage_export_and_commit",
     "STOR-backend-set": "tests.test_acceptance_cli::test_storage_backend_set_cli",
     "MCP-context-packet": "tests.test_acceptance_cli::test_mcp_context_packet_cli",
     "CLI-12": "tests.test_acceptance_cli::test_cli_lang_flag_overrides_sayane_lang",
     "CLI-12b": "tests.test_acceptance_cli::test_cli_sayane_lang_ja_messages",
-    "PLG-01": "tests.test_acceptance_cli::test_help_excludes_commercial_commands_without_extensions",
+    "PLG-01": (
+        "tests.test_acceptance_cli::test_help_excludes_commercial_commands_without_extensions"
+    ),
     "BRG-reject": "tests.test_bridge_api::test_candidate_reject",
     "BRG-critical": "tests.test_bridge_api::test_candidate_critical_approve_requires_force",
 }

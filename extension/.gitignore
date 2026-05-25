@@ -1,0 +1,6 @@
+node_modules/
+e2e/.e2e-env.json
+e2e/.bridge-pid.json
+test-results/
+playwright-report/
+blob-report/

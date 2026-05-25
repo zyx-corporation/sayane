@@ -33,8 +33,8 @@ Sayane **Community Edition（OSS）** の受け入れ条件・テストシナリ
 |------|------|-----------|
 | **L1 済み** | Core schema、Adapter、Bridge TestClient 主要経路、Storage 契約、MCP operations、CLI Candidate フルフロー・エラー経路・Critical 拒否、Storage export/commit、PLG 境界 | 本書 §5.2 · `tests/test_acceptance_cli.py` |
 | **L1 拡張（任意）** | 受け入れ ID ↔ pytest の網羅レジストリ拡張 | `tests/test_acceptance_coverage.py` · [#92](https://github.com/zyx-corporation/sayane/issues/92) |
-| **手動のみ** | Extension DOM・Options UI、実サイト Insert、サインオフ記録、任意 LLM judge、UX 目視 | [#93](https://github.com/zyx-corporation/sayane/issues/93) |
-| **手動＋scheduled E2E** | ChatGPT / Claude 実 DOM Insert | [#91](https://github.com/zyx-corporation/sayane/issues/91) |
+| **手動のみ（L3 残）** | 実サイト Insert（本番 DOM）、Options UX 目視、サインオフ、任意 LLM judge | [#93](https://github.com/zyx-corporation/sayane/issues/93) |
+| **scheduled E2E（L1 補完）** | ChatGPT / Claude Insert（モック DOM + Bridge） | `extension/e2e/` · [extension-e2e.md](extension-e2e.md) · [#91](https://github.com/zyx-corporation/sayane/issues/91) |
 
 [#92](https://github.com/zyx-corporation/sayane/issues/92) 完了後は、該当シナリオを L2 必須から外し L1 のみで足りる旨を本書と [#88](https://github.com/zyx-corporation/sayane/issues/88) に反映する。
 

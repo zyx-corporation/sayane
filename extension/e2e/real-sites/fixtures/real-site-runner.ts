@@ -15,10 +15,12 @@ import {
 } from "./diagnostics";
 import type { RealSiteSpec } from "./types";
 
+const USER_DATA_DIR_ENV = "SAYANE_E2E_USER_DATA_DIR";
+
 function authProfileDir(spec: RealSiteSpec): string | undefined {
-  const raw = process.env[spec.userDataDirEnv];
-  if (!raw) return undefined;
-  return path.resolve(raw);
+  const baseDir = process.env[USER_DATA_DIR_ENV];
+  if (!baseDir) return undefined;
+  return path.resolve(baseDir, spec.profileKey);
 }
 
 function siteOrigin(spec: RealSiteSpec): string {
@@ -51,7 +53,7 @@ export function defineRealSiteInsertTest(spec: RealSiteSpec): void {
     const userDataDir = authProfileDir(spec);
     test.skip(
       !userDataDir,
-      `${spec.userDataDirEnv} is not set; create a logged-in Chrome user data dir for ${spec.id}`,
+      `${USER_DATA_DIR_ENV} is not set; create a logged-in Chromium profile under ${USER_DATA_DIR_ENV}/${spec.profileKey}`,
     );
 
     const bridge = await startMockBridge(spec.target);

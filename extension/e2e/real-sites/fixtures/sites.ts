@@ -4,7 +4,7 @@ export const CHATGPT_REAL_SITE: RealSiteSpec = {
   id: "chatgpt",
   target: "chatgpt",
   url: "https://chatgpt.com/",
-  storageStateEnv: "SAYANE_E2E_CHATGPT_STORAGE_STATE",
+  userDataDirEnv: "SAYANE_E2E_CHATGPT_USER_DATA_DIR",
   loginIndicators: [
     'a[href*="/auth/login"]',
     'button:has-text("Log in")',
@@ -31,7 +31,7 @@ export const CLAUDE_REAL_SITE: RealSiteSpec = {
   id: "claude",
   target: "claude",
   url: "https://claude.ai/new",
-  storageStateEnv: "SAYANE_E2E_CLAUDE_STORAGE_STATE",
+  userDataDirEnv: "SAYANE_E2E_CLAUDE_USER_DATA_DIR",
   loginIndicators: [
     'a[href*="login"]',
     'button:has-text("Log in")',

@@ -16,7 +16,7 @@ import {
 import type { RealSiteSpec } from "./types";
 
 function authProfileDir(spec: RealSiteSpec): string | undefined {
-  const raw = process.env[spec.storageStateEnv];
+  const raw = process.env[spec.userDataDirEnv];
   if (!raw) return undefined;
   return path.resolve(raw);
 }
@@ -51,7 +51,7 @@ export function defineRealSiteInsertTest(spec: RealSiteSpec): void {
     const userDataDir = authProfileDir(spec);
     test.skip(
       !userDataDir,
-      `${spec.storageStateEnv} is not set; create a logged-in Chrome user data dir for ${spec.id}`,
+      `${spec.userDataDirEnv} is not set; create a logged-in Chrome user data dir for ${spec.id}`,
     );
 
     const bridge = await startMockBridge(spec.target);

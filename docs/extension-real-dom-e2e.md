@@ -50,20 +50,18 @@ npx playwright install chromium
 
 次に、ChatGPT / Claude にログイン済みの Chromium user data dir を用意する。
 
-この実装では、Playwright の `launchPersistentContext` を使うため、環境変数には **storage state JSON ではなく user data dir** を指定する。
+この実装では、Playwright の `launchPersistentContext` を使うため、環境変数には **Chromium user data directory** を指定する。
 
 ```bash
-export SAYANE_E2E_CHATGPT_STORAGE_STATE="$HOME/.sayane-e2e/chromium-chatgpt"
-export SAYANE_E2E_CLAUDE_STORAGE_STATE="$HOME/.sayane-e2e/chromium-claude"
+export SAYANE_E2E_CHATGPT_USER_DATA_DIR="$HOME/.sayane-e2e/chromium-chatgpt"
+export SAYANE_E2E_CLAUDE_USER_DATA_DIR="$HOME/.sayane-e2e/chromium-claude"
 ```
 
-変数名は Issue #91 の初期仕様に合わせて `STORAGE_STATE` を含むが、実体は persistent Chromium profile directory である。
-
-初回は次のように対象ディレクトリでブラウザを開き、手動ログインしてから閉じる運用を想定する。
+初回は次のように対象ディレクトリを作成し、その profile でブラウザを起動して手動ログインしてから閉じる運用を想定する。
 
 ```bash
-mkdir -p "$SAYANE_E2E_CHATGPT_STORAGE_STATE"
-mkdir -p "$SAYANE_E2E_CLAUDE_STORAGE_STATE"
+mkdir -p "$SAYANE_E2E_CHATGPT_USER_DATA_DIR"
+mkdir -p "$SAYANE_E2E_CLAUDE_USER_DATA_DIR"
 ```
 
 ログイン状態の作成を自動化しない。CAPTCHA、2FA、アカウント作成、内部API呼び出しは対象外である。

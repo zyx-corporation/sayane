@@ -95,6 +95,25 @@ def test_init_creates_profile_store(tmp_path: Path, monkeypatch) -> None:
     assert profile_file.exists()
 
 
+def test_init_respects_sayane_dir_and_creates_prompt_e2e_layout(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    sayane_dir = tmp_path / "custom-sayane"
+    monkeypatch.setenv("SAYANE_DIR", str(sayane_dir))
+
+    result = runner.invoke(app, ["init"])
+
+    assert result.exit_code == 0, result.stdout + result.stderr
+    assert (sayane_dir / "profiles" / "default" / "sayane.profile.yaml").exists()
+    assert (sayane_dir / "prompts" / "targets" / "README.md").exists()
+    assert (sayane_dir / "prompts" / "models" / "README.md").exists()
+    assert (sayane_dir / "prompts" / "providers" / "README.md").exists()
+    assert (sayane_dir / "e2e" / "user-data" / "README.md").exists()
+    assert (sayane_dir / "e2e" / "prompts" / "README.md").exists()
+    assert not (Path.home() / ".sayane" / "profiles" / "default" / "sayane.profile.yaml").exists()
+
+
 def test_init_existing_store_is_non_destructive_and_explains_force(
     tmp_path: Path,
     monkeypatch,
@@ -112,6 +131,25 @@ def test_init_existing_store_is_non_destructive_and_explains_force(
     assert profile_file.read_text(encoding="utf-8") == "sentinel"
     assert "already exists" in second.stdout
     assert "--force" in second.stdout
+
+
+def test_init_existing_store_still_backfills_layout(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    sayane_dir = tmp_path / "custom-sayane"
+    monkeypatch.setenv("SAYANE_DIR", str(sayane_dir))
+    profile_dir = sayane_dir / "profiles" / "default"
+    profile_dir.mkdir(parents=True)
+    profile_file = profile_dir / "sayane.profile.yaml"
+    profile_file.write_text("sentinel", encoding="utf-8")
+
+    result = runner.invoke(app, ["init"])
+
+    assert result.exit_code == 0, result.stdout + result.stderr
+    assert profile_file.read_text(encoding="utf-8") == "sentinel"
+    assert (sayane_dir / "prompts" / "targets" / "README.md").exists()
+    assert (sayane_dir / "e2e" / "user-data" / "README.md").exists()
 
 
 def test_init_force_warns_on_stderr_before_overwrite(tmp_path: Path, monkeypatch) -> None:

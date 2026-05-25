@@ -22,7 +22,7 @@ export async function launchExtensionContext(): Promise<{
 }> {
   const context = await chromium.launchPersistentContext("", {
     channel: "chromium",
-    headless: false,
+    headless: !!process.env.CI,
     args: [
       `--disable-extensions-except=${EXTENSION_DIR}`,
       `--load-extension=${EXTENSION_DIR}`,

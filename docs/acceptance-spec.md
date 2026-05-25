@@ -7,7 +7,7 @@ Sayane **Community Edition（OSS）** の受け入れ条件・テストシナリ
 | **対象リリース** | sayane **0.6.0+**（`sayane --version`） |
 | **対象エディション** | Community Edition（Apache 2.0）のみ |
 | **非対象** | sayane-pro 商用機能（暗号化 SQLite、ライセンス、Web UI 等）— pro 側ドキュメント参照 |
-| **関連 Issue** | [#78](https://github.com/zyx-corporation/sayane/issues/78) OSS 契約維持 · [#88](https://github.com/zyx-corporation/sayane/issues/88) L2 Core 手動 · [#89](https://github.com/zyx-corporation/sayane/issues/89) L3 Extension UAT |
+| **関連 Issue** | [#78](https://github.com/zyx-corporation/sayane/issues/78) OSS 契約維持 · [#88](https://github.com/zyx-corporation/sayane/issues/88) L2 Core 手動 · [#89](https://github.com/zyx-corporation/sayane/issues/89) L3 Extension UAT · [#92](https://github.com/zyx-corporation/sayane/issues/92) L1 自動化バックログ · [#93](https://github.com/zyx-corporation/sayane/issues/93) 手動のみ整理 |
 
 下位手順書:
 
@@ -26,6 +26,17 @@ Sayane **Community Edition（OSS）** の受け入れ条件・テストシナリ
 | **L3 手動（Extension）** | ブラウザ DOM・popup 結合 | Extension / Bridge 変更時 | [extension-acceptance-test.md](extension-acceptance-test.md) · Issue [#89](https://github.com/zyx-corporation/sayane/issues/89) |
 
 **リリース判定**: L1 が green、L2 の **必須シナリオがすべて Pass**、Extension に変更がある場合は L3 必須 Pass。
+
+### 1.1 自動化できる部分 / できない部分
+
+| 区分 | 内容 | 追跡 Issue |
+|------|------|-----------|
+| **L1 済み** | Core schema、Adapter、Bridge TestClient 主要経路、Storage 契約、MCP operations | 本書 §5.2 |
+| **L1 未実装（拡張予定）** | CLI Candidate フルフロー、CLI エラー経路、Critical approve 拒否の CLI 表現、Storage commit/export | [#92](https://github.com/zyx-corporation/sayane/issues/92) |
+| **手動のみ** | Extension DOM・Options UI、実サイト Insert、サインオフ記録、任意 LLM judge、UX 目視 | [#93](https://github.com/zyx-corporation/sayane/issues/93) |
+| **手動＋scheduled E2E** | ChatGPT / Claude 実 DOM Insert | [#91](https://github.com/zyx-corporation/sayane/issues/91) |
+
+[#92](https://github.com/zyx-corporation/sayane/issues/92) 完了後は、該当シナリオを L2 必須から外し L1 のみで足りる旨を本書と [#88](https://github.com/zyx-corporation/sayane/issues/88) に反映する。
 
 ---
 

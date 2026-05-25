@@ -21,7 +21,24 @@ function authProfileDir(spec: RealSiteSpec): string | undefined {
   return path.resolve(raw);
 }
 
-async function assertMarkerInserted(pageText: string, marker: string, siteId: string): Promise<void> {
+async function readEditableText(spec: RealSiteSpec, page: import("@playwright/test").Page): Promise<string> {
+  return page.evaluate((selectors) => {
+    for (const selector of selectors) {
+      const nodes = Array.from(document.querySelectorAll(selector));
+      for (const node of nodes) {
+        if (!(node instanceof HTMLElement)) continue;
+        if (node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement) {
+          if (node.value) return node.value;
+        }
+        const text = node.textContent ?? "";
+        if (text) return text;
+      }
+    }
+    return "";
+  }, spec.inputSelectors);
+}
+
+function assertMarkerInserted(pageText: string, marker: string, siteId: string): void {
   expect(pageText, `${siteId}: inserted marker should be visible in the editable input`).toContain(marker);
 }
 
@@ -76,9 +93,14 @@ export function defineRealSiteInsertTest(spec: RealSiteSpec): void {
           throw new ClassifiedE2EError(kind, `${spec.id}: insert failed: ${error}`);
         }
 
-        const text = await page.locator(spec.inputSelectors.join(", ")).first().textContent({ timeout: 10_000 })
-          .catch(async () => page.locator(spec.inputSelectors.join(", ")).first().inputValue({ timeout: 10_000 }));
-        await assertMarkerInserted(text ?? "", bridge.marker, spec.id);
+        await expect
+          .poll(() => readEditableText(spec, page), {
+            message: `${spec.id}: wait for Sayane E2E marker in real editable input`,
+            timeout: 10_000,
+          })
+          .toContain(bridge.marker);
+
+        assertMarkerInserted(await readEditableText(spec, page), bridge.marker, spec.id);
       } catch (err) {
         const reason = err instanceof ClassifiedE2EError ? `${err.kind}: ${err.message}` : String(err);
         await writeDiagnostics(page, spec, testInfo, reason);

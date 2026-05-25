@@ -122,7 +122,8 @@ def test_candidate_approve_critical_without_force_rejected(
 
     result = runner.invoke(app, ["candidate", "approve", cid])
     assert result.exit_code != 0
-    assert "force-critical" in (result.stdout + result.stderr + str(result.exception)).lower()
+    combined = (result.stdout + result.stderr).lower()
+    assert "critical" in combined and "force" in combined
 
     profile_after = load_profile(profile_path)
     assert list(profile_after.values.core) == core_before

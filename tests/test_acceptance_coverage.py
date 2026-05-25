@@ -28,8 +28,15 @@ ACCEPTANCE_L1_COVERAGE: dict[str, str] = {
 }
 
 
+def _import_test_module(nodeid: str):
+    """Import a test module the same way pytest does (tests/ on sys.path)."""
+    module_name, func_name = nodeid.split("::")
+    if module_name.startswith("tests."):
+        module_name = module_name.removeprefix("tests.")
+    return importlib.import_module(module_name), func_name
+
+
 @pytest.mark.parametrize("scenario_id,nodeid", sorted(ACCEPTANCE_L1_COVERAGE.items()))
 def test_acceptance_scenario_has_pytest(scenario_id: str, nodeid: str) -> None:
-    module_name, func_name = nodeid.split("::")
-    module = importlib.import_module(module_name)
-    assert hasattr(module, func_name), f"{scenario_id}: missing {func_name} in {module_name}"
+    module, func_name = _import_test_module(nodeid)
+    assert hasattr(module, func_name), f"{scenario_id}: missing {func_name} in {module.__name__}"

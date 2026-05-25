@@ -145,3 +145,59 @@ def test_candidate_evaluate_approve_flow(
     profile = load_profile(config.profiles_dir / "default" / "sayane.profile.yaml")
     concepts = profile.knowledge.concepts if profile.knowledge else []
     assert any("Bridge-driven" in c for c in concepts)
+
+
+def test_candidate_reject(bridge_env: tuple[TestClient, BridgeConfig, str]) -> None:
+    client, config, token = bridge_env
+    capture = client.post(
+        "/capture",
+        headers=_auth(token),
+        json={"content": "Reject flow concept", "source": "test"},
+    )
+    assert capture.status_code == 200
+    cid = capture.json()["id"]
+
+    rejected = client.post(
+        f"/candidates/{cid}/reject",
+        headers=_auth(token),
+        json={"reason": "not needed"},
+    )
+    assert rejected.status_code == 200
+    assert rejected.json()["status"] == "rejected"
+
+    record = json.loads((config.candidates_dir / f"{cid}.json").read_text(encoding="utf-8"))
+    assert record["status"] == "rejected"
+
+
+def test_candidate_critical_approve_requires_force(
+    bridge_env: tuple[TestClient, BridgeConfig, str],
+) -> None:
+    client, config, token = bridge_env
+    capture = client.post(
+        "/capture",
+        headers=_auth(token),
+        json={"content": "values.core: must change core values", "source": "test"},
+    )
+    assert capture.status_code == 200
+    cid = capture.json()["id"]
+
+    evaluated = client.post(
+        f"/candidates/{cid}/evaluate",
+        headers=_auth(token),
+        json={"level": 1},
+    )
+    assert evaluated.status_code == 200
+    assert evaluated.json()["evaluation"]["rde_class"] == "Critical Distortion"
+
+    denied = client.post(
+        f"/candidates/{cid}/approve",
+        headers=_auth(token),
+        json={"force_critical": False},
+    )
+    assert denied.status_code == 400
+    assert "force-critical" in denied.json()["detail"].lower()
+
+    from sayane.core.loader import load_profile
+
+    profile = load_profile(config.profiles_dir / "default" / "sayane.profile.yaml")
+    assert not any("must change" in v for v in profile.values.core)

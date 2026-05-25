@@ -12,7 +12,7 @@ export type RealSiteSpec = {
   id: RealSiteId;
   target: "chatgpt" | "claude";
   url: string;
-  storageStateEnv: string;
+  userDataDirEnv: string;
   loginIndicators: readonly string[];
   readinessSelectors: readonly string[];
   inputSelectors: readonly string[];

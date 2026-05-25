@@ -12,7 +12,7 @@ export type RealSiteSpec = {
   id: RealSiteId;
   target: "chatgpt" | "claude";
   url: string;
-  /** Directory key under SAYANE_E2E_USER_DATA_DIR, e.g. chatgpt or claude. */
+  /** Directory key under $SAYANE_DIR/e2e/user-data/, e.g. chatgpt or claude. */
   profileKey: string;
   loginIndicators: readonly string[];
   readinessSelectors: readonly string[];

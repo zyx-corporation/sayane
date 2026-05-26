@@ -6,6 +6,7 @@ from typing import Annotated
 
 import click
 import typer
+from typer.core import TyperGroup
 from typer.main import get_command
 
 import sayane
@@ -44,7 +45,7 @@ def render_help(topics: list[str] | None) -> str:
 
     cmd: click.Command = root
     for part in path:
-        if not isinstance(cmd, click.Group):
+        if not _is_command_group(cmd):
             raise HelpTopicError(
                 t("help.not_group", part=part, path=" ".join(path)),
             )
@@ -61,6 +62,11 @@ def render_help(topics: list[str] | None) -> str:
 
 class HelpTopicError(Exception):
     """Invalid help topic path."""
+
+
+def _is_command_group(cmd: click.Command) -> bool:
+    """True for Click groups and Typer sub-apps (TyperGroup is not a click.Group)."""
+    return isinstance(cmd, (click.Group, TyperGroup))
 
 
 def _format_overview(group: click.Group, ctx: click.Context) -> str:
@@ -87,7 +93,7 @@ def _format_overview(group: click.Group, ctx: click.Context) -> str:
         if sub is None:
             continue
         summary = _first_line(sub.help)
-        if isinstance(sub, click.Group):
+        if _is_command_group(sub):
             sub_ctx = click.Context(sub, parent=ctx, info_name=name)
             children = []
             for child_name in sorted(sub.list_commands(sub_ctx)):

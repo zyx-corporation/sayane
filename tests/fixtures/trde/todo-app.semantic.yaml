@@ -1,0 +1,62 @@
+intent_elements:
+  - id: I1
+    description: "タスクに高・中・低の三段階優先度がある"
+    mapped_to: "Priority enum, Task.priority"
+    status: preserved
+
+  - id: I2
+    description: "高優先度タスクが視覚的に目立つ"
+    mapped_to: "TaskCard priority class"
+    status: preserved
+
+  - id: I3
+    description: "完了タスクが下に移動する"
+    mapped_to: "sortCompletedLast"
+    status: transformed
+    transform_reason: "下に移動を、完了タスクを未完了タスクの後にソートする処理として解釈した"
+
+  - id: I4
+    description: "完了タスクに取り消し線を表示する"
+    mapped_to: "TaskCard completed style"
+    status: preserved
+
+  - id: I5
+    description: "期限切れタスクを警告色で表示する"
+    mapped_to: null
+    status: not_implemented
+
+implicit_additions:
+  - description: "タスクの作成日時を自動記録する"
+    justification: "一般的なTodoアプリの慣行"
+    risk: low
+    affected_stage: edited
+
+  - description: "LocalStorageによる永続化を追加する"
+    justification: "ブラウザ更新時のデータ保持"
+    risk: high
+    affected_stage: export
+
+delta_ms:
+  - from_stage: raw
+    to_stage: edited
+    element: "優先度"
+    change_type: preservation
+    description: "優先度の三段階は保存された"
+    severity: 0.0
+    approved: true
+
+  - from_stage: edited
+    to_stage: normalize
+    element: "優先度の内部表現"
+    change_type: transformation
+    description: "高・中・低を high/medium/low enum に正規化"
+    severity: 0.2
+    approved: true
+
+  - from_stage: interpret
+    to_stage: export
+    element: "期限管理"
+    change_type: deviation
+    description: "期限切れ警告が未実装のままExportされた"
+    severity: 0.8
+    approved: false

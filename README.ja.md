@@ -58,7 +58,7 @@ Candidate（capture）→ RDE 評価 → 承認 merge → Lineage
 | **履歴** | なし、または SaaS 側の限定的ログ | **Lineage** で更新・拒否の記録をユーザーが保持 |
 | **文脈の所在** | 各 LLM のメモリ / プロジェクトに分散 | **context_index** + Markdown でローカルに索引 |
 | **所有** | ベンダー SaaS 内に閉じがち | **local-first**（ユーザーが正本を保持） |
-| **即時反映** | 貼り付け即生效 | capture は **即 merge しない**（Critical Distortion 等は拒否可能） |
+| **即時反映** | 貼り付けると即時反映 | capture は **即 merge しない**（Critical Distortion 等は拒否可能） |
 
 Sayane Profile は「自己紹介文の置き場」ではなく、LLM がユーザーの文脈へ **構造的に接近するための媒介** です。単一フィールドの交換ではなく、identity / voice / values / policy / context を分離して保持し、compile 時に Prompt IR へ合成します。
 

@@ -22,7 +22,8 @@ _RDE_CLASSES: tuple[RDEClass, ...] = (
     "Critical Distortion",
 )
 
-_JUDGE_PROMPT = """You are an RDE reviewer for Sayane profile updates (T-RDE v1.1a operational subset).
+_JUDGE_PROMPT = """You are an RDE reviewer for Sayane profile updates
+(T-RDE v1.1a operational subset).
 
 This review is a tentative heuristic — not an objective truth determination.
 The human reviewer makes the final approve/reject decision.

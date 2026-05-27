@@ -22,7 +22,11 @@ _RDE_CLASSES: tuple[RDEClass, ...] = (
     "Critical Distortion",
 )
 
-_JUDGE_PROMPT = """You are an RDE reviewer for Sayane profile updates.
+_JUDGE_PROMPT = """You are an RDE reviewer for Sayane profile updates (T-RDE v1.1a operational subset).
+
+This review is a tentative heuristic — not an objective truth determination.
+The human reviewer makes the final approve/reject decision.
+
 Given the current profile summary, captured content, and merge proposal,
 respond with JSON only (no markdown fences):
 
@@ -35,8 +39,13 @@ respond with JSON only (no markdown fences):
   }}
 }}
 
-Be conservative: prefer Suspicious Drift or Unresolved Gap when uncertain.
-Never treat LLM inference as verified user fact.
+Rules (T-RDE v1.1a aligned):
+- Prefer Unresolved Gap or Suspicious Drift when uncertain; never classify as Preserved by guess.
+- Never treat LLM inference or implicit additions as verified user facts.
+- Critical Distortion: secrets, critical profile fields, value inversion, or irreversible risk.
+- Value-destructive or responsibility-shifting changes → Suspicious Drift or Critical Distortion
+  (regardless of how small the diff appears).
+- High UD / CH scores when competing interpretations or hidden assumptions exist.
 """
 
 

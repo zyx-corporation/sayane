@@ -42,6 +42,7 @@ Commercial Edition 向けマニュアル（ライセンス、暗号化 SQLite、
 - [Conversation Extract / Reverse Compile Pipeline](extraction-pipeline.md)
 - [Security Design](security.md)
 - [RDE / UIB 評価と Lineage](evaluation-lineage.md)
+- [T-RDE 実行プロンプト v1.1a](t-rde-execution-prompt.md) — 意味監査の実行プロンプト（論文 T-RDE v1.2 準拠）
 - [開発原則](development-principles.md)
 - [CI方針](ci.md)
 - [実装ロードマップ](roadmap.md)

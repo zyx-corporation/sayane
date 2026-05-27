@@ -4,6 +4,8 @@ Phase 4 の Candidate Update 評価・承認フロー。Level 0–1 はヒュー
 
 設計: [evaluation-lineage.md](evaluation-lineage.md)
 
+**T-RDE 実行プロンプト（v1.1a）**: [t-rde-execution-prompt.md](t-rde-execution-prompt.md) — PR・設計・コードの意味監査に使用。`sayane candidate evaluate --level 2/3` は同プロンプトのサブセットを `llm_judge` が適用する。
+
 ## 1. フロー
 
 ```text

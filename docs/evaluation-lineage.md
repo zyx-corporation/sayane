@@ -21,6 +21,8 @@ Captured Context
 
 RDEは、生成物や更新候補が元の意図・価値・文脈からどのように変化したかを評価する層である。
 
+フル監査用の実行プロンプト（T-RDE v1.1a）: [t-rde-execution-prompt.md](t-rde-execution-prompt.md)。Sayane CLI の Level 2/3 judge はその運用サブセットである。
+
 SayaneにおけるRDEは、主に以下を評価する。
 
 - Profile更新候補が既存Profileと整合しているか

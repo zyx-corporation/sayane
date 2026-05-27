@@ -1,0 +1,34 @@
+intent_elements:
+  - id: S1
+    description: "AIはユーザーの人格や文脈の所有者ではなく実行基盤である"
+    mapped_to: "Prompt IR system constraints"
+    status: preserved
+
+  - id: S2
+    description: "人格的文脈はlocal-firstに保持される"
+    mapped_to: "SAYANE_DIR profiles/default and prompt separation"
+    status: preserved
+
+  - id: S3
+    description: "Extensionの挿入成功は意味監査の代替証拠ではない"
+    mapped_to: "T-RDE acceptance gate"
+    status: preserved
+
+implicit_additions: []
+
+delta_ms:
+  - from_stage: raw
+    to_stage: edited
+    element: "人格と実行の分離"
+    change_type: preservation
+    description: "設計原則は編集後も保存された"
+    severity: 0.0
+    approved: true
+
+  - from_stage: interpret
+    to_stage: export
+    element: "local-first制約"
+    change_type: preservation
+    description: "target向け出力でもlocal-first制約が保存された"
+    severity: 0.0
+    approved: true

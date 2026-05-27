@@ -1,5 +1,6 @@
 """T-RDE semantic audit utilities."""
 
+from sayane.trde.loader import load_semantic_map, semantic_map_from_dict
 from sayane.trde.models import (
     DeltaM,
     ImplicitAddition,
@@ -19,4 +20,6 @@ __all__ = [
     "SemanticSummary",
     "TRDERunner",
     "evaluate_quality_gate",
+    "load_semantic_map",
+    "semantic_map_from_dict",
 ]

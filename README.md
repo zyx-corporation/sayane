@@ -1,5 +1,7 @@
 # Sayane (紗綾音)
 
+[日本語版 README](README_ja.md)
+
 Sayane is a local-first persona and context portability tool for cross-LLM collaboration.
 
 It helps users extract, structure, migrate, and evaluate their personal context, working style, values, and response preferences across different LLM runtimes such as ChatGPT, Claude, Gemini, and open-source models.

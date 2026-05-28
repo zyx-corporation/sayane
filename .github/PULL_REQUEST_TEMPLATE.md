@@ -150,7 +150,7 @@ test/<issue-number>-<short-name>
 ## ドキュメント更新
 
 - [ ] README.md
-- [ ] README.ja.md
+- [ ] README_ja.md
 - [ ] docs/index.md
 - [ ] docs/architecture.md
 - [ ] docs/profile-ir.md

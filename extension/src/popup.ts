@@ -142,9 +142,7 @@ $("btn-capture-selection").addEventListener("click", async () => {
       setStatus(localizeError(res.error), true);
       return;
     }
-    const id = (res.data as { id: string }).id;
-    setStatus(t("status.captured", { id }));
-    await loadCandidates(id);
+    setCaptureStatus(res.data as import("./types.js").CaptureResult);
   } catch (e) {
     setStatus(localizeError(String(e)), true);
   }
@@ -158,13 +156,21 @@ $("btn-capture-page").addEventListener("click", async () => {
       setStatus(localizeError(res.error), true);
       return;
     }
-    const id = (res.data as { id: string }).id;
-    setStatus(t("status.captured", { id }));
-    await loadCandidates(id);
+    setCaptureStatus(res.data as import("./types.js").CaptureResult);
   } catch (e) {
     setStatus(localizeError(String(e)), true);
   }
 });
+
+function setCaptureStatus(data: import("./types.js").CaptureResult): void {
+  const id = data.id;
+  const warn = data.warnings?.[0];
+  const msg = warn
+    ? `${t("status.captured", { id: id.slice(0, 8) })} — ${warn}`
+    : t("status.captured", { id: id.slice(0, 8) });
+  setStatus(msg, Boolean(warn));
+  void loadCandidates(id);
+}
 
 async function insertContext(target: InsertTarget): Promise<void> {
   try {

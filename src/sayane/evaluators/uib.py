@@ -1,15 +1,35 @@
 """Heuristic UIB checklist scores (0.0–1.0)."""
 
 from sayane.core.candidate import CandidateProposal, UIBScores
+from sayane.evaluators.heuristic_match import contains_any_phrase, contains_any_word
 
-_UNCERTAINTY = ("maybe", "perhaps", "might", "推測", "不明", "?", "possibly")
+_UNCERTAINTY_PHRASES = (
+    "not sure",
+    "i think",
+)
+_UNCERTAINTY_WORDS = (
+    "maybe",
+    "perhaps",
+    "might",
+    "possibly",
+    "uncertain",
+    "uncertainty",
+    "推測",
+    "不明",
+)
+
+
+def _signals_uncertainty(content: str) -> bool:
+    return contains_any_phrase(content, _UNCERTAINTY_PHRASES) or contains_any_word(
+        content,
+        _UNCERTAINTY_WORDS,
+    )
 
 
 def score_uib(content: str, proposal: CandidateProposal) -> UIBScores:
-    lower = content.lower()
     length = len(content.strip())
 
-    ud = 0.85 if any(m in lower for m in _UNCERTAINTY) else 0.55
+    ud = 0.85 if _signals_uncertainty(content) else 0.55
     mi = 0.9 if length < 400 else 0.65 if length < 2000 else 0.45
     ch = 0.7 if len(proposal.add) > 1 else 0.5
     dt = 0.75 if proposal.section else 0.5

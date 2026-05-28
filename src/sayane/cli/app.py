@@ -138,6 +138,27 @@ def _register_profile(app: typer.Typer) -> None:
             typer.echo(t("inspect.concepts", concepts=", ".join(p.knowledge.concepts)))
         if p.context_index.entrypoint:
             typer.echo(t("inspect.entrypoint", path=p.context_index.entrypoint))
+        from sayane.core.profile_quality import validate_profile_quality
+
+        for warning in validate_profile_quality(p):
+            typer.echo(f"warning: {warning}", err=True)
+
+    @profile_app.command("validate")
+    def profile_validate(
+        profile: Annotated[Path | None, typer.Option("--profile")] = None,
+    ) -> None:
+        """Check profile layout (tone, concepts, PII placement)."""
+        _path, loaded = _load(profile)
+        from sayane.core.profile_quality import validate_profile_quality
+
+        warnings = validate_profile_quality(loaded)
+        if not warnings:
+            typer.echo("Profile layout: OK")
+            return
+        typer.echo("Profile layout warnings:", err=True)
+        for warning in warnings:
+            typer.echo(f"  - {warning}", err=True)
+        raise typer.Exit(1)
 
     @profile_app.command("diff")
     def profile_diff(
@@ -187,6 +208,10 @@ def _register_core_commands(app: typer.Typer) -> None:
     ) -> None:
         """Build Prompt IR and compile to the target LLM format."""
         path, loaded = _load(profile)
+        from sayane.core.profile_quality import validate_profile_quality
+
+        for warning in validate_profile_quality(loaded):
+            typer.echo(f"warning: {warning}", err=True)
         ir = build_prompt_ir(loaded, instruction=instruction, profile_root=path.parent)
         compiled = get_adapter(target).compile(ir)
         typer.echo(json.dumps(compiled.payload, ensure_ascii=False, indent=2))
@@ -230,6 +255,23 @@ def _register_core_commands(app: typer.Typer) -> None:
             raise typer.BadParameter(t("error.bridge_localhost"))
 
         config = BridgeConfig(host=host, port=port)
+        from sayane.storage.base import StorageBackendError
+        from sayane.storage.config import load_storage_config
+        from sayane.storage.registry import get_backend_factory
+
+        storage_cfg = load_storage_config(config.home)
+        try:
+            get_backend_factory(storage_cfg.backend)
+        except StorageBackendError as exc:
+            typer.echo(str(exc), err=True)
+            if storage_cfg.backend == "encrypted-sqlite":
+                typer.echo(
+                    "Install sayane-pro, or run:\n"
+                    "  sayane storage backend set filesystem",
+                    err=True,
+                )
+            raise typer.Exit(1) from exc
+
         token, created = load_or_create_token(config)
         typer.echo(t("serve.listening", host=host, port=port))
         typer.echo(t("serve.token_file", path=config.token_file))

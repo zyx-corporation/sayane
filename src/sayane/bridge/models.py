@@ -21,6 +21,7 @@ class CaptureResponse(BaseModel):
     id: str
     status: Literal["captured"] = "captured"
     path: str
+    warnings: list[str] = Field(default_factory=list)
 
 
 class CompileRequest(BaseModel):

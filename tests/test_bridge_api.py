@@ -93,6 +93,20 @@ def test_capture_saves_candidate(bridge_env: tuple[TestClient, BridgeConfig, str
     assert record["content"] == "Selected text from page"
 
 
+def test_capture_structured_persona_returns_warnings(
+    bridge_env: tuple[TestClient, BridgeConfig, str],
+) -> None:
+    client, _, token = bridge_env
+    content = "person:\n  x: 1\nprojects:\n  y: 2\n"
+    response = client.post(
+        "/capture",
+        headers=_auth(token),
+        json={"content": content, "source": "selection"},
+    )
+    assert response.status_code == 200
+    assert response.json().get("warnings")
+
+
 def test_invalid_token_rejected(bridge_env: tuple[TestClient, BridgeConfig, str]) -> None:
     client, _, _ = bridge_env
     response = client.get("/profiles", headers={"Authorization": "Bearer invalid"})

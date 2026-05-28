@@ -63,7 +63,7 @@ ChatGPT / Claude context packet → Extension Insert
 | **Values** | 倫理・判断基準 | 尊厳、共鳴、不確実性の明示 | `values.core` |
 | **Policy** | 実行時制約 | avoid / prefer | `policy.response.*` |
 | **Theory** | 理論体系・造語・論文 | Resonanceverse、ΔM、RDE | `context/theory.md` + `knowledge.concepts`（索引） |
-| **Projects** | プロジェクト一覧 | Kotone、OpenAyane | `context/projects.md` + concepts ラベル |
+| **Projects** | プロジェクト一覧 | 各プロジェクト名 | `context/projects.md` + concepts ラベル |
 | **Formation / Health** | 形成史・健康（センシティブ） | 病歴、原体験 | `context/private/`（任意・区分付き） |
 | **Interaction** | 対話・開発スタイル | TDD、反論歓迎 | `voice.tone` + `policy.response.prefer` |
 | **Unverified** | 未確認メタ | 推定のみの学歴等 | `context/notes/unverified.md` |
@@ -79,7 +79,7 @@ ChatGPT / Claude context packet → Extension Insert
 | `interaction_style.*` | `voice.tone` + `policy.response.prefer` | △ 箇条書き単位で分割キャプチャ |
 | `philosophy.*` | `context/theory.md` | ❌ ファイル編集 |
 | `theory.*` | `context/theory.md` | ❌ |
-| `projects.*` | `context/projects.md` | ❌（`Kotone:` はセクション誤爆の元） |
+| `projects.*` | `context/projects.md` | ❌（例: `Melotone:` が `tone:` に誤爆しうる） |
 | `health.*` | `context/private/health.md` | ❌ |
 | `unverified.*` | `context/notes/unverified.md` | ❌ |
 
@@ -112,8 +112,8 @@ ChatGPT / Claude context packet → Extension Insert
 ```yaml
 identity:
   name: "…"              # 表示名最小
-  preferred_name: "tomyuk"
-  roles: ["代表", "エンジニア"]
+  preferred_name: "example"
+  roles: ["developer"]
 voice:
   default_language: "ja"
   tone:

@@ -1,5 +1,7 @@
 # AI Handoff
 
+**Fictional sample** for Sayane documentation and tests.
+
 Review candidates before merge.
 
 ## Merge Policy
@@ -12,9 +14,8 @@ When merging context across systems or LLMs, prefer explicit uncertainty over si
 
 Before merging, evaluate whether the change preserves the original intent, introduces an acceptable transformation, or creates suspicious drift.
 
-## Candidate Concepts
+## Candidate Concepts (example labels only)
 
 - Context portability
-- Explicit uncertainty in merge operations
-- Sayane
-- RDE evaluation
+- Explicit uncertainty
+- Sample concept A

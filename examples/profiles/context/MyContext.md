@@ -1,6 +1,6 @@
 # My Context
 
-Example User — developer profile for Sayane samples.
+**Fictional sample.** Alex Chen — developer at Acme Research Lab (example org).
 
 ## Read order
 
@@ -9,5 +9,3 @@ Example User — developer profile for Sayane samples.
 3. [theory.md](theory.md)
 4. [projects.md](projects.md)
 5. [interaction.md](interaction.md)
-
-Sensitive files under `context/private/` are excluded from `storage index` by default.

@@ -1,6 +1,7 @@
-# Interaction (example)
+# Interaction (fictional sample)
 
-- Prefer structured reasoning
-- Avoid unsupported overclaiming
+- Prefer concise, structured answers
+- State uncertainty explicitly
+- Cite assumptions when recommending changes
 
-Short phrases also live in `voice.tone` and `policy.response` on the profile YAML.
+Short summaries also belong in `voice.tone` and `policy.response` on the profile YAML.

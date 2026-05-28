@@ -1,6 +1,7 @@
-# Identity (example)
+# Identity (fictional sample)
 
-- **Roles**: developer
-- **Default language**: ja
+- **Organization**: Acme Research Lab (example)
+- **Roles**: developer, reviewer
+- **Default language**: en
 
-Keep PII out of `knowledge.concepts`; use `identity` in profile YAML or `private/contact.md` (not indexed).
+Do not put email or legal names in `knowledge.concepts`. Use profile `identity` or a non-indexed `context/private/` file for sensitive fields.

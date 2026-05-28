@@ -1,6 +1,6 @@
-# Theory (example)
+# Theory (fictional sample)
 
-Long-form intellectual context belongs here, not in `voice.tone`.
+Place long-form background here—not in `voice.tone`.
 
-- RDE — Resonance Diversity Entropy
-- Explicit uncertainty in merge operations
+- Example framework: structured reasoning under uncertainty
+- Example metric: drift score for merge review (fictional)

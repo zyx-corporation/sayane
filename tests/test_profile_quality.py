@@ -16,7 +16,7 @@ def test_capture_warns_on_structured_persona() -> None:
 
 def test_tone_yaml_line_warns(examples_dir: Path) -> None:
     profile = load_profile(examples_dir / "profiles" / "minimal.yaml")
-    profile.voice.tone = ["name: Tomoyuki Kano"]
+    profile.voice.tone = ["name: Alex Chen"]
     warnings = validate_profile_quality(profile)
     assert any("voice.tone" in w and "YAML" in w for w in warnings)
 
@@ -24,7 +24,7 @@ def test_tone_yaml_line_warns(examples_dir: Path) -> None:
 def test_concepts_email_warns(examples_dir: Path) -> None:
     profile = load_profile(examples_dir / "profiles" / "minimal.yaml")
     assert profile.knowledge is not None
-    profile.knowledge.concepts = ["tomyuk@example.com"]
+    profile.knowledge.concepts = ["alex@example.com"]
     warnings = validate_profile_quality(profile)
     assert any("PII" in w or "email" in w.lower() for w in warnings)
 

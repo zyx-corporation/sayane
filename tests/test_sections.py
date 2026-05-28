@@ -13,7 +13,7 @@ def test_build_proposal_for_policy_avoid() -> None:
 
 
 def test_kotone_project_does_not_match_voice_tone() -> None:
-    content = "- Kotone: Edge AI / Home Automation\n"
+    content = "- Melotone: Edge AI / Home Automation\n"
     assert infer_proposal_section(content) == "knowledge.concepts"
 
 
@@ -30,7 +30,7 @@ def test_organization_roles_matches_identity_roles() -> None:
 def test_structured_persona_defaults_to_knowledge() -> None:
     content = (
         "person:\n  name:\n    formal_ja: Example\n"
-        "projects:\n  kotone:\n    name_en: Kotone\n"
+        "projects:\n  melotone:\n    name_en: Melotone\n"
         "organization:\n  roles:\n    - lead\n"
     )
     assert infer_proposal_section(content) == "knowledge.concepts"

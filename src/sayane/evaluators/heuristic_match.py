@@ -1,7 +1,7 @@
 """Bounded text matching for Level-1 heuristics.
 
 All marker checks use token, phrase, dot-path, or YAML-key boundaries so that
-substring accidents (e.g. ``Kotone:`` matching ``tone:``, ``secretary`` matching
+substring accidents (e.g. ``Melotone:`` matching ``tone:``, ``secretary`` matching
 ``secret``) do not occur.
 """
 
@@ -46,7 +46,7 @@ def contains_dot_path(content: str, path: str) -> bool:
 
 
 def has_yaml_key(content: str, key: str) -> bool:
-    """YAML key at a token boundary followed by ``:`` (e.g. ``tone:``, not ``Kotone:``)."""
+    """YAML key at a token boundary followed by ``:`` (e.g. ``tone:``, not ``Melotone:``)."""
     if not key:
         return False
     pattern = re.compile(rf"{_L}{re.escape(key)}\s*:", re.IGNORECASE)

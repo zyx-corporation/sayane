@@ -1,4 +1,4 @@
-# Projects (example)
+# Projects (fictional sample)
 
-- **Sayane** — context portability tooling
-- **RDE evaluation** — heuristic + optional LLM judge
+- **Widget** — sample edge automation project
+- **Platform** — sample cloud orchestration project

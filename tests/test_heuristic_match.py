@@ -20,7 +20,7 @@ from sayane.evaluators.uib import score_uib
 # --- Known false positives (must NOT match) ---
 
 _SECTION_FALSE_POSITIVES = [
-    ("- Kotone: Edge AI", "knowledge.concepts"),
+    ("- Melotone: Edge AI", "knowledge.concepts"),
     ("secretary@corp.com", "knowledge.concepts"),
     ("private keyboard layout", "knowledge.concepts"),
     ("unavoidable trade-off", "knowledge.concepts"),
@@ -35,7 +35,7 @@ _RDE_FALSE_POSITIVES = [
     "The secret garden is beautiful.",
     "private keyboard shortcuts",
     "hardcore values only",
-    "OpenAyane governance overview",
+    "OpenExample governance overview",
     "top-secret clearance document",
 ]
 
@@ -72,7 +72,7 @@ def test_uib_does_not_treat_url_query_as_uncertainty() -> None:
 
 def test_yaml_key_helpers() -> None:
     assert has_yaml_key("tone:\n  - calm", "tone")
-    assert not has_yaml_key("Kotone: Edge AI", "tone")
+    assert not has_yaml_key("Melotone: Edge AI", "tone")
     assert contains_dot_path("set values.core item", "values.core")
     assert not contains_dot_path("hardcore values", "values.core")
     assert has_core_values_phrase("Our core values include dignity.")
@@ -115,7 +115,7 @@ def test_persona_proposal_skips_markdown_headers() -> None:
 def test_structured_persona_yaml() -> None:
     content = (
         "person:\n  name:\n    formal_ja: Example\n"
-        "projects:\n  kotone:\n    name_en: Kotone\n"
+        "projects:\n  melotone:\n    name_en: Melotone\n"
         "organization:\n  roles:\n    - lead\n"
     )
     assert infer_proposal_section(content) == "knowledge.concepts"

@@ -41,7 +41,7 @@ curl -fsSL https://raw.githubusercontent.com/zyx-corporation/sayane/main/scripts
 特定バージョン（タグ）:
 
 ```bash
-SAYANE_REF=v0.6.0 curl -fsSL .../install.sh | bash
+SAYANE_REF=v1.0.0 curl -fsSL .../install.sh | bash
 ```
 
 `~/.local/bin` が PATH に無い場合、シェルプロファイルに追加:
@@ -155,7 +155,7 @@ sayane serve                   # Bridge（Extension 用）
 **PyPI パッケージ `sayane` は未公開**（2026-05 時点）。インストールは本書のスクリプト、または:
 
 ```bash
-pip install "sayane @ git+https://github.com/zyx-corporation/sayane.git@v0.6.0"
+pip install "sayane @ git+https://github.com/zyx-corporation/sayane.git@v1.0.0"
 ```
 
 公開時は [CHANGELOG](../CHANGELOG.md) と [移行ガイド](migration-omomuki-to-sayane.md) を参照。

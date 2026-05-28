@@ -33,4 +33,4 @@ def test_build_prompt_ir_loads_context_bodies(examples_dir: Path) -> None:
         load_context_bodies=True,
     )
     joined = "\n".join(ir.context)
-    assert "Example context" in joined or "Handoff notes" in joined
+    assert "Fictional sample" in joined or "Review candidates before merge" in joined

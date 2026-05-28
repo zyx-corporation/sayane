@@ -60,7 +60,10 @@ def create_app(config: BridgeConfig | None = None) -> FastAPI:
         body: CaptureRequest,
         _: Annotated[None, Depends(require_bearer)],
     ) -> CaptureResponse:
-        return save_capture(cfg, body)
+        try:
+            return save_capture(cfg, body)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.post("/compile", response_model=ContextPacketResponse)
     def post_compile(

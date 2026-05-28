@@ -8,6 +8,9 @@ from sayane.evaluators.sections import infer_proposal_section
 _MAX_ITEMS = 5
 _MIN_TOKEN_LEN = 3
 _BULLET_RE = re.compile(r"^[\s]*[-*•]\s+(.+)$")
+_MARKDOWN_HEADING_RE = re.compile(r"^#+\s")
+_BARE_YAML_KEY_RE = re.compile(r"^[a-z][a-z0-9_]*:\s*$", re.IGNORECASE)
+_YAML_KEY_VALUE_RE = re.compile(r"^[a-z][a-z0-9_]*:\s+.+", re.IGNORECASE)
 
 
 def build_proposal_from_content(content: str, section: str | None = None) -> CandidateProposal:
@@ -18,29 +21,50 @@ def build_proposal_from_content(content: str, section: str | None = None) -> Can
     return CandidateProposal(section=target, add=items, summary=summary)
 
 
+def _is_noise_line(line: str) -> bool:
+    if _MARKDOWN_HEADING_RE.match(line):
+        return True
+    if _BARE_YAML_KEY_RE.match(line):
+        return True
+    return False
+
+
 def _extract_items(content: str, section: str) -> list[str]:
     lines = [ln.strip() for ln in content.splitlines() if ln.strip()]
     items: list[str] = []
 
     for line in lines:
+        if _is_noise_line(line):
+            continue
         bullet = _BULLET_RE.match(line)
         candidate = bullet.group(1).strip() if bullet else line
+        if not bullet and _YAML_KEY_VALUE_RE.match(line):
+            _, _, value = line.partition(":")
+            candidate = value.strip()
         if section.startswith("policy."):
             candidate = _strip_policy_prefix(candidate)
-        if len(candidate) >= _MIN_TOKEN_LEN and candidate not in items:
-            items.append(candidate[:120])
+        if len(candidate) < _MIN_TOKEN_LEN or candidate in items:
+            continue
+        items.append(candidate[:120])
         if len(items) >= _MAX_ITEMS:
             break
 
     if not items and content.strip():
-        items.append(content.strip()[:120])
+        compact = " ".join(
+            ln.strip()
+            for ln in content.splitlines()
+            if ln.strip() and not _is_noise_line(ln.strip())
+        )
+        if len(compact) >= _MIN_TOKEN_LEN:
+            items.append(compact[:120])
 
     return items
 
 
 def _strip_policy_prefix(line: str) -> str:
-    for prefix in ("avoid:", "prefer:", "Avoid:", "Prefer:"):
-        if line.startswith(prefix):
+    lowered = line.lower()
+    for prefix in ("avoid:", "prefer:"):
+        if lowered.startswith(prefix):
             return line[len(prefix) :].strip()
     return line
 

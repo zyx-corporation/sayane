@@ -15,12 +15,17 @@ class CaptureRequest(BaseModel):
     content: str = Field(min_length=1)
     source: str | None = None
     source_url: str | None = None
+    section: str | None = Field(
+        default=None,
+        description="Optional Sayane profile section (overrides heuristic inference).",
+    )
 
 
 class CaptureResponse(BaseModel):
     id: str
     status: Literal["captured"] = "captured"
     path: str
+    warnings: list[str] = Field(default_factory=list)
 
 
 class CompileRequest(BaseModel):

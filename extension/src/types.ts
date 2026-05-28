@@ -27,6 +27,7 @@ export interface CaptureResult {
   id: string;
   status: string;
   path: string;
+  warnings?: string[];
 }
 
 export interface CandidateSummary {

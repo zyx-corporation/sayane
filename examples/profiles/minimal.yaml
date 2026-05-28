@@ -27,6 +27,14 @@ policy:
 context_index:
   entrypoint: "context/MyContext.md"
   handoff: "context/AI_HANDOFF.md"
+  entries:
+    - "context/MyContext.md"
+    - "context/AI_HANDOFF.md"
+    - "context/identity.md"
+    - "context/theory.md"
+    - "context/projects.md"
+    - "context/interaction.md"
+    - "context/notes/unverified.md"
 lineage:
   created_at: "2026-05-23T00:00:00+09:00"
   updated_at: "2026-05-23T00:00:00+09:00"

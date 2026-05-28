@@ -7,12 +7,24 @@ from sayane.storage.filesystem import FileSystemContextStore
 
 _DEFAULT_ENTRYPOINT = "MyContext.md"
 _DEFAULT_HANDOFF = "AI_HANDOFF.md"
+# Not indexed for compile/insert unless manually added to profile entries.
+_INDEX_EXCLUDED_PREFIXES = ("private/",)
+
+
+def _indexable_relative_paths(store: FileSystemContextStore) -> list[str]:
+    paths: list[str] = []
+    for path in store.list_markdown():
+        rel = store.relative_path(path)
+        if any(rel.startswith(prefix) for prefix in _INDEX_EXCLUDED_PREFIXES):
+            continue
+        paths.append(rel)
+    return paths
 
 
 def generate_context_index(profile_dir: Path, profile: SayaneProfile) -> ContextIndex:
     """Scan context/ and build entries plus entrypoint/handoff hints."""
     store = FileSystemContextStore(profile_dir)
-    entries = [store.relative_path(p) for p in store.list_markdown()]
+    entries = _indexable_relative_paths(store)
 
     entrypoint = profile.context_index.entrypoint
     handoff = profile.context_index.handoff

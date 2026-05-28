@@ -6,11 +6,21 @@ from sayane.storage.candidates import create_from_capture, save_candidate
 
 
 def save_capture(config: BridgeConfig, request: CaptureRequest) -> CaptureResponse:
+    from sayane.core.profile_quality import capture_content_warnings
+
     candidate = create_from_capture(
         config,
         content=request.content,
         source_type=request.source or "capture",
         source_url=request.source_url,
+        section=request.section,
     )
     path = save_candidate(config, candidate)
-    return CaptureResponse(id=candidate.id, path=str(path))
+    warnings: list[str] = []
+    if not request.section:
+        warnings = capture_content_warnings(request.content)
+    return CaptureResponse(
+        id=candidate.id,
+        path=str(path),
+        warnings=warnings,
+    )

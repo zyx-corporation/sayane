@@ -105,4 +105,32 @@ sayane compile --target claude
 | `llm_review: null` + UIB validation | 旧版。0.5.3+ で UIB 欠損軸を補完 |
 | Ollama 404 | `SAYANE_JUDGE_MODEL` を `ollama list` の名前に合わせる |
 
-関連: [はじめに](getting-started.md) / [評価マニュアル](evaluation-manual.md) / [Bridge マニュアル](bridge-manual.md)
+## 9. Iteration 2 以降（配置設計）
+
+Tone 汚染・部分注入・PII 露出などを観察した場合は、[コンテキスト層設計](context-layering-design.md) のマッピングルールとクリーンアップ手順に従う。
+
+```bash
+sayane profile validate          # tone / concepts 配置の警告
+sayane compile --target claude   # compile 時にも警告を stderr へ
+```
+
+構造化ペルソナを Capture した場合、Bridge は `warnings` を返す（Extension popup に表示）。
+
+## 10. Iteration 3（context/ 長文移行）
+
+1. `context/theory.md`, `projects.md`, `interaction.md`, `identity.md`, `notes/unverified.md` を作成（[レイアウト](context-layering-design.md#4-推奨ディレクトリレイアウト)）
+2. `sayane storage index` — `context/private/` は自動除外
+3. `sayane profile validate` → `Profile layout: OK`
+4. Extension **文脈を挿入** — [user] に theory / projects / unverified 本文が含まれること
+5. [system] の `Tone:` にペルソナ見出し・email が **無い** こと
+
+| # | 項目 | OK |
+|---|------|-----|
+| I3-1 | context 長文ファイル作成 | ☐ |
+| I3-2 | `profile validate` OK | ☐ |
+| I3-3 | Insert に theory/projects 本文 | ☐ |
+| I3-4 | PII が Insert に無い（private 未 index） | ☐ |
+
+観察メモは `~/.sayane/profiles/default/context/notes/context.md` へ追記可。
+
+関連: [はじめに](getting-started.md) / [評価マニュアル](evaluation-manual.md) / [Bridge マニュアル](bridge-manual.md) / [コンテキスト層設計](context-layering-design.md) / [#102](https://github.com/zyx-corporation/sayane/issues/102)

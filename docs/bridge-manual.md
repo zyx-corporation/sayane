@@ -87,6 +87,17 @@ curl -s -X POST -H "$AUTH" -H "Content-Type: application/json" \
   http://127.0.0.1:38741/compile
 ```
 
+#### `POST /capture`
+
+| フィールド | 説明 |
+|-----------|------|
+| `content` | 必須。キャプチャ本文 |
+| `source` | 任意。`selection` / `page` 等 |
+| `source_url` | 任意 |
+| `section` | 任意。`knowledge.concepts` 等（指定時はヒューリスティックより優先） |
+
+構造化ペルソナ全文を capture した場合、レスポンス `warnings` に context 移行の案内が入る（`section` 指定時は出さない）。
+
 #### `GET /context-packet`
 
 クエリパラメータでコンパイル（Extension が利用）。

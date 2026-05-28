@@ -1,5 +1,13 @@
 """Profile section helpers for proposals and merge policy."""
 
+from __future__ import annotations
+
+from sayane.evaluators.heuristic_match import (
+    contains_dot_path,
+    has_core_values_phrase,
+    has_yaml_key,
+)
+
 CRITICAL_ROOTS = frozenset({"identity", "values", "policy", "voice"})
 BLOCKED_SECTIONS = frozenset({"identity.name", "identity.preferred_name"})
 FORCE_ALLOWED_SECTIONS = frozenset(
@@ -12,20 +20,63 @@ FORCE_ALLOWED_SECTIONS = frozenset(
         "knowledge.concepts",
     },
 )
+PROPOSAL_SECTIONS = FORCE_ALLOWED_SECTIONS
+
+
+def normalize_proposal_section(section: str) -> str:
+    """Validate an explicit capture/merge target section."""
+    name = section.strip()
+    if name not in PROPOSAL_SECTIONS:
+        allowed = ", ".join(sorted(PROPOSAL_SECTIONS))
+        raise ValueError(f"Unknown proposal section '{section}'. Allowed: {allowed}")
+    return name
+
+
+_PERSONA_ROOT_KEYS = (
+    "person:",
+    "organization:",
+    "relationships:",
+    "formation:",
+    "philosophy:",
+    "theory:",
+    "projects:",
+    "interaction_style:",
+    "health:",
+)
+
+
+def looks_like_structured_persona(content: str) -> bool:
+    """Multi-root persona documents are not a single Sayane section."""
+    hits = 0
+    for line in content.splitlines():
+        stripped = line.strip()
+        if any(stripped.startswith(key) for key in _PERSONA_ROOT_KEYS):
+            hits += 1
+        if hits >= 2:
+            return True
+    return False
 
 
 def infer_proposal_section(content: str) -> str:
     """Guess target section from capture text markers."""
-    lower = content.lower()
-    if "policy.response.avoid" in lower or "avoid:" in lower:
+    if looks_like_structured_persona(content):
+        return "knowledge.concepts"
+
+    if contains_dot_path(content, "policy.response.avoid") or has_yaml_key(
+        content,
+        "avoid",
+    ):
         return "policy.response.avoid"
-    if "policy.response.prefer" in lower or "prefer:" in lower:
+    if contains_dot_path(content, "policy.response.prefer") or has_yaml_key(
+        content,
+        "prefer",
+    ):
         return "policy.response.prefer"
-    if "values.core" in lower or "core value" in lower:
+    if contains_dot_path(content, "values.core") or has_core_values_phrase(content):
         return "values.core"
-    if "voice.tone" in lower or "tone:" in lower:
+    if contains_dot_path(content, "voice.tone") or has_yaml_key(content, "tone"):
         return "voice.tone"
-    if "identity.roles" in lower or "roles:" in lower:
+    if contains_dot_path(content, "identity.roles") or has_yaml_key(content, "roles"):
         return "identity.roles"
     return "knowledge.concepts"
 

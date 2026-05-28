@@ -75,12 +75,16 @@ def create_from_capture(
     content: str,
     source_type: str,
     source_url: str | None = None,
+    *,
+    section: str | None = None,
 ) -> CandidateUpdate:
     from sayane.evaluators.proposal import build_proposal_from_content
+    from sayane.evaluators.sections import normalize_proposal_section
 
     now = datetime.now(UTC)
     candidate_id = uuid4().hex
-    proposal = build_proposal_from_content(content)
+    target_section = normalize_proposal_section(section) if section else None
+    proposal = build_proposal_from_content(content, section=target_section)
     candidate = CandidateUpdate(
         id=candidate_id,
         status="pending",

@@ -31,7 +31,7 @@ assignees: []
 変更対象を書く。
 
 - [ ] README.md
-- [ ] README.ja.md
+- [ ] README_ja.md
 - [ ] docs/architecture.md
 - [ ] docs/profile-ir.md
 - [ ] docs/mvp-scope.md

@@ -13,10 +13,14 @@ def save_capture(config: BridgeConfig, request: CaptureRequest) -> CaptureRespon
         content=request.content,
         source_type=request.source or "capture",
         source_url=request.source_url,
+        section=request.section,
     )
     path = save_candidate(config, candidate)
+    warnings: list[str] = []
+    if not request.section:
+        warnings = capture_content_warnings(request.content)
     return CaptureResponse(
         id=candidate.id,
         path=str(path),
-        warnings=capture_content_warnings(request.content),
+        warnings=warnings,
     )

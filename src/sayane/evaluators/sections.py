@@ -20,6 +20,17 @@ FORCE_ALLOWED_SECTIONS = frozenset(
         "knowledge.concepts",
     },
 )
+PROPOSAL_SECTIONS = FORCE_ALLOWED_SECTIONS
+
+
+def normalize_proposal_section(section: str) -> str:
+    """Validate an explicit capture/merge target section."""
+    name = section.strip()
+    if name not in PROPOSAL_SECTIONS:
+        allowed = ", ".join(sorted(PROPOSAL_SECTIONS))
+        raise ValueError(f"Unknown proposal section '{section}'. Allowed: {allowed}")
+    return name
+
 
 _PERSONA_ROOT_KEYS = (
     "person:",

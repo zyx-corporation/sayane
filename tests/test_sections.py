@@ -12,7 +12,7 @@ def test_build_proposal_for_policy_avoid() -> None:
     assert p.add
 
 
-def test_kotone_project_does_not_match_voice_tone() -> None:
+def test_melotone_project_does_not_match_voice_tone() -> None:
     content = "- Melotone: Edge AI / Home Automation\n"
     assert infer_proposal_section(content) == "knowledge.concepts"
 

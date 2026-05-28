@@ -266,8 +266,7 @@ def _register_core_commands(app: typer.Typer) -> None:
             typer.echo(str(exc), err=True)
             if storage_cfg.backend == "encrypted-sqlite":
                 typer.echo(
-                    "Install sayane-pro, or run:\n"
-                    "  sayane storage backend set filesystem",
+                    "Install sayane-pro, or run:\n  sayane storage backend set filesystem",
                     err=True,
                 )
             raise typer.Exit(1) from exc

@@ -14,9 +14,7 @@ _CRITICAL_PHRASES = (
     "api key",
     "private key",
 )
-_CRITICAL_WORDS = (
-    "password",
-)
+_CRITICAL_WORDS = ("password",)
 _CRITICAL_DOT_PATHS = (
     "identity.name",
     "values.core",

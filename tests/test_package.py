@@ -12,7 +12,7 @@ from sayane import (
 
 
 def test_version() -> None:
-    assert sayane.__version__ == "1.0.0"
+    assert sayane.__version__ == "1.0.1"
 
 
 def test_subpackages_importable() -> None:

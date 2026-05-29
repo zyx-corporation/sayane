@@ -2,8 +2,6 @@
 
 Sayane CLI のプラットフォーム別インストーラー。Extension ビルドは別途 [Extension マニュアル](extension-manual.md) を参照。
 
-**既存 Omomuki ユーザー**: [Omomuki から Sayane への移行](migration-omomuki-to-sayane.md)（`~/.omomuki/` → `~/.sayane/`）。
-
 | OS | 方式 | スクリプト / パッケージ |
 |----|------|------------------------|
 | **macOS** | curl + bash | `scripts/install.sh` |
@@ -158,7 +156,7 @@ sayane serve                   # Bridge（Extension 用）
 pip install "sayane @ git+https://github.com/zyx-corporation/sayane.git@v1.0.0"
 ```
 
-公開時は [CHANGELOG](../CHANGELOG.md) と [移行ガイド](migration-omomuki-to-sayane.md) を参照。
+公開時は [CHANGELOG](../CHANGELOG.md) を参照。
 
 ---
 

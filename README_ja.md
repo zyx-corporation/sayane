@@ -215,3 +215,188 @@ sayane mcp compile --target chatgpt --profile-id default
 クライアント側の MCP 設定は [MCP マニュアル](docs/mcp-manual.md) を参照してください。
 
 ### C. ブラウザで capture・挿入する（Extension + Bridge）
+
+ターミナル 1:
+
+```bash
+sayane serve
+# 表示される Bearer token を Extension の設定に入力
+```
+
+ターミナル 2（Extension ビルド）:
+
+```bash
+cd extension && npm install && npm run build
+# Chrome で extension/ を読み込む
+```
+
+→ [Bridge マニュアル](docs/bridge-manual.md) / [Extension マニュアル](docs/extension-manual.md)
+
+### D. Obsidian の vault とつなぐ（Storage）
+
+```bash
+export SAYANE_OBSIDIAN_VAULT="$HOME/Documents/MyVault"   # あなたの vault パス
+sayane storage import
+sayane storage index
+sayane compile --target chatgpt   # context 本文を Prompt IR に含められる
+```
+
+→ [Storage マニュアル](docs/storage-manual.md)
+
+### E. 開発者向け（リポジトリから入れる）
+
+```bash
+git clone https://github.com/zyx-corporation/sayane.git
+cd sayane
+python -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
+sayane init
+pytest -q
+```
+
+---
+
+## 接続面の選び方
+
+```text
+                    ┌─────────────────┐
+                    │  Core Library   │
+                    │ Profile / IR    │
+                    └────────┬────────┘
+           ┌─────────────────┼─────────────────┐
+           ▼                 ▼                 ▼
+      ┌─────────┐     ┌───────────┐    ┌────────────┐
+      │   CLI   │     │  Bridge   │    │ MCP Server │
+      │ 直接操作 │     │ HTTP:38741│    │ stdio MCP  │
+      └─────────┘     └─────┬─────┘    └──────┬─────┘
+                            │                  │
+                            ▼                  ▼
+                     Chrome Extension    Cursor 等
+```
+
+| やりたいこと | おすすめ |
+|-------------|---------|
+| とにかく手元でプロンプト JSON を得たい | **CLI** |
+| Cursor から Profile を参照・compile したい | **MCP Server** |
+| ブラウザで文脈を拾って LLM 欄に入れたい | **Chrome Extension** + **Bridge** |
+| スクリプトから HTTP で呼びたい | **Local Bridge** |
+
+---
+
+## 今どこまで使えるか（Community Release 1.0）
+
+| 接続面 | 現状 | 主な用途 |
+|--------|------|----------|
+| CLI | 利用可能 | `init` / `compile` / `candidate` / `storage` |
+| Local Bridge | 利用可能 | `sayane serve` + HTTP API |
+| MCP Server | 利用可能 | Cursor / Claude Desktop 連携 |
+| Chrome Extension | 利用可能 | capture / 文脈挿入 / candidate 操作 |
+| RDE / Candidate 評価 | 利用可能 | `evaluate` / `approve` / `reject` / lineage |
+| Storage (Obsidian / Git) | 利用可能 | `import` / `index` / `export` / `commit` |
+
+**Phase 6（Commercial Edition）** の暗号化 SQLite・MSI などは別製品です。概要は [ロードマップ §9](docs/roadmap.md) を参照してください。
+
+---
+
+## 単なる「プロファイル交換」との違い
+
+「Custom Instructions をコピペする」「設定 JSON を丸ごと移す」だけでは、次の点が足りないことがあります。
+
+| 観点 | 典型的なコピペ | Sayane |
+|------|----------------|--------|
+| データの形 | サービス固有のテキスト | **Sayane Profile** + **Prompt IR** |
+| LLM 間の移行 | 同じ文字列を貼る | **target ごとに再コンパイル** |
+| 更新 | 上書きするだけ | **Candidate → 評価 → approve** |
+| 履歴 | ほぼ残らない | **lineage** で記録 |
+| 正本の所在 | 各 SaaS 内 | **ローカル**（`~/.sayane/`） |
+
+設計の詳細: [設計概要](docs/architecture.md) / [Profile と Prompt IR](docs/profile-ir.md)
+
+---
+
+## 中核原則
+
+### 1. 人格と実行基盤を分離する
+
+人格・価値観・方針の正本は、ChatGPT のメモリや Claude のプロジェクト設定ではなく、**ローカルの Sayane Profile** に置きます。
+
+### 2. 中間表現（Prompt IR）を経由する
+
+同じプロンプト文字列を LLM 間でコピーするのではなく、Profile から **毎回コンパイル** します。
+
+```text
+同一人格  ≠  同一プロンプト文字列
+同一 Profile  →  target ごとに最適化された出力
+```
+
+### 3. 意味変化を評価してから反映する
+
+更新は「設定の上書き」ではなく **意味の変化** として扱います。
+
+```text
+capture → candidate → evaluate (RDE/UIB) → approve/reject → lineage
+         （即 merge しない）
+```
+
+---
+
+## 制限事項（v1.0.0 時点）
+
+- `compile` で読み込む context 本文は、プロファイルディレクトリ内のファイルに限定（目安: 約 32KB/ファイル）
+- Adapter の **target** は主に **chatgpt** / **claude**（`gemini` 等は未対応の場合あり）
+- PyPI パッケージ `sayane` は未公開。インストールは [install.md](docs/install.md) のスクリプトまたは Git タグを利用
+- Obsidian との **リアルタイム双方向同期** は未対応（`import` / `export` は CLI 経由）
+
+---
+
+## ドキュメント（ここから読む）
+
+| 用途 | リンク |
+|------|--------|
+| 初めての全体像 | [はじめに（利用者ガイド）](docs/getting-started.md) |
+| インストール詳細 | [インストール手順](docs/install.md) |
+| CLI コマンド一覧 | [CLI マニュアル](docs/cli-manual.md) |
+| Bridge API | [Bridge マニュアル](docs/bridge-manual.md) |
+| MCP 設定 | [MCP マニュアル](docs/mcp-manual.md) |
+| ブラウザ拡張 | [Extension マニュアル](docs/extension-manual.md) |
+| 評価・承認フロー | [評価マニュアル](docs/evaluation-manual.md) |
+| Obsidian / Git | [Storage マニュアル](docs/storage-manual.md) |
+| 一通り試す手順 | [Dogfood 手順書](docs/dogfood-walkthrough.md) |
+| 索引 | [ドキュメント索引](docs/index.md) |
+
+---
+
+## アンインストール
+
+CLI だけ削除し、**Profile データは残す**場合の例です。
+
+```bash
+# macOS / Linux
+rm -rf ~/.local/share/sayane ~/.local/bin/sayane
+# ~/.sayane は削除しない（プロファイルを残す）
+```
+
+```powershell
+# Windows
+Remove-Item -Recurse -Force "$env:LOCALAPPDATA\Sayane"
+# PATH から ...\Sayane\bin を手動削除（設定 → 環境変数）
+```
+
+詳細: [install.md#アンインストール](docs/install.md#アンインストール)
+
+---
+
+## 開発・貢献
+
+- [CI 方針](docs/ci.md)
+- [開発原則](docs/development-principles.md)
+- [ロードマップ](docs/roadmap.md)
+- 貢献ガイド（日本語）: [CONTRIBUTING_ja.md](CONTRIBUTING_ja.md)
+- 貢献ガイド（英語）: [CONTRIBUTING.md](CONTRIBUTING.md)
+
+---
+
+## License
+
+Apache License 2.0  
+SPDX-License-Identifier: Apache-2.0

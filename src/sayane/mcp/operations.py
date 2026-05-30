@@ -7,7 +7,7 @@ from sayane.bridge.models import CompileRequest
 from sayane.bridge.service import compile_prompt, list_profiles, resolve_profile_path
 from sayane.core.loader import load_profile
 
-SUPPORTED_TARGETS = ("chatgpt", "claude", "openai", "anthropic")
+SUPPORTED_TARGETS = ("chatgpt", "claude", "gemini", "openai", "anthropic", "google")
 
 
 class McpOperations:
@@ -55,7 +55,7 @@ class McpOperations:
         if target.lower() not in SUPPORTED_TARGETS and target.lower() != "markdown":
             raise ValueError(
                 f"Unsupported target: {target}. "
-                "Supported: chatgpt, claude (markdown via export only)",
+                "Supported: chatgpt, claude, gemini (markdown via export only)",
             )
         if target.lower() == "markdown":
             raise ValueError("Use sayane export --format markdown for markdown output")

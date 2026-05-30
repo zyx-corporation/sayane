@@ -16,7 +16,7 @@ const providers: ProviderAdapter[] = [
 ];
 
 /** Bridge compile targets supported by Core (`sayane.adapters.factory`). */
-export const BRIDGE_CONTEXT_PACKET_TARGETS = new Set<InsertTarget>(["chatgpt", "claude"]);
+export const BRIDGE_CONTEXT_PACKET_TARGETS = new Set<InsertTarget>(["chatgpt", "claude", "gemini"]);
 
 export function listProviders(): readonly ProviderAdapter[] {
   return providers;

@@ -67,9 +67,15 @@ def test_list_candidate_updates(mcp_ops: McpOperations) -> None:
     assert "Captured" in items[0]["content_preview"]
 
 
+def test_compile_prompt_gemini(mcp_ops: McpOperations) -> None:
+    result = mcp_ops.compile_prompt("gemini", profile_id="default")
+    assert result["target"] == "gemini"
+    assert "contents" in result["payload"]
+
+
 def test_unsupported_target(mcp_ops: McpOperations) -> None:
     with pytest.raises(ValueError, match="Unsupported target"):
-        mcp_ops.compile_prompt("gemini")
+        mcp_ops.compile_prompt("deepseek")
 
 
 def test_mcp_candidate_evaluate_and_diff(mcp_ops: McpOperations) -> None:

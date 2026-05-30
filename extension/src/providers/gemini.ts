@@ -6,7 +6,7 @@ export const geminiProvider: ProviderAdapter = {
   profileKey: "gemini",
   kind: "hosted",
   labelKey: "insert.gemini",
-  bridgeContextPacketSupported: false,
+  bridgeContextPacketSupported: true,
   origins: ["https://gemini.google.com/*"],
   matches(url: string): boolean {
     try {

@@ -32,6 +32,7 @@ sayane capture ./note.md
 sayane compile --target chatgpt
 sayane compile --target claude
 sayane compile --target gemini
+sayane compile --target local-openwebui
 sayane diff old.yaml new.yaml
 sayane evaluate --mode rde
 sayane export --format markdown

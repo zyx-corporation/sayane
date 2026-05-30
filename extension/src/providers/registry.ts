@@ -21,6 +21,7 @@ export const BRIDGE_CONTEXT_PACKET_TARGETS = new Set<InsertTarget>([
   "claude",
   "gemini",
   "deepseek",
+  "local-openwebui",
 ]);
 
 export function listProviders(): readonly ProviderAdapter[] {

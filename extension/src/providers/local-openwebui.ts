@@ -8,7 +8,7 @@ export const localOpenwebuiProvider: ProviderAdapter = {
   profileKey: "local",
   kind: "local",
   labelKey: "insert.local_openwebui",
-  bridgeContextPacketSupported: false,
+  bridgeContextPacketSupported: true,
   origins: ["http://127.0.0.1/*", "http://localhost/*"],
   matches(url: string): boolean {
     try {

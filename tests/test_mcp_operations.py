@@ -73,9 +73,16 @@ def test_compile_prompt_gemini(mcp_ops: McpOperations) -> None:
     assert "contents" in result["payload"]
 
 
+def test_compile_prompt_local_openwebui(mcp_ops: McpOperations) -> None:
+    result = mcp_ops.compile_prompt("local-openwebui", profile_id="default")
+    assert result["target"] == "local-openwebui"
+    assert result["format"] == "openai_chat"
+    assert "messages" in result["payload"]
+
+
 def test_unsupported_target(mcp_ops: McpOperations) -> None:
     with pytest.raises(ValueError, match="Unsupported target"):
-        mcp_ops.compile_prompt("local-openwebui")
+        mcp_ops.compile_prompt("local-custom")
 
 
 def test_mcp_candidate_evaluate_and_diff(mcp_ops: McpOperations) -> None:

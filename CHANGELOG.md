@@ -6,6 +6,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **Local Open WebUI compile adapter** — `sayane compile --target local-openwebui` (OpenAI-compatible messages for localhost Open WebUI).
+
+### Changed
+
+- Extension: Open WebUI insert moved from preview to active buttons (Bridge compile supported; Extension **0.3.6**).
 ## [1.0.2] - 2026-05-30
 
 ### Added

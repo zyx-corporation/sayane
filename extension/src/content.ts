@@ -2,7 +2,7 @@
  * Content script — capture selection/page and insert context (site adapters).
  */
 
-import { insertTextIntoPage } from "./sites/registry.js";
+import { insertTextIntoPage } from "./providers/registry.js";
 import type { ContentMessage, ContentResponse } from "./types.js";
 
 const LOADED_KEY = "__sayaneContentScript";

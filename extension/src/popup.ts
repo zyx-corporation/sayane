@@ -3,9 +3,10 @@ import type {
   BackgroundResponse,
   CandidateDiff,
   CandidateSummary,
-  InsertTarget,
   ProfileSummary,
 } from "./types.js";
+import type { InsertTarget } from "./providers/types.js";
+import { listPopupInsertProviders, listPreviewInsertProviders } from "./providers/registry.js";
 import { applyDataI18n, initI18n, localizeError, t } from "./i18n.js";
 
 function $(id: string): HTMLElement {
@@ -113,9 +114,54 @@ function evaluationSummary(data: Record<string, unknown>): string {
   return String(data.status ?? "ok");
 }
 
+function renderInsertButtons(): void {
+  const container = $("insert-providers");
+  container.innerHTML = "";
+
+  for (const provider of listPopupInsertProviders()) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.dataset.providerId = provider.id;
+    btn.dataset.i18n = provider.labelKey;
+    btn.textContent = t(provider.labelKey);
+    btn.addEventListener("click", () => insertContext(provider.id));
+    container.appendChild(btn);
+  }
+
+  const preview = listPreviewInsertProviders();
+  if (preview.length === 0) return;
+
+  const details = document.createElement("details");
+  details.className = "insert-preview-collapsible";
+
+  const summary = document.createElement("summary");
+  summary.dataset.i18n = "insert.preview_toggle";
+  summary.textContent = t("insert.preview_toggle");
+  details.appendChild(summary);
+
+  const hint = document.createElement("p");
+  hint.className = "insert-preview";
+  hint.dataset.i18n = "insert.preview_note";
+  hint.textContent = t("insert.preview_note");
+  details.appendChild(hint);
+
+  const list = document.createElement("ul");
+  list.className = "insert-preview-list";
+  for (const provider of preview) {
+    const item = document.createElement("li");
+    item.dataset.i18n = provider.labelKey;
+    item.textContent = t(provider.labelKey);
+    list.appendChild(item);
+  }
+  details.appendChild(list);
+  container.appendChild(details);
+}
+
 async function init(): Promise<void> {
   await initI18n();
   applyDataI18n();
+  renderInsertButtons();
+  applyDataI18n($("insert-providers"));
   document.title = t("app.title");
   setStatus(t("status.loading"));
 
@@ -186,9 +232,6 @@ async function insertContext(target: InsertTarget): Promise<void> {
     setStatus(localizeError(String(e)), true);
   }
 }
-
-$("btn-insert-chatgpt").addEventListener("click", () => insertContext("chatgpt"));
-$("btn-insert-claude").addEventListener("click", () => insertContext("claude"));
 
 $("btn-refresh-candidates").addEventListener("click", async () => {
   try {

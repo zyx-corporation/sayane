@@ -1,5 +1,8 @@
 /** Shared extension types. */
 
+export type { InsertTarget } from "./providers/types.js";
+import type { InsertTarget } from "./providers/types.js";
+
 export interface ExtensionConfig {
   bridgeUrl: string;
   bridgeToken: string;
@@ -49,8 +52,6 @@ export interface CandidateDiff {
   already_present?: boolean;
   [key: string]: unknown;
 }
-
-export type InsertTarget = "chatgpt" | "claude";
 
 export type ContentMessage =
   | { type: "GET_SELECTION" }

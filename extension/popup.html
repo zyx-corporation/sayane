@@ -28,6 +28,26 @@
         padding: 8px;
         cursor: pointer;
       }
+      .insert-preview-collapsible {
+        margin-top: 4px;
+      }
+      .insert-preview-collapsible summary {
+        font-size: 0.8rem;
+        color: #555;
+        cursor: pointer;
+        margin-bottom: 4px;
+      }
+      .insert-preview {
+        font-size: 0.75rem;
+        color: #666;
+        margin: 4px 0 6px;
+      }
+      .insert-preview-list {
+        font-size: 0.75rem;
+        color: #666;
+        margin: 0 0 8px 1.1em;
+        padding: 0;
+      }
       .status {
         font-size: 0.8rem;
         color: #333;
@@ -75,10 +95,7 @@
       <button type="button" id="btn-capture-page" data-i18n="capture.page">Capture this page</button>
     </div>
 
-    <div class="section">
-      <button type="button" id="btn-insert-chatgpt" data-i18n="insert.chatgpt">Insert context (ChatGPT)</button>
-      <button type="button" id="btn-insert-claude" data-i18n="insert.claude">Insert context (Claude)</button>
-    </div>
+    <div class="section" id="insert-providers"></div>
 
     <div class="section">
       <label for="candidate-select" data-i18n="candidate.label">Candidate</label>

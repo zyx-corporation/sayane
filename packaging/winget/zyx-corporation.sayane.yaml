@@ -1,0 +1,45 @@
+# PackageIdentifier: zyx-corporation.sayane
+# PackageVersion: 1.0.1
+# PackageLocale: en-US
+# Publisher: ZYX Corporation
+# PublisherUrl: https://github.com/zyx-corporation
+# PackageName: Sayane
+# PackageUrl: https://github.com/zyx-corporation/sayane
+# License: Apache-2.0
+# LicenseUrl: https://github.com/zyx-corporation/sayane/blob/main/LICENSE
+# Copyright: Copyright (c) ZYX Corporation
+# ShortDescription: Local-first persona and context portability for cross-LLM collaboration
+# Description: |
+#   Sayane keeps your persona and working context on your PC and compiles it for ChatGPT,
+#   Claude, and other LLM targets. Community Edition CLI installed via the official
+#   PowerShell installer (scripts/install.ps1).
+# Moniker: sayane
+# Tags:
+#   - llm
+#   - cli
+#   - local-first
+#   - persona
+# Documentations:
+#   - DocumentLabel: Getting started
+#     DocumentUrl: https://github.com/zyx-corporation/sayane/blob/main/docs/getting-started.md
+# Installers:
+#   - Architecture: x64
+#     InstallerType: zip
+#     InstallerUrl: https://github.com/zyx-corporation/sayane/archive/refs/tags/v1.0.1.zip
+#     InstallerSha256: REPLACE_ON_RELEASE
+#     NestedInstallerType: script
+#     NestedInstallerFiles:
+#       - RelativeFilePath: sayane-1.0.1/scripts/install.ps1
+#         PortableCommandAlias: sayane-install
+#     InstallModes:
+#       - silent
+#       - interactive
+# ManifestType: default
+# ManifestVersion: 1.6.0
+
+# DRAFT — not yet submitted to microsoft/winget-pkgs.
+# Before PR to winget-pkgs:
+#   1. Compute InstallerSha256 for the release zip.
+#   2. Confirm NestedInstallerFiles path matches GitHub archive folder name.
+#   3. Prefer a dedicated release asset if zip layout is unstable.
+# See packaging/winget/README.md

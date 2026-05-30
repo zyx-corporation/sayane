@@ -9,7 +9,9 @@
     "http://localhost/*",
     "https://chatgpt.com/*",
     "https://chat.openai.com/*",
-    "https://claude.ai/*"
+    "https://claude.ai/*",
+    "https://gemini.google.com/*",
+    "https://chat.deepseek.com/*"
   ],
   "action": {
     "default_title": "Sayane",

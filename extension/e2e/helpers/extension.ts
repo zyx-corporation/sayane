@@ -96,7 +96,7 @@ async function extensionHelperPage(
 ): Promise<Page> {
   const helper = await context.newPage();
   await helper.goto(`chrome-extension://${extensionId}/popup.html`);
-  await helper.waitForSelector("#btn-insert-chatgpt", { timeout: 10_000 });
+  await helper.waitForSelector('[data-provider-id="chatgpt"]', { timeout: 10_000 });
   return helper;
 }
 
@@ -177,8 +177,6 @@ export async function insertViaPopup(
       "chrome.action.openPopup() unavailable; popup UI test requires toolbar popup",
     );
   }
-  const buttonId =
-    target === "chatgpt" ? "#btn-insert-chatgpt" : "#btn-insert-claude";
-  await popup.locator(buttonId).click();
+  await popup.locator(`[data-provider-id="${target}"]`).click();
   return popup;
 }

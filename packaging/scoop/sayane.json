@@ -1,0 +1,28 @@
+{
+  "version": "1.0.1",
+  "description": "Local-first persona and context portability for cross-LLM collaboration (Community Edition CLI)",
+  "homepage": "https://github.com/zyx-corporation/sayane",
+  "license": "Apache-2.0",
+  "notes": "Runs the official install.ps1 from the tagged GitHub release. Requires Python 3.11+ and git.",
+  "suggest": {
+    "git": "git",
+    "python": "python"
+  },
+  "checkver": {
+    "github": "https://github.com/zyx-corporation/sayane"
+  },
+  "autoupdate": {
+    "url": "https://raw.githubusercontent.com/zyx-corporation/sayane/v$version/scripts/install.ps1"
+  },
+  "installer": {
+    "script": [
+      "$ErrorActionPreference = 'Stop'",
+      "$ref = 'v$version'",
+      "$repo = if ($env:SAYANE_REPO) { $env:SAYANE_REPO } else { 'zyx-corporation/sayane' }",
+      "$url = \"https://raw.githubusercontent.com/$repo/$ref/scripts/install.ps1\"",
+      "$env:SAYANE_REF = $ref",
+      "Invoke-Expression (Invoke-WebRequest -UseBasicParsing $url).Content"
+    ]
+  },
+  "bin": "sayane"
+}

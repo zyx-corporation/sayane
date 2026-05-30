@@ -1,6 +1,6 @@
 /** Page interactions via chrome.scripting (MV3-safe). */
 
-import { getAdapterById } from "./sites/registry.js";
+import { getProviderById } from "./providers/registry.js";
 import type { ContentResponse, InsertTarget } from "./types.js";
 
 const CONTENT_SCRIPT_FILE = "dist/content.js";
@@ -63,12 +63,12 @@ export async function insertTextInTab(
     return { ok: false, error: RESTRICTED_PAGE_HINT, code: "UNSUPPORTED_SITE" };
   }
 
-  const adapter = getAdapterById(target);
+  const adapter = getProviderById(target);
   if (!adapter) {
     return {
       ok: false,
       code: "UNSUPPORTED_SITE",
-      error: "No site adapter for this target",
+      error: "No provider adapter for this target",
     };
   }
   if (!adapter.matches(url)) {

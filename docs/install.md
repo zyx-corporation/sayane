@@ -111,12 +111,34 @@ sayane init
 
 Community Edition（本リポジトリ OSS）は **PowerShell スクリプト** を第一選択とする。Commercial Edition の Windows MSI インストールは sayane-pro 側マニュアルを参照。
 
-### 将来の配布案（Community / 未実装）
+### WinGet / Scoop（Community / プレビュー）
+
+| 方式 | 用途 | リポジトリ内 |
+|------|------|--------------|
+| **WinGet** マニフェスト | 企業・再現性重視 | [`packaging/winget/`](../packaging/winget/)（draft、未公開） |
+| **Scoop** bucket | 開発者向け | [`packaging/scoop/`](../packaging/scoop/)（draft、未公開） |
+
+**現状の推奨インストール**は上記 PowerShell ワンライナー。WinGet / Scoop は #83 のマニフェスト雛形のみ — `microsoft/winget-pkgs` または公開 bucket への PR は未実施。
+
+WinGet 検証（マニフェストを有効化した後）:
+
+```powershell
+winget validate .\packaging\winget\zyx-corporation.sayane.yaml
+```
+
+Scoop（カスタム bucket に `sayane.json` を配置した場合）:
+
+```powershell
+scoop install sayane
+```
+
+詳細: [`packaging/winget/README.md`](../packaging/winget/README.md) / [`packaging/scoop/README.md`](../packaging/scoop/README.md)
+
+### その他（未実装）
 
 | 方式 | 用途 |
 |------|------|
-| **WinGet** マニフェスト | 企業・再現性重視 |
-| **Scoop** bucket | 開発者向け |
+| PyPI `pip install sayane` | #82 — 未公開 |
 
 ---
 

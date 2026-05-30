@@ -10,6 +10,8 @@ const ENV_FILE = path.join(E2E_DIR, ".e2e-env.json");
 const PID_FILE = path.join(E2E_DIR, ".bridge-pid.json");
 
 export default async function globalSetup(): Promise<void> {
+  execSync("npm run build", { cwd: EXTENSION_DIR, stdio: "inherit" });
+
   const e2eHome = fs.mkdtempSync(path.join(os.tmpdir(), "sayane-e2e-home-"));
 
   execSync("python3 e2e/setup-bridge.py", {

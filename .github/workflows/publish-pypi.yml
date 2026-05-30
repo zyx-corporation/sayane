@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Git tag to publish (e.g. v1.0.2)"
+        description: "Git tag to publish (e.g. v1.0.3)"
         required: true
         default: "v1.0.3"
 
@@ -17,7 +17,12 @@ jobs:
   publish:
     name: Upload to PyPI
     runs-on: ubuntu-latest
-    environment: pypi
+    environment:
+      name: pypi
+      url: https://pypi.org/project/sayane/
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -36,8 +41,19 @@ jobs:
       - name: Check dist
         run: twine check dist/*
 
-      - name: Publish to PyPI
+      - name: Verify PyPI credentials configured
         env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: twine upload dist/*
+          PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+        run: |
+          if [ -n "$PYPI_API_TOKEN" ]; then
+            echo "Using PYPI_API_TOKEN from the pypi environment."
+          else
+            echo "No PYPI_API_TOKEN — attempting PyPI Trusted Publishing (OIDC)."
+            echo "Configure at: https://pypi.org/manage/project/sayane/settings/publishing/"
+            echo "  Owner: zyx-corporation  Repo: sayane  Workflow: publish-pypi.yml"
+          fi
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}

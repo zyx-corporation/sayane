@@ -43,7 +43,11 @@ def test_capture_from_file(tmp_path: Path, monkeypatch) -> None:
 
     result = runner.invoke(app, ["capture", "--file", str(capture_file)])
     assert result.exit_code == 0, result.stdout
-    cid = next(line.split(":", 1)[1].strip() for line in result.stdout.splitlines() if line.startswith("id:"))
+    cid = next(
+        line.split(":", 1)[1].strip()
+        for line in result.stdout.splitlines()
+        if line.startswith("id:")
+    )
     saved = json.loads((config.candidates_dir / f"{cid}.json").read_text(encoding="utf-8"))
     assert "file capture content" in saved["content"]
 

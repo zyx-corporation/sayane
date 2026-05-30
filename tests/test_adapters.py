@@ -3,9 +3,9 @@ from pathlib import Path
 from sayane.adapters.chatgpt import ChatGPTAdapter
 from sayane.adapters.claude import ClaudeAdapter
 from sayane.adapters.deepseek import DeepSeekAdapter
+from sayane.adapters.factory import get_adapter
 from sayane.adapters.gemini import GeminiAdapter
 from sayane.adapters.local_openwebui import LocalOpenWebUIAdapter
-from sayane.adapters.factory import get_adapter
 from sayane.core.builder import build_prompt_ir
 from sayane.core.loader import load_profile
 

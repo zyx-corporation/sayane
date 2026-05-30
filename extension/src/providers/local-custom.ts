@@ -1,6 +1,5 @@
+import { matchesLocalCustom } from "./local-host.js";
 import type { ProviderAdapter } from "./types.js";
-
-const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1"]);
 
 export const localCustomProvider: ProviderAdapter = {
   id: "local-custom",
@@ -11,15 +10,7 @@ export const localCustomProvider: ProviderAdapter = {
   bridgeContextPacketSupported: false,
   origins: ["http://127.0.0.1/*", "http://localhost/*"],
   matches(url: string): boolean {
-    try {
-      const parsed = new URL(url);
-      if (!LOCAL_HOSTS.has(parsed.hostname)) return false;
-      // Fallback for localhost pages that are not Open WebUI chat UI.
-      const path = parsed.pathname;
-      return path !== "/" && !path.startsWith("/chat");
-    } catch {
-      return false;
-    }
+    return matchesLocalCustom(url);
   },
   inputSelectors: [
     "textarea",

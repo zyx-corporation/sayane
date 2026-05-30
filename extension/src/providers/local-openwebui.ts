@@ -1,6 +1,5 @@
+import { matchesLocalOpenWebUI } from "./local-host.js";
 import type { ProviderAdapter } from "./types.js";
-
-const OPENWEBUI_HOSTS = new Set(["localhost", "127.0.0.1"]);
 
 export const localOpenwebuiProvider: ProviderAdapter = {
   id: "local-openwebui",
@@ -11,21 +10,16 @@ export const localOpenwebuiProvider: ProviderAdapter = {
   bridgeContextPacketSupported: true,
   origins: ["http://127.0.0.1/*", "http://localhost/*"],
   matches(url: string): boolean {
-    try {
-      const parsed = new URL(url);
-      if (!OPENWEBUI_HOSTS.has(parsed.hostname)) return false;
-      return parsed.pathname === "/" || parsed.pathname.startsWith("/chat");
-    } catch {
-      return false;
-    }
+    return matchesLocalOpenWebUI(url);
   },
   inputSelectors: [
     "#chat-input",
+    '[id^="chat-input-"]',
     'textarea[placeholder*="message" i]',
     'textarea[placeholder*="Message" i]',
     "textarea",
     'div[contenteditable="true"]',
   ],
   failureHint:
-    "Open WebUI input not found. Ensure the chat page is open and selectors match your Open WebUI version.",
+    "Open WebUI tab must be active (e.g. http://localhost:3000/ after login, not /auth). Click the Open WebUI tab, then open Sayane popup and Insert again.",
 };

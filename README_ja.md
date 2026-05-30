@@ -356,7 +356,7 @@ capture → candidate → evaluate (RDE/UIB) → approve/reject → lineage
 
 - `compile` で読み込む context 本文は、プロファイルディレクトリ内のファイルに限定（目安: 約 32KB/ファイル）
 - Adapter の **target** は主に **chatgpt** / **claude**（`gemini` 等は未対応の場合あり）
-- PyPI パッケージ `sayane` は未公開。インストールは [install.md](docs/install.md) のスクリプトまたは Git タグを利用
+- PyPI: `pip install sayane`（v1.0.3+）。Extension は別途 [install.md](docs/install.md)
 - 外部 vault（Obsidian 等）との **リアルタイム双方向同期** は未対応（`import` / `export` は CLI 経由のスナップショット）
 
 ---

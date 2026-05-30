@@ -6,15 +6,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-05-31
+
 ### Added
 
 - **Local Open WebUI compile adapter** — `sayane compile --target local-openwebui` (OpenAI-compatible messages for localhost Open WebUI).
+- **PyPI package `sayane`** — first publish to PyPI ([#82](https://github.com/zyx-corporation/sayane/issues/82)).
 
 ### Changed
 
 - Extension: Open WebUI insert moved from preview to active buttons (Bridge compile supported; Extension **0.3.6**).
 - Extension **0.3.7**: Open WebUI URL matching for `/c/{id}` routes and dynamic `#chat-input-*` selectors.
 - Extension **0.3.8**: Relax localhost Open WebUI path matching (SPA routes); support `[::1]`; clearer SITE_MISMATCH hint.
+- `docs/install.md`: PyPI install instructions (`pip install sayane`).
+
 ## [1.0.2] - 2026-05-30
 
 ### Added
@@ -65,7 +70,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 See [git history](https://github.com/zyx-corporation/sayane/commits/main) and release tags prior to v0.5.9.
 
-[Unreleased]: https://github.com/zyx-corporation/sayane/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/zyx-corporation/sayane/compare/v1.0.3...HEAD
+[1.0.3]: https://github.com/zyx-corporation/sayane/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/zyx-corporation/sayane/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/zyx-corporation/sayane/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/zyx-corporation/sayane/compare/v0.5.9...v1.0.0

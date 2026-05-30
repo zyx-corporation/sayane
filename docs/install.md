@@ -138,7 +138,7 @@ scoop install sayane
 
 | 方式 | 用途 |
 |------|------|
-| PyPI `pip install sayane` | #82 — 未公開 |
+| PyPI `pip install sayane` | **利用可能**（v1.0.3+、[#82](https://github.com/zyx-corporation/sayane/issues/82)） |
 
 ---
 
@@ -172,21 +172,23 @@ sayane serve                   # Bridge（Extension 用）
 
 ## PyPI
 
-**PyPI パッケージ `sayane` は未公開**（2026-05-30 時点）。公開手順: [`packaging/pypi/README.md`](../packaging/pypi/README.md)（#82）。
-
-公開後:
-
 ```bash
-pip install sayane==1.0.2
+pip install sayane
+# または特定版:
+pip install sayane==1.0.3
 ```
 
-現状のインストールは本書のスクリプト、または:
+PyPI には **CLI + Bridge + MCP** のみ含まれます。Chrome Extension は別途 [Extension マニュアル](extension-manual.md) を参照。
+
+初回公開手順（maintainer）: [`packaging/pypi/README.md`](../packaging/pypi/README.md)（#82）。
+
+Git タグから直接:
 
 ```bash
-pip install "sayane @ git+https://github.com/zyx-corporation/sayane.git@v1.0.2"
+pip install "sayane @ git+https://github.com/zyx-corporation/sayane.git@v1.0.3"
 ```
 
-公開時は [CHANGELOG](../CHANGELOG.md) を参照。
+公開履歴は [CHANGELOG](../CHANGELOG.md) を参照。
 
 ---
 

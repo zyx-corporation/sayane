@@ -4,47 +4,54 @@ Community Edition package name: **`sayane`** (Apache-2.0).
 
 ## Prerequisites
 
-1. PyPI account + project `sayane` created (or first upload registers it).
-2. Trusted Publisher (recommended) or API token stored as GitHub secret `PYPI_API_TOKEN`.
-3. Tag `v1.0.2` on `main` (done).
+1. PyPI account at https://pypi.org (first upload registers project `sayane`).
+2. GitHub repository secret **`PYPI_API_TOKEN`**  
+   pypi.org → Account → API tokens → scope: entire project `sayane` (or first upload: no project yet).
+3. GitHub **environment** `pypi` (optional; workflow references it).
+4. Tag **`v1.0.3`** on `main`.
 
 ## Local build verify
 
 ```bash
 cd /path/to/sayane
-python3 -m pip install build twine
-python3 -m build
-twine check dist/sayane-1.0.2*
-pip install dist/sayane-1.0.2*.whl
-sayane --version   # expect 1.0.2
+bash scripts/build-wheel.sh
+pip install dist/sayane-1.0.3*.whl
+sayane --version   # expect 1.0.3
+```
+
+TestPyPI (optional):
+
+```bash
+twine upload --repository testpypi dist/sayane-1.0.3*
+pip install -i https://test.pypi.org/simple/ sayane==1.0.3
+```
+
+## CI publish (recommended)
+
+1. Add `PYPI_API_TOKEN` to GitHub → Settings → Secrets → Actions.
+2. Create GitHub Release **`v1.0.3`** (publish) — triggers `.github/workflows/publish-pypi.yml`.
+
+Or manual workflow:
+
+```bash
+gh workflow run publish-pypi.yml -f tag=v1.0.3
 ```
 
 ## Manual upload (maintainers)
 
 ```bash
-twine upload dist/sayane-1.0.2*
+export TWINE_USERNAME=__token__
+export TWINE_PASSWORD=pypi-...   # API token
+twine upload dist/sayane-1.0.3*
 ```
-
-Use TestPyPI first when validating:
-
-```bash
-twine upload --repository testpypi dist/sayane-1.0.2*
-pip install -i https://test.pypi.org/simple/ sayane==1.0.2
-```
-
-## CI publish
-
-Workflow `.github/workflows/publish-pypi.yml` runs on GitHub Release **published** (or manual `workflow_dispatch`).
-
-Required secret: `PYPI_API_TOKEN` (pypi.org → Account → API tokens → scope: entire project `sayane`).
 
 ## Post-publish
 
-1. Update `docs/install.md` — mark PyPI as available, add `pip install sayane==1.0.2`.
-2. Update `README.md` / `README_ja.md` install one-liner.
-3. Close Issue #82.
+1. Confirm: `pip install sayane==1.0.3` && `sayane --version`
+2. Close Issue #82.
+3. Update release notes if needed.
 
 ## Notes
 
-- Package ships **CLI + Bridge + MCP** only; Chrome Extension remains separate (load unpacked / future store).
+- Package ships **CLI + Bridge + MCP** only; Chrome Extension remains separate (load unpacked).
 - `sayane-pro` is **not** published to PyPI.

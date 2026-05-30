@@ -10,22 +10,22 @@ fi
 REPO="${SAYANE_REPO:-zyx-corporation/sayane}"
 
 gh issue close 96 --repo "$REPO" \
-  --comment "Merged to main @ 8f2b558 — Extension provider registry, collapsed preview UI, L3 E2E record."
+  --comment "Released v1.0.2 — Extension provider registry, collapsed preview UI, L3 E2E record."
 
 gh issue close 83 --repo "$REPO" \
-  --comment "Merged to main @ 8f2b558 — WinGet/Scoop draft manifests under packaging/."
+  --comment "Released v1.0.2 — WinGet/Scoop draft manifests under packaging/."
 
 gh issue close 85 --repo "$REPO" \
-  --comment "GeminiAdapter merged — compile / context-packet / Extension insert enabled."
+  --comment "Released v1.0.2 — GeminiAdapter compile / context-packet / Extension insert."
 
 gh issue close 84 --repo "$REPO" \
-  --comment "CLI sayane capture merged — --text / --file / stdin, same as Bridge POST /capture."
+  --comment "Released v1.0.2 — CLI sayane capture (--text / --file / stdin)."
 
 gh issue close 88 --repo "$REPO" \
-  --comment "L2 Core manual sign-off recorded in acceptance-spec §4.0 / §8.3 (v1.0.1, 2026-05-29)."
+  --comment "L2 Core manual sign-off recorded in acceptance-spec §4.0 / §8.3."
 
 gh issue close 89 --repo "$REPO" \
-  --comment "L3 Extension: Playwright E2E Pass recorded §6.1 (2026-05-30); provider registry @ 0.3.3."
+  --comment "L3 Extension: Playwright E2E Pass §6.1 (2026-05-30); Extension 0.3.5."
 
 echo "Closed #96, #83, #85, #84, #88, #89 on $REPO"
 

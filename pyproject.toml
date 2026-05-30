@@ -45,8 +45,11 @@ dev = [
 ]
 
 [project.urls]
+Homepage = "https://github.com/zyx-corporation/sayane"
 Documentation = "https://github.com/zyx-corporation/sayane/tree/main/docs"
 Repository = "https://github.com/zyx-corporation/sayane"
+Issues = "https://github.com/zyx-corporation/sayane/issues"
+Changelog = "https://github.com/zyx-corporation/sayane/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/sayane"]

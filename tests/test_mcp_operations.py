@@ -75,7 +75,7 @@ def test_compile_prompt_gemini(mcp_ops: McpOperations) -> None:
 
 def test_unsupported_target(mcp_ops: McpOperations) -> None:
     with pytest.raises(ValueError, match="Unsupported target"):
-        mcp_ops.compile_prompt("deepseek")
+        mcp_ops.compile_prompt("local-openwebui")
 
 
 def test_mcp_candidate_evaluate_and_diff(mcp_ops: McpOperations) -> None:

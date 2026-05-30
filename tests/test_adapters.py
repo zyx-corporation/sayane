@@ -2,6 +2,7 @@ from pathlib import Path
 
 from sayane.adapters.chatgpt import ChatGPTAdapter
 from sayane.adapters.claude import ClaudeAdapter
+from sayane.adapters.deepseek import DeepSeekAdapter
 from sayane.adapters.gemini import GeminiAdapter
 from sayane.adapters.factory import get_adapter
 from sayane.core.builder import build_prompt_ir
@@ -48,11 +49,22 @@ def test_gemini_adapter_produces_generate_content_shape(examples_dir: Path) -> N
     assert "Example User" in system
 
 
+def test_deepseek_adapter_produces_openai_messages(examples_dir: Path) -> None:
+    ir = _minimal_ir(examples_dir)
+    result = DeepSeekAdapter().compile(ir)
+
+    assert result.target == "deepseek"
+    assert result.format == "openai_chat"
+    assert result.payload["messages"][0]["role"] == "system"
+    assert "Example User" in result.payload["messages"][0]["content"]
+
+
 def test_factory_resolves_targets(examples_dir: Path) -> None:
     ir = _minimal_ir(examples_dir)
     assert get_adapter("chatgpt").compile(ir).target == "chatgpt"
     assert get_adapter("claude").compile(ir).target == "claude"
     assert get_adapter("gemini").compile(ir).target == "gemini"
+    assert get_adapter("deepseek").compile(ir).target == "deepseek"
     assert get_adapter("openai").compile(ir).target == "chatgpt"
 
 
@@ -60,4 +72,4 @@ def test_factory_rejects_unknown_target() -> None:
     import pytest
 
     with pytest.raises(ValueError, match="Unknown target"):
-        get_adapter("deepseek")
+        get_adapter("local-openwebui")

@@ -6,7 +6,7 @@ export const deepseekProvider: ProviderAdapter = {
   profileKey: "deepseek",
   kind: "hosted",
   labelKey: "insert.deepseek",
-  bridgeContextPacketSupported: false,
+  bridgeContextPacketSupported: true,
   origins: ["https://chat.deepseek.com/*"],
   matches(url: string): boolean {
     try {

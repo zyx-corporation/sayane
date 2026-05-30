@@ -9,6 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 
 - **Gemini compile adapter** (`GeminiAdapter`) — `sayane compile --target gemini` and Bridge `/context-packet?target=gemini` ([#85](https://github.com/zyx-corporation/sayane/issues/85)).
+- **CLI `sayane capture`** — save pending Candidate from `--text`, `--file`, or stdin ([#84](https://github.com/zyx-corporation/sayane/issues/84)).
 - Extension provider registry (`extension/src/providers/`) with dynamic popup insert UI; Bridge-supported targets (ChatGPT, Claude) active, others in collapsed preview section ([#96](https://github.com/zyx-corporation/sayane/issues/96)).
 - Draft WinGet / Scoop packaging manifests under `packaging/` ([#83](https://github.com/zyx-corporation/sayane/issues/83)).
 - L3 Playwright E2E pass record in `docs/acceptance-spec.md` §6.1 (2026-05-30).

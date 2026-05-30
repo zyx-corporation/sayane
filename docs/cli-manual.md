@@ -52,7 +52,7 @@ sayane candidate --help          # グループ単位（Typer 標準）
 
 Bridge HTTP API の詳細は [Bridge マニュアル](bridge-manual.md)。MCP Tools / Cursor 設定は [MCP マニュアル](mcp-manual.md)。Storage 詳細は [Storage マニュアル](storage-manual.md)。
 
-未実装（ロードマップ参照）: CLI の `capture` など。文脈 capture は Bridge `POST /capture` または Extension から可能。`candidate evaluate` / `approve` は CLI から利用可（[評価マニュアル](evaluation-manual.md)）。
+未実装（ロードマップ参照）: その他 CLI 拡張。文脈 capture は **`sayane capture`**（`--text` / `--file` / stdin）、Bridge `POST /capture`、または Extension から可能。`candidate evaluate` / `approve` は CLI から利用可（[評価マニュアル](evaluation-manual.md)）。
 
 ## 環境変数
 

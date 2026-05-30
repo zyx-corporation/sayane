@@ -18,13 +18,16 @@ gh issue close 83 --repo "$REPO" \
 gh issue close 85 --repo "$REPO" \
   --comment "GeminiAdapter merged — compile / context-packet / Extension insert enabled."
 
+gh issue close 84 --repo "$REPO" \
+  --comment "CLI sayane capture merged — --text / --file / stdin, same as Bridge POST /capture."
+
 gh issue close 88 --repo "$REPO" \
   --comment "L2 Core manual sign-off recorded in acceptance-spec §4.0 / §8.3 (v1.0.1, 2026-05-29)."
 
 gh issue close 89 --repo "$REPO" \
   --comment "L3 Extension: Playwright E2E Pass recorded §6.1 (2026-05-30); provider registry @ 0.3.3."
 
-echo "Closed #96, #83, #85, #88, #89 on $REPO"
+echo "Closed #96, #83, #85, #84, #88, #89 on $REPO"
 
 PRO_REPO="${SAYANE_PRO_REPO:-zyx-corporation/sayane-pro}"
 if gh issue list --repo "$PRO_REPO" --state open --search "RecursionError context_index" --json number --jq '.[0].number' 2>/dev/null | grep -q .; then

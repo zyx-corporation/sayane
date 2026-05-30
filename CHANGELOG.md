@@ -13,6 +13,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - Extension: Open WebUI insert moved from preview to active buttons (Bridge compile supported; Extension **0.3.6**).
+- Extension **0.3.7**: Open WebUI URL matching for `/c/{id}` routes and dynamic `#chat-input-*` selectors.
+- Extension **0.3.8**: Relax localhost Open WebUI path matching (SPA routes); support `[::1]`; clearer SITE_MISMATCH hint.
 ## [1.0.2] - 2026-05-30
 
 ### Added

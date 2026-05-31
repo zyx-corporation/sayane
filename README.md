@@ -17,7 +17,10 @@ It keeps a canonical user context locally, then compiles it for different runtim
 Install CLI first (detailed steps: [docs/install.md](docs/install.md)).
 
 ```bash
-# macOS / Linux
+# PyPI (macOS / Linux / Windows with Python 3.11+)
+pip install 'sayane==1.0.3'
+
+# macOS / Linux (install script)
 curl -fsSL https://raw.githubusercontent.com/zyx-corporation/sayane/main/scripts/install.sh | bash
 ```
 
@@ -40,7 +43,7 @@ Within 5 minutes, you can verify:
 - target-specific prompt compilation from one profile
 - the core flow: Profile → compile
 
-## Current status (Community Release 1.0 / v1.0.0)
+## Current status (Community Edition v1.0.3)
 
 | Interface | Status | Primary use |
 |-----------|--------|-------------|

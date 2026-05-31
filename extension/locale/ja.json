@@ -24,7 +24,7 @@
   "insert.local_openwebui": "文脈を挿入 (Open WebUI)",
   "insert.local_custom": "文脈を挿入 (ローカル UI)",
   "insert.preview_toggle": "その他の provider（近日対応）",
-  "insert.preview_note": "DOM adapter は登録済み。Bridge compile は未対応（#85）。",
+  "insert.preview_note": "DOM adapter のみ（local-custom）。Bridge compile は未対応。",
   "candidate.label": "Candidate",
   "candidate.none": "（Candidate なし）",
   "candidate.level1": "Level 1",

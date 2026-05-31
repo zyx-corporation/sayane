@@ -33,7 +33,7 @@ export function listPopupInsertProviders(): readonly ProviderAdapter[] {
   return providers.filter((p) => p.bridgeContextPacketSupported);
 }
 
-/** Registered DOM adapters awaiting Bridge compile (#85 / future). */
+/** Registered DOM adapters awaiting Bridge compile (local-custom). */
 export function listPreviewInsertProviders(): readonly ProviderAdapter[] {
   return providers.filter((p) => !p.bridgeContextPacketSupported);
 }

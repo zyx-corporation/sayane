@@ -24,7 +24,7 @@
   "insert.local_openwebui": "Insert context (Open WebUI)",
   "insert.local_custom": "Insert context (Local UI)",
   "insert.preview_toggle": "More providers (coming soon)",
-  "insert.preview_note": "DOM adapters registered; Bridge compile pending (#85).",
+  "insert.preview_note": "DOM adapter only (local-custom). Bridge compile not supported.",
   "candidate.label": "Candidate",
   "candidate.none": "(no candidates)",
   "candidate.level1": "Level 1",

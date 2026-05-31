@@ -19,7 +19,7 @@ Profile への任意編集は **行わない**。Candidate の `approve_candidat
 |------|------|
 | `list_profiles` | ローカル Profile 一覧 |
 | `inspect_profile` | Profile 要約（`profile_id` 既定: `default`） |
-| `compile_prompt` | `target`（chatgpt / claude）向けコンパイル |
+| `compile_prompt` | `target` 向けコンパイル（`chatgpt` / `claude` / `gemini` / `deepseek` / `local-openwebui` 等） |
 | `generate_context_packet` | `compile_prompt` と同等（LLM クライアント向け） |
 | `list_candidate_updates` | Candidate 一覧 |
 | `show_candidate` | Candidate 全文 |
@@ -90,7 +90,7 @@ Candidate フロー詳細: [RDE / Candidate 評価マニュアル](evaluation-ma
 |------|------|
 | クライアントがサーバーに接続できない | `sayane` の PATH、venv のフルパス指定 |
 | `Profile not found` | `sayane init`、または `profiles/default/` の存在 |
-| `Unknown target` | `chatgpt` / `claude` のみ（`gemini` は未対応） |
+| `Unknown target` | `chatgpt` / `claude` / `gemini` / `deepseek` / `local-openwebui` 等（`local-custom` は未対応） |
 | Bridge と混同 | MCP は `mcp serve`（stdio）。HTTP は `sayane serve` |
 
 ## 8. 関連

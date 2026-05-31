@@ -7,7 +7,7 @@ Sayane **Community Edition（OSS）** の受け入れ条件・テストシナリ
 | **対象リリース** | sayane **1.0.0+**（`sayane --version`） |
 | **対象エディション** | Community Edition（Apache 2.0）のみ |
 | **非対象** | sayane-pro 商用機能（暗号化 SQLite、ライセンス、Web UI 等）— pro 側ドキュメント参照 |
-| **関連 Issue** | [#78](https://github.com/zyx-corporation/sayane/issues/78) OSS 契約維持 · [#88](https://github.com/zyx-corporation/sayane/issues/88) L2 Core 手動（close 候補） · [#89](https://github.com/zyx-corporation/sayane/issues/89) L3 Extension UAT（close 候補） · [#92](https://github.com/zyx-corporation/sayane/issues/92) L1 pytest（完了） · [#91](https://github.com/zyx-corporation/sayane/issues/91) Extension E2E（完了） · [#93](https://github.com/zyx-corporation/sayane/issues/93) [手動のみ](acceptance-manual-only.md) · [#96](https://github.com/zyx-corporation/sayane/issues/96) provider registry（merge 済） · [#83](https://github.com/zyx-corporation/sayane/issues/83) WinGet/Scoop draft（merge 済） · [#85](https://github.com/zyx-corporation/sayane/issues/85) Gemini adapter |
+| **関連 Issue** | 完了: [#82](https://github.com/zyx-corporation/sayane/issues/82) PyPI · [#96](https://github.com/zyx-corporation/sayane/issues/96) provider registry · [#88–89](https://github.com/zyx-corporation/sayane/issues/88) L2/L3 UAT — **open:** [#78](https://github.com/zyx-corporation/sayane/issues/78) storage plugin · [#86](https://github.com/zyx-corporation/sayane/issues/86) Obsidian 双方向 |
 
 下位手順書:
 

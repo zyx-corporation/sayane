@@ -212,7 +212,7 @@ sayane compile --target chatgpt --instruction "今週の優先タスクを整理
 
 | オプション | 必須 | 既定値 | 説明 |
 |-----------|------|--------|------|
-| `--target` | はい | — | `chatgpt` / `claude`（`openai` / `anthropic` も可） |
+| `--target` | はい | — | `chatgpt` / `claude` / `gemini` / `deepseek` / `local-openwebui`（エイリアス: `openai`, `anthropic`, `openwebui`） |
 | `--profile` | いいえ | 既定 Store | Profile YAML のパス |
 | `--instruction` | いいえ | — | タスク指示（Prompt IR の `instruction` に入る） |
 
@@ -249,7 +249,7 @@ sayane compile --target chatgpt --profile examples/profiles/minimal.yaml \
 
 **エラー**
 
-- 未対応の `--target`（例: `gemini`）→ `Unknown target`
+- 未対応の `--target`（例: `local-custom`）→ `Unknown target`
 - Profile 不在 → `Profile not found`
 
 ---

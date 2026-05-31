@@ -172,15 +172,21 @@ sayane serve                   # Bridge（Extension 用）
 
 ## PyPI
 
+**公開済み:** https://pypi.org/project/sayane/ （v1.0.3+）
+
 ```bash
 pip install sayane
-# または特定版:
-pip install sayane==1.0.3
+# または特定版（zsh ではクォート推奨）:
+pip install 'sayane==1.0.3'
 ```
+
+> **zsh ユーザー:** `sayane==1.0.3` をクォートしないと `zsh: 1.0.3 not found` になることがあります。
 
 PyPI には **CLI + Bridge + MCP** のみ含まれます。Chrome Extension は別途 [Extension マニュアル](extension-manual.md) を参照。
 
-初回公開手順（maintainer）: [`packaging/pypi/README.md`](../packaging/pypi/README.md)（#82）。
+初回公開: **2026-05-30** — `sayane==1.0.3` on https://pypi.org/project/sayane/ ([#82](https://github.com/zyx-corporation/sayane/issues/82) closed).
+
+Maintainer 手順（再公開時）: 以下チェックリスト。
 
 Git タグから直接:
 

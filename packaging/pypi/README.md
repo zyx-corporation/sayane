@@ -73,9 +73,9 @@ twine upload dist/sayane-1.0.3*
 
 ## Post-publish
 
-1. Confirm: `pip install sayane==1.0.3` && `sayane --version`
-2. Close Issue #82.
-3. Update release notes if needed.
+1. Confirm: `pip install 'sayane==1.0.3'` && `sayane --version`
+2. **Done (2026-05-30):** v1.0.3 live at https://pypi.org/project/sayane/
+3. Enable **Trusted Publishing** for future tag uploads without API token.
 
 ## Notes
 

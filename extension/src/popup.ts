@@ -1,13 +1,25 @@
 import type {
   BackgroundMessage,
   BackgroundResponse,
-  CandidateDiff,
-  CandidateSummary,
   ProfileSummary,
+  SupportedLocale,
 } from "./types.js";
 import type { InsertTarget } from "./providers/types.js";
 import { listPopupInsertProviders, listPreviewInsertProviders } from "./providers/registry.js";
-import { applyDataI18n, initI18n, localizeError, t } from "./i18n.js";
+import { applyDataI18n, getLocale, initI18n, localizeError, normalizeLocale, t } from "./i18n.js";
+import { categoryLabel, type CandidateCategory } from "./candidate-display.js";
+import { initCandidateReviewUI } from "./candidate-review-ui.js";
+import { BusyUiController, applyDisabledWithCursorHint } from "./busy-ui.js";
+import { loadConfig } from "./config.js";
+import {
+  deriveCaptureAvailability,
+  diagnoseActiveTab,
+  type BridgeState,
+  type CaptureAvailability,
+  type PageState,
+} from "./page-diagnostics.js";
+import { getActiveCaptureTab } from "./tab-target.js";
+import type { OptionsUpdatedMessage } from "./options-notify.js";
 
 function $(id: string): HTMLElement {
   const el = document.getElementById(id);
@@ -21,12 +33,314 @@ function setStatus(text: string, isError = false): void {
   el.className = isError ? "status error" : "status";
 }
 
+let lastAvailability: CaptureAvailability | null = null;
+
+function renderBridgeState(state: BridgeState): void {
+  const el = $("bridge-state");
+  if (state.kind === "connected") {
+    el.textContent = t("popup.bridge.connected");
+  } else if (state.kind === "checking") {
+    el.textContent = t("popup.bridge.checking");
+  } else if (state.kind === "failed") {
+    el.textContent = t("popup.bridge.unreachable");
+  } else {
+    el.textContent = "";
+  }
+}
+
+function renderPageStateLine(pageState: PageState): void {
+  const el = $("page-state");
+  switch (pageState.kind) {
+    case "readable":
+      el.textContent = t("page.status.readable", { provider: pageState.ping.provider });
+      break;
+    case "extractor_failed":
+      el.textContent = t("page.status.unreadable");
+      break;
+    case "content_script_unavailable":
+      el.textContent = t("page.status.content_script");
+      break;
+    case "unsupported_url":
+      el.textContent = t("page.status.unsupported");
+      break;
+    case "no_active_tab":
+      el.textContent = t("page.status.no_tab");
+      break;
+    case "checking":
+      el.textContent = t("page.status.checking");
+      break;
+    default:
+      el.textContent = "";
+  }
+}
+
+function formatPageDetail(avail: CaptureAvailability): string {
+  const lines: string[] = [t("page.detail.header")];
+  const url = avail.tabUrl ?? "-";
+  lines.push(t("page.detail.url", { url }));
+
+  const ping =
+    avail.pageState.kind === "readable" || avail.pageState.kind === "extractor_failed"
+      ? avail.pageState.ping
+      : null;
+
+  if (ping) {
+    lines.push(t("page.detail.provider", { provider: ping.provider }));
+    lines.push(
+      t("page.detail.content_script", {
+        status: ping.contentScriptReady
+          ? t("page.detail.content_script_ok")
+          : t("page.detail.content_script_no"),
+      }),
+    );
+    lines.push(t("page.detail.page_readable", { value: String(ping.readable) }));
+    lines.push(t("page.detail.selection_length", { length: ping.selectionTextLength }));
+    lines.push(
+      t("page.detail.host_permission", {
+        value: ping.hostPermissionOk ? t("page.detail.host_ok") : t("page.detail.host_ng"),
+      }),
+    );
+    if (!ping.extractorAvailable) {
+      lines.push(
+        t("page.detail.action", {
+          action:
+            ping.provider === "chatgpt"
+              ? t("page.detail.reload_chatgpt")
+              : t("page.detail.reload_tab"),
+        }),
+      );
+    }
+  } else if (avail.pageState.kind === "content_script_unavailable") {
+    lines.push(t("page.reason.content_script_unavailable"));
+    const raw = avail.pageState.lastError ?? "";
+    if (raw && !raw.includes("Receiving end does not exist")) {
+      lines.push(raw);
+    }
+    lines.push(t("page.detail.action", { action: t("page.detail.cs_reload") }));
+  } else if (avail.pageState.kind === "unsupported_url") {
+    lines.push(avail.pageState.reason);
+    lines.push(t("page.detail.action", { action: t("page.detail.open_supported") }));
+  } else if (avail.pageState.kind === "no_active_tab") {
+    lines.push(avail.pageState.reason);
+  }
+
+  return lines.join("\n");
+}
+
+async function renderDebugPanel(avail: CaptureAvailability): Promise<void> {
+  const config = await loadConfig();
+  const debugEl = $("debug-lines");
+  const header = [`Bridge URL: ${config.bridgeUrl}`, ...avail.debugLines];
+  debugEl.textContent = header.join("\n");
+}
+
+function applyCaptureAvailability(avail: CaptureAvailability): void {
+  lastAvailability = avail;
+  renderBridgeState(avail.bridgeState);
+  renderPageStateLine(avail.pageState);
+
+  const detailEl = $("page-state-detail");
+  const needsDetail =
+    avail.pageState.kind !== "readable" && avail.pageState.kind !== "checking";
+  detailEl.textContent = needsDetail ? formatPageDetail(avail) : "";
+  detailEl.style.whiteSpace = "pre-wrap";
+
+  ($("capture-selection-hint") as HTMLElement).textContent =
+    avail.canCaptureSelection ? "" : (avail.selectionDisabledReason ?? "");
+  ($("capture-clipboard-hint") as HTMLElement).textContent =
+    avail.canCaptureClipboard ? "" : (avail.clipboardDisabledReason ?? "");
+  ($("capture-page-disabled-hint") as HTMLElement).textContent =
+    avail.canCapturePage ? "" : (avail.pageDisabledReason ?? "");
+
+  const busy = busyUi.isBusy();
+  busyUi.applyExternalDisabled("btn-capture-selection", !avail.canCaptureSelection || busy);
+  busyUi.applyExternalDisabled("btn-capture-clipboard", !avail.canCaptureClipboard || busy);
+  busyUi.applyExternalDisabled("btn-capture-page", !avail.canCapturePage || busy);
+
+  void renderDebugPanel(avail);
+}
+
+async function applyDeveloperModeUi(): Promise<void> {
+  const config = await loadConfig();
+  const panel = $("developer-capture-panel") as HTMLDetailsElement;
+  panel.hidden = !config.developerMode;
+}
+
+async function resolveBridgeState(): Promise<BridgeState> {
+  const health = await send({ type: "BRIDGE_HEALTH" });
+  if (!health.ok) {
+    return { kind: "failed", reason: localizeError(health.error) };
+  }
+  const healthy = (health.data as { healthy: boolean }).healthy;
+  if (!healthy) {
+    return { kind: "failed", reason: t("status.bridge_unreachable") };
+  }
+  return { kind: "connected" };
+}
+
+async function runPageDiagnostics(bridgeState: BridgeState): Promise<CaptureAvailability> {
+  renderPageStateLine({ kind: "checking" });
+  const { pageState, tabId, tabUrl } = await diagnoseActiveTab(t);
+  const avail = deriveCaptureAvailability(bridgeState, pageState, tabId, tabUrl, t);
+  applyCaptureAvailability(avail);
+  return avail;
+}
+
+async function reloadSettingsAndDiagnose(): Promise<CaptureAvailability> {
+  await loadConfig();
+  return runFullDiagnostics();
+}
+
+async function runFullDiagnostics(): Promise<CaptureAvailability> {
+  renderBridgeState({ kind: "checking" });
+  const bridgeState = await resolveBridgeState();
+  const avail = await runPageDiagnostics(bridgeState);
+
+  if (bridgeState.kind === "failed") {
+    setStatus(bridgeState.reason, true);
+  } else if (avail.canCaptureSelection || avail.canCaptureClipboard || avail.canCapturePage) {
+    setStatus(t("status.ready"));
+  } else {
+    setStatus(formatPageDetail(avail), true);
+  }
+  return avail;
+}
+
 async function send(message: BackgroundMessage): Promise<BackgroundResponse> {
   return chrome.runtime.sendMessage(message) as Promise<BackgroundResponse>;
 }
 
+const EVAL_LEVEL_STORAGE_KEY = "sayane.evalLevel";
+
+function normalizeEvalLevel(value: unknown): number {
+  const n = Number(value);
+  if (!Number.isInteger(n)) return 1;
+  if (n < 1) return 1;
+  if (n > 5) return 5;
+  return n;
+}
+
+function setEvalLevel(level: number): void {
+  const select = $("detail-eval-level") as HTMLSelectElement;
+  const normalized = normalizeEvalLevel(level);
+  const value = String(Math.min(normalized, 3));
+  const hasOption = Array.from(select.options).some((option) => option.value === value);
+  select.value = hasOption ? value : "1";
+}
+
+function currentEvalLevel(): number {
+  return normalizeEvalLevel(($("detail-eval-level") as HTMLSelectElement).value);
+}
+
+async function loadEvalLevelFromStorage(): Promise<void> {
+  const stored = await chrome.storage.local.get(EVAL_LEVEL_STORAGE_KEY);
+  setEvalLevel(stored[EVAL_LEVEL_STORAGE_KEY]);
+}
+
+async function saveEvalLevelToStorage(level: number): Promise<void> {
+  await chrome.storage.local.set({ [EVAL_LEVEL_STORAGE_KEY]: normalizeEvalLevel(level) });
+}
+
+let profilesById = new Map<string, ProfileSummary>();
+const busyUi = new BusyUiController($("app-root"));
+const insertButtons: HTMLButtonElement[] = [];
+
+function registerBusyButtons(): void {
+  busyUi.registerButton("btn-capture-selection", $("btn-capture-selection") as HTMLButtonElement, {
+    busyKey: "capturing",
+    idleLabel: t("capture.selection"),
+    busyLabel: t("busy.capturing"),
+  });
+  busyUi.registerButton("btn-capture-clipboard", $("btn-capture-clipboard") as HTMLButtonElement, {
+    busyKey: "capturingClipboard",
+    idleLabel: t("capture.clipboard"),
+    busyLabel: t("busy.capturing_clipboard"),
+  });
+  busyUi.registerButton("btn-capture-page", $("btn-capture-page") as HTMLButtonElement, {
+    busyKey: "capturing",
+    idleLabel: t("capture.page"),
+    busyLabel: t("busy.capturing"),
+  });
+  busyUi.registerButton("btn-bridge-check", $("btn-bridge-check") as HTMLButtonElement, {
+    busyKey: "pairing",
+    idleLabel: t("bridge.check"),
+    busyLabel: t("busy.pairing"),
+  });
+  busyUi.registerButton("btn-refresh-candidates", $("btn-refresh-candidates") as HTMLButtonElement, {
+    busyKey: "refreshingCandidates",
+    idleLabel: "↻",
+    busyLabel: t("busy.refreshing"),
+  });
+  busyUi.registerButton("btn-detail-evaluate", $("btn-detail-evaluate") as HTMLButtonElement, {
+    busyKey: "evaluating",
+    idleLabel: t("candidate.evaluate"),
+    busyLabel: t("busy.evaluating"),
+  });
+  busyUi.registerButton("btn-detail-approve", $("btn-detail-approve") as HTMLButtonElement, {
+    busyKey: "approving",
+    idleLabel: t("candidate.approve"),
+    busyLabel: t("busy.approving"),
+    blockDuringCandidateMutation: true,
+  });
+  busyUi.registerButton("btn-detail-reject", $("btn-detail-reject") as HTMLButtonElement, {
+    busyKey: "rejecting",
+    idleLabel: t("candidate.reject"),
+    busyLabel: t("busy.rejecting"),
+    blockDuringCandidateMutation: true,
+  });
+  for (const btn of insertButtons) {
+    const providerId = btn.dataset.providerId ?? "insert";
+    busyUi.registerButton(`insert-${providerId}`, btn, {
+      busyKey: "insertingContext",
+      idleLabel: btn.textContent ?? t("insert.chatgpt"),
+      busyLabel: t("busy.inserting"),
+    });
+  }
+}
+
+function setInsertButtonsDisabled(disabled: boolean): void {
+  const hint = busyUi.cursorHintForExternalDisabled(disabled);
+  for (const btn of insertButtons) {
+    if (busyUi.getState().insertingContext) {
+      applyDisabledWithCursorHint(btn, true, "busy");
+      continue;
+    }
+    applyDisabledWithCursorHint(btn, disabled, hint);
+  }
+}
+
+async function checkBridgeHealth(): Promise<boolean> {
+  const avail = await runFullDiagnostics();
+  return avail.bridgeState.kind === "connected";
+}
+
+function selectedProfile(): ProfileSummary | null {
+  const id = selectedProfileId();
+  return profilesById.get(id) ?? null;
+}
+
+function captureLocaleForSave(): SupportedLocale {
+  const uiLocale = getLocale() || "en";
+  const profileLocale = selectedProfile()?.default_language;
+  return profileLocale ? normalizeLocale(profileLocale) : uiLocale;
+}
+
+function formatBridgeError(res: Extract<BackgroundResponse, { ok: false }>): string {
+  const details = res.errorDetails;
+  if (details && details.error === "unsafe_rde_category") {
+    const category = String(details.rde_category ?? "unknown");
+    if (getLocale() === "ja") {
+      return `このCandidateは「${categoryLabel(category as CandidateCategory, "ja")}」と評価されているため、そのまま採用できません。差分を確認し、必要なら修正して新しいCandidateとして作成してください。`;
+    }
+  }
+  if (details && typeof details.message === "string") {
+    return localizeError(details.message);
+  }
+  return localizeError(res.error);
+}
+
 async function getActiveTabId(): Promise<number> {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  const tab = await getActiveCaptureTab();
   if (!tab?.id) throw new Error(t("error.no_active_tab"));
   return tab.id;
 }
@@ -34,22 +348,6 @@ async function getActiveTabId(): Promise<number> {
 function selectedProfileId(): string {
   const select = $("profile-select") as HTMLSelectElement;
   return select.value || "default";
-}
-
-function selectedCandidateId(): string | null {
-  const select = $("candidate-select") as HTMLSelectElement;
-  return select.value || null;
-}
-
-function selectCandidateById(id: string): void {
-  const select = $("candidate-select") as HTMLSelectElement;
-  for (let i = 0; i < select.options.length; i++) {
-    const opt = select.options.item(i);
-    if (opt?.value === id) {
-      select.value = id;
-      return;
-    }
-  }
 }
 
 async function loadProfiles(): Promise<void> {
@@ -60,6 +358,7 @@ async function loadProfiles(): Promise<void> {
     return;
   }
   const profiles = res.data as ProfileSummary[];
+  profilesById = new Map(profiles.map((p) => [p.id, p]));
   select.innerHTML = "";
   if (profiles.length === 0) {
     const opt = document.createElement("option");
@@ -76,39 +375,41 @@ async function loadProfiles(): Promise<void> {
   }
 }
 
-async function loadCandidates(preferId?: string): Promise<void> {
-  const select = $("candidate-select") as HTMLSelectElement;
-  const res = await send({ type: "BRIDGE_LIST_CANDIDATES" });
-  if (!res.ok) {
-    setStatus(localizeError(res.error), true);
-    return;
-  }
-  const items = res.data as CandidateSummary[];
-  select.innerHTML = "";
-  if (items.length === 0) {
-    const opt = document.createElement("option");
-    opt.value = "";
-    opt.textContent = t("candidate.none");
-    select.appendChild(opt);
-    return;
-  }
-  for (const c of items) {
-    const opt = document.createElement("option");
-    opt.value = c.id;
-    const rde = c.rde_class ? ` · ${c.rde_class}` : "";
-    opt.textContent = `${c.id.slice(0, 8)}… · ${c.status}${rde}`;
-    select.appendChild(opt);
-  }
-  if (preferId) selectCandidateById(preferId);
-}
-
-function showDiff(diff: CandidateDiff): void {
-  const pre = $("diff-preview") as HTMLPreElement;
-  pre.hidden = false;
-  pre.textContent = JSON.stringify(diff, null, 2);
-}
-
 function evaluationSummary(data: Record<string, unknown>): string {
+  const evalStatus = data.evaluation_status;
+  const evalError = data.evaluation_error as
+    | { type?: string; status_code?: number; provider?: string; message?: string }
+    | undefined;
+  if (evalStatus === "judge_failed") {
+    const locale = getLocale();
+    const statusCode = evalError?.status_code;
+    const provider = evalError?.provider ?? "judge provider";
+    if (locale === "ja") {
+      const reason =
+        statusCode === 401
+          ? "評価用LLMのAPIキーが未設定、無効、または権限不足の可能性があります。"
+          : statusCode === 429
+            ? "評価用LLMがレート制限またはクォータ超過になっている可能性があります。"
+            : "評価用LLMの設定または接続に問題がある可能性があります。";
+      return (
+        `LLM評価に失敗しました。${reason}\n` +
+        "Captureされた内容はCandidateとして保存されていますが、" +
+        "LLM judgeによる評価は完了していません。\n" +
+        "確認してください: 1) APIキー設定 2) sayane serve 起動時の環境変数 " +
+        "3) APIキー有効性 4) provider設定の一致"
+      );
+    }
+    const reason =
+      statusCode === 401
+        ? "The API key for the configured judge provider may be missing, invalid, or unauthorized."
+        : statusCode === 429
+          ? "The judge provider appears to be rate-limited or out of quota."
+          : "The judge provider configuration or connectivity may be invalid.";
+    return (
+      `LLM judge failed (${provider}). ${reason}\n` +
+      "The captured content was saved as a Candidate, but LLM-based evaluation was not completed."
+    );
+  }
   const ev = data.evaluation as { rde_class?: string; level?: number } | undefined;
   if (ev?.rde_class) return `${ev.rde_class} (L${ev.level ?? "?"})`;
   return String(data.status ?? "ok");
@@ -124,7 +425,8 @@ function renderInsertButtons(): void {
     btn.dataset.providerId = provider.id;
     btn.dataset.i18n = provider.labelKey;
     btn.textContent = t(provider.labelKey);
-    btn.addEventListener("click", () => insertContext(provider.id));
+    btn.addEventListener("click", () => void insertContext(provider.id));
+    insertButtons.push(btn);
     container.appendChild(btn);
   }
 
@@ -157,164 +459,176 @@ function renderInsertButtons(): void {
   container.appendChild(details);
 }
 
+const candidateReview = initCandidateReviewUI({
+  $,
+  send,
+  busyUi,
+  formatBridgeError,
+  evaluationSummary,
+  onEvalLevelChange: (level) => {
+    setEvalLevel(level);
+    void saveEvalLevelToStorage(level);
+  },
+  getStoredEvalLevel: () => currentEvalLevel(),
+});
+
 async function init(): Promise<void> {
   await initI18n();
   applyDataI18n();
   renderInsertButtons();
   applyDataI18n($("insert-providers"));
+  registerBusyButtons();
+  busyUi.setOnStateChange(() => {
+    if (lastAvailability) applyCaptureAvailability(lastAvailability);
+    setInsertButtonsDisabled(busyUi.isBusy());
+  });
   document.title = t("app.title");
   setStatus(t("status.loading"));
+  await applyDeveloperModeUi();
 
-  const health = await send({ type: "BRIDGE_HEALTH" });
-  if (!health.ok) {
-    setStatus(localizeError(health.error), true);
-    return;
-  }
-  const healthy = (health.data as { healthy: boolean }).healthy;
-  if (!healthy) {
-    setStatus(t("status.bridge_unreachable"), true);
-    return;
-  }
-  setStatus(t("status.bridge_connected"));
-  await loadProfiles();
-  await loadCandidates();
+  const avail = await busyUi.run("pairing", () => runFullDiagnostics());
+
+  await loadEvalLevelFromStorage();
+  if (avail.bridgeState.kind !== "connected") return;
+  await busyUi.run("refreshingCandidates", async () => {
+    await loadProfiles();
+    await candidateReview.loadCandidates();
+  });
+  ($("profile-select") as HTMLSelectElement).addEventListener("change", () => {
+    void busyUi.run("refreshingCandidates", () => candidateReview.loadCandidates());
+  });
 }
 
-$("btn-capture-selection").addEventListener("click", async () => {
-  try {
-    const tabId = await getActiveTabId();
-    const res = await send({ type: "CAPTURE_SELECTION", tabId });
-    if (!res.ok) {
-      setStatus(localizeError(res.error), true);
-      return;
+$("btn-capture-selection").addEventListener("click", () => {
+  void busyUi.run("capturing", async () => {
+    try {
+      const tabId = await getActiveTabId();
+      const res = await send({
+        type: "CAPTURE_SELECTION",
+        tabId,
+        profileId: selectedProfileId(),
+        locale: captureLocaleForSave(),
+      });
+      if (!res.ok) {
+        setStatus(formatBridgeError(res), true);
+        return;
+      }
+      setCaptureStatus(res.data as import("./types.js").CaptureResult);
+    } catch (e) {
+      setStatus(localizeError(String(e)), true);
     }
-    setCaptureStatus(res.data as import("./types.js").CaptureResult);
-  } catch (e) {
-    setStatus(localizeError(String(e)), true);
+  });
+});
+
+$("btn-capture-page").addEventListener("click", () => {
+  void busyUi.run("capturing", async () => {
+    try {
+      const tabId = await getActiveTabId();
+      const res = await send({
+        type: "CAPTURE_PAGE",
+        tabId,
+        profileId: selectedProfileId(),
+        locale: captureLocaleForSave(),
+      });
+      if (!res.ok) {
+        setStatus(formatBridgeError(res), true);
+        return;
+      }
+      setCaptureStatus(res.data as import("./types.js").CaptureResult, { pageCapture: true });
+    } catch (e) {
+      setStatus(localizeError(String(e)), true);
+    }
+  });
+});
+
+$("btn-capture-clipboard").addEventListener("click", () => {
+  void busyUi.run("capturingClipboard", async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text.trim()) {
+        setStatus(t("capture.clipboard_empty"), true);
+        return;
+      }
+      const res = await send({
+        type: "CAPTURE_CLIPBOARD",
+        content: text,
+        profileId: selectedProfileId(),
+        locale: captureLocaleForSave(),
+      });
+      if (!res.ok) {
+        setStatus(formatBridgeError(res), true);
+        return;
+      }
+      setCaptureStatus(res.data as import("./types.js").CaptureResult);
+    } catch {
+      setStatus(t("capture.clipboard_error"), true);
+    }
+  });
+});
+
+$("btn-bridge-check").addEventListener("click", () => {
+  void busyUi.run("pairing", () => checkBridgeHealth());
+});
+
+$("btn-recheck-page").addEventListener("click", () => {
+  void busyUi.run("pairing", async () => {
+    const avail = await reloadSettingsAndDiagnose();
+    if (avail.bridgeState.kind === "connected") {
+      await loadProfiles();
+      if (avail.canCaptureSelection || avail.canCaptureClipboard || avail.canCapturePage) {
+        setStatus(t("status.ready"));
+      }
+    }
+  });
+});
+
+chrome.runtime.onMessage.addListener((message: OptionsUpdatedMessage) => {
+  if (message?.type === "SAYANE_OPTIONS_UPDATED") {
+    void reloadSettingsAndDiagnose().then(async (avail) => {
+      if (avail.bridgeState.kind === "connected") {
+        await loadProfiles();
+        await applyDeveloperModeUi();
+      }
+    });
   }
 });
 
-$("btn-capture-page").addEventListener("click", async () => {
-  try {
-    const tabId = await getActiveTabId();
-    const res = await send({ type: "CAPTURE_PAGE", tabId });
-    if (!res.ok) {
-      setStatus(localizeError(res.error), true);
-      return;
-    }
-    setCaptureStatus(res.data as import("./types.js").CaptureResult);
-  } catch (e) {
-    setStatus(localizeError(String(e)), true);
-  }
-});
-
-function setCaptureStatus(data: import("./types.js").CaptureResult): void {
+function setCaptureStatus(
+  data: import("./types.js").CaptureResult,
+  options?: { pageCapture?: boolean },
+): void {
   const id = data.id;
-  const warn = data.warnings?.[0];
-  const msg = warn
-    ? `${t("status.captured", { id: id.slice(0, 8) })} — ${warn}`
+  const warnings = data.warnings ?? [];
+  const pageWarn = options?.pageCapture
+    ? warnings.includes("page_capture_low_confidence") ||
+        warnings.includes("ui_noise_detected")
+    : false;
+  const hint = pageWarn
+    ? t("capture.warning.page_low_confidence")
+    : warnings[0];
+  const msg = hint
+    ? `${t("status.captured", { id: id.slice(0, 8) })} — ${hint}`
     : t("status.captured", { id: id.slice(0, 8) });
-  setStatus(msg, Boolean(warn));
-  void loadCandidates(id);
+  setStatus(msg, Boolean(hint));
+  void candidateReview.loadCandidates(id);
 }
 
 async function insertContext(target: InsertTarget): Promise<void> {
-  try {
-    const tabId = await getActiveTabId();
-    const res = await send({
-      type: "INSERT_CONTEXT_PACKET",
-      tabId,
-      target,
-      profileId: selectedProfileId(),
-    });
-    setStatus(res.ok ? t("status.inserted", { target }) : localizeError(res.error), !res.ok);
-  } catch (e) {
-    setStatus(localizeError(String(e)), true);
-  }
-}
-
-$("btn-refresh-candidates").addEventListener("click", async () => {
-  try {
-    await loadCandidates(selectedCandidateId() ?? undefined);
-    setStatus(t("status.candidates_refreshed"));
-  } catch (e) {
-    setStatus(localizeError(String(e)), true);
-  }
-});
-
-$("btn-evaluate").addEventListener("click", async () => {
-  const cid = selectedCandidateId();
-  if (!cid) {
-    setStatus(t("status.select_candidate"), true);
-    return;
-  }
-  const level = Number(($("eval-level") as HTMLSelectElement).value) || 1;
-  try {
-    const res = await send({ type: "BRIDGE_EVALUATE_CANDIDATE", candidateId: cid, level });
-    setStatus(
-      res.ok
-        ? t("status.evaluated", { summary: evaluationSummary(res.data as Record<string, unknown>) })
-        : localizeError(res.error),
-      !res.ok,
-    );
-    if (res.ok) await loadCandidates(cid);
-  } catch (e) {
-    setStatus(localizeError(String(e)), true);
-  }
-});
-
-$("btn-diff").addEventListener("click", async () => {
-  const cid = selectedCandidateId();
-  if (!cid) {
-    setStatus(t("status.select_candidate"), true);
-    return;
-  }
-  try {
-    const res = await send({ type: "BRIDGE_DIFF_CANDIDATE", candidateId: cid });
-    if (!res.ok) {
-      setStatus(localizeError(res.error), true);
-      return;
+  await busyUi.run("insertingContext", async () => {
+    try {
+      const tabId = await getActiveTabId();
+      const res = await send({
+        type: "INSERT_CONTEXT_PACKET",
+        tabId,
+        target,
+        profileId: selectedProfileId(),
+      });
+      setStatus(res.ok ? t("status.inserted", { target }) : localizeError(res.error), !res.ok);
+    } catch (e) {
+      setStatus(localizeError(String(e)), true);
     }
-    showDiff(res.data as CandidateDiff);
-    setStatus(t("status.diff_for", { id: cid.slice(0, 8) }));
-  } catch (e) {
-    setStatus(localizeError(String(e)), true);
-  }
-});
-
-$("btn-approve").addEventListener("click", async () => {
-  const cid = selectedCandidateId();
-  if (!cid) {
-    setStatus(t("status.select_candidate"), true);
-    return;
-  }
-  try {
-    const res = await send({ type: "BRIDGE_APPROVE_CANDIDATE", candidateId: cid });
-    setStatus(res.ok ? t("status.approved", { id: cid.slice(0, 8) }) : localizeError(res.error), !res.ok);
-    if (res.ok) await loadCandidates(cid);
-  } catch (e) {
-    setStatus(localizeError(String(e)), true);
-  }
-});
-
-$("btn-reject").addEventListener("click", async () => {
-  const cid = selectedCandidateId();
-  if (!cid) {
-    setStatus(t("status.select_candidate"), true);
-    return;
-  }
-  try {
-    const res = await send({
-      type: "BRIDGE_REJECT_CANDIDATE",
-      candidateId: cid,
-      reason: "rejected from extension",
-    });
-    setStatus(res.ok ? t("status.rejected", { id: cid.slice(0, 8) }) : localizeError(res.error), !res.ok);
-    if (res.ok) await loadCandidates(cid);
-  } catch (e) {
-    setStatus(localizeError(String(e)), true);
-  }
-});
+  });
+}
 
 $("btn-options").addEventListener("click", () => chrome.runtime.openOptionsPage());
 

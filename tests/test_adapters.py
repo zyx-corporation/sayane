@@ -38,26 +38,36 @@ def test_claude_adapter_produces_anthropic_shape(examples_dir: Path) -> None:
     assert "Example User" in result.payload["system"]
 
 
-def test_gemini_adapter_produces_generate_content_shape(examples_dir: Path) -> None:
+def test_gemini_adapter_produces_working_memo_shape(examples_dir: Path) -> None:
     ir = _minimal_ir(examples_dir)
     result = GeminiAdapter().compile(ir)
 
     assert result.target == "gemini"
-    assert result.format == "gemini_generate_content"
-    assert "contents" in result.payload
-    assert result.payload["contents"][0]["role"] == "user"
-    system = result.payload["system_instruction"]["parts"][0]["text"]
-    assert "Example User" in system
+    assert result.format == "gemini_working_memo"
+    text = result.payload["text"]
+    assert "User Working Context" in text
+    assert "Example User" in text
+    assert "system=制御面" not in text
+    assert "user=全文脈" not in text
 
 
-def test_deepseek_adapter_produces_openai_messages(examples_dir: Path) -> None:
+def test_gemini_adapter_differs_from_claude_output(examples_dir: Path) -> None:
+    ir = _minimal_ir(examples_dir)
+    gemini_text = GeminiAdapter().compile(ir).payload["text"]
+    claude = ClaudeAdapter().compile(ir)
+    assert "[system]" not in gemini_text
+    assert claude.format == "anthropic_messages"
+    assert "system" in claude.payload
+
+
+def test_deepseek_adapter_produces_working_memo(examples_dir: Path) -> None:
     ir = _minimal_ir(examples_dir)
     result = DeepSeekAdapter().compile(ir)
 
     assert result.target == "deepseek"
-    assert result.format == "openai_chat"
-    assert result.payload["messages"][0]["role"] == "system"
-    assert "Example User" in result.payload["messages"][0]["content"]
+    assert result.format == "deepseek_working_memo"
+    assert "User Working Context" in result.payload["text"]
+    assert "Example User" in result.payload["text"]
 
 
 def test_local_openwebui_adapter_produces_openai_messages(examples_dir: Path) -> None:

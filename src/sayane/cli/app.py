@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -110,6 +111,23 @@ def _load(profile: Path | None) -> tuple[Path, object]:
     return path, load_profile(path)
 
 
+def _status_line(label: str, present: bool) -> str:
+    return f"{label}: {'set' if present else 'missing'}"
+
+
+def _load_judge_settings(home: Path) -> dict[str, object]:
+    judge_path = home / "judge.yaml"
+    if not judge_path.is_file():
+        return {}
+    try:
+        raw = yaml.safe_load(judge_path.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError):
+        return {}
+    if isinstance(raw, dict):
+        return raw
+    return {}
+
+
 def _register_profile(app: typer.Typer) -> None:
     profile_app = typer.Typer(help=t("group.profile"), no_args_is_help=True)
 
@@ -175,6 +193,41 @@ def _register_profile(app: typer.Typer) -> None:
 
 
 def _register_core_commands(app: typer.Typer) -> None:
+    @app.command()
+    def doctor(
+        topic: Annotated[
+            str | None,
+            typer.Argument(help="Optional topic: judge"),
+        ] = None,
+    ) -> None:
+        """Run local diagnostic checks for bridge and judge settings."""
+        if topic not in (None, "judge"):
+            raise typer.BadParameter("Supported topic: judge")
+
+        config = BridgeConfig()
+        judge_settings = _load_judge_settings(config.home)
+        judge_base = os.environ.get("SAYANE_JUDGE_BASE_URL") or judge_settings.get("base_url")
+        judge_key = os.environ.get("SAYANE_JUDGE_API_KEY") or judge_settings.get("api_key")
+        judge_model = os.environ.get("SAYANE_JUDGE_MODEL") or judge_settings.get("model")
+        openai_key = os.environ.get("OPENAI_API_KEY")
+
+        if topic is None:
+            typer.echo(_status_line("Bridge token", config.token_file.is_file()))
+            typer.echo(_status_line("Profile store", default_profile_file().is_file()))
+        typer.echo(_status_line("Judge base URL", bool(judge_base)))
+        typer.echo(_status_line("Judge API key", bool(judge_key)))
+        typer.echo(_status_line("Judge model", bool(judge_model)))
+        typer.echo(_status_line("OpenAI API key", bool(openai_key)))
+
+        if openai_key and not judge_key:
+            typer.echo(
+                (
+                    "warning: OPENAI_API_KEY is set but SAYANE_JUDGE_API_KEY is "
+                    "missing. Sayane judge uses SAYANE_JUDGE_API_KEY."
+                ),
+                err=True,
+            )
+
     @app.command()
     def init(
         force: Annotated[bool, typer.Option("--force")] = False,

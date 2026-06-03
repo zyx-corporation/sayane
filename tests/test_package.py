@@ -12,9 +12,19 @@ from sayane import (
 
 
 def test_version() -> None:
-    assert sayane.__version__ == "1.0.3"
+    assert sayane.__version__ == "1.0.4"
 
 
 def test_subpackages_importable() -> None:
-    for module in (core, cli, bridge, adapters, strategies, evaluators, storage, mcp):
+    modules = (
+        core,
+        cli,
+        bridge,
+        adapters,
+        strategies,
+        evaluators,
+        storage,
+        mcp,
+    )
+    for module in modules:
         assert module.__doc__ is not None

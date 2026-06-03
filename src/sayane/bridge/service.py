@@ -28,10 +28,17 @@ def list_profiles(config: BridgeConfig) -> list[ProfileSummary]:
         try:
             profile = load_profile(profile_path)
             name = profile.identity.name
+            default_language = profile.voice.default_language
         except Exception:
             name = None
+            default_language = None
         summaries.append(
-            ProfileSummary(id=entry.name, path=str(profile_path), name=name),
+            ProfileSummary(
+                id=entry.name,
+                path=str(profile_path),
+                name=name,
+                default_language=default_language,
+            ),
         )
     return summaries
 

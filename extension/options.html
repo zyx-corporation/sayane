@@ -33,9 +33,23 @@
       #status.error {
         color: #b00020;
       }
+      body.is-busy,
+      body.is-busy #app-root {
+        cursor: wait;
+      }
+      button:disabled[data-cursor-hint="busy"] {
+        cursor: wait !important;
+      }
+      button:disabled[data-cursor-hint="unavailable"] {
+        cursor: not-allowed !important;
+      }
+      button:disabled:not([data-cursor-hint]) {
+        cursor: not-allowed !important;
+      }
     </style>
   </head>
   <body>
+    <div id="app-root" aria-busy="false">
     <h1 data-i18n="options.title">Sayane Options</h1>
     <p class="hint" data-i18n="options.hint">
       Run sayane serve locally. Copy the bearer token from ~/.sayane/bridge.token.
@@ -57,10 +71,19 @@
     <label for="default-profile" data-i18n="options.default_profile">Default profile id</label>
     <input id="default-profile" type="text" placeholder="default" />
 
+    <label>
+      <input id="developer-mode" type="checkbox" />
+      <span data-i18n="options.developer_mode">Developer mode (show page capture)</span>
+    </label>
+    <p class="hint" data-i18n="options.developer_mode_hint">
+      When enabled, low-confidence page capture appears in the popup for debugging.
+    </p>
+
     <button type="button" id="save" data-i18n="options.save">Save</button>
     <button type="button" id="test-bridge" data-i18n="options.test">Test connection</button>
     <p id="status"></p>
 
+    </div>
     <script type="module" src="dist/options.js"></script>
   </body>
 </html>

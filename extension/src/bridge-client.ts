@@ -1,5 +1,6 @@
 import { loadConfig } from "./config.js";
 import type {
+  CandidateDetail,
   CandidateDiff,
   CandidateSummary,
   CaptureResult,
@@ -11,6 +12,7 @@ export class BridgeError extends Error {
   constructor(
     message: string,
     readonly status?: number,
+    readonly details?: Record<string, unknown>,
   ) {
     super(message);
     this.name = "BridgeError";
@@ -33,13 +35,21 @@ async function bridgeFetch(path: string, init?: RequestInit): Promise<Response> 
   });
   if (!response.ok) {
     let detail = response.statusText;
+    let details: Record<string, unknown> | undefined;
     try {
-      const body = (await response.json()) as { detail?: string };
-      if (body.detail) detail = body.detail;
+      const body = (await response.json()) as
+        | { detail?: string }
+        | { error?: string; message?: string; [key: string]: unknown };
+      if ("message" in body && typeof body.message === "string") {
+        detail = body.message;
+        details = body as Record<string, unknown>;
+      } else if ("detail" in body && typeof body.detail === "string") {
+        detail = body.detail;
+      }
     } catch {
       /* ignore */
     }
-    throw new BridgeError(detail, response.status);
+    throw new BridgeError(detail, response.status, details);
   }
   return response;
 }
@@ -103,14 +113,40 @@ export async function listProfiles(): Promise<ProfileSummary[]> {
   return (await res.json()) as ProfileSummary[];
 }
 
+export type CaptureRequestOptions = {
+  rawContent?: string;
+  userSelected?: boolean;
+  captureSource?: "selection" | "clipboard" | "page";
+  captureConfidence?: "high" | "low";
+  requiresReview?: boolean;
+  captureWarnings?: string[];
+  extractor?: string;
+};
+
 export async function captureContent(
   content: string,
   source: string,
   sourceUrl?: string,
+  profileId = "default",
+  locale?: string,
+  options: CaptureRequestOptions = {},
 ): Promise<CaptureResult> {
   const res = await bridgeFetch("/capture", {
     method: "POST",
-    body: JSON.stringify({ content, source, source_url: sourceUrl }),
+    body: JSON.stringify({
+      content,
+      raw_content: options.rawContent,
+      source,
+      capture_source: options.captureSource,
+      source_url: sourceUrl,
+      profile_id: profileId,
+      locale,
+      user_selected: options.userSelected ?? false,
+      capture_confidence: options.captureConfidence ?? "high",
+      requires_review: options.requiresReview ?? false,
+      capture_warnings: options.captureWarnings ?? [],
+      extractor: options.extractor,
+    }),
   });
   return (await res.json()) as CaptureResult;
 }
@@ -127,6 +163,11 @@ export async function fetchContextPacket(
 export async function listCandidates(): Promise<CandidateSummary[]> {
   const res = await bridgeFetch("/candidates");
   return (await res.json()) as CandidateSummary[];
+}
+
+export async function getCandidate(candidateId: string): Promise<CandidateDetail> {
+  const res = await bridgeFetch(`/candidates/${encodeURIComponent(candidateId)}`);
+  return (await res.json()) as CandidateDetail;
 }
 
 export async function evaluateCandidate(
@@ -148,10 +189,14 @@ export async function diffCandidate(candidateId: string): Promise<CandidateDiff>
 export async function approveCandidate(
   candidateId: string,
   forceCritical = false,
+  overrideReason?: string,
 ): Promise<Record<string, unknown>> {
   const res = await bridgeFetch(`/candidates/${encodeURIComponent(candidateId)}/approve`, {
     method: "POST",
-    body: JSON.stringify({ force_critical: forceCritical }),
+    body: JSON.stringify({
+      force_critical: forceCritical,
+      override_reason: overrideReason ?? null,
+    }),
   });
   return (await res.json()) as Record<string, unknown>;
 }
@@ -169,6 +214,12 @@ export async function rejectCandidate(
 
 export function formatContextPacketForInsert(packet: ContextPacket): string {
   const { format, payload } = packet;
+  if (
+    (format === "gemini_working_memo" || format === "deepseek_working_memo")
+    && typeof payload.text === "string"
+  ) {
+    return payload.text;
+  }
   if (format === "openai_chat" && Array.isArray(payload.messages)) {
     const messages = payload.messages as Array<{ role: string; content: string }>;
     return messages.map((m) => `[${m.role}]\n${m.content}`).join("\n\n");
@@ -180,6 +231,13 @@ export function formatContextPacketForInsert(packet: ContextPacket): string {
       : [];
     const user = messages.map((m) => m.content).join("\n\n");
     return `[system]\n${system}\n\n[user]\n${user}`;
+  }
+  if (format === "gemini_generate_content") {
+    const contents = payload.contents as Array<{ parts?: Array<{ text?: string }> }> | undefined;
+    const userText = contents?.[0]?.parts?.[0]?.text;
+    if (typeof userText === "string") {
+      return userText;
+    }
   }
   return JSON.stringify(payload, null, 2);
 }

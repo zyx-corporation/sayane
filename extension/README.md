@@ -37,6 +37,8 @@ Chrome → Extensions → Load unpacked → select this `extension/` folder (man
 
 ## Features
 
+UI state (busy vs unavailable cursors): [../docs/ui-design-principles.md](../docs/ui-design-principles.md).
+
 | Action | Description |
 |--------|-------------|
 | Capture selection | Sends selected text to Bridge `POST /capture` |

@@ -40,9 +40,13 @@ values:
     - "relational intelligence"
 knowledge:
   concepts:
-    - "RDE"
-    - "UIB"
     - "Sample Framework"
+canonical_terms:
+  - term: "ABC"
+    expansion: "Approved Base Concept"
+    deprecated:
+      - "Alternative Broken Concept"
+    correction_policy: replace_deprecated_with_canonical
 policy:
   response:
     avoid:
@@ -93,19 +97,27 @@ lineage:
 
 これは単なる知識ベースではなく、ユーザーがどのような意味体系を扱っているかを示す。
 
-### 4.5 policy
+`knowledge.concepts` の自由記述と混同しないこと。**略語の正規展開・旧称の置換**は `canonical_terms` で定義する（詳細は [正規語彙](canonical-terminology.md)）。
+
+### 4.5 canonical_terms
+
+Profile または `sayane.project.yaml` で定義する正規語彙表。Core はここに書かれたルールのみを適用し、特定理論の略語を組み込まない。
+
+プロジェクト Profile は同一 `term` についてユーザ Profile を上書きする。Prompt IR 構築時にマージされ、Adapter が各 LLM 形式へ渡す。
+
+### 4.6 policy
 
 応答制約、禁止事項、優先方針を保持する。
 
 policy は人格ではなく、実行時の制御条件である。
 
-### 4.6 context_index
+### 4.7 context_index
 
 AIが読むべき文脈ファイルへの目次である。
 
 大量の文脈を一括投入せず、タスクに必要な最小文脈だけを選択するために用いる。
 
-### 4.7 lineage
+### 4.8 lineage
 
 Profileの生成、更新、分岐、統合の履歴を保持する。
 
@@ -120,6 +132,9 @@ class PromptIR:
     instruction: list[str]
     constraints: list[str]
     examples: list[dict]
+    canonical_terms: list[CanonicalTermRef]
+    export_notes: list[str]
+    export_blocked: bool
 ```
 
 Prompt IR は文字列ではなく構造である。
@@ -148,15 +163,17 @@ Few-shot例や、文体・変換例を保持する。
 
 Prompt IR はそのままLLMへ送信しない。
 
-Claude向け、ChatGPT向け、Gemini向け、OSSモデル向けのAdapterが、LLMごとのAPI形式・プロンプト作法・推論癖に応じて変換する。
+Claude向け、ChatGPT向け、Gemini向け、DeepSeek向け、OSSモデル向けのAdapterが、LLMごとのAPI形式・プロンプト作法・推論癖に応じて変換する。
 
 ```text
-Prompt IR
-  → ClaudeAdapter
-  → OpenAIAdapter
-  → GeminiAdapter
+Prompt IR (+ canonical_terms / export_notes)
+  → ClaudeAdapter / ChatGPTAdapter   … messages + 正規語彙セクション
+  → GeminiAdapter                    … gemini_working_memo (単一 text)
+  → DeepSeekAdapter                  … deepseek_working_memo (単一 text)
   → OSSAdapter
 ```
+
+正規語彙のマージ・置換・ブロック判定は Core が行い、Adapter は整形と `requires_user_confirmation` の付与のみを担う。仕様とテストフィクスチャは [正規語彙](canonical-terminology.md) を正とする。
 
 ## 7. RDEとの関係
 

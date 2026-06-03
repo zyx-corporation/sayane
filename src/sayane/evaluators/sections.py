@@ -18,6 +18,8 @@ FORCE_ALLOWED_SECTIONS = frozenset(
         "policy.response.prefer",
         "identity.roles",
         "knowledge.concepts",
+        "major_projects",
+        "communication_mode",
     },
 )
 PROPOSAL_SECTIONS = FORCE_ALLOWED_SECTIONS
@@ -28,7 +30,9 @@ def normalize_proposal_section(section: str) -> str:
     name = section.strip()
     if name not in PROPOSAL_SECTIONS:
         allowed = ", ".join(sorted(PROPOSAL_SECTIONS))
-        raise ValueError(f"Unknown proposal section '{section}'. Allowed: {allowed}")
+        raise ValueError(
+            f"Unknown proposal section '{section}'. Allowed: {allowed}",
+        )
     return name
 
 
@@ -57,8 +61,17 @@ def looks_like_structured_persona(content: str) -> bool:
     return False
 
 
-def infer_proposal_section(content: str) -> str:
+def infer_proposal_section(
+    content: str,
+    *,
+    structured_items: list[dict[str, str]] | None = None,
+    communication_items: list[dict[str, str]] | None = None,
+) -> str:
     """Guess target section from capture text markers."""
+    if structured_items:
+        return "major_projects"
+    if communication_items:
+        return "communication_mode"
     if looks_like_structured_persona(content):
         return "knowledge.concepts"
 
@@ -72,11 +85,17 @@ def infer_proposal_section(content: str) -> str:
         "prefer",
     ):
         return "policy.response.prefer"
-    if contains_dot_path(content, "values.core") or has_core_values_phrase(content):
+    if contains_dot_path(
+        content,
+        "values.core",
+    ) or has_core_values_phrase(content):
         return "values.core"
     if contains_dot_path(content, "voice.tone") or has_yaml_key(content, "tone"):
         return "voice.tone"
-    if contains_dot_path(content, "identity.roles") or has_yaml_key(content, "roles"):
+    if contains_dot_path(
+        content,
+        "identity.roles",
+    ) or has_yaml_key(content, "roles"):
         return "identity.roles"
     return "knowledge.concepts"
 

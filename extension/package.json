@@ -4,8 +4,9 @@
   "private": true,
   "description": "Sayane Chrome Extension — capture and insert context (Phase 3)",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node scripts/bundle-content.mjs",
     "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --import tsx --test src/busy-ui.test.ts src/rde-notes.test.ts src/page-diagnostics.test.ts src/manifest-content-bundle.test.ts src/diff-summary.test.ts src/options-notify.test.ts src/capture-input-design.test.ts src/candidate-display.test.ts",
     "clean": "rm -rf dist",
     "test:e2e": "playwright test",
     "test:e2e:install": "playwright install chromium"
@@ -13,6 +14,8 @@
   "devDependencies": {
     "@playwright/test": "^1.52.0",
     "@types/chrome": "^0.0.287",
+    "tsx": "^4.19.4",
+    "esbuild": "^0.25.0",
     "typescript": "^5.7.3"
   }
 }

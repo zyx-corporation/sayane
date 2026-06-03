@@ -6,6 +6,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Query, status
 from fastapi.responses import JSONResponse
 
 from sayane.bridge import candidate_api
+from sayane.bridge.candidate_api import CandidateOperationError
 from sayane.bridge.auth import verify_token
 from sayane.bridge.capture_store import save_capture
 from sayane.bridge.config import BridgeConfig
@@ -27,7 +28,7 @@ def create_app(config: BridgeConfig | None = None) -> FastAPI:
     cfg = config or BridgeConfig()
     app = FastAPI(
         title="Sayane Local Bridge",
-        version="0.5.2",
+        version="0.5.3",
         docs_url="/docs" if False else None,
         redoc_url=None,
     )
@@ -52,7 +53,9 @@ def create_app(config: BridgeConfig | None = None) -> FastAPI:
         return {"status": "ok"}
 
     @app.get("/profiles", response_model=list[ProfileSummary])
-    def get_profiles(_: Annotated[None, Depends(require_bearer)]) -> list[ProfileSummary]:
+    def get_profiles(
+        _: Annotated[None, Depends(require_bearer)],
+    ) -> list[ProfileSummary]:
         return list_profiles(cfg)
 
     @app.post("/capture", response_model=CaptureResponse)
@@ -103,6 +106,11 @@ def create_app(config: BridgeConfig | None = None) -> FastAPI:
             return candidate_api.post_evaluate(cfg, candidate_id, level=body.level)
         except FileNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
+        except CandidateOperationError as exc:
+            raise HTTPException(
+                status_code=400,
+                detail=exc.to_payload(),
+            ) from exc
 
     @app.post("/candidates/{candidate_id}/approve")
     def post_candidate_approve(
@@ -115,9 +123,15 @@ def create_app(config: BridgeConfig | None = None) -> FastAPI:
                 cfg,
                 candidate_id,
                 force_critical=body.force_critical,
+                override_reason=body.override_reason,
             )
         except FileNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
+        except CandidateOperationError as exc:
+            raise HTTPException(
+                status_code=400,
+                detail=exc.to_payload(),
+            ) from exc
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -131,6 +145,11 @@ def create_app(config: BridgeConfig | None = None) -> FastAPI:
             return candidate_api.post_reject(cfg, candidate_id, reason=body.reason)
         except FileNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
+        except CandidateOperationError as exc:
+            raise HTTPException(
+                status_code=400,
+                detail=exc.to_payload(),
+            ) from exc
 
     @app.get("/candidates/{candidate_id}/diff")
     def get_candidate_diff(
@@ -164,6 +183,11 @@ def create_app(config: BridgeConfig | None = None) -> FastAPI:
 
     @app.exception_handler(HTTPException)
     async def http_exception_handler(_request, exc: HTTPException) -> JSONResponse:
-        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+        if isinstance(exc.detail, dict):
+            return JSONResponse(status_code=exc.status_code, content=exc.detail)
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"detail": exc.detail},
+        )
 
     return app

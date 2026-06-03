@@ -7,6 +7,7 @@ export const STORAGE_KEYS = {
   bridgeToken: "bridgeToken",
   defaultProfileId: "defaultProfileId",
   displayLanguage: "displayLanguage",
+  developerMode: "developerMode",
 } as const;
 
 export const DEFAULT_CONFIG: ExtensionConfig = {
@@ -14,6 +15,7 @@ export const DEFAULT_CONFIG: ExtensionConfig = {
   bridgeToken: "",
   defaultProfileId: "default",
   displayLanguage: "auto",
+  developerMode: false,
 };
 
 export async function loadConfig(): Promise<ExtensionConfig> {
@@ -22,6 +24,7 @@ export async function loadConfig(): Promise<ExtensionConfig> {
     STORAGE_KEYS.bridgeToken,
     STORAGE_KEYS.defaultProfileId,
     STORAGE_KEYS.displayLanguage,
+    STORAGE_KEYS.developerMode,
   ]);
   const lang = stored[STORAGE_KEYS.displayLanguage] as string | undefined;
   const displayLanguage: DisplayLanguage =
@@ -32,6 +35,7 @@ export async function loadConfig(): Promise<ExtensionConfig> {
     defaultProfileId:
       (stored[STORAGE_KEYS.defaultProfileId] as string) || DEFAULT_CONFIG.defaultProfileId,
     displayLanguage,
+    developerMode: Boolean(stored[STORAGE_KEYS.developerMode]),
   };
 }
 

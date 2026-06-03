@@ -1,6 +1,8 @@
 # Chrome Extension マニュアル
 
-Phase 3 の Sayane Chrome Extension は **補助 UI** である。判断・保存・merge は Core / Bridge 側で行う。
+Phase 3 の Sayane Chrome Extension は **補助 UI** ではあるが、**人間↔Sayane の実行境界**として LLM チャットと同格に重要である。判断・保存・merge の本体は Core / Bridge 側だが、入出力の意味を UI が伝えられなければパイプラインは成立しない。
+
+**UI の基本コンセプト**（実行要素としての位置づけ、busy / unavailable、カーソル）: [ui-design-principles.md](ui-design-principles.md)
 
 ## 1. 前提
 
@@ -107,6 +109,7 @@ Extension は行わない:
 
 ## 8. 関連
 
+- [**UI 設計の基本コンセプト**](../docs/ui-design-principles.md) — busy / unavailable、カーソル
 - [はじめに](getting-started.md)
 - [Bridge マニュアル](bridge-manual.md)
 - [CLI マニュアル](cli-manual.md) — `sayane serve`

@@ -70,7 +70,7 @@ def test_list_candidate_updates(mcp_ops: McpOperations) -> None:
 def test_compile_prompt_gemini(mcp_ops: McpOperations) -> None:
     result = mcp_ops.compile_prompt("gemini", profile_id="default")
     assert result["target"] == "gemini"
-    assert "contents" in result["payload"]
+    assert "text" in result["payload"]
 
 
 def test_compile_prompt_local_openwebui(mcp_ops: McpOperations) -> None:

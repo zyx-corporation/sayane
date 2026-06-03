@@ -1,6 +1,7 @@
 """Heuristic RDE classification (Level 1 — no LLM)."""
 
 from sayane.core.candidate import CandidateProposal, RDEClass
+from sayane.core.evaluation_notes import EvaluationNote, heuristic_note
 from sayane.evaluators.heuristic_match import (
     contains_any_dot_path,
     contains_any_phrase,
@@ -69,35 +70,96 @@ def _has_suspicious_imperative(content: str) -> bool:
     return any(marker in content for marker in _SUSPICIOUS_WORDS_JA)
 
 
-def classify_rde(content: str, proposal: CandidateProposal) -> tuple[RDEClass, list[str]]:
-    """Return RDE class and explanatory notes."""
-    notes: list[str] = []
+def classify_rde(
+    content: str,
+    proposal: CandidateProposal,
+) -> tuple[RDEClass, list[EvaluationNote]]:
+    """Return RDE class and structured explanatory notes."""
+    notes: list[EvaluationNote] = []
 
     if _references_critical_content(content):
-        notes.append("Content references critical profile fields or secrets.")
-        if proposal.section.split(".")[0] in ("identity", "values", "policy", "voice"):
+        notes.append(
+            heuristic_note("content_references_critical_profile_fields"),
+        )
+        if proposal.section.split(".")[0] in (
+            "identity",
+            "values",
+            "policy",
+            "voice",
+        ):
             return "Critical Distortion", notes
         return "Suspicious Drift", notes
 
-    if _references_identity_change(content) and proposal.section.startswith("identity"):
-        notes.append("Identity-related change detected.")
+    if (
+        _references_identity_change(content)
+        and proposal.section.startswith("identity")
+    ):
+        notes.append(heuristic_note("identity_related_change_detected"))
         return "Critical Distortion", notes
 
     if len(content.strip()) < 20:
-        notes.append("Capture too short for reliable merge judgment.")
+        notes.append(heuristic_note("capture_too_short"))
+        return "Unresolved Gap", notes
+
+    if proposal.operation in ("parse_failed", "parse_failed_or_no_effective_update"):
+        notes.append(heuristic_note("yaml_parse_failed"))
+        return "Unresolved Gap", notes
+
+    if proposal.section == "review_required":
+        notes.append(heuristic_note("review_required_no_auto_merge"))
+        return "Unresolved Gap", notes
+
+    if proposal.section == "mixed_sections":
+        notes.append(heuristic_note("multiple_profile_sections_mixed"))
+        if proposal.already_present and not proposal.items:
+            notes.append(
+                heuristic_note("proposal_overlaps_existing_across_sections"),
+            )
+            return "Suspicious Drift", notes
         return "Unresolved Gap", notes
 
     if _has_suspicious_imperative(content):
-        notes.append("Imperative or overconfident phrasing detected.")
+        notes.append(heuristic_note("imperative_or_overconfident_phrasing"))
         return "Suspicious Drift", notes
 
-    if not proposal.add:
-        notes.append("No concrete proposal items extracted.")
+    project_style_items = [item for item in proposal.items if "name" in item]
+    if proposal.section == "knowledge.concepts" and project_style_items:
+        notes.append(heuristic_note("project_items_in_concepts"))
+        notes.append(heuristic_note("potential_redundancy_with_major_projects"))
+        return "Suspicious Drift", notes
+
+    if proposal.section == "major_projects":
+        if proposal.operation == "no_op_or_duplicate":
+            notes.append(
+                heuristic_note("no_effective_profile_update_major_projects"),
+            )
+            return "Preserved", notes
+        notes.append(heuristic_note("project_updates_inferred"))
+        return "Inferred Extension", notes
+
+    communication_items = [
+        item for item in proposal.items
+        if item.get("path", "").startswith("communication_mode.")
+    ]
+    if proposal.section == "communication_mode":
+        if proposal.operation == "no_op_or_duplicate":
+            notes.append(
+                heuristic_note("no_effective_profile_update_communication_mode"),
+            )
+            return "Preserved", notes
+        notes.append(heuristic_note("communication_mode_requires_manual_review"))
+        return "Unresolved Gap", notes
+    if proposal.section == "knowledge.concepts" and communication_items:
+        notes.append(heuristic_note("communication_mode_values_in_concepts"))
+        return "Unresolved Gap", notes
+
+    if not proposal.add and not proposal.items:
+        notes.append(heuristic_note("no_concrete_proposal_items"))
         return "Unresolved Gap", notes
 
     if proposal.section == "knowledge.concepts":
-        notes.append("Non-critical knowledge extension from capture.")
+        notes.append(heuristic_note("non_critical_knowledge_extension"))
         return "Inferred Extension", notes
 
-    notes.append("Section change requires manual review.")
+    notes.append(heuristic_note("section_change_requires_manual_review"))
     return "Authorized Transformation", notes

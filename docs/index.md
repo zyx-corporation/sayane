@@ -36,6 +36,7 @@ Commercial Edition 向けマニュアル（ライセンス、暗号化 SQLite、
 
 - [設計概要](architecture.md)
 - [Sayane Profile と Prompt IR](profile-ir.md)
+- [正規語彙（Canonical Terminology）](canonical-terminology.md)
 - [MVP範囲](mvp-scope.md)
 - [CLI / Local Bridge / Chrome Extension 設計](cli-chrome-extension.md)
 - [MCP Server Integration](mcp-integration.md)
@@ -44,6 +45,7 @@ Commercial Edition 向けマニュアル（ライセンス、暗号化 SQLite、
 - [RDE / UIB 評価と Lineage](evaluation-lineage.md)
 - [T-RDE 実行プロンプト v1.1a](t-rde-execution-prompt.md) — 意味監査の実行プロンプト（論文 T-RDE v1.2 準拠）
 - [開発原則](development-principles.md)
+- [**UI 設計の基本コンセプト**](ui-design-principles.md) — 実行要素としての UI、busy / unavailable、入出力の意味
 - [CI方針](ci.md)
 - [実装ロードマップ](roadmap.md)
 

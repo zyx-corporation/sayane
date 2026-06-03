@@ -18,6 +18,7 @@ Security / Privacy by design
 See also:
 
 - `docs/development-principles.md`
+- `docs/ui-design-principles.md` — Extension / 対話 UI の busy・カーソル・状態表示
 - `docs/mvp-scope.md`
 - `docs/security.md`
 - `docs/roadmap.md`

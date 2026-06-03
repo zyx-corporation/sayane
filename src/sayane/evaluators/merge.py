@@ -3,12 +3,19 @@
 from datetime import UTC, datetime
 
 from sayane.core.candidate import CandidateUpdate
-from sayane.core.models import Knowledge, Policy, ResponsePolicy, SayaneProfile
+from sayane.core.models import (
+    CommunicationMode,
+    Knowledge,
+    MajorProject,
+    Policy,
+    ResponsePolicy,
+    SayaneProfile,
+)
 from sayane.evaluators.sections import BLOCKED_SECTIONS, can_merge_section
 
 _CRITICAL_MSG = (
-    "Merge to critical section '{section}' requires --force-critical on approve. "
-    "Edit profile manually after review."
+    "Merge to critical section '{section}' requires --force-critical "
+    "on approve. Edit profile manually after review."
 )
 
 
@@ -22,7 +29,9 @@ def merge_candidate_into_profile(
     section = candidate.proposal.section
 
     if section in BLOCKED_SECTIONS:
-        raise ValueError(f"Merge to '{section}' is not allowed. Edit profile manually.")
+        raise ValueError(
+            f"Merge to '{section}' is not allowed. Edit profile manually.",
+        )
 
     if not can_merge_section(section, force_critical=force_critical):
         raise ValueError(_CRITICAL_MSG.format(section=section))
@@ -39,6 +48,10 @@ def merge_candidate_into_profile(
         _merge_policy_list(profile, candidate, field="prefer")
     elif section == "identity.roles":
         _merge_roles(profile, candidate)
+    elif section == "major_projects":
+        _merge_major_projects(profile, candidate)
+    elif section == "communication_mode":
+        _merge_communication_mode(profile, candidate)
     else:
         raise ValueError(f"Unsupported merge section: {section}")
 
@@ -86,3 +99,42 @@ def _merge_policy_list(
     for item in candidate.proposal.add:
         if item and item not in target:
             target.append(item)
+
+
+def _merge_major_projects(
+    profile: SayaneProfile,
+    candidate: CandidateUpdate,
+) -> None:
+    existing_names = {item.name for item in profile.major_projects}
+    for item in candidate.proposal.items:
+        name = item.get("name", "").strip()
+        if not name or name in existing_names:
+            continue
+        profile.major_projects.append(
+            MajorProject(name=name, summary=item.get("summary")),
+        )
+        existing_names.add(name)
+
+
+def _merge_communication_mode(
+    profile: SayaneProfile,
+    candidate: CandidateUpdate,
+) -> None:
+    mode = profile.communication_mode or CommunicationMode()
+    existing_styles = set(mode.collaboration_style)
+    for item in candidate.proposal.items:
+        path = item.get("path", "").strip()
+        value = item.get("value", "").strip()
+        if not path or not value:
+            continue
+        if path == "communication_mode.assistant_name_for_chatgpt":
+            mode.assistant_name_for_chatgpt = value
+        elif path == "communication_mode.preferred_address":
+            mode.preferred_address = value
+        elif path == "communication_mode.intimate_address":
+            mode.intimate_address = value
+        elif path == "communication_mode.collaboration_style":
+            if value not in existing_styles:
+                mode.collaboration_style.append(value)
+                existing_styles.add(value)
+    profile.communication_mode = mode

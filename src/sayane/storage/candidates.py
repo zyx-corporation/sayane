@@ -10,6 +10,7 @@ from sayane.core.candidate import (
     CandidateProposal,
     CandidateSource,
     CandidateUpdate,
+    CaptureMetadata,
 )
 
 
@@ -39,7 +40,11 @@ def from_legacy_capture(data: dict) -> CandidateUpdate:
             uri=data.get("source_url"),
             captured_at=ts,
         ),
-        proposal=CandidateProposal(section="knowledge.concepts", add=[], summary=None),
+        proposal=CandidateProposal(
+            section="knowledge.concepts",
+            add=[],
+            summary=None,
+        ),
     )
 
 
@@ -57,7 +62,11 @@ def save_candidate(config: BridgeConfig, candidate: CandidateUpdate) -> Path:
     _candidates_dir(config).mkdir(parents=True, exist_ok=True)
     path = _candidate_path(config, candidate.id)
     path.write_text(
-        json.dumps(candidate.model_dump(mode="json"), ensure_ascii=False, indent=2),
+        json.dumps(
+            candidate.model_dump(mode="json"),
+            ensure_ascii=False,
+            indent=2,
+        ),
         encoding="utf-8",
     )
     return path
@@ -77,20 +86,71 @@ def create_from_capture(
     source_url: str | None = None,
     *,
     section: str | None = None,
+    profile_id: str = "default",
+    locale: str | None = None,
+    raw_content: str | None = None,
+    capture_meta: CaptureMetadata | None = None,
+    display_summary: str | None = None,
 ) -> CandidateUpdate:
+    from sayane.evaluators.capture_cleaning import (
+        clean_capture_text,
+        display_summary_from_text,
+    )
     from sayane.evaluators.proposal import build_proposal_from_content
     from sayane.evaluators.sections import normalize_proposal_section
+    from sayane.storage.factory import open_storage
 
     now = datetime.now(UTC)
     candidate_id = uuid4().hex
     target_section = normalize_proposal_section(section) if section else None
-    proposal = build_proposal_from_content(content, section=target_section)
+    profile_bundle = open_storage(home=config.home, profile=None, profile_id=profile_id)
+    profile = profile_bundle.profile.load()
+
+    raw = raw_content if raw_content is not None else content
+    user_explicit = capture_meta is not None and capture_meta.capture_source in (
+        "selection",
+        "clipboard",
+    )
+    if user_explicit:
+        cleaned = content.strip()
+        ui_noise = False
+    else:
+        cleaned, ui_noise = clean_capture_text(content)
+    if capture_meta is None:
+        capture_meta = CaptureMetadata()
+    warnings = list(capture_meta.capture_warnings)
+    if ui_noise and "ui_noise_detected" not in warnings:
+        warnings.append("ui_noise_detected")
+    capture_meta = capture_meta.model_copy(update={"capture_warnings": warnings})
+
+    proposal = build_proposal_from_content(
+        cleaned,
+        section=target_section,
+        profile=profile,
+        capture_meta=capture_meta,
+    )
+    if proposal.parse_error:
+        capture_meta = capture_meta.model_copy(update={"parse_error": proposal.parse_error})
+    requires_review = capture_meta.requires_review or proposal.section == "review_required"
+    if requires_review and not capture_meta.requires_review:
+        capture_meta = capture_meta.model_copy(update={"requires_review": True})
+    summary = display_summary or proposal.summary or display_summary_from_text(cleaned)
     candidate = CandidateUpdate(
         id=candidate_id,
         status="pending",
-        target_profile_id="default",
-        content=content,
-        source=CandidateSource(type=source_type, uri=source_url, captured_at=now),
+        locale=locale,
+        target_profile_id=profile_id,
+        content=cleaned,
+        raw_capture=raw,
+        cleaned_capture=cleaned,
+        display_summary=summary,
+        capture_meta=capture_meta,
+        generator_id="sayane.capture",
+        source=CandidateSource(
+            type=source_type,
+            uri=source_url,
+            captured_at=now,
+        ),
         proposal=proposal,
     )
     save_candidate(config, candidate)

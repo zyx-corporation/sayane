@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Sayane Diff</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        font-size: 14px;
+        line-height: 1.6;
+        margin: 0;
+        padding: 16px;
+      }
+      h1 {
+        margin: 0 0 8px;
+      }
+      .status {
+        min-height: 1.5em;
+        margin-bottom: 8px;
+      }
+      .status.error {
+        color: #b00020;
+      }
+      .warn {
+        background: #fff8e1;
+        border: 1px solid #f0c36d;
+        padding: 10px;
+        border-radius: 6px;
+        margin-bottom: 12px;
+      }
+      pre {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-size: 13px;
+        line-height: 1.5;
+        background: #f5f5f5;
+        padding: 10px;
+        border-radius: 6px;
+      }
+      .toolbar {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .toolbar button,
+      .toolbar select {
+        padding: 8px;
+      }
+      section {
+        margin-bottom: 12px;
+      }
+      body.is-busy,
+      body.is-busy #app-root {
+        cursor: wait;
+      }
+      button:disabled[data-cursor-hint="busy"] {
+        cursor: wait !important;
+      }
+      button:disabled[data-cursor-hint="unavailable"] {
+        cursor: not-allowed !important;
+      }
+      button:disabled:not([data-cursor-hint]) {
+        cursor: not-allowed !important;
+      }
+      .content-loading {
+        color: #555;
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app-root" aria-busy="false">
+    <h1 id="title">差分ビュー</h1>
+    <div id="status" class="status"></div>
+    <div id="warning" class="warn" hidden></div>
+    <div class="toolbar">
+      <select id="eval-level">
+        <option value="1">再評価レベル 1</option>
+        <option value="2">再評価レベル 2</option>
+        <option value="3">再評価レベル 3</option>
+      </select>
+      <button type="button" id="btn-evaluate">評価</button>
+      <button type="button" id="btn-approve">採用</button>
+      <button type="button" id="btn-reject">棄却</button>
+      <button type="button" id="btn-close">閉じる</button>
+    </div>
+    <section>
+      <h2 id="heading-meta">候補メタデータ</h2>
+      <pre id="meta"></pre>
+    </section>
+    <section>
+      <h2 id="heading-source">元の文脈（表示用要約）</h2>
+      <pre id="content-source"></pre>
+      <details id="raw-capture-details" hidden>
+        <summary id="heading-raw">元のCapture全文（raw）</summary>
+        <pre id="content-raw"></pre>
+      </details>
+    </section>
+    <section>
+      <h2 id="heading-proposal">候補文脈</h2>
+      <pre id="content-proposal"></pre>
+    </section>
+    <section>
+      <h2 id="heading-diff">差分</h2>
+      <pre id="content-diff"></pre>
+    </section>
+    <section>
+      <h2 id="heading-rde">RDE評価</h2>
+      <pre id="content-rde"></pre>
+    </section>
+    <section>
+      <h2 id="heading-notes">注意点</h2>
+      <pre id="content-notes"></pre>
+    </section>
+    </div>
+    <script type="module" src="dist/diff.js"></script>
+  </body>
+</html>

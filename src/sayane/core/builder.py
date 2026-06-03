@@ -2,7 +2,9 @@
 
 from pathlib import Path
 
-from sayane.core.models import PromptIR, SayaneProfile
+from sayane.core.canonical_terms import attach_canonical_terms_to_ir, merge_canonical_terms
+from sayane.core.models import PromptIR, SayaneProfile, SayaneProjectProfile
+from sayane.core.project_loader import load_project_profile
 from sayane.storage.markdown import normalize_markdown
 
 PROMPT_IR_VERSION = "0.1.0"
@@ -14,15 +16,20 @@ def build_prompt_ir(
     instruction: str | None = None,
     *,
     profile_root: Path | None = None,
+    project_profile: SayaneProjectProfile | None = None,
     load_context_bodies: bool = True,
 ) -> PromptIR:
     """Compile profile fields into a structured Prompt IR."""
+    resolved_project = project_profile
+    if resolved_project is None and profile_root is not None:
+        resolved_project = load_project_profile(profile_root)
+
     system = _build_system_lines(profile)
     context = _build_context_lines(profile, profile_root, load_context_bodies)
     constraints = _build_constraint_lines(profile)
     instructions = [instruction] if instruction else []
 
-    return PromptIR(
+    ir = PromptIR(
         version=PROMPT_IR_VERSION,
         system=system,
         context=context,
@@ -30,6 +37,9 @@ def build_prompt_ir(
         constraints=constraints,
         examples=[],
     )
+    merged_terms = merge_canonical_terms(profile, resolved_project)
+    attach_canonical_terms_to_ir(ir, merged_terms)
+    return ir
 
 
 def _build_system_lines(profile: SayaneProfile) -> list[str]:

@@ -6,12 +6,34 @@ import urllib.error
 import urllib.request
 from typing import Any
 
-from sayane.core.candidate import CandidateProposal, LLMReview, RDEClass, UIBScores
+from sayane.core.candidate import (
+    CandidateProposal,
+    LLMReview,
+    RDEClass,
+    UIBScores,
+)
+from sayane.core.evaluation_notes import llm_text_note
 from sayane.core.models import SayaneProfile
 from sayane.evaluators.judge_config import JudgeConfig
 
 _UIB_KEYS = ("UD", "MI", "CH", "DT", "VP", "FG")
 _DEFAULT_UIB_AXIS = 0.5
+
+
+class LLMJudgeRequestError(RuntimeError):
+    """Structured error from external LLM judge call."""
+
+    def __init__(
+        self,
+        *,
+        message: str,
+        provider: str,
+        status_code: int | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.provider = provider
+        self.status_code = status_code
+
 
 _RDE_CLASSES: tuple[RDEClass, ...] = (
     "Preserved",
@@ -41,9 +63,11 @@ respond with JSON only (no markdown fences):
 }}
 
 Rules (T-RDE v1.1a aligned):
-- Prefer Unresolved Gap or Suspicious Drift when uncertain; never classify as Preserved by guess.
+- Prefer Unresolved Gap or Suspicious Drift when uncertain;
+  never classify as Preserved by guess.
 - Never treat LLM inference or implicit additions as verified user facts.
-- Critical Distortion: secrets, critical profile fields, value inversion, or irreversible risk.
+- Critical Distortion: secrets, critical profile fields,
+  value inversion, or irreversible risk.
 - Value-destructive or responsibility-shifting changes → Suspicious Drift or Critical Distortion
   (regardless of how small the diff appears).
 - High UD / CH scores when competing interpretations or hidden assumptions exist.
@@ -56,6 +80,8 @@ def review_with_llm(
     profile: SayaneProfile,
     content: str,
     proposal: CandidateProposal,
+    *,
+    locale: str | None = None,
 ) -> LLMReview:
     """Call OpenAI-compatible chat completions API."""
     profile_summary = _profile_summary(profile)
@@ -64,9 +90,15 @@ def review_with_llm(
         f"Captured content:\n{content[:4000]}\n\n"
         f"Proposal section: {proposal.section}\n"
         f"Proposal add: {json.dumps(proposal.add, ensure_ascii=False)}\n"
+        f"Proposal items: {json.dumps(proposal.items, ensure_ascii=False)}\n"
         f"Summary: {proposal.summary or ''}"
     )
     prompt = _JUDGE_PROMPT.format(rde_classes=", ".join(_RDE_CLASSES))
+    if locale and str(locale).lower().startswith("ja"):
+        prompt += (
+            "\n\nThe candidate locale is ja. Return notes in Japanese. "
+            "Keep rde_class as one of the English enum values listed above."
+        )
     payload = {
         "model": config.model,
         "messages": [
@@ -86,19 +118,36 @@ def review_with_llm(
         headers=headers,
         method="POST",
     )
+    provider = _detect_provider(config.base_url)
     try:
         with urllib.request.urlopen(req, timeout=config.timeout_sec) as resp:
             body = json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        raise LLMJudgeRequestError(
+            message=(
+                f"LLM judge request failed: HTTP Error {exc.code}: {exc.reason}"
+            ),
+            provider=provider,
+            status_code=exc.code,
+        ) from exc
     except urllib.error.URLError as exc:
-        raise RuntimeError(f"LLM judge request failed: {exc}") from exc
+        raise LLMJudgeRequestError(
+            message=f"LLM judge request failed: {exc}",
+            provider=provider,
+            status_code=None,
+        ) from exc
 
     text = body["choices"][0]["message"]["content"]
     parsed = _parse_judge_json(text)
+    raw_notes = parsed.get("notes", [])
+    structured_notes = [
+        llm_text_note(str(note)) for note in raw_notes if str(note).strip()
+    ]
     return LLMReview(
         model=config.model,
         level=level,
         rde_class=parsed.get("rde_class"),
-        notes=parsed.get("notes", []),
+        notes=structured_notes,
         uib=parsed.get("uib"),
     )
 
@@ -144,3 +193,14 @@ def _coerce_uib_scores(raw: dict[str, Any]) -> UIBScores:
             num = _DEFAULT_UIB_AXIS
         values[key] = max(0.0, min(1.0, num))
     return UIBScores(**values)
+
+
+def _detect_provider(base_url: str) -> str:
+    host = base_url.lower()
+    if "anthropic" in host:
+        return "anthropic"
+    if "openai" in host:
+        return "openai"
+    if "127.0.0.1" in host or "localhost" in host:
+        return "local"
+    return "custom"

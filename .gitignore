@@ -221,3 +221,5 @@ __marimo__/
 # Node / Chrome Extension
 node_modules/
 extension/dist/
+
+xxx.yaml

@@ -95,8 +95,13 @@ test("blocked and unsupported sections stay approve-disabled", () => {
 test("override panel wires input refresh for expanded approve button", () => {
   assert.ok(src.includes(".override-reason"));
   assert.ok(src.includes(".override-check"));
-  assert.ok(src.includes("bindApproveInputsRefresh(actions, c.id)"));
-  assert.ok(src.includes("refreshExpandedApproveUi(c.id)"));
+  assert.ok(src.includes("bindApproveInputsRefresh(actions, syncExpandedApprove)"));
+  assert.ok(src.includes("syncExpandedApprove()"));
+  assert.ok(src.includes("btnRow.appendChild(approveBtn)"));
+  assert.ok(src.includes("actions.appendChild(btnRow)"));
+  const bindIdx = src.indexOf("bindApproveInputsRefresh(actions, syncExpandedApprove)");
+  const appendIdx = src.indexOf("btnRow.appendChild(approveBtn)");
+  assert.ok(bindIdx > 0 && appendIdx > 0 && bindIdx > appendIdx);
   const bindBlock = src.match(
     /function bindApproveInputsRefresh[\s\S]*?function refreshExpandedApproveUi/,
   );

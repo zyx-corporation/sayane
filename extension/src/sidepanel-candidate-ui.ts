@@ -109,6 +109,16 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
   let currentReviewSession: CandidateReviewSession | null = null;
   let loadGeneration = 0;
   const cardActions = new Map<string, CardActionRecord>();
+  const expandedApproveSync = new Map<string, () => void>();
+
+  function isApproveConfirmationInput(input: HTMLInputElement): boolean {
+    return (
+      input.classList.contains("explicit-confirm-reason")
+      || input.classList.contains("explicit-confirm-check")
+      || input.classList.contains("override-reason")
+      || input.classList.contains("override-check")
+    );
+  }
 
   function getCardAction(candidateId: string): CandidateActionState {
     return cardActions.get(candidateId)?.state ?? "idle";
@@ -254,6 +264,10 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
       sel.disabled = busy || actionState === "approved";
     });
     card.querySelectorAll<HTMLInputElement>("input").forEach((input) => {
+      if (isApproveConfirmationInput(input)) {
+        input.disabled = actionState === "approved";
+        return;
+      }
       input.disabled = busy || actionState === "approved";
     });
   }
@@ -418,40 +432,50 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     refresh: () => void,
   ): void {
     if (!input) return;
-    input.addEventListener("input", refresh);
-    input.addEventListener("change", refresh);
-    if (input.type === "checkbox") {
-      input.addEventListener("click", refresh);
-    } else {
-      input.addEventListener("compositionend", refresh);
+    const schedule = () => queueMicrotask(refresh);
+    input.addEventListener("input", schedule);
+    input.addEventListener("change", schedule);
+    if (input.type !== "checkbox") {
+      input.addEventListener("compositionend", schedule);
     }
   }
 
   /** Recompute expanded approve button when explicit or override inputs change. */
   function bindApproveInputsRefresh(
     actions: HTMLElement,
-    candidateId: string,
+    sync: () => void,
   ): void {
-    const refresh = () => refreshExpandedApproveUi(candidateId);
     bindApproveInputRefresh(
       actions.querySelector<HTMLInputElement>(".explicit-confirm-reason"),
-      refresh,
+      sync,
     );
     bindApproveInputRefresh(
       actions.querySelector<HTMLInputElement>(".explicit-confirm-check"),
-      refresh,
+      sync,
     );
     bindApproveInputRefresh(
       actions.querySelector<HTMLInputElement>(".override-reason"),
-      refresh,
+      sync,
     );
     bindApproveInputRefresh(
       actions.querySelector<HTMLInputElement>(".override-check"),
-      refresh,
+      sync,
     );
+    Array.from(
+      actions.querySelectorAll<HTMLLabelElement>(
+        ".explicit-confirm-label, .critical-override-label",
+      ),
+    ).forEach((label) => {
+      label.addEventListener("click", () => queueMicrotask(sync));
+    });
   }
 
   function refreshExpandedApproveUi(candidateId: string): void {
+    const sync = expandedApproveSync.get(candidateId);
+    if (sync) {
+      sync();
+      return;
+    }
     applyCardActionUi(candidateId);
   }
 
@@ -488,7 +512,14 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     const detail = cardState.get(c.id)?.detail ?? undefined;
     syncSummaryFromDetail(summary, detail);
     const resolvedActions = resolveActionsEl(c.id, actionsEl, compact);
-    const opts = approveOptionsFor(summary, detail, resolvedActions, compact, null);
+    const approveBtn = resolvedActions.querySelector<HTMLButtonElement>(".btn-approve");
+    const opts = approveOptionsFor(
+      summary,
+      detail,
+      resolvedActions,
+      compact,
+      approveBtn,
+    );
     const avail = getApproveAvailability(summary, detail, opts);
     if (avail.kind === "needs_evaluation") {
       setStatus(t("review.approve_requires_evaluation"), true);
@@ -1027,12 +1058,6 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     const approveBtn = document.createElement("button");
     approveBtn.type = "button";
     approveBtn.className = "btn-approve";
-    applyApproveButtonState(approveBtn, c, detail, false, actions, approveHint);
-    approveBtn.addEventListener("click", () => {
-      handleApproveClick(c, actions, false);
-    });
-    bindApproveInputsRefresh(actions, c.id);
-    refreshExpandedApproveUi(c.id);
 
     const rejectBtn = document.createElement("button");
     rejectBtn.type = "button";
@@ -1049,6 +1074,38 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     btnRow.appendChild(approveBtn);
     btnRow.appendChild(rejectBtn);
     actions.appendChild(btnRow);
+
+    const syncExpandedApprove = (): void => {
+      const summary = allCandidates.find((item) => item.id === c.id);
+      const liveDetail = cardState.get(c.id)?.detail ?? detail;
+      if (!summary) return;
+      syncSummaryFromDetail(summary, liveDetail);
+      const opts = approveOptionsFor(summary, liveDetail, actions, false, approveBtn);
+      const avail = getApproveAvailability(summary, liveDetail, opts);
+      const canUse =
+        !isBusyActionState(getCardAction(c.id))
+        && canApproveCandidate(summary, liveDetail, opts);
+      const label = t(avail.labelKey);
+      approveBtn.dataset.idleLabel = label;
+      if (getCardAction(c.id) === "idle") approveBtn.textContent = label;
+      approveBtn.title = avail.reasonKey ? t(avail.reasonKey) : "";
+      applyDisabledWithCursorHint(approveBtn, !canUse, canUse ? null : "unavailable");
+      if (avail.reasonKey && !canUse) {
+        approveHint.hidden = false;
+        approveHint.textContent = t(avail.reasonKey);
+      } else {
+        approveHint.hidden = true;
+        approveHint.textContent = "";
+      }
+    };
+
+    expandedApproveSync.set(c.id, syncExpandedApprove);
+    approveBtn.addEventListener("click", () => {
+      handleApproveClick(c, actions, false);
+    });
+    bindApproveInputsRefresh(actions, syncExpandedApprove);
+    syncExpandedApprove();
+
     body.appendChild(actions);
 
     if (activeFilter === "debug") {
@@ -1079,6 +1136,7 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
       session,
     );
     cardState.delete(candidateId);
+    expandedApproveSync.delete(candidateId);
     expandedCandidateIds.clear();
     expandedCandidateIds.add(candidateId);
 

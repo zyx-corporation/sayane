@@ -5,6 +5,7 @@ import {
   isPersonaDump,
   matchesReviewFilter,
   REVIEW_REQUIRED_CLASSES,
+  shouldBlockBulkApprove,
 } from "./candidate-review-class.js";
 import type { CandidateSummary } from "./types.js";
 
@@ -50,6 +51,12 @@ test("persona dump detected as sensitive_review", () => {
   assert.ok(isPersonaDump(text, "knowledge.concepts"));
   const c = summary({ id: "c", content_preview: text });
   assert.equal(classifyCandidate(c), "sensitive_review");
+});
+
+test("persona dump blocks bulk approve", () => {
+  const text = "persona:\ncommunication_mode: formal\n".repeat(80);
+  const c = summary({ id: "e", content_preview: text });
+  assert.equal(shouldBlockBulkApprove(c), true);
 });
 
 test("inferred extension appears in inferred filter", () => {

@@ -104,7 +104,34 @@
         color: #666;
       }
       .card-quick-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
         margin-bottom: 6px;
+      }
+      .btn-compact {
+        flex: 1;
+        min-width: 4.5em;
+        font-size: 0.72rem;
+        padding: 5px 8px;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        color: #fff;
+      }
+      .btn-compact:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .diff-section-label {
+        font-size: 0.68rem;
+        font-weight: 600;
+        color: #666;
+        margin: 6px 0 2px;
+      }
+      .lineage-line {
+        font-family: monospace;
+        font-size: 0.65rem;
       }
       .btn-later {
         font-size: 0.72rem;

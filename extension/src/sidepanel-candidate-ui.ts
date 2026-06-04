@@ -3,14 +3,13 @@
  */
 
 import {
-  canApprove,
   canApproveWithCriticalOverride,
   canEvaluate,
   canReject,
+  categoryLabel,
   isKnownRdeCategory,
   rdeCssClass,
   rdeSeverity,
-  statusWithJudgeLabel,
   type CandidateCategory,
 } from "./candidate-display.js";
 import {
@@ -20,6 +19,7 @@ import {
   recommendedActionKey,
   reviewClassLabelKey,
   riskHintKey,
+  shouldBlockBulkApprove,
   type ReviewFilterId,
 } from "./candidate-review-class.js";
 import type { BusyUiController } from "./busy-ui.js";
@@ -108,6 +108,15 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     return detail;
   }
 
+  function canQuickApprove(c: CandidateSummary): boolean {
+    if (shouldBlockBulkApprove(c)) return false;
+    if (c.rde_class === "Critical Distortion") return false;
+    return canApproveWithCriticalOverride(
+      c.status,
+      (c.rde_class ?? null) as CandidateCategory | null,
+    );
+  }
+
   async function renderDiffInto(container: HTMLElement, candidateId: string): Promise<void> {
     const state = cardState.get(candidateId);
     if (state?.diffLoaded) return;
@@ -130,19 +139,35 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
       container.appendChild(noteEl);
     }
     const addItems = (diff.add ?? diff.proposed_add ?? []) as unknown[];
+    const present = (diff.already_present ?? []) as unknown[];
+
+    if (present.length > 0) {
+      const savedLabel = document.createElement("p");
+      savedLabel.className = "diff-section-label";
+      savedLabel.textContent = t("review.saved_context");
+      container.appendChild(savedLabel);
+      for (const item of present) {
+        const line = document.createElement("div");
+        line.className = "diff-present";
+        line.textContent = diffLineText(item);
+        container.appendChild(line);
+      }
+    }
+
+    if (addItems.length > 0) {
+      const proposedLabel = document.createElement("p");
+      proposedLabel.className = "diff-section-label";
+      proposedLabel.textContent = t("review.proposed_changes");
+      container.appendChild(proposedLabel);
+    }
+
     for (const item of addItems) {
       const line = document.createElement("div");
       line.className = "diff-add";
       line.textContent = diffLineText(item);
       container.appendChild(line);
     }
-    for (const item of (diff.already_present ?? []) as unknown[]) {
-      const line = document.createElement("div");
-      line.className = "diff-present";
-      line.textContent = diffLineText(item);
-      container.appendChild(line);
-    }
-    if (addItems.length === 0 && !(diff.already_present ?? []).length && !diff.note) {
+    if (addItems.length === 0 && present.length === 0 && !diff.note) {
       container.textContent = t("detail.diff_empty");
     }
     cardState.set(candidateId, {
@@ -179,6 +204,11 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     sectionRow.className = "meta-line";
     sectionRow.textContent = `${t("detail.section")}: ${detail.proposal.section}`;
     body.appendChild(sectionRow);
+
+    const lineageRow = document.createElement("p");
+    lineageRow.className = "meta-line lineage-line";
+    lineageRow.textContent = `${t("review.lineage")}: ${detail.id.slice(0, 12)} · ${c.captured_at.slice(0, 19)}`;
+    body.appendChild(lineageRow);
 
     const captureLabel = document.createElement("p");
     captureLabel.className = "subheading";
@@ -310,6 +340,7 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     approveBtn.textContent = t("candidate.approve");
     approveBtn.disabled =
       busyUi.shouldDisableCandidateActions()
+      || shouldBlockBulkApprove(c)
       || !canApproveWithCriticalOverride(
         detail.status,
         (detail.evaluation?.rde_class ?? null) as CandidateCategory | null,
@@ -437,12 +468,32 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     if (c.rde_class && isKnownRdeCategory(c.rde_class)) {
       const rde = document.createElement("span");
       rde.className = `rde-badge ${rdeCssClass(c.rde_class)}`;
-      rde.textContent = statusWithJudgeLabel(c.status, c.evaluation_status, locale());
+      rde.textContent = categoryLabel(c.rde_class, locale());
       article.appendChild(rde);
     }
 
     const quickActions = document.createElement("div");
     quickActions.className = "card-quick-actions";
+
+    const approveBtn = document.createElement("button");
+    approveBtn.type = "button";
+    approveBtn.className = "btn-approve btn-compact";
+    approveBtn.textContent = t("candidate.approve");
+    approveBtn.disabled = busyUi.shouldDisableCandidateActions() || !canQuickApprove(c);
+    approveBtn.title = shouldBlockBulkApprove(c) ? t("review.approve_blocked_hint") : "";
+    approveBtn.addEventListener("click", () => {
+      void runApprove(c.id, document.createElement("div"));
+    });
+
+    const rejectBtn = document.createElement("button");
+    rejectBtn.type = "button";
+    rejectBtn.className = "btn-reject btn-compact";
+    rejectBtn.textContent = t("candidate.reject");
+    rejectBtn.disabled = busyUi.shouldDisableCandidateActions() || !canReject(c.status);
+    rejectBtn.addEventListener("click", () => {
+      void runReject(c.id);
+    });
+
     const laterBtn = document.createElement("button");
     laterBtn.type = "button";
     laterBtn.className = "btn-later";
@@ -452,6 +503,8 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
       article.remove();
       updateEmptyState();
     });
+    quickActions.appendChild(approveBtn);
+    quickActions.appendChild(rejectBtn);
     quickActions.appendChild(laterBtn);
     article.appendChild(quickActions);
 

@@ -128,6 +128,14 @@ export function recommendedActionKey(cls: CandidateReviewClass): string {
   return `review.action.${cls}`;
 }
 
+export function shouldBlockBulkApprove(c: CandidateSummary): boolean {
+  const preview = c.content_preview ?? "";
+  const section = c.section ?? "";
+  if (isPersonaDump(preview, section)) return true;
+  const cls = classifyCandidate(c);
+  return cls === "reject_recommended" || cls === "sensitive_review";
+}
+
 export function riskHintKey(cls: CandidateReviewClass): string {
   return `review.risk.${cls}`;
 }

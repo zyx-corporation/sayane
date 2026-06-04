@@ -24,6 +24,7 @@
   "capture.clipboard_preview_terms": "Clipboard: important_terms {count} entries ({lines} lines / {chars} chars) — this will be captured",
   "capture.clipboard_preview_generic": "Clipboard: {lines} lines / {chars} chars",
   "capture.clipboard_confirm_many": "The clipboard contains {count} important_terms entries. Differences from stored context will be checked after Capture. Continue?",
+  "capture.clipboard_confirm_many_preflight": "The clipboard lists {total} important_terms ({existing} already in the saved profile, {added} new). Continue Capture?",
   "capture.clipboard_confirm_cancelled": "Capture cancelled. Check what you copied, then try again.",
   "capture.warning.clipboard_many_important_terms": "Clipboard contains many important_terms entries.",
   "capture.developer_toggle": "Developer: low-confidence page capture",

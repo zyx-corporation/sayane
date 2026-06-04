@@ -16,6 +16,7 @@ import {
   getCaptureLineage,
   listCandidates,
   listProfiles,
+  preflightImportantTerms,
   rejectCandidate,
 } from "./bridge-client.js";
 import {
@@ -58,6 +59,14 @@ chrome.runtime.onMessage.addListener(
             return { ok: true, data: { healthy: await checkHealth() } };
           case "BRIDGE_LIST_PROFILES":
             return { ok: true, data: await listProfiles() };
+          case "BRIDGE_PREFLIGHT_IMPORTANT_TERMS":
+            return {
+              ok: true,
+              data: await preflightImportantTerms(
+                message.content,
+                message.profileId ?? "default",
+              ),
+            };
           case "BRIDGE_CAPTURE":
             return {
               ok: true,

@@ -76,3 +76,16 @@ class ApproveCandidateRequest(BaseModel):
 
 class RejectCandidateRequest(BaseModel):
     reason: str | None = None
+
+
+class ImportantTermsPreflightRequest(BaseModel):
+    content: str = Field(min_length=1)
+    profile_id: str = "default"
+
+
+class ImportantTermsPreflightResponse(BaseModel):
+    section: Literal["important_terms"] = "important_terms"
+    total: int = Field(ge=0)
+    existing_count: int = Field(ge=0)
+    added_count: int = Field(ge=0)
+    removed_count: int = Field(ge=0)

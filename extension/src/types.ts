@@ -36,6 +36,15 @@ export interface CaptureResult {
   warnings?: string[];
 }
 
+/** Bridge `/preflight/important-terms` — preview only, no Candidate. */
+export interface ImportantTermsPreflightSummary {
+  section: "important_terms";
+  total: number;
+  existing_count: number;
+  added_count: number;
+  removed_count: number;
+}
+
 export interface CandidateSummary {
   id: string;
   status: "pending" | "evaluated" | "approved" | "rejected";
@@ -249,6 +258,11 @@ export type ContentResponse =
 export type BackgroundMessage =
   | { type: "BRIDGE_HEALTH" }
   | { type: "BRIDGE_LIST_PROFILES" }
+  | {
+      type: "BRIDGE_PREFLIGHT_IMPORTANT_TERMS";
+      content: string;
+      profileId?: string;
+    }
   | {
       type: "BRIDGE_CAPTURE";
       content: string;

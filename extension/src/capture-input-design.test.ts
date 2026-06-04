@@ -21,6 +21,20 @@ describe("capture input design", () => {
     assert.ok(!ja["capture.clipboard_confirm_many"].includes("6 行だけ"));
   });
 
+  it("preflight clipboard confirm shows total, existing, and added (Fixes #127)", () => {
+    const ja = JSON.parse(
+      readFileSync(join(extRoot, "locale/ja.json"), "utf8"),
+    ) as Record<string, string>;
+    const en = JSON.parse(
+      readFileSync(join(extRoot, "locale/en.json"), "utf8"),
+    ) as Record<string, string>;
+    const preJa = ja["capture.clipboard_confirm_many_preflight"];
+    const preEn = en["capture.clipboard_confirm_many_preflight"];
+    assert.ok(preJa.includes("{total}") && preJa.includes("{existing}") && preJa.includes("{added}"));
+    assert.ok(preEn.includes("{total}") && preEn.includes("{existing}") && preEn.includes("{added}"));
+    assert.ok(!preJa.includes("Capture 後に確認"));
+  });
+
   it("manifest includes clipboardRead permission", () => {
     const manifest = JSON.parse(
       readFileSync(join(extRoot, "manifest.json"), "utf8"),

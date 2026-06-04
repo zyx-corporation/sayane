@@ -608,16 +608,18 @@ def test_candidate_judge_auth_error_keeps_pending(
     )
     assert evaluated.status_code == 200
     body = evaluated.json()
-    assert body["status"] == "pending"
+    # After judge failure, status is "evaluated" (heuristic level 1 preserved).
+    assert body["status"] == "evaluated"
     assert body["evaluation_status"] == "judge_failed"
-    assert body["evaluation"] is None
+    assert body["evaluation"] is not None
+    assert body["evaluation"]["rde_class"] is not None
     assert body["evaluation_error"]["type"] == "llm_judge_auth_error"
     assert body["evaluation_error"]["status_code"] == 401
     assert body["evaluation_error"]["provider"] == "openai"
 
     listed = client.get("/candidates", headers=_auth(token))
     summary = next(item for item in listed.json() if item["id"] == cid)
-    assert summary["status"] == "pending"
+    assert summary["status"] == "evaluated"
     assert summary["evaluation_status"] == "judge_failed"
 
 

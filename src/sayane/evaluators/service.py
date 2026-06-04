@@ -94,10 +94,20 @@ def evaluate_candidate(
                 if llm_review.uib is not None:
                     uib = llm_review.uib
             except LLMJudgeRequestError as exc:
-                candidate.status = "pending"
+                # Keep heuristic (level 1) evaluation instead of clearing it.
+                # status stays "evaluated"; evaluation_status marked judge_failed.
                 candidate.evaluation_status = "judge_failed"
-                candidate.evaluation = None
                 candidate.evaluation_error = _judge_error_payload(exc)
+                # Preserve heuristic-only evaluation if not already set.
+                if candidate.evaluation is None:
+                    candidate.evaluation = CandidateEvaluation(
+                        level=1,
+                        rde_class=heuristic_class,
+                        notes=notes,
+                        uib=uib,
+                        evaluated_at=datetime.now(UTC),
+                    )
+                candidate.status = "evaluated"
                 save_candidate(config, candidate)
                 return candidate
             except (RuntimeError, ValueError, KeyError) as exc:

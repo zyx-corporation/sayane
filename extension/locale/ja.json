@@ -232,5 +232,9 @@
   "review.risk.new_candidate": "保存文脈に対する評価が未完了です。",
   "review.risk.duplicate_or_confirmed": "保存文脈に既にある可能性が高いです。",
   "review.risk.low_value": "影響が小さい、または処理済みです。",
-  "review.risk.debug_only": "評価未完了または Debug 用です。"
+  "review.risk.debug_only": "評価未完了または Debug 用です。",
+  "review.saved_context": "保存済み Sayane 文脈",
+  "review.proposed_changes": "提案される変更",
+  "review.lineage": "Lineage",
+  "review.approve_blocked_hint": "承認前に詳細を開いて内容を確認してください。"
 }

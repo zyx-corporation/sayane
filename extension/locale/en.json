@@ -232,5 +232,9 @@
   "review.risk.new_candidate": "Not yet evaluated against saved context.",
   "review.risk.duplicate_or_confirmed": "Likely already present in saved context.",
   "review.risk.low_value": "Low impact or already resolved.",
-  "review.risk.debug_only": "Evaluation incomplete or debug-only."
+  "review.risk.debug_only": "Evaluation incomplete or debug-only.",
+  "review.saved_context": "Existing saved context",
+  "review.proposed_changes": "Proposed changes",
+  "review.lineage": "Lineage",
+  "review.approve_blocked_hint": "Expand details to review before approving this candidate."
 }

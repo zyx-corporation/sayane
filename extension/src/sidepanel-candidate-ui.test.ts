@@ -43,10 +43,14 @@ test("pending candidates do not auto-approve or auto-evaluate from approve click
 test("applyCardActionUi uses getApproveAvailability for approve buttons", () => {
   assert.ok(src.includes("approveOptionsFor"));
   assert.ok(src.includes("canApproveCandidate"));
+  assert.ok(src.includes("readApproveContextFromActions"));
   assert.ok(src.includes("readApproveContextFromButton"));
   assert.ok(src.includes("bindApproveInputsRefresh"));
   assert.ok(src.includes("bindApproveInputRefresh"));
   assert.ok(src.includes("expandedActionsForApproveButton"));
+  assert.ok(src.includes("expandedApproveSync.get(candidateId)"));
+  assert.ok(src.includes("approveUnavailableMessage"));
+  assert.ok(src.includes("approve-blocked-hint"));
   assert.ok(!src.includes("canInitiateApproveFromDetail"));
   assert.ok(!src.includes("ensureEvaluatedForApprove"));
 });
@@ -92,6 +96,14 @@ test("blocked and unsupported sections stay approve-disabled", () => {
   assert.equal(blocked.enabled, false);
 });
 
+test("approveOptionsFor reads explicit confirmation from actions element", () => {
+  assert.ok(
+    src.includes(
+      "!compact && actionsEl\n        ? readApproveContextFromActions(actionsEl)",
+    ),
+  );
+});
+
 test("override panel wires input refresh for expanded approve button", () => {
   assert.ok(src.includes(".override-reason"));
   assert.ok(src.includes(".override-check"));
@@ -100,8 +112,8 @@ test("override panel wires input refresh for expanded approve button", () => {
   assert.ok(src.includes("btnRow.appendChild(approveBtn)"));
   assert.ok(src.includes("actions.appendChild(btnRow)"));
   const bindIdx = src.indexOf("bindApproveInputsRefresh(actions, syncExpandedApprove)");
-  const appendIdx = src.indexOf("btnRow.appendChild(approveBtn)");
-  assert.ok(bindIdx > 0 && appendIdx > 0 && bindIdx > appendIdx);
+  const bodyAppendIdx = src.indexOf("body.appendChild(actions)");
+  assert.ok(bindIdx > 0 && bodyAppendIdx > 0 && bindIdx > bodyAppendIdx);
   const bindBlock = src.match(
     /function bindApproveInputsRefresh[\s\S]*?function refreshExpandedApproveUi/,
   );

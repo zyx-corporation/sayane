@@ -12,6 +12,7 @@ import {
   type CandidateCategory,
 } from "./candidate-display.js";
 import {
+  approveUnavailableMessage,
   canApproveCandidate,
   effectiveCandidateStatus,
   getApproveAvailability,
@@ -213,6 +214,13 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
       }
       if (btn.classList.contains("btn-approve")) {
         const compact = btn.classList.contains("btn-compact");
+        if (!compact) {
+          const sync = expandedApproveSync.get(candidateId);
+          if (sync) {
+            sync();
+            return;
+          }
+        }
         const actionsEl = compact
           ? null
           : expandedActionsForApproveButton(btn, candidateId);
@@ -236,9 +244,15 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
         if (!compact) {
           const hint = actionsEl?.querySelector<HTMLElement>(".approve-blocked-hint");
           if (hint) {
-            if (avail.reasonKey && !canUse) {
+            if (!canUse) {
               hint.hidden = false;
-              hint.textContent = t(avail.reasonKey);
+              hint.textContent = approveUnavailableMessage(
+                c,
+                detail ?? undefined,
+                avail,
+                locale(),
+                t,
+              );
             } else {
               hint.hidden = true;
               hint.textContent = "";
@@ -404,9 +418,11 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     approveBtn?: HTMLButtonElement | null,
   ) {
     const contextFromDom =
-      approveBtn && !compact
-        ? readApproveContextFromButton(approveBtn)
-        : readApproveContextFromActions(actionsEl);
+      !compact && actionsEl
+        ? readApproveContextFromActions(actionsEl)
+        : approveBtn && !compact
+          ? readApproveContextFromButton(approveBtn)
+          : readApproveContextFromActions(actionsEl);
     return {
       compact,
       cardActionState: getCardAction(c.id),
@@ -526,13 +542,13 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
       return;
     }
     if (!canApproveCandidate(summary, detail, opts)) {
-      const reason = avail.reasonKey ?? "review.approve_blocked_after_eval";
-      setStatus(t(reason), true);
+      const msg = approveUnavailableMessage(summary, detail, avail, locale(), t);
+      setStatus(msg, true);
       if (!compact) {
         const hint = resolvedActions.querySelector<HTMLElement>(".approve-blocked-hint");
         if (hint) {
           hint.hidden = false;
-          hint.textContent = t(reason);
+          hint.textContent = msg;
         }
       }
       return;
@@ -567,12 +583,15 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     const canUse = canApproveCandidate(c, resolvedDetail, opts);
     applyDisabledWithCursorHint(btn, !canUse, canUse ? null : "unavailable");
     if (hintEl) {
-      if (avail.reasonKey && !canUse) {
+      if (!canUse) {
+        const msg = approveUnavailableMessage(c, resolvedDetail, avail, locale(), t);
         hintEl.hidden = false;
-        hintEl.textContent = t(avail.reasonKey);
+        hintEl.textContent = msg;
+        btn.title = msg;
       } else {
         hintEl.hidden = true;
         hintEl.textContent = "";
+        btn.title = avail.reasonKey ? t(avail.reasonKey) : "";
       }
     }
     return avail;
@@ -1042,15 +1061,10 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
       if (needsSectionOverride) actions.dataset.hasCriticalSection = "1";
     }
 
-    const rejectInput = document.createElement("input");
-    rejectInput.type = "text";
-    rejectInput.placeholder = t("detail.reject_reason_placeholder");
-    rejectInput.className = "reject-reason";
-    actions.appendChild(rejectInput);
-
     const approveHint = document.createElement("p");
     approveHint.className = "approve-blocked-hint";
     approveHint.hidden = true;
+    approveHint.setAttribute("role", "status");
     actions.appendChild(approveHint);
 
     const btnRow = document.createElement("div");
@@ -1075,27 +1089,42 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     btnRow.appendChild(rejectBtn);
     actions.appendChild(btnRow);
 
+    const rejectInput = document.createElement("input");
+    rejectInput.type = "text";
+    rejectInput.placeholder = t("detail.reject_reason_placeholder");
+    rejectInput.className = "reject-reason";
+    actions.appendChild(rejectInput);
+
     const syncExpandedApprove = (): void => {
       const summary = allCandidates.find((item) => item.id === c.id);
       const liveDetail = cardState.get(c.id)?.detail ?? detail;
       if (!summary) return;
       syncSummaryFromDetail(summary, liveDetail);
-      const opts = approveOptionsFor(summary, liveDetail, actions, false, approveBtn);
+      const actionState = getCardAction(c.id);
+      const busyAction = isBusyActionState(actionState);
+      const opts = approveOptionsFor(summary, liveDetail, actions, false);
       const avail = getApproveAvailability(summary, liveDetail, opts);
       const canUse =
-        !isBusyActionState(getCardAction(c.id))
+        !busyAction
+        && actionState !== "approved"
         && canApproveCandidate(summary, liveDetail, opts);
       const label = t(avail.labelKey);
       approveBtn.dataset.idleLabel = label;
-      if (getCardAction(c.id) === "idle") approveBtn.textContent = label;
-      approveBtn.title = avail.reasonKey ? t(avail.reasonKey) : "";
-      applyDisabledWithCursorHint(approveBtn, !canUse, canUse ? null : "unavailable");
-      if (avail.reasonKey && !canUse) {
+      if (actionState === "idle") approveBtn.textContent = label;
+      applyDisabledWithCursorHint(
+        approveBtn,
+        !canUse,
+        busyAction ? "busy" : canUse ? null : "unavailable",
+      );
+      if (!canUse) {
+        const msg = approveUnavailableMessage(summary, liveDetail, avail, locale(), t);
         approveHint.hidden = false;
-        approveHint.textContent = t(avail.reasonKey);
+        approveHint.textContent = msg;
+        approveBtn.title = msg;
       } else {
         approveHint.hidden = true;
         approveHint.textContent = "";
+        approveBtn.title = "";
       }
     };
 
@@ -1103,10 +1132,9 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     approveBtn.addEventListener("click", () => {
       handleApproveClick(c, actions, false);
     });
+    body.appendChild(actions);
     bindApproveInputsRefresh(actions, syncExpandedApprove);
     syncExpandedApprove();
-
-    body.appendChild(actions);
 
     if (activeFilter === "debug") {
       const debugPre = document.createElement("pre");
@@ -1379,6 +1407,7 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
             return;
           }
           renderExpandedBody(body, c, detail);
+          refreshExpandedApproveUi(c.id);
         });
       } else {
         expandedCandidateIds.delete(c.id);
@@ -1391,7 +1420,10 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     if (shouldOpen) {
       details.open = true;
       void fetchDetail(c.id, { refresh: true }).then((detail) => {
-        if (detail) renderExpandedBody(body, c, detail);
+        if (detail) {
+          renderExpandedBody(body, c, detail);
+          refreshExpandedApproveUi(c.id);
+        }
       });
     }
 

@@ -23,7 +23,7 @@
   "capture.clipboard_hint": "エディタで範囲を選んだだけでは取り込まれません。取り込みたい行だけをコピー（⌘C / Ctrl+C）してから押してください。",
   "capture.clipboard_preview_terms": "クリップボード: important_terms {count} 語（{lines} 行 / {chars} 文字）— この内容が Capture されます",
   "capture.clipboard_preview_generic": "クリップボード: {lines} 行 / {chars} 文字",
-  "capture.clipboard_confirm_many": "クリップボードに important_terms が {count} 語あります。6 行だけ取り込みたい場合は、該当行だけコピーし直してから Capture してください。このまま Capture しますか？",
+  "capture.clipboard_confirm_many": "クリップボード内の important_terms に {count} 件の項目があります。既存項目との差分は Capture 後に確認します。このまま Capture しますか？",
   "capture.clipboard_confirm_cancelled": "Capture をキャンセルしました。コピー範囲を確認してから再度お試しください。",
   "capture.warning.clipboard_many_important_terms": "クリップボードに important_terms が多数含まれています。",
   "capture.developer_toggle": "開発者向け: 低信頼・ページ全体Capture",
@@ -296,6 +296,11 @@
   "review.evaluate_before_approve_done": "評価が完了しました。結果を確認してから採用してください。",
   "review.approve_requires_evaluation": "未評価のため採用できません。先に「評価」を実行してください。",
   "review.approve_blocked_after_eval": "この評価結果では、そのまま採用できません。詳細の分類と差分を確認してください。",
+  "review.approve_blocked_rde_preserved": "分類が「{category}」のため採用できません（変更なし、または採用不要です）。チェックと理由だけでは採用できません。",
+  "review.approve_blocked_rde_unresolved_gap": "分類が「{category}」のため採用できません。差分を解消するか、棄却してください。チェックと理由だけでは採用できません。",
+  "review.approve_blocked_rde_suspicious_drift": "分類が「{category}」のため採用できません。追加候補の意味と差分を確認してください。必要なら棄却してください。チェックと理由だけでは採用できません。",
+  "review.approve_blocked_rde_critical_distortion": "分類が「{category}」のため、そのまま採用できません。重大な歪曲として扱われます。",
+  "review.approve_unavailable_generic": "現在この候補は採用できません。",
   "review.approve_not_found": "候補が見つかりません。一覧を更新してください。",
   "review.approve_evaluate_failed": "評価に失敗したため、採用できません。評価ボタンで再試行してください。"
 }

@@ -58,6 +58,8 @@ const NOTE_MESSAGES: Record<SupportedLocale, Record<string, string>> = {
       "ヒューリスティック評価では「{heuristic_label}」でしたが、LLM judge結果を反映して「{rde_class_label}」に統合されました。",
     llm_judge_suggested_kept_heuristic:
       "LLM judgeは「{rde_class_label}」と評価しましたが、Sayaneのヒューリスティック評価「{heuristic_label}」を優先しました。",
+    llm_judge_capped_important_terms_list_add:
+      "LLM judgeは「{llm_rde_class_label}」と評価しましたが、important_terms の追加のみの差分のため「{rde_class_label}」を採用しました。用語名が未知でも、リスト追加だけでは疑わしい逸脱にはしません。",
     llm_judge_skipped: "LLM judgeはスキップされました: {detail}",
     llm_judge_failed: "LLM judgeに失敗しました: {detail}",
     llm_judge_freeform_prefix: "LLM judgeの指摘: {text}",
@@ -105,6 +107,8 @@ const NOTE_MESSAGES: Record<SupportedLocale, Record<string, string>> = {
       "Heuristic was {heuristic_label}; merged to {rde_class_label}.",
     llm_judge_suggested_kept_heuristic:
       "LLM judge suggested {rde_class_label}; kept heuristic {heuristic_label}.",
+    llm_judge_capped_important_terms_list_add:
+      "LLM judge classified this as {llm_rde_class_label}, but for an important_terms append-only list diff Sayane kept {rde_class_label}. Unfamiliar term names alone are not Suspicious Drift.",
     llm_judge_skipped: "LLM judge skipped: {detail}",
     llm_judge_failed: "LLM judge failed: {detail}",
     llm_judge_freeform_prefix: "LLM judge note: {text}",
@@ -179,6 +183,9 @@ function formatTemplate(
   }
   if (expanded.heuristic) {
     expanded.heuristic_label = rdeClassLabel(expanded.heuristic, locale);
+  }
+  if (expanded.llm_rde_class) {
+    expanded.llm_rde_class_label = rdeClassLabel(expanded.llm_rde_class, locale);
   }
   return template.replace(/\{(\w+)\}/g, (_, name: string) => expanded[name] ?? `{${name}}`);
 }

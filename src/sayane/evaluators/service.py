@@ -103,7 +103,11 @@ def evaluate_candidate(
             except (RuntimeError, ValueError, KeyError) as exc:
                 notes.append(heuristic_note("llm_judge_failed", detail=str(exc)))
 
-    final_class, merge_notes = merge_rde_class(heuristic_class, llm_review)
+    final_class, merge_notes = merge_rde_class(
+        heuristic_class,
+        llm_review,
+        proposal=candidate.proposal,
+    )
     notes.extend(merge_notes)
 
     candidate.evaluation = CandidateEvaluation(

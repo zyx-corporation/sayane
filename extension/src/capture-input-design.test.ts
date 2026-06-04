@@ -9,6 +9,18 @@ const extRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const t = (key: string): string => key;
 
 describe("capture input design", () => {
+  it("clipboard confirm wording does not imply raw count equals new additions (Fixes #126)", () => {
+    const ja = JSON.parse(
+      readFileSync(join(extRoot, "locale/ja.json"), "utf8"),
+    ) as Record<string, string>;
+    const en = JSON.parse(
+      readFileSync(join(extRoot, "locale/en.json"), "utf8"),
+    ) as Record<string, string>;
+    assert.ok(ja["capture.clipboard_confirm_many"].includes("Capture 後に確認"));
+    assert.ok(en["capture.clipboard_confirm_many"].includes("checked after Capture"));
+    assert.ok(!ja["capture.clipboard_confirm_many"].includes("6 行だけ"));
+  });
+
   it("manifest includes clipboardRead permission", () => {
     const manifest = JSON.parse(
       readFileSync(join(extRoot, "manifest.json"), "utf8"),

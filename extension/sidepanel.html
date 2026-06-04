@@ -20,9 +20,9 @@
         cursor: wait;
       }
       body.is-busy .candidate-cards,
-      body.is-busy .candidate-cards *,
+      body.is-busy .candidate-cards *:not(button:not(:disabled)),
       #app-root[aria-busy="true"] .candidate-cards,
-      #app-root[aria-busy="true"] .candidate-cards * {
+      #app-root[aria-busy="true"] .candidate-cards *:not(button:not(:disabled)) {
         cursor: wait !important;
       }
       button:disabled[data-cursor-hint="busy"] {
@@ -278,6 +278,13 @@
         padding: 6px;
         cursor: pointer;
       }
+      .btn-approve:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+      .btn-approve:not(:disabled) {
+        cursor: pointer;
+      }
       .btn-reject {
         background: #c62828;
         color: #fff;
@@ -285,6 +292,19 @@
         border-radius: 3px;
         padding: 6px;
         cursor: pointer;
+      }
+      .approve-blocked-hint {
+        margin: 0 0 8px;
+        padding: 8px 10px;
+        font-size: 0.75rem;
+        line-height: 1.45;
+        color: #b71c1c;
+        background: #ffebee;
+        border: 1px solid #ffcdd2;
+        border-radius: 4px;
+      }
+      .approve-blocked-hint[hidden] {
+        display: none !important;
       }
       .reject-reason,
       .override-reason {

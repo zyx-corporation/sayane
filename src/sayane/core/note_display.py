@@ -110,6 +110,11 @@ _NOTE_MESSAGES: dict[str, dict[str, str]] = {
             "LLM judgeは「{rde_class_label}」と評価しましたが、"
             "Sayaneのヒューリスティック評価「{heuristic_label}」を優先しました。"
         ),
+        "llm_judge_capped_important_terms_list_add": (
+            "LLM judgeは「{llm_rde_class_label}」と評価しましたが、"
+            "important_terms の追加のみの差分のため「{rde_class_label}」を採用しました。"
+            "用語名が未知でも、リスト追加だけでは疑わしい逸脱にはしません。"
+        ),
         "llm_judge_skipped": "LLM judgeはスキップされました: {detail}",
         "llm_judge_failed": "LLM judgeに失敗しました: {detail}",
         "llm_judge_freeform_prefix": "LLM judgeの指摘: {text}",
@@ -196,6 +201,11 @@ _NOTE_MESSAGES: dict[str, dict[str, str]] = {
         "llm_judge_suggested_kept_heuristic": (
             "LLM judge suggested {rde_class_label}; kept heuristic {heuristic_label}."
         ),
+        "llm_judge_capped_important_terms_list_add": (
+            "LLM judge classified this as {llm_rde_class_label}, but for an "
+            "important_terms append-only list diff Sayane kept {rde_class_label}. "
+            "Unfamiliar term names alone are not Suspicious Drift."
+        ),
         "llm_judge_skipped": "LLM judge skipped: {detail}",
         "llm_judge_failed": "LLM judge failed: {detail}",
         "llm_judge_freeform_prefix": "LLM judge note: {text}",
@@ -249,14 +259,16 @@ def rde_class_label(rde_class: str, locale: str | None) -> str:
 
 def _format_template(template: str, params: dict[str, Any], locale: str) -> str:
     expanded = dict(params)
-    for key in ("rde_class", "heuristic"):
+    for key in ("rde_class", "heuristic", "llm_rde_class"):
         value = expanded.get(key)
         if isinstance(value, str):
-            label_key = f"{key}_label" if key == "rde_class" else f"{key}_label"
+            label = rde_class_label(value, locale)
             if key == "rde_class":
-                expanded["rde_class_label"] = rde_class_label(value, locale)
+                expanded["rde_class_label"] = label
             elif key == "heuristic":
-                expanded["heuristic_label"] = rde_class_label(value, locale)
+                expanded["heuristic_label"] = label
+            elif key == "llm_rde_class":
+                expanded["llm_rde_class_label"] = label
     try:
         return template.format(**expanded)
     except KeyError:

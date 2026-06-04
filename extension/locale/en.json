@@ -23,7 +23,7 @@
   "capture.clipboard_hint": "Selecting lines in an editor is not enough — copy only the lines you want (⌘C / Ctrl+C), then capture.",
   "capture.clipboard_preview_terms": "Clipboard: important_terms {count} entries ({lines} lines / {chars} chars) — this will be captured",
   "capture.clipboard_preview_generic": "Clipboard: {lines} lines / {chars} chars",
-  "capture.clipboard_confirm_many": "Clipboard has {count} important_terms entries. To capture only a short block, copy just those lines (⌘C / Ctrl+C) and try again. Capture this clipboard anyway?",
+  "capture.clipboard_confirm_many": "The clipboard contains {count} important_terms entries. Differences from stored context will be checked after Capture. Continue?",
   "capture.clipboard_confirm_cancelled": "Capture cancelled. Check what you copied, then try again.",
   "capture.warning.clipboard_many_important_terms": "Clipboard contains many important_terms entries.",
   "capture.developer_toggle": "Developer: low-confidence page capture",
@@ -296,6 +296,11 @@
   "review.evaluate_before_approve_done": "Evaluation complete. Review the result, then approve if appropriate.",
   "review.approve_requires_evaluation": "Cannot approve before evaluation. Run Evaluate first.",
   "review.approve_blocked_after_eval": "This evaluation cannot be approved as-is. Review the classification and diff.",
+  "review.approve_blocked_rde_preserved": "Cannot approve: classified as “{category}” (no change or approval not needed). Checking the box and entering a reason does not enable approve.",
+  "review.approve_blocked_rde_unresolved_gap": "Cannot approve: classified as “{category}”. Resolve the diff or reject. Checking the box and entering a reason does not enable approve.",
+  "review.approve_blocked_rde_suspicious_drift": "Cannot approve: classified as “{category}”. Review the meaning of proposed additions and the diff; reject if needed. Checking the box and entering a reason does not enable approve.",
+  "review.approve_blocked_rde_critical_distortion": "Cannot approve as-is: classified as “{category}” (critical distortion).",
+  "review.approve_unavailable_generic": "This candidate cannot be approved right now.",
   "review.approve_not_found": "Candidate not found. Refresh the list.",
   "review.approve_evaluate_failed": "Evaluation failed, so approve is not available. Try Evaluate again."
 }

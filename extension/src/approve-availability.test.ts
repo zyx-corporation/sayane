@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  approveUnavailableMessage,
   canApproveCandidate,
   canQuickApprove,
   effectiveCandidateStatus,
@@ -78,6 +79,28 @@ describe("getApproveAvailability", () => {
       }),
       true,
     );
+  });
+
+  it("suspicious drift stays blocked after explicit confirmation with specific reason", () => {
+    const c = summary({
+      status: "evaluated",
+      rde_class: "Suspicious Drift",
+    });
+    const opts = {
+      explicitConfirmation: { checked: true, reason: "test6" },
+    };
+    const avail = getApproveAvailability(c, undefined, opts);
+    assert.equal(avail.kind, "blocked");
+    assert.equal(avail.enabled, false);
+    assert.equal(avail.reasonKey, "review.approve_blocked_rde_suspicious_drift");
+    assert.equal(canApproveCandidate(c, undefined, opts), false);
+    const msg = approveUnavailableMessage(c, undefined, avail, "ja", (key, params) => {
+      let text = key;
+      if (params?.category) text += `|${params.category}`;
+      return text;
+    });
+    assert.ok(msg.includes("review.approve_blocked_rde_suspicious_drift"));
+    assert.ok(msg.includes("疑わしい逸脱"));
   });
 
   it("explicit confirmation disabled with check but empty reason", () => {

@@ -4,6 +4,7 @@
 
 import {
   canApproveWithCriticalOverride,
+  categoryLabel,
   type CandidateCategory,
 } from "./candidate-display.js";
 import { shouldBlockBulkApprove } from "./candidate-review-class.js";
@@ -19,7 +20,7 @@ import {
   isBusyActionState,
   isResolvedActionState,
 } from "./candidate-action-state.js";
-import type { CandidateDetail, CandidateSummary } from "./types.js";
+import type { CandidateDetail, CandidateSummary, SupportedLocale } from "./types.js";
 
 export type ApproveAvailabilityKind =
   | "needs_evaluation"
@@ -62,12 +63,48 @@ export function effectiveCandidateStatus(
   return detail?.status ?? c.status;
 }
 
-function candidateCategory(
+export function candidateCategoryForApprove(
   c: CandidateSummary,
   detail?: CandidateDetail,
 ): CandidateCategory | null {
   const raw = detail?.evaluation?.rde_class ?? c.rde_class ?? null;
   return raw as CandidateCategory | null;
+}
+
+function approveBlockedByRdeReasonKey(category: CandidateCategory | null): string {
+  switch (category) {
+    case "Preserved":
+      return "review.approve_blocked_rde_preserved";
+    case "Unresolved Gap":
+      return "review.approve_blocked_rde_unresolved_gap";
+    case "Suspicious Drift":
+      return "review.approve_blocked_rde_suspicious_drift";
+    case "Critical Distortion":
+      return "review.approve_blocked_rde_critical_distortion";
+    default:
+      return "review.approve_blocked_after_eval";
+  }
+}
+
+/** User-visible explanation when the approve button is disabled. */
+export function approveUnavailableMessage(
+  c: CandidateSummary,
+  detail: CandidateDetail | undefined,
+  avail: ApproveAvailability,
+  locale: SupportedLocale,
+  translate: (key: string, params?: Record<string, string | number>) => string,
+): string {
+  const key = avail.reasonKey ?? "review.approve_unavailable_generic";
+  const category = candidateCategoryForApprove(c, detail);
+  if (
+    category
+    && (key === "review.approve_blocked_after_eval" || key.startsWith("review.approve_blocked_rde_"))
+  ) {
+    return translate(approveBlockedByRdeReasonKey(category), {
+      category: categoryLabel(category, locale),
+    });
+  }
+  return translate(key);
 }
 
 function explicitConfirmationReasonKey(
@@ -165,7 +202,7 @@ export function getApproveAvailability(
   const cardActionState = options?.cardActionState ?? "idle";
   const status = effectiveCandidateStatus(c, detail);
   const section = detail?.proposal?.section ?? c.section ?? "";
-  const category = candidateCategory(c, detail);
+  const category = candidateCategoryForApprove(c, detail);
 
   if (status === "approved" || status === "rejected") {
     return {
@@ -261,7 +298,7 @@ export function getApproveAvailability(
         kind: "blocked",
         enabled: false,
         labelKey: "candidate.approve",
-        reasonKey: "review.approve_blocked_after_eval",
+        reasonKey: approveBlockedByRdeReasonKey(category),
       };
     }
     return {
@@ -276,7 +313,7 @@ export function getApproveAvailability(
       kind: "blocked",
       enabled: false,
       labelKey: "candidate.approve",
-      reasonKey: "review.approve_blocked_after_eval",
+      reasonKey: approveBlockedByRdeReasonKey(category),
     };
   }
 

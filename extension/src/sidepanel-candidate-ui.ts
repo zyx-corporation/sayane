@@ -1214,6 +1214,18 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
 
     btnRow.appendChild(approveBtn);
     btnRow.appendChild(rejectBtn);
+
+    // #119: Edit and Save button
+    const reviseBtn = document.createElement("button");
+    reviseBtn.type = "button";
+    reviseBtn.className = "btn-revise";
+    reviseBtn.textContent = t("candidate.revise");
+    reviseBtn.dataset.idleLabel = t("candidate.revise");
+    reviseBtn.addEventListener("click", () => {
+      showReviseView(c.id, detail, actions);
+    });
+    btnRow.appendChild(reviseBtn);
+
     actions.appendChild(btnRow);
 
     const rejectInput = document.createElement("input");
@@ -1430,6 +1442,96 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     setCardAction(candidateId, "rejected");
     setStatus(t("status.rejected", { id: candidateId.slice(0, 8) }));
     await reloadCandidateCard(candidateId);
+  }
+
+  function showReviseView(
+    candidateId: string,
+    detail: CandidateDetail,
+    actionsEl: HTMLElement,
+  ): void {
+    // #119: Replace actions with an edit view.
+    actionsEl.replaceChildren();
+
+    const title = document.createElement("p");
+    title.className = "subheading";
+    title.textContent = t("candidate.revise_title");
+    actionsEl.appendChild(title);
+
+    const hint = document.createElement("p");
+    hint.className = "card-why";
+    hint.textContent = t("candidate.revise_hint");
+    actionsEl.appendChild(hint);
+
+    const textarea = document.createElement("textarea");
+    textarea.className = "revise-textarea";
+    textarea.rows = 6;
+    textarea.value = detail.content;
+    actionsEl.appendChild(textarea);
+
+    const sectionInput = document.createElement("input");
+    sectionInput.type = "text";
+    sectionInput.className = "revise-section";
+    sectionInput.placeholder = t("candidate.revise_section_placeholder");
+    sectionInput.value = detail.proposal.section ?? "";
+    actionsEl.appendChild(sectionInput);
+
+    const reasonInput = document.createElement("input");
+    reasonInput.type = "text";
+    reasonInput.className = "revise-reason";
+    reasonInput.placeholder = t("candidate.revise_reason_placeholder");
+    actionsEl.appendChild(reasonInput);
+
+    const btnRow = document.createElement("div");
+    btnRow.className = "row";
+
+    const saveBtn = document.createElement("button");
+    saveBtn.type = "button";
+    saveBtn.className = "btn-primary";
+    saveBtn.textContent = t("candidate.revise_save");
+    saveBtn.addEventListener("click", () => {
+      void runRevise(
+        candidateId,
+        textarea.value,
+        sectionInput.value.trim() || undefined,
+        reasonInput.value.trim() || undefined,
+      );
+    });
+
+    const cancelBtn = document.createElement("button");
+    cancelBtn.type = "button";
+    cancelBtn.textContent = t("candidate.revise_cancel");
+    cancelBtn.addEventListener("click", () => {
+      void reloadCandidateCard(candidateId);
+    });
+
+    btnRow.appendChild(saveBtn);
+    btnRow.appendChild(cancelBtn);
+    actionsEl.appendChild(btnRow);
+  }
+
+  async function runRevise(
+    candidateId: string,
+    editedText: string,
+    targetSection?: string,
+    changeReason?: string,
+  ): Promise<void> {
+    setCardAction(candidateId, "deferring");
+    const res = await send({
+      type: "BRIDGE_REVISE_CANDIDATE",
+      candidateId,
+      editedText,
+      targetSection,
+      changeReason,
+    });
+    if (!res.ok) {
+      setCardAction(candidateId, "error", { rawError: res.error });
+      setStatus(formatBridgeError(res), true);
+      setCardAction(candidateId, "idle");
+      return;
+    }
+    setCardAction(candidateId, "idle");
+    setStatus(t("candidate.revise_created"));
+    await loadCandidates();
   }
 
   function createCard(c: CandidateSummary, preferOpen: boolean): HTMLElement {

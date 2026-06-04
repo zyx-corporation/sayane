@@ -18,6 +18,7 @@ import {
   listProfiles,
   preflightImportantTerms,
   rejectCandidate,
+  reviseCandidate,
 } from "./bridge-client.js";
 import {
   insertTextInTab,
@@ -126,6 +127,16 @@ chrome.runtime.onMessage.addListener(
             return {
               ok: true,
               data: await rejectCandidate(message.candidateId, message.reason),
+            };
+          case "BRIDGE_REVISE_CANDIDATE":
+            return {
+              ok: true,
+              data: await reviseCandidate(
+                message.candidateId,
+                message.editedText,
+                message.targetSection,
+                message.changeReason,
+              ),
             };
           case "CAPTURE_SELECTION": {
             const text = await readSelectionFromTab(message.tabId);

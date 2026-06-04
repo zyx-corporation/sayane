@@ -334,6 +334,13 @@ export type BackgroundMessage =
       };
     }
   | { type: "BRIDGE_REJECT_CANDIDATE"; candidateId: string; reason?: string }
+  | {
+      type: "BRIDGE_REVISE_CANDIDATE";
+      candidateId: string;
+      editedText: string;
+      targetSection?: string;
+      changeReason?: string;
+    }
   | { type: "OPEN_SIDE_PANEL"; windowId?: number }
   | { type: "CANDIDATES_CHANGED"; candidateId?: string | null };
 

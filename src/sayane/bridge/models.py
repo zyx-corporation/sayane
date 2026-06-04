@@ -89,3 +89,9 @@ class ImportantTermsPreflightResponse(BaseModel):
     existing_count: int = Field(ge=0)
     added_count: int = Field(ge=0)
     removed_count: int = Field(ge=0)
+
+
+class ReviseCandidateRequest(BaseModel):
+    edited_text: str = Field(min_length=1)
+    target_section: str | None = None
+    change_reason: str | None = None

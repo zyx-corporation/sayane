@@ -258,6 +258,23 @@ export async function rejectCandidate(
   return (await res.json()) as Record<string, unknown>;
 }
 
+export async function reviseCandidate(
+  candidateId: string,
+  editedText: string,
+  targetSection?: string,
+  changeReason?: string,
+): Promise<Record<string, unknown>> {
+  const res = await bridgeFetch(`/candidates/${encodeURIComponent(candidateId)}/revise`, {
+    method: "POST",
+    body: JSON.stringify({
+      edited_text: editedText,
+      target_section: targetSection || null,
+      change_reason: changeReason || null,
+    }),
+  });
+  return (await res.json()) as Record<string, unknown>;
+}
+
 export function formatContextPacketForInsert(packet: ContextPacket): string {
   const { format, payload } = packet;
   if (

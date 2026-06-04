@@ -19,6 +19,8 @@ from sayane.bridge.models import (
     EvaluateCandidateRequest,
     ImportantTermsPreflightRequest,
     ImportantTermsPreflightResponse,
+    RejectCandidateRequest,
+    ReviseCandidateRequest,
     ProfileSummary,
     RejectCandidateRequest,
 )
@@ -181,6 +183,23 @@ def create_app(config: BridgeConfig | None = None) -> FastAPI:
                 status_code=400,
                 detail=exc.to_payload(),
             ) from exc
+
+    @app.post("/candidates/{candidate_id}/revise")
+    def post_candidate_revise(
+        candidate_id: str,
+        body: ReviseCandidateRequest,
+        _: Annotated[None, Depends(require_bearer)],
+    ) -> dict:
+        try:
+            return candidate_api.post_revise(
+                cfg,
+                candidate_id,
+                edited_text=body.edited_text,
+                target_section=body.target_section,
+                change_reason=body.change_reason,
+            )
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
 
     @app.get("/candidates/{candidate_id}/diff")
     def get_candidate_diff(

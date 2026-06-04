@@ -52,11 +52,36 @@ def merge_candidate_into_profile(
         _merge_major_projects(profile, candidate)
     elif section == "communication_mode":
         _merge_communication_mode(profile, candidate)
+    elif section == "important_terms":
+        _merge_important_terms(profile, candidate)
     else:
         raise ValueError(f"Unsupported merge section: {section}")
 
     profile.lineage.updated_at = datetime.now(UTC)
     return profile
+
+
+def _merge_important_terms(profile: SayaneProfile, candidate: CandidateUpdate) -> None:
+    """Append proposal items to important_terms with case-insensitive dedup."""
+    existing_keys = {term.strip().casefold() for term in profile.important_terms if term.strip()}
+    for item in candidate.proposal.items:
+        name = (item.get("name") or "").strip()
+        if not name:
+            continue
+        key = name.casefold()
+        if key in existing_keys:
+            continue
+        profile.important_terms.append(name)
+        existing_keys.add(key)
+    for item in candidate.proposal.add:
+        text = str(item).strip()
+        if not text:
+            continue
+        key = text.casefold()
+        if key in existing_keys:
+            continue
+        profile.important_terms.append(text)
+        existing_keys.add(key)
 
 
 def _merge_knowledge(profile: SayaneProfile, candidate: CandidateUpdate) -> None:

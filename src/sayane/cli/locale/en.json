@@ -25,6 +25,7 @@
   "export.prompt_ir": "## Prompt IR",
   "export.compiled": "## Compiled Payload",
   "serve.listening": "Local Bridge listening on http://{host}:{port}",
+  "serve.build_info": "Sayane {version} · codebase updated {updated_at}",
   "serve.token_file": "Bearer token file: {path}",
   "serve.pairing": "Pairing code: {code}",
   "serve.auth_hint": "Use Authorization: Bearer <token> for protected endpoints",

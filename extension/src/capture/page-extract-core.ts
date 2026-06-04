@@ -19,6 +19,9 @@ export type SayanePingResult = {
   title: string;
   readable: boolean;
   selectionTextLength: number;
+  selectionCurrentLength?: number;
+  selectionCachedLength?: number;
+  selectionCacheAgeMs?: number | null;
   extractorAvailable: boolean;
   extractorError: string | null;
   hostPermissionOk: boolean;

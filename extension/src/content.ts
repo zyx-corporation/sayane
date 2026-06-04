@@ -5,17 +5,16 @@
 
 import { buildSayanePing, extractPageFromDocument } from "./capture/page-extract-core.js";
 import { insertTextIntoPage } from "./providers/registry.js";
+import {
+  getSelectionCacheSnapshot,
+  getSelectionText,
+  registerSelectionCacheListeners,
+} from "./selection-cache.js";
 import type { ContentMessage, ContentResponse } from "./types.js";
 
 console.debug("[Sayane] content script loaded", location.href);
 
 const LISTENER_KEY = "__sayaneMessageListenerRegistered";
-
-function getSelectionText(): string {
-  const selection = window.getSelection();
-  if (!selection || selection.isCollapsed) return "";
-  return selection.toString().trim();
-}
 
 function getPageSnapshot(): string {
   const extracted = extractPageFromDocument();
@@ -30,7 +29,14 @@ function registerMessageListener(): void {
   chrome.runtime.onMessage.addListener(
     (message: ContentMessage, _sender, sendResponse: (r: ContentResponse) => void) => {
       if (message?.type === "SAYANE_PING") {
-        sendResponse(buildSayanePing());
+        const snap = getSelectionCacheSnapshot();
+        sendResponse({
+          ...buildSayanePing(),
+          selectionTextLength: getSelectionText().length,
+          selectionCurrentLength: snap.currentLength,
+          selectionCachedLength: snap.cachedLength,
+          selectionCacheAgeMs: snap.cacheAgeMs,
+        });
         return true;
       }
       if (message.type === "EXTRACT_PAGE") {
@@ -101,5 +107,6 @@ function watchSpaNavigation(): void {
   else document.addEventListener("DOMContentLoaded", startObserve, { once: true });
 }
 
+registerSelectionCacheListeners();
 registerMessageListener();
 watchSpaNavigation();

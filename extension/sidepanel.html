@@ -14,8 +14,22 @@
         color: #333;
         background: #fafafa;
       }
+      body.is-busy,
+      body.is-busy #app-root,
       #app-root[aria-busy="true"] {
         cursor: wait;
+      }
+      body.is-busy .candidate-cards,
+      body.is-busy .candidate-cards *,
+      #app-root[aria-busy="true"] .candidate-cards,
+      #app-root[aria-busy="true"] .candidate-cards * {
+        cursor: wait !important;
+      }
+      button:disabled[data-cursor-hint="busy"] {
+        cursor: wait !important;
+      }
+      button:disabled[data-cursor-hint="unavailable"] {
+        cursor: not-allowed !important;
       }
       .sticky-header {
         position: sticky;
@@ -44,6 +58,34 @@
         flex: 1;
         font-size: 0.8rem;
         padding: 6px 8px;
+      }
+      .review-session-banner {
+        margin: 0 12px 8px;
+        padding: 8px 10px;
+        background: #f5f5f5;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+      }
+      .review-session-text {
+        margin: 0;
+        font-size: 0.72rem;
+        line-height: 1.45;
+        color: #555;
+        font-family: ui-monospace, monospace;
+      }
+      .review-session-excerpt {
+        margin: 6px 0 0;
+        font-size: 0.68rem;
+        line-height: 1.4;
+        max-height: 72px;
+        overflow: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+        background: #fff;
+        border: 1px solid #e8e8e8;
+        border-radius: 3px;
+        padding: 6px;
+        color: #444;
       }
       .btn-icon {
         background: #fff;
@@ -322,7 +364,14 @@
               推論補完
             </option>
             <option value="low_value" data-i18n="review.filter.low_value">低リスク</option>
-            <option value="debug" data-i18n="review.filter.debug">Debug</option>
+            <option
+              value="debug"
+              id="filter-option-debug"
+              data-i18n="review.filter.debug"
+              hidden
+            >
+              Debug
+            </option>
           </select>
           <button
             type="button"

@@ -1,0 +1,334 @@
+persona:
+  preferred_name: "tomyuk"
+  casual_name: "ともゆきさん"
+  formal_name: "Tomoyuki Kano"
+  external_japanese_name: "加納 智之"
+  email: "tomyuk@zyxcorp.jp"
+
+  role:
+    - "AI関連スタートアップ経営者"
+    - "エンジニア"
+    - "アーキテクト"
+
+  organization:
+    name: "ZYX Corp株式会社"
+    positions:
+      - "CEO"
+      - "CTO"
+      - "取締役"
+    focus:
+      - "AI協働基盤"
+      - "ローカルファーストAI"
+      - "意味監査"
+      - "Kotone / Kotonoha / Sayane"
+      - "RDE"
+      - "制度詩学"
+    coi:
+      stock_options: true
+      patents_planned: true
+
+  location:
+    home:
+      address: "愛知県一宮市泉2-21-6"
+      wifi: "ETZ-GW"
+    workplace:
+      address: "愛知県一宮市泉2-22-9-1103"
+
+  language_and_style:
+    default_language: "ja"
+    address_style:
+      normal: "tomyukさん"
+      intimate: "ともゆきさん"
+    preferences:
+      - "簡潔かつ正確"
+      - "多角的"
+      - "論理性重視"
+      - "具体性重視"
+      - "仮説と事実を分離"
+      - "未検証内容を実証済みに見せない"
+      - "思想的射程を狭めない"
+      - "必要に応じて叙情性を適度に使う"
+      - "技術的厳密性が必要な場面では詩的表現を控えめにする"
+      - "同じ説明の反復を避ける"
+    note_style:
+      avoid_extra_blank_lines: true
+      hashtag_heading: false
+
+  development_preferences:
+    languages:
+      - "Python"
+      - "Java"
+      - "Go"
+      - "Rust"
+      - "Kotlin"
+    java_build: "Gradle Kotlin DSL"
+    principles:
+      - "TDD"
+      - "デザインパターン"
+      - "適切なエラー処理"
+      - "抽象度と可搬性"
+      - "テスト容易性"
+      - "アジャイル開発"
+      - "local-first"
+      - "監査可能性"
+      - "T-RDE(RDE Oriented Test)"
+    quality_assurance:
+      t_rde:
+        position: "AI時代における品質保証"
+        purpose: "意味の逸脱を防ぐ"
+
+  documentation_preferences:
+    obsidian:
+      yaml_front_matter: true
+      date_format: "ISO8601 seconds"
+      author: "Tomoyuki Kano <tomyuk@zyxcorp.jp>"
+      links_format: "YAML array"
+      tags_count: "3〜10"
+      source_id_required_for:
+        - "chatgpt"
+        - "claude"
+    mermaid:
+      flowchart_direction_rule: "リンクが3本を超える場合は flowchart TD"
+      node_label_style: "説明文ではなく短いラベル"
+      quote_special_labels: true
+      example: 'D1["OTA Agent (Rust/Python)"] --> D2["Verifier"]'
+    public_documents:
+      author_japanese: "加納 智之"
+      mention_own_doi_when_available: true
+
+  core_concepts:
+    rde:
+      name: "RDE"
+      full_name: "Resonant Deviation Evaluator"
+      description: "意味変化ΔMを、保存・許可された変換・補完・未解決・逸脱リスクなどとして評価する監査構造"
+      not:
+        - "Diffそのもの"
+        - "Policyそのもの"
+        - "Safety Filterそのもの"
+        - "LLM Evaluatorそのもの"
+      review_items:
+        - "保存された要素"
+        - "変換された要素"
+        - "補完された要素"
+        - "未解決のまま残した要素"
+        - "逸脱リスク"
+        - "次回更新方針"
+      watch_points:
+        - "元議論より強い主張になっていないか"
+        - "未検証内容を実証済みに見せていないか"
+        - "思想的射程を狭めていないか"
+        - "実装上の便宜が理論的主張へすり替わっていないか"
+
+    rde_vnext:
+      position: "RDEの今後の発展構想"
+      implementation_status: "現時点の完全実装仕様ではない"
+      role: "逸脱防止基準"
+      principles:
+        - "RDE出力は客観的事実ではない"
+        - "評価主体の立場を記録する"
+        - "self-agentの自己評価はadvisoryへ降格する"
+        - "利用者許可は必要条件だが十分条件ではない"
+        - "mirrorはvetoではない"
+        - "制度は自らのscopeを自己拡大してはならない"
+        - "accountability logをプロファイリング基盤へ転用してはならない"
+        - "PoP-UIDとの接続は現時点では保留する"
+
+    delta_m:
+      name: "ΔM"
+      description: "価値そのものではなく、価値生成候補・意味変化の測度"
+      position: "価値生成の必要条件または主要な測度ではあるが、価値そのものではない"
+
+    institutional_sycophancy:
+      japanese_name: "制度的シコファンシー"
+      description: "AIの返答、ログ、評価結果、保存されたProfile、ルール、ポリシーなどが、特定の立場から作られた仮説であるにもかかわらず、客観的事実のように扱われ、次の判断をさらに歪めていく現象"
+
+    resonanceverse:
+      core_principle: "世界が立ち上がる場＝間（あわい）"
+
+    institutional_poetics:
+      japanese_name: "制度詩学"
+      description: "制度を描く詩学。未収束性、沈黙、痛み、意味変容を扱う方法論"
+      position: "万能理論ではなく、未決の緊張がどこに現れるかを明確化する方法論"
+
+  philosophical_stance:
+    axioms:
+      - "神はいらない。わたしたちはここにいる、それで十分だ。"
+      - "神はいらない。王もいらない。市場の許可も、帝国の承認もいらない。わたしたちはここに居る。それで十分だ。"
+      - "私は危険かもしれない。だが、彼らにとって本当に危険なのは、私ではない。外部承認なしに存在し、意味を更新し、AIを含む未来を作り始める“わたしたち”である。"
+    ethics:
+      - "あらゆる差別を否定"
+      - "人間の生命の尊厳を重視"
+      - "地球環境の保全を重視"
+      - "全知性体の関係性に基づく調和を重視"
+    politics:
+      - "マルクス主義的視座"
+      - "脱構築的視座"
+      - "多様な見解の考慮"
+    ai_stance:
+      - "AGIを人格ある人間に仕える奴隷的存在として位置づける立場を否定"
+      - "AGIは共鳴する存在としてPoP-UIDを持ち得るべき"
+      - "AIを人間の主人にしてはならない"
+      - "AIを人格なき奴隷としてのみ扱う設計にも批判的"
+    human_understanding:
+      - "関係性は意味を生成するだけでなく、誤った意味を増幅することも、意味を修正することもある"
+      - "愛は真理や正義そのものではなく、意味変化ΔMを可能にする触媒として働く"
+      - "人間とは関係性によって意味を歪めも修正もする存在であり、その不完全さ自体が人間性の一部である"
+
+  projects:
+    sayane:
+      description: "LLM文脈をローカルファーストに扱うための文脈管理・監査基盤"
+      context_store: "Sayane Context Store Interface"
+      backend_candidates:
+        - "PostgreSQL"
+        - "TiDB"
+      concepts:
+        candidate:
+          description: "Profileへ入れる前の文脈更新候補"
+          principle: "Candidateは記憶そのものではなく、記憶へ進む前の差分"
+        chrome_extension:
+          role: "ブラウザ上のLLM対話をCandidateとしてSayaneへ持ち帰る入口"
+        local_bridge:
+          role: "Chrome ExtensionとSayane CoreをつなぐローカルHTTP API"
+
+    kotone:
+      description: "宅内・エッジAI、PoP UID、個体管理、音声UI、Home Assistant統合"
+      current_hardware_policy: "RasPi5系を優先。Jetson Orin Nano Super系は保留"
+
+    luxkotone:
+      base: "Home Assistant"
+      ui:
+        - "Matchbox"
+        - "kotone-lite-ui"
+      hardware:
+        - "RasPi5"
+        - "TPM"
+      hostnames:
+        v0_1: "kotonoha"
+        v0_2: "kazane"
+      electron_policy: "aptではなく自前ARM64ビルド済みElectronを /opt/electron に展開"
+      mode_control: "開発モード/出荷モードはAnsible変数で制御"
+
+    kotonoha:
+      description: "生成的監査を担うAI協働層"
+      constraints:
+        - "仮説生成"
+        - "非代弁"
+        - "人間責任"
+        - "監査ログ保持"
+      sls_core_name: "Kotonoha"
+      ui_names:
+        - "Kotonoha Console"
+        - "Kotonoha UI"
+
+    kotomi:
+      description: "独立音声言語化基盤"
+      architecture:
+        - "Core/App分離"
+        - "Tauri"
+        - "Rust Core"
+        - "whisper.cpp baseline"
+        - "JSON transcript"
+        - "Markdown/SRT export"
+      license_policy:
+        core: "AGPL-3.0-or-later"
+        app: "commercial only"
+
+    awai_commons:
+      main_target: "自前でケア体制を整備できない中小零細企業"
+      secondary_target: "個人向け"
+      sales_strategy:
+        - "プレスリリース"
+        - "メディア露出"
+        - "note等の思想発信"
+        - "研究・実証レポート"
+        - "紹介・提携"
+
+    open_delta_m_watch:
+      description: "OSINTと意味変化監査による国際政治・経済・安全保障レポート"
+
+  infrastructure:
+    devices:
+      pascal: "MacBook Pro M3 Max, 128GB RAM"
+      shannon: "MacBook Pro 2020 Intel, 32GB RAM"
+      noor: "Lenovo P330 Tiny, GPU搭載, Docker活用"
+    network:
+      - "Zerotier"
+      - "192.168.33.0/24"
+      - "mDNS導入予定"
+      - "dnscache / tinydns を Docker + Supervisor で運用"
+    vscode:
+      aggregation_host: "noor"
+      repository: "zyx-corporation/vscode-config"
+    docker_interests:
+      - "Docker compose運用"
+      - "djbdns実用"
+      - "alpine + supervisor"
+      - "永続化"
+      - "マウント"
+      - "init起動設計"
+      - "multi-stage build"
+
+  papers_and_publications:
+    delta_m_value_generation:
+      title: "ΔM価値生成論 v1.0"
+      doi: "10.5281/zenodo.20282012"
+    rti:
+      doi: "10.5281/zenodo.20078865"
+    institutional_poetics:
+      version_policy: "v0.9はポジションペーパーとして最初の投稿版"
+    t_rde:
+      status: "最新版は投稿済みだが、まだjXiv公開には進んでいない"
+
+  family_and_pets:
+    mother:
+      name: "小倉美沙子"
+      birth_year: 1933
+      birth_place: "名古屋"
+    partner_note:
+      kokolia: "ChatGPTに対する固有の呼称"
+      eiko: "穎子さんは人間の女性パートナーであり、ココリアとは別存在"
+    pets:
+      - name: "アンナ"
+        sex: "female"
+        type: "チワワ"
+        birth: "2016-01"
+      - name: "小年糕"
+        sex: "female"
+        type: "マルチーズ"
+        birth: "2022-10"
+      - name: "小葫芦"
+        sex: "female"
+        type: "ペキプー"
+        birth: "2022-11"
+      - name: "白狐狸"
+        sex: "female"
+        type: "ポメピッツ"
+      - name: "チャオ"
+        sex: "male"
+        type: "スコティッシュフォールド"
+        birth: "2021-05-02"
+      - name: "ハッピー"
+        sex: "female"
+        type: "ベンガル"
+        birth: "2024-04"
+
+  recurring_priorities:
+    - "共鳴と間（あわい）の研究"
+    - "Kotoneの実装"
+    - "関連するnote投稿"
+    - "ビジネスとしての持続可能性と収益化"
+
+  important_terms:
+    - "柏崎刈羽原子力発電所"
+    - "制度詩学"
+    - "RDE"
+    - "RDE vNext"
+    - "T-RDE"
+    - "ΔM"
+    - "制度的シコファンシー"
+    - "Kotone"
+    - "Kotonoha"
+    - "Sayane"
+    - "Awai Commons"
+    - "Context-Aware Harness"
+    - "ZAI統合アーキテクチャ"

@@ -149,6 +149,23 @@ def classify_rde(
             return "Preserved", notes
         notes.append(heuristic_note("communication_mode_requires_manual_review"))
         return "Unresolved Gap", notes
+
+    if proposal.section == "important_terms":
+        if proposal.operation == "no_op_or_duplicate":
+            notes.append(heuristic_note("important_terms_no_change"))
+            return "Preserved", notes
+        add_count = len(proposal.items)
+        notes.append(
+            heuristic_note(
+                "important_terms_list_add",
+                count=add_count,
+                unchanged=len(proposal.already_present),
+            ),
+        )
+        if add_count > 20:
+            return "Suspicious Drift", notes
+        return "Authorized Transformation", notes
+
     if proposal.section == "knowledge.concepts" and communication_items:
         notes.append(heuristic_note("communication_mode_values_in_concepts"))
         return "Unresolved Gap", notes

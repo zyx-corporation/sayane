@@ -35,7 +35,8 @@ const NOTE_MESSAGES: Record<SupportedLocale, Record<string, string>> = {
       "communication_mode 由来の値を knowledge.concepts に追加するべきではありません。",
     no_concrete_proposal_items: "具体的な提案項目が抽出されませんでした。",
     non_critical_knowledge_extension: "Captureから得られた非重大な知識補完です。",
-    section_change_requires_manual_review: "section変更には手動確認が必要です。",
+    important_terms_list_add: "important_terms に {count} 件の追加候補があります。既存 {unchanged} 件は変更されません。",
+    important_terms_no_change: "important_terms の項目はすべて既存Profileと一致しています。",
     proposal_adds_existing_projects:
       "既存プロジェクトを明確な理由なく再追加しようとしています。",
     potential_redundancy_in_concepts:

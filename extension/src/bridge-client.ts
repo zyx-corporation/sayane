@@ -37,13 +37,21 @@ async function bridgeFetch(path: string, init?: RequestInit): Promise<Response> 
     let detail = response.statusText;
     let details: Record<string, unknown> | undefined;
     try {
-      const body = (await response.json()) as
-        | { detail?: string }
-        | { error?: string; message?: string; [key: string]: unknown };
-      if ("message" in body && typeof body.message === "string") {
+      const body = (await response.json()) as Record<string, unknown>;
+      const nested = body.detail;
+      if (nested && typeof nested === "object" && !Array.isArray(nested)) {
+        const payload = nested as Record<string, unknown>;
+        if (typeof payload.message === "string") {
+          detail = payload.message;
+          details = payload;
+        } else if (typeof payload.error === "string") {
+          detail = payload.error;
+          details = payload;
+        }
+      } else if (typeof body.message === "string") {
         detail = body.message;
-        details = body as Record<string, unknown>;
-      } else if ("detail" in body && typeof body.detail === "string") {
+        details = body;
+      } else if (typeof body.detail === "string") {
         detail = body.detail;
       }
     } catch {

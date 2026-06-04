@@ -122,8 +122,10 @@
         <p id="bridge-state" class="meta-line"></p>
         <p id="page-state" class="meta-line"></p>
         <p id="page-state-detail" class="meta-line"></p>
-        <button type="button" id="btn-bridge-check" data-i18n="bridge.check">Check connection</button>
-        <button type="button" id="btn-recheck-page" data-i18n="page.recheck">Recheck page</button>
+        <div id="input-debug-actions" class="input-debug-actions" hidden>
+          <button type="button" id="btn-bridge-check" data-i18n="bridge.check">Check connection</button>
+          <button type="button" id="btn-recheck-page" data-i18n="page.recheck">Recheck page</button>
+        </div>
         <label for="profile-select" data-i18n="profile.label">Profile</label>
         <select id="profile-select"></select>
         <button type="button" id="btn-capture-selection" data-i18n="capture.selection">Capture selection</button>
@@ -136,7 +138,7 @@
           <p id="capture-page-disabled-hint" class="meta-line capture-hint"></p>
           <p id="capture-page-hint" class="meta-line" data-i18n="capture.page_hint"></p>
         </details>
-        <details id="debug-panel" class="debug-panel">
+        <details id="debug-panel" class="debug-panel" hidden>
           <summary data-i18n="debug.toggle">Debug</summary>
           <pre id="debug-lines" class="meta"></pre>
         </details>

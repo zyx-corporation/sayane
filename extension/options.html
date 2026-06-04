@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Sayane Options</title>
+    <title>Sayane Settings</title>
     <style>
       body {
         font-family: system-ui, sans-serif;
@@ -30,6 +30,16 @@
         font-size: 0.85rem;
         color: #555;
       }
+      .build-info-panel {
+        margin: 12px 0 16px;
+        padding: 10px 12px;
+        background: #f5f7fa;
+        border: 1px solid #e2e6ee;
+        border-radius: 6px;
+      }
+      .build-info-line {
+        margin: 4px 0;
+      }
       #status.error {
         color: #b00020;
       }
@@ -50,7 +60,11 @@
   </head>
   <body>
     <div id="app-root" aria-busy="false">
-    <h1 data-i18n="options.title">Sayane Options</h1>
+    <h1 data-i18n="options.title">Sayane Settings</h1>
+    <section class="build-info-panel" aria-label="Build information">
+      <p id="extension-build-info" class="hint build-info-line"></p>
+      <p id="bridge-build-info" class="hint build-info-line"></p>
+    </section>
     <p class="hint" data-i18n="options.hint">
       Run sayane serve locally. Copy the bearer token from ~/.sayane/bridge.token.
     </p>
@@ -77,6 +91,14 @@
     </label>
     <p class="hint" data-i18n="options.developer_mode_hint">
       When enabled, low-confidence page capture appears in the popup for debugging.
+    </p>
+
+    <label>
+      <input id="show-debug-ui" type="checkbox" />
+      <span data-i18n="options.show_debug_ui">Show debug UI</span>
+    </label>
+    <p class="hint" data-i18n="options.show_debug_ui_hint">
+      When enabled, shows popup bridge check, page recheck, diagnostics panel, and the side panel Debug filter.
     </p>
 
     <button type="button" id="save" data-i18n="options.save">Save</button>

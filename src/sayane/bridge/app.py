@@ -21,14 +21,16 @@ from sayane.bridge.models import (
     RejectCandidateRequest,
 )
 from sayane.bridge.service import compile_prompt, list_profiles
+from sayane.core.build_info import get_build_info
 from sayane.storage.candidates import load_candidate
 
 
 def create_app(config: BridgeConfig | None = None) -> FastAPI:
     cfg = config or BridgeConfig()
+    build = get_build_info()
     app = FastAPI(
         title="Sayane Local Bridge",
-        version="0.5.3",
+        version=build.version,
         docs_url="/docs" if False else None,
         redoc_url=None,
     )
@@ -50,7 +52,7 @@ def create_app(config: BridgeConfig | None = None) -> FastAPI:
 
     @app.get("/health")
     def health() -> dict[str, str]:
-        return {"status": "ok"}
+        return {"status": "ok", **build.as_dict()}
 
     @app.get("/profiles", response_model=list[ProfileSummary])
     def get_profiles(

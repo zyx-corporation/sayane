@@ -1,5 +1,10 @@
 import { DEFAULT_BRIDGE_URL, loadConfig, saveConfig, STORAGE_KEYS } from "./config.js";
 import { probeBridge } from "./bridge-client.js";
+import {
+  bridgeBuildInfoLine,
+  extensionBuildInfoLine,
+  fetchBridgeBuildInfo,
+} from "./build-info-display.js";
 import { BusyUiController } from "./busy-ui.js";
 import { applyDataI18n, initI18n, t } from "./i18n.js";
 import { notifyOptionsUpdated } from "./options-notify.js";
@@ -38,17 +43,20 @@ function readForm(): {
   defaultProfileId: string;
   displayLanguage: DisplayLanguage;
   developerMode: boolean;
+  showDebugUi: boolean;
 } {
   const lang = select("display-language").value;
   const displayLanguage: DisplayLanguage =
     lang === "en" || lang === "ja" || lang === "auto" ? lang : "auto";
   const devEl = document.getElementById("developer-mode");
+  const debugUiEl = document.getElementById("show-debug-ui");
   return {
     bridgeUrl: input("bridge-url").value.trim() || DEFAULT_BRIDGE_URL,
     bridgeToken: input("bridge-token").value.trim(),
     defaultProfileId: input("default-profile").value.trim() || "default",
     displayLanguage,
     developerMode: devEl instanceof HTMLInputElement ? devEl.checked : false,
+    showDebugUi: debugUiEl instanceof HTMLInputElement ? debugUiEl.checked : true,
   };
 }
 
@@ -56,6 +64,19 @@ async function refreshUiLanguage(): Promise<void> {
   await initI18n();
   applyDataI18n();
   document.title = t("options.title");
+  renderExtensionBuildInfo();
+}
+
+function renderExtensionBuildInfo(): void {
+  const el = document.getElementById("extension-build-info");
+  if (el) el.textContent = extensionBuildInfoLine();
+}
+
+async function refreshBridgeBuildInfo(bridgeUrl: string): Promise<void> {
+  const el = document.getElementById("bridge-build-info");
+  if (!el) return;
+  const info = await fetchBridgeBuildInfo(bridgeUrl);
+  el.textContent = bridgeBuildInfoLine(info);
 }
 
 function registerBusyButtons(): void {
@@ -76,8 +97,13 @@ async function init(): Promise<void> {
   if (devEl instanceof HTMLInputElement) {
     devEl.checked = config.developerMode;
   }
+  const debugUiEl = document.getElementById("show-debug-ui");
+  if (debugUiEl instanceof HTMLInputElement) {
+    debugUiEl.checked = config.showDebugUi;
+  }
   await refreshUiLanguage();
   registerBusyButtons();
+  void refreshBridgeBuildInfo(config.bridgeUrl || DEFAULT_BRIDGE_URL);
 }
 
 select("display-language").addEventListener("change", () => {
@@ -91,6 +117,7 @@ async function persistOptions(form: ReturnType<typeof readForm>): Promise<void> 
     [STORAGE_KEYS.defaultProfileId]: form.defaultProfileId,
     [STORAGE_KEYS.displayLanguage]: form.displayLanguage,
     [STORAGE_KEYS.developerMode]: form.developerMode,
+    [STORAGE_KEYS.showDebugUi]: form.showDebugUi,
   });
   await notifyOptionsUpdated(form.bridgeUrl, form.defaultProfileId);
 }
@@ -101,11 +128,16 @@ $("save").addEventListener("click", () => {
       const form = readForm();
       await persistOptions(form);
       await refreshUiLanguage();
+      void refreshBridgeBuildInfo(form.bridgeUrl);
       setStatus(t("options.saved"));
     } catch (err) {
       setStatus(String(err), true);
     }
   })();
+});
+
+input("bridge-url").addEventListener("change", () => {
+  void refreshBridgeBuildInfo(input("bridge-url").value.trim() || DEFAULT_BRIDGE_URL);
 });
 
 $("test-bridge").addEventListener("click", () => {
@@ -116,6 +148,7 @@ $("test-bridge").addEventListener("click", () => {
       await persistOptions(form);
       await refreshUiLanguage();
       const result = await probeBridge(form.bridgeUrl, form.bridgeToken);
+      await refreshBridgeBuildInfo(form.bridgeUrl);
       setStatus(t(result.messageKey, result.ok ? undefined : result.params), !result.ok);
     } catch (err) {
       setStatus(String(err), true);

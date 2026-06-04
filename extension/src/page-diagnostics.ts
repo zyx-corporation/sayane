@@ -273,6 +273,21 @@ export function deriveCaptureAvailability(
   );
   debugLines.push(`${t("debug.page_readable")}: ${ping.readable}`);
   debugLines.push(`${t("debug.selection_length")}: ${ping.selectionTextLength}`);
+  if (typeof ping.selectionCurrentLength === "number") {
+    debugLines.push(
+      `${t("debug.selection_current_length")}: ${ping.selectionCurrentLength}`,
+    );
+  }
+  if (typeof ping.selectionCachedLength === "number") {
+    debugLines.push(
+      `${t("debug.selection_cached_length")}: ${ping.selectionCachedLength}`,
+    );
+  }
+  if (ping.selectionCacheAgeMs != null) {
+    debugLines.push(
+      `${t("debug.selection_cache_age_ms")}: ${ping.selectionCacheAgeMs}`,
+    );
+  }
   debugLines.push(
     `${t("debug.extractor")}: ${ping.extractorAvailable ? t("debug.ok") : t("debug.failed")}`,
   );

@@ -1,5 +1,6 @@
 """Persist capture payloads as candidate updates (not profile merge)."""
 
+import re
 from typing import Literal
 
 from sayane.bridge.config import BridgeConfig
@@ -8,7 +9,31 @@ from sayane.bridge.service import resolve_profile_path
 from sayane.core.candidate import CaptureMetadata
 from sayane.core.loader import load_profile
 from sayane.core.profile_quality import capture_content_warnings
+from sayane.evaluators.list_diff import parse_yaml_list_section
 from sayane.storage.candidates import create_from_capture
+
+IMPORTANT_TERMS_CLIPBOARD_WARN_COUNT = 8
+
+
+def _clipboard_scope_warnings(content: str, source_kind: str) -> list[str]:
+    """Warn when clipboard likely contains a full persona document, not a partial edit."""
+    if source_kind != "clipboard":
+        return []
+    text = content.strip()
+    if not text:
+        return []
+    line_count = len(text.splitlines())
+    has_persona_root = bool(re.search(r"(?m)^persona\s*:", text))
+    has_terms_only = bool(re.search(r"(?m)^important_terms\s*:", text)) and not has_persona_root
+    if has_terms_only:
+        warnings: list[str] = []
+        terms = parse_yaml_list_section(text, "important_terms")
+        if len(terms) > IMPORTANT_TERMS_CLIPBOARD_WARN_COUNT:
+            warnings.append("clipboard_many_important_terms")
+        return warnings
+    if has_persona_root and line_count > 35:
+        return ["full_persona_document_detected"]
+    return []
 
 
 def save_capture(config: BridgeConfig, request: CaptureRequest) -> CaptureResponse:
@@ -33,6 +58,10 @@ def save_capture(config: BridgeConfig, request: CaptureRequest) -> CaptureRespon
         source_kind = "selection"
     elif (request.source or "").strip().lower() == "clipboard":
         source_kind = "clipboard"
+
+    for w in _clipboard_scope_warnings(request.content, source_kind):
+        if w not in warnings:
+            warnings.append(w)
 
     capture_meta = CaptureMetadata(
         user_selected=request.user_selected or source_kind in ("selection", "clipboard"),

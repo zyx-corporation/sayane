@@ -24,6 +24,14 @@ describe("capture input design", () => {
     assert.ok(!html.includes('id="btn-capture-page"') || html.indexOf("developer-capture-panel") < html.indexOf("btn-capture-page"));
   });
 
+  it("popup hides bridge check and page recheck until debug UI is enabled", () => {
+    const html = readFileSync(join(extRoot, "popup.html"), "utf8");
+    assert.ok(html.includes('id="input-debug-actions"'));
+    assert.match(html, /input-debug-actions[^>]*hidden/);
+    assert.ok(html.includes('id="btn-bridge-check"'));
+    assert.ok(html.includes('id="btn-recheck-page"'));
+  });
+
   it("clipboard capture available when bridge is connected without page ping", () => {
     const avail = deriveCaptureAvailability(
       { kind: "connected" },

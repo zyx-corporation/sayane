@@ -18,6 +18,7 @@ FORCE_ALLOWED_SECTIONS = frozenset(
         "policy.response.prefer",
         "identity.roles",
         "knowledge.concepts",
+        "important_terms",
         "major_projects",
         "communication_mode",
     },

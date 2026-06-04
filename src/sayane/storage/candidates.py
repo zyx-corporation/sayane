@@ -96,6 +96,7 @@ def create_from_capture(
         clean_capture_text,
         display_summary_from_text,
     )
+    from sayane.evaluators.list_diff import important_terms_display_summary
     from sayane.evaluators.proposal import build_proposal_from_content
     from sayane.evaluators.sections import normalize_proposal_section
     from sayane.storage.factory import open_storage
@@ -135,6 +136,8 @@ def create_from_capture(
     if requires_review and not capture_meta.requires_review:
         capture_meta = capture_meta.model_copy(update={"requires_review": True})
     summary = display_summary or proposal.summary or display_summary_from_text(cleaned)
+    if proposal.section == "important_terms" and not display_summary:
+        summary = important_terms_display_summary(proposal, locale=locale)
     candidate = CandidateUpdate(
         id=candidate_id,
         status="pending",

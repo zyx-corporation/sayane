@@ -4,6 +4,8 @@ from typing import Any
 
 from sayane.bridge.config import BridgeConfig
 from sayane.core.candidate import CandidateUpdate
+from sayane.evaluators.sections import can_merge_section
+from sayane.evaluators.list_diff import important_terms_display_summary
 from sayane.evaluators.service import (
     approve_candidate,
     diff_candidate,
@@ -24,6 +26,7 @@ class CandidateOperationError(ValueError):
         candidate_id: str,
         status: str | None = None,
         rde_category: str | None = None,
+        section: str | None = None,
     ) -> None:
         super().__init__(message)
         self.error = error
@@ -31,6 +34,7 @@ class CandidateOperationError(ValueError):
         self.candidate_id = candidate_id
         self.status = status
         self.rde_category = rde_category
+        self.section = section
 
     def to_payload(self) -> dict[str, Any]:
         payload: dict[str, Any] = {
@@ -42,6 +46,8 @@ class CandidateOperationError(ValueError):
             payload["status"] = self.status
         if self.rde_category:
             payload["rde_category"] = self.rde_category
+        if self.section:
+            payload["section"] = self.section
         return payload
 
 
@@ -65,7 +71,10 @@ def list_candidates(config: BridgeConfig) -> list[dict[str, Any]]:
 
 
 def get_candidate(config: BridgeConfig, candidate_id: str) -> dict[str, Any]:
-    return load_candidate(config, candidate_id).model_dump(mode="json")
+    candidate = load_candidate(config, candidate_id)
+    data = candidate.model_dump(mode="json")
+    data["source_excerpt"] = _source_excerpt(candidate)
+    return data
 
 
 def post_evaluate(
@@ -129,6 +138,19 @@ def post_approve(
                 status=existing.status,
                 rde_category=rde_category,
             )
+    section = existing.proposal.section
+    if not can_merge_section(section, force_critical=force_critical):
+        raise CandidateOperationError(
+            error="requires_force_critical",
+            message=(
+                f"Cannot merge section '{section}' without force_critical. "
+                "Confirm in the review panel after checking the diff."
+            ),
+            candidate_id=candidate_id,
+            status=existing.status,
+            rde_category=rde_category,
+            section=section,
+        )
     candidate = approve_candidate(
         config,
         candidate_id,
@@ -166,8 +188,29 @@ def get_diff(config: BridgeConfig, candidate_id: str) -> dict[str, Any]:
     return diff_candidate(config, candidate_id)
 
 
+def _source_excerpt(c: CandidateUpdate, max_len: int = 1200) -> str:
+    """Raw capture input for UI — never stored Profile IR (`content` field)."""
+    text = (c.raw_capture or c.cleaned_capture or "").strip()
+    if not text:
+        text = (c.display_summary or "").strip()
+    if len(text) > max_len:
+        return text[:max_len]
+    return text
+
+
+def _capture_preview_text(c: CandidateUpdate) -> str:
+    """Card list preview — prefer diff summary for list sections."""
+    if c.proposal.section == "important_terms":
+        summary = important_terms_display_summary(c.proposal, locale=c.locale)
+        if summary:
+            return summary[:200] + ("..." if len(summary) > 200 else "")
+    source = _source_excerpt(c, max_len=200)
+    if len(source) <= 200:
+        return source
+    return source[:200] + "..."
+
+
 def _candidate_summary(c: CandidateUpdate) -> dict[str, Any]:
-    preview = c.content if len(c.content) <= 200 else c.content[:200] + "..."
     return {
         "id": c.id,
         "status": c.status,
@@ -183,5 +226,9 @@ def _candidate_summary(c: CandidateUpdate) -> dict[str, Any]:
         "rde_class": c.evaluation.rde_class if c.evaluation else None,
         "evaluation_level": c.evaluation.level if c.evaluation else None,
         "section": c.proposal.section,
-        "content_preview": preview,
+        "content_preview": _capture_preview_text(c),
+        "display_summary": c.display_summary,
+        "capture_source": (
+            c.capture_meta.capture_source if c.capture_meta else c.source.type
+        ),
     }

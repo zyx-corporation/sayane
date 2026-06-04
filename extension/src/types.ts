@@ -9,6 +9,7 @@ export interface ExtensionConfig {
   defaultProfileId: string;
   displayLanguage: DisplayLanguage;
   developerMode: boolean;
+  showDebugUi: boolean;
 }
 
 export type DisplayLanguage = "auto" | "en" | "ja";
@@ -61,16 +62,42 @@ export interface CandidateSummary {
   evaluation_level: number | null;
   section: string;
   content_preview: string;
+  display_summary?: string | null;
+  capture_source?: CaptureSourceKind | string | null;
+}
+
+export type CaptureSourceKind = "selection" | "clipboard" | "page";
+
+export interface CaptureMetadataView {
+  capture_source?: CaptureSourceKind;
+  capture_confidence?: "high" | "low";
+  user_selected?: boolean;
+  requires_review?: boolean;
+  capture_warnings?: string[];
+  parse_error?: string | null;
 }
 
 export interface CandidateDetail extends CandidateSummary {
   content: string;
+  raw_capture?: string | null;
+  cleaned_capture?: string | null;
+  display_summary?: string | null;
+  /** Raw capture input for UI (from Bridge; never Profile IR `content`). */
+  source_excerpt?: string | null;
+  capture_meta?: CaptureMetadataView | null;
   proposal: {
     section: string;
     operation?: string;
     parse_error?: string | null;
     add: string[];
-    items?: Array<{ name?: string; summary?: string; path?: string; value?: string }>;
+    items?: Array<{
+      name?: string;
+      summary?: string;
+      path?: string;
+      yaml_path?: string;
+      section?: string;
+      value?: string;
+    }>;
     already_present?: Array<{ name?: string; summary?: string; path?: string; value?: string }>;
     summary: string | null;
   };
@@ -118,6 +145,13 @@ export interface CandidateDiff {
   remove?: unknown[];
   modify?: unknown[];
   already_present?: unknown[];
+  list_diff?: {
+    added?: string[];
+    removed?: string[];
+    unchanged?: string[];
+    unchanged_count?: number;
+    operation?: string;
+  };
   recommended_section?: string;
   has_duplicates?: boolean;
   profile_update_recommended?: boolean;
@@ -131,6 +165,12 @@ export type SayanePingPayload = {
   title: string;
   readable: boolean;
   selectionTextLength: number;
+  /** Live window.getSelection() length (debug). */
+  selectionCurrentLength?: number;
+  /** Cached last selection length (debug). */
+  selectionCachedLength?: number;
+  /** Milliseconds since cache was last updated; null if none (debug). */
+  selectionCacheAgeMs?: number | null;
   extractorAvailable: boolean;
   extractorError: string | null;
   hostPermissionOk: boolean;
@@ -177,13 +217,27 @@ export type BackgroundMessage =
       target: InsertTarget;
       profileId: string;
     }
-  | { type: "CAPTURE_SELECTION"; tabId: number; profileId?: string; locale?: SupportedLocale }
-  | { type: "CAPTURE_PAGE"; tabId: number; profileId?: string; locale?: SupportedLocale }
+  | {
+      type: "CAPTURE_SELECTION";
+      tabId: number;
+      windowId?: number;
+      profileId?: string;
+      locale?: SupportedLocale;
+    }
+  | {
+      type: "CAPTURE_PAGE";
+      tabId: number;
+      windowId?: number;
+      profileId?: string;
+      locale?: SupportedLocale;
+    }
   | {
       type: "CAPTURE_CLIPBOARD";
       content: string;
+      windowId?: number;
       profileId?: string;
       locale?: SupportedLocale;
+      captureWarnings?: string[];
     }
   | {
       type: "INSERT_CONTEXT_PACKET";

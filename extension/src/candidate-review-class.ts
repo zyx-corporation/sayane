@@ -34,9 +34,22 @@ export const REVIEW_REQUIRED_CLASSES: CandidateReviewClass[] = [
 const PERSONA_MARKERS =
   /persona\s*:|communication_mode|writing_style|identity\s*:|values\.|major_projects\s*:/i;
 
+const PERSONA_DOC_HEADER = /^#\s*.+(ペルソナ|persona)/im;
+const PERSONA_BASIC_INFO = /^##\s*基本情報/m;
+
 export function isPersonaDump(text: string, section: string): boolean {
+  if (section === "important_terms") return false;
+  const trimmed = text.trim();
+  if (/^important_terms\s*:/im.test(trimmed) && !/^persona\s*:/im.test(trimmed)) {
+    return false;
+  }
   if (section === "mixed_sections" || section === "review_required") {
-    return text.length > 400;
+    return text.length > 400 && /^persona\s*:/im.test(trimmed);
+  }
+  if (PERSONA_DOC_HEADER.test(text)) return true;
+  if (PERSONA_BASIC_INFO.test(text) && text.length > 200) return true;
+  if (section === "voice.tone" && /^#\s/m.test(text) && text.length > 300) {
+    return true;
   }
   if (text.length > 1500 && PERSONA_MARKERS.test(text)) return true;
   if (/^---\s*$/m.test(text) && text.length > 800) return true;
@@ -56,12 +69,43 @@ export function classifyCandidate(c: CandidateSummary): CandidateReviewClass {
     return "low_value";
   }
 
+  if (section === "important_terms") {
+    if (c.status === "evaluated") {
+      const rde = c.rde_class;
+      if (rde === "Preserved") return "duplicate_or_confirmed";
+      if (rde === "Critical Distortion" || rde === "Suspicious Drift") {
+        return "reject_recommended";
+      }
+    }
+    return "new_candidate";
+  }
+
   if (isPersonaDump(preview, section)) {
     return "sensitive_review";
   }
 
   if (section === "review_required" || section === "mixed_sections") {
     return "sensitive_review";
+  }
+
+  if (c.status === "evaluated") {
+    const rde = c.rde_class;
+    if (rde === "Critical Distortion" || rde === "Suspicious Drift") {
+      return "reject_recommended";
+    }
+    if (rde === "Preserved") {
+      return "duplicate_or_confirmed";
+    }
+    if (rde === "Authorized Transformation") {
+      return "meaning_changed";
+    }
+    if (rde === "Inferred Extension") {
+      return "inferred_extension";
+    }
+    if (rde === "Unresolved Gap") {
+      return "conflict";
+    }
+    return "new_candidate";
   }
 
   const rde = c.rde_class;
@@ -138,4 +182,25 @@ export function shouldBlockBulkApprove(c: CandidateSummary): boolean {
 
 export function riskHintKey(cls: CandidateReviewClass): string {
   return `review.risk.${cls}`;
+}
+
+export function riskHintKeyForCandidate(c: CandidateSummary): string {
+  if (c.section === "important_terms") {
+    const withSummary = c as CandidateSummary & { display_summary?: string | null };
+    const summary = withSummary.display_summary ?? c.content_preview ?? "";
+    if (/追加候補|term\(s\) to add/i.test(summary)) {
+      return "review.risk.important_terms_add";
+    }
+  }
+  return riskHintKey(classifyCandidate(c));
+}
+
+export function recommendedActionKeyForCandidate(c: CandidateSummary): string {
+  if (c.section === "important_terms") {
+    const cls = classifyCandidate(c);
+    if (cls === "new_candidate" || cls === "meaning_changed") {
+      return "review.action.important_terms_add";
+    }
+  }
+  return recommendedActionKey(classifyCandidate(c));
 }

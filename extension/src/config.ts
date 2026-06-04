@@ -8,6 +8,7 @@ export const STORAGE_KEYS = {
   defaultProfileId: "defaultProfileId",
   displayLanguage: "displayLanguage",
   developerMode: "developerMode",
+  showDebugUi: "showDebugUi",
 } as const;
 
 export const DEFAULT_CONFIG: ExtensionConfig = {
@@ -16,6 +17,7 @@ export const DEFAULT_CONFIG: ExtensionConfig = {
   defaultProfileId: "default",
   displayLanguage: "auto",
   developerMode: false,
+  showDebugUi: true,
 };
 
 export async function loadConfig(): Promise<ExtensionConfig> {
@@ -25,6 +27,7 @@ export async function loadConfig(): Promise<ExtensionConfig> {
     STORAGE_KEYS.defaultProfileId,
     STORAGE_KEYS.displayLanguage,
     STORAGE_KEYS.developerMode,
+    STORAGE_KEYS.showDebugUi,
   ]);
   const lang = stored[STORAGE_KEYS.displayLanguage] as string | undefined;
   const displayLanguage: DisplayLanguage =
@@ -36,6 +39,10 @@ export async function loadConfig(): Promise<ExtensionConfig> {
       (stored[STORAGE_KEYS.defaultProfileId] as string) || DEFAULT_CONFIG.defaultProfileId,
     displayLanguage,
     developerMode: Boolean(stored[STORAGE_KEYS.developerMode]),
+    showDebugUi:
+      stored[STORAGE_KEYS.showDebugUi] === undefined
+        ? DEFAULT_CONFIG.showDebugUi
+        : Boolean(stored[STORAGE_KEYS.showDebugUi]),
   };
 }
 

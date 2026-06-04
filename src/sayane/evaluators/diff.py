@@ -5,6 +5,11 @@ from typing import Any
 from sayane.core.candidate import CandidateEvaluation, CandidateProposal, CandidateUpdate
 from sayane.core.models import SayaneProfile
 from sayane.evaluators.rde_summary import build_rde_summary_message
+from sayane.evaluators.list_diff import (
+    important_terms_profile_diff,
+    list_diff_operation,
+    parse_yaml_list_section,
+)
 
 _REVIEW_REQUIRED = "review_required"
 _MIXED_SECTIONS = "mixed_sections"
@@ -55,6 +60,41 @@ def profile_diff_for_candidate(
             candidate.capture_meta.model_dump() if candidate.capture_meta else None,
             has_add=bool(result["add"]),
         )
+        result["rde_summary_message"] = build_rde_summary_message(candidate, result)
+        return result
+
+    if section == "important_terms":
+        raw = (
+            candidate.raw_capture
+            or candidate.cleaned_capture
+            or candidate.content
+            or ""
+        )
+        proposed = parse_yaml_list_section(raw, "important_terms")
+        if not proposed:
+            from sayane.evaluators.list_diff import list_diff_for_important_terms
+
+            ld = list_diff_for_important_terms(proposal)
+        else:
+            ld = important_terms_profile_diff(profile.important_terms, proposed)
+        result["list_diff"] = {
+            **ld.to_dict(),
+            "operation": list_diff_operation(ld),
+        }
+        result["add"] = [
+            {"name": name, "path": "important_terms[]", "yaml_path": "important_terms[]"}
+            for name in ld.added
+        ]
+        result["remove"] = [
+            {"name": name, "path": "important_terms[]", "yaml_path": "important_terms[]"}
+            for name in ld.removed
+        ]
+        result["already_present"] = [
+            {"name": name, "path": "important_terms[]", "yaml_path": "important_terms[]"}
+            for name in ld.unchanged
+        ]
+        result["has_duplicates"] = bool(ld.unchanged) and not ld.added
+        result["profile_update_recommended"] = bool(ld.added)
         result["rde_summary_message"] = build_rde_summary_message(candidate, result)
         return result
 

@@ -388,8 +388,12 @@ def _register_core_commands(app: typer.Typer) -> None:
                 )
             raise typer.Exit(1) from exc
 
+        from sayane.core.build_info import format_build_info_startup_line, get_build_info
+
+        build = get_build_info()
         token, created = load_or_create_token(config)
         typer.echo(t("serve.listening", host=host, port=port))
+        typer.echo(format_build_info_startup_line(build))
         typer.echo(t("serve.token_file", path=config.token_file))
         if created:
             typer.echo(t("serve.pairing", code=format_pairing_code(token)))

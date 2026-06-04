@@ -59,6 +59,30 @@ test("persona dump blocks bulk approve", () => {
   assert.equal(shouldBlockBulkApprove(c), true);
 });
 
+test("japanese persona header detected as sensitive_review", () => {
+  const preview = "# ともゆきさん ペルソナ\n\n## 基本情報\nname: Tomoyuki";
+  assert.ok(isPersonaDump(preview, "voice.tone"));
+  const c = summary({
+    id: "f",
+    status: "evaluated",
+    section: "voice.tone",
+    rde_class: "Authorized Transformation",
+    content_preview: preview,
+  });
+  assert.equal(classifyCandidate(c), "sensitive_review");
+  assert.equal(shouldBlockBulkApprove(c), true);
+});
+
+test("evaluated candidate stays in review_required until resolved", () => {
+  const c = summary({
+    id: "g",
+    status: "evaluated",
+    rde_class: "Authorized Transformation",
+  });
+  assert.equal(classifyCandidate(c), "meaning_changed");
+  assert.equal(matchesReviewFilter(c, "review_required"), true);
+});
+
 test("inferred extension appears in inferred filter", () => {
   const c = summary({
     id: "d",

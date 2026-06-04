@@ -8,7 +8,10 @@ import type { InsertTarget } from "./providers/types.js";
 import { listPopupInsertProviders, listPreviewInsertProviders } from "./providers/registry.js";
 import { applyDataI18n, getLocale, initI18n, localizeError, normalizeLocale, t } from "./i18n.js";
 import { categoryLabel, type CandidateCategory } from "./candidate-display.js";
-import { openSidePanel, notifyCandidatesChanged } from "./sidepanel-client.js";
+import {
+  openSidePanelOnUserGesture,
+  reopenExtensionPopup,
+} from "./sidepanel-client.js";
 import { BusyUiController, applyDisabledWithCursorHint } from "./busy-ui.js";
 import { loadConfig } from "./config.js";
 import {
@@ -20,6 +23,10 @@ import {
 } from "./page-diagnostics.js";
 import { getActiveCaptureTab } from "./tab-target.js";
 import type { OptionsUpdatedMessage } from "./options-notify.js";
+import {
+  analyzeClipboardText,
+  shouldConfirmLargeImportantTermsCapture,
+} from "./clipboard-preview.js";
 
 function $(id: string): HTMLElement {
   const el = document.getElementById(id);
@@ -134,6 +141,32 @@ async function renderDebugPanel(avail: CaptureAvailability): Promise<void> {
   debugEl.textContent = header.join("\n");
 }
 
+async function refreshClipboardPreviewHint(): Promise<void> {
+  const hintEl = $("capture-clipboard-hint") as HTMLElement;
+  try {
+    const text = await navigator.clipboard.readText();
+    const preview = analyzeClipboardText(text);
+    if (preview.importantTermsCount > 0) {
+      hintEl.textContent = t("capture.clipboard_preview_terms", {
+        count: String(preview.importantTermsCount),
+        lines: String(preview.lineCount),
+        chars: String(preview.charCount),
+      });
+      return;
+    }
+    if (preview.charCount > 0) {
+      hintEl.textContent = t("capture.clipboard_preview_generic", {
+        lines: String(preview.lineCount),
+        chars: String(preview.charCount),
+      });
+      return;
+    }
+  } catch {
+    /* permission or empty — fall through */
+  }
+  hintEl.textContent = t("capture.clipboard_hint");
+}
+
 function applyCaptureAvailability(avail: CaptureAvailability): void {
   lastAvailability = avail;
   renderBridgeState(avail.bridgeState);
@@ -147,8 +180,12 @@ function applyCaptureAvailability(avail: CaptureAvailability): void {
 
   ($("capture-selection-hint") as HTMLElement).textContent =
     avail.canCaptureSelection ? "" : (avail.selectionDisabledReason ?? "");
-  ($("capture-clipboard-hint") as HTMLElement).textContent =
-    avail.canCaptureClipboard ? "" : (avail.clipboardDisabledReason ?? "");
+  if (!avail.canCaptureClipboard) {
+    ($("capture-clipboard-hint") as HTMLElement).textContent =
+      avail.clipboardDisabledReason ?? "";
+  } else {
+    void refreshClipboardPreviewHint();
+  }
   ($("capture-page-disabled-hint") as HTMLElement).textContent =
     avail.canCapturePage ? "" : (avail.pageDisabledReason ?? "");
 
@@ -164,6 +201,13 @@ async function applyDeveloperModeUi(): Promise<void> {
   const config = await loadConfig();
   const panel = $("developer-capture-panel") as HTMLDetailsElement;
   panel.hidden = !config.developerMode;
+}
+
+async function applyShowDebugUi(): Promise<void> {
+  const config = await loadConfig();
+  const show = config.showDebugUi;
+  ($("debug-panel") as HTMLDetailsElement).hidden = !show;
+  ($("input-debug-actions") as HTMLElement).hidden = !show;
 }
 
 async function resolveBridgeState(): Promise<BridgeState> {
@@ -286,6 +330,11 @@ function formatBridgeError(res: Extract<BackgroundResponse, { ok: false }>): str
   return localizeError(res.error);
 }
 
+async function getCaptureWindowId(): Promise<number | undefined> {
+  const win = await chrome.windows.getCurrent();
+  return win.id;
+}
+
 async function getActiveTabId(): Promise<number> {
   const tab = await getActiveCaptureTab();
   if (!tab?.id) throw new Error(t("error.no_active_tab"));
@@ -387,12 +436,15 @@ async function init(): Promise<void> {
 }
 
 $("btn-capture-selection").addEventListener("click", () => {
+  openSidePanelOnUserGesture();
   void busyUi.run("capturing", async () => {
     try {
       const tabId = await getActiveTabId();
+      const windowId = await getCaptureWindowId();
       const res = await send({
         type: "CAPTURE_SELECTION",
         tabId,
+        windowId,
         profileId: selectedProfileId(),
         locale: captureLocaleForSave(),
       });
@@ -400,7 +452,7 @@ $("btn-capture-selection").addEventListener("click", () => {
         setStatus(formatBridgeError(res), true);
         return;
       }
-      setCaptureStatus(res.data as import("./types.js").CaptureResult);
+      setCaptureStatus(res.data as import("./types.js").CaptureResult, { windowId });
     } catch (e) {
       setStatus(localizeError(String(e)), true);
     }
@@ -408,12 +460,15 @@ $("btn-capture-selection").addEventListener("click", () => {
 });
 
 $("btn-capture-page").addEventListener("click", () => {
+  openSidePanelOnUserGesture();
   void busyUi.run("capturing", async () => {
     try {
       const tabId = await getActiveTabId();
+      const windowId = await getCaptureWindowId();
       const res = await send({
         type: "CAPTURE_PAGE",
         tabId,
+        windowId,
         profileId: selectedProfileId(),
         locale: captureLocaleForSave(),
       });
@@ -421,7 +476,10 @@ $("btn-capture-page").addEventListener("click", () => {
         setStatus(formatBridgeError(res), true);
         return;
       }
-      setCaptureStatus(res.data as import("./types.js").CaptureResult, { pageCapture: true });
+      setCaptureStatus(res.data as import("./types.js").CaptureResult, {
+        pageCapture: true,
+        windowId,
+      });
     } catch (e) {
       setStatus(localizeError(String(e)), true);
     }
@@ -429,6 +487,7 @@ $("btn-capture-page").addEventListener("click", () => {
 });
 
 $("btn-capture-clipboard").addEventListener("click", () => {
+  openSidePanelOnUserGesture();
   void busyUi.run("capturingClipboard", async () => {
     try {
       const text = await navigator.clipboard.readText();
@@ -436,17 +495,35 @@ $("btn-capture-clipboard").addEventListener("click", () => {
         setStatus(t("capture.clipboard_empty"), true);
         return;
       }
+      const preview = analyzeClipboardText(text);
+      if (shouldConfirmLargeImportantTermsCapture(preview)) {
+        const proceed = globalThis.confirm(
+          t("capture.clipboard_confirm_many", { count: String(preview.importantTermsCount) }),
+        );
+        if (!proceed) {
+          setStatus(t("capture.clipboard_confirm_cancelled"));
+          void refreshClipboardPreviewHint();
+          return;
+        }
+      }
+      const captureWarnings: string[] = [];
+      if (preview.importantTermsCount > 8) {
+        captureWarnings.push("clipboard_many_important_terms");
+      }
+      const windowId = await getCaptureWindowId();
       const res = await send({
         type: "CAPTURE_CLIPBOARD",
         content: text,
+        windowId,
         profileId: selectedProfileId(),
         locale: captureLocaleForSave(),
+        captureWarnings,
       });
       if (!res.ok) {
         setStatus(formatBridgeError(res), true);
         return;
       }
-      setCaptureStatus(res.data as import("./types.js").CaptureResult);
+      setCaptureStatus(res.data as import("./types.js").CaptureResult, { windowId });
     } catch {
       setStatus(t("capture.clipboard_error"), true);
     }
@@ -475,14 +552,25 @@ chrome.runtime.onMessage.addListener((message: OptionsUpdatedMessage) => {
       if (avail.bridgeState.kind === "connected") {
         await loadProfiles();
         await applyDeveloperModeUi();
+        await applyShowDebugUi();
       }
     });
   }
 });
 
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== "sync") return;
+  if (changes.developerMode) {
+    void applyDeveloperModeUi();
+  }
+  if (changes.showDebugUi) {
+    void applyShowDebugUi();
+  }
+});
+
 function setCaptureStatus(
   data: import("./types.js").CaptureResult,
-  options?: { pageCapture?: boolean },
+  options?: { pageCapture?: boolean; windowId?: number },
 ): void {
   const id = data.id;
   const warnings = data.warnings ?? [];
@@ -490,15 +578,22 @@ function setCaptureStatus(
     ? warnings.includes("page_capture_low_confidence") ||
         warnings.includes("ui_noise_detected")
     : false;
+  const fullPersonaWarn = warnings.includes("full_persona_document_detected");
+  const manyTermsWarn = warnings.includes("clipboard_many_important_terms");
   const hint = pageWarn
     ? t("capture.warning.page_low_confidence")
-    : warnings[0];
+    : fullPersonaWarn
+      ? t("capture.warning.full_persona_document")
+      : manyTermsWarn
+        ? t("capture.warning.clipboard_many_important_terms")
+        : warnings[0];
   const msg = hint
     ? `${t("status.captured", { id: id.slice(0, 8) })} — ${hint}`
     : t("status.captured", { id: id.slice(0, 8) });
   setStatus(msg, Boolean(hint));
-  void notifyCandidatesChanged(id);
-  void openSidePanel();
+  if (options?.windowId != null) {
+    void reopenExtensionPopup(options.windowId);
+  }
 }
 
 async function insertContext(target: InsertTarget): Promise<void> {
@@ -519,7 +614,7 @@ async function insertContext(target: InsertTarget): Promise<void> {
 }
 
 $("btn-open-sidepanel").addEventListener("click", () => {
-  void openSidePanel();
+  openSidePanelOnUserGesture();
 });
 
 $("btn-options").addEventListener("click", () => chrome.runtime.openOptionsPage());

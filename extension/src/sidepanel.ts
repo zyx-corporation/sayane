@@ -1,9 +1,11 @@
 import type { BackgroundMessage, BackgroundResponse } from "./types.js";
-import { applyDataI18n, getLocale, initI18n, localizeError, t } from "./i18n.js";
+import { formatUserFacingBridgeError } from "./bridge-error-format.js";
+import { applyDataI18n, initI18n, t } from "./i18n.js";
 import { BusyUiController } from "./busy-ui.js";
-import { categoryLabel, type CandidateCategory } from "./candidate-display.js";
 import { initSidepanelCandidateUI } from "./sidepanel-candidate-ui.js";
-import { watchCandidatesChanged } from "./sidepanel-client.js";
+import { STORAGE_KEYS } from "./config.js";
+import type { OptionsUpdatedMessage } from "./options-notify.js";
+import { peekCandidatesFocusId, watchCandidatesChanged } from "./sidepanel-client.js";
 
 function $(id: string): HTMLElement {
   const el = document.getElementById(id);
@@ -29,17 +31,10 @@ async function getStoredEvalLevel(): Promise<number> {
 }
 
 function formatBridgeError(res: Extract<BackgroundResponse, { ok: false }>): string {
-  const details = res.errorDetails;
-  if (details && details.error === "unsafe_rde_category") {
-    const category = String(details.rde_category ?? "unknown");
-    if (getLocale() === "ja") {
-      return `このCandidateは「${categoryLabel(category as CandidateCategory, "ja")}」と評価されているため、そのまま採用できません。`;
-    }
-  }
-  if (details && typeof details.message === "string") {
-    return localizeError(details.message);
-  }
-  return localizeError(res.error);
+  return formatUserFacingBridgeError(
+    res.error,
+    res.errorDetails as Record<string, unknown> | undefined,
+  );
 }
 
 const busyUi = new BusyUiController($("app-root"));
@@ -69,10 +64,37 @@ async function init(): Promise<void> {
     getStoredEvalLevel: () => evalLevel,
   });
 
-  await busyUi.run("refreshingCandidates", () => candidateUi!.loadCandidates());
-
   watchCandidatesChanged((candidateId) => {
-    void candidateUi?.loadCandidates(candidateId ?? undefined);
+    if (candidateId) {
+      void candidateUi?.focusCandidate(candidateId);
+      return;
+    }
+    void candidateUi?.loadCandidates();
+  });
+
+  const initialFocusId = await peekCandidatesFocusId();
+  await busyUi.run("refreshingCandidates", async () => {
+    if (initialFocusId) {
+      await candidateUi!.focusCandidate(initialFocusId);
+    } else {
+      await candidateUi!.loadCandidates();
+    }
+  });
+
+  const latestFocusId = await peekCandidatesFocusId();
+  if (latestFocusId && latestFocusId !== initialFocusId) {
+    await candidateUi!.focusCandidate(latestFocusId);
+  }
+
+  chrome.runtime.onMessage.addListener((message: OptionsUpdatedMessage) => {
+    if (message?.type === "SAYANE_OPTIONS_UPDATED") {
+      void candidateUi?.applyShowDebugUi();
+    }
+  });
+
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== "sync" || !changes[STORAGE_KEYS.showDebugUi]) return;
+    void candidateUi?.applyShowDebugUi();
   });
 }
 

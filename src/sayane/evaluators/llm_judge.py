@@ -15,6 +15,7 @@ from sayane.core.candidate import (
 from sayane.core.evaluation_notes import llm_text_note
 from sayane.core.models import SayaneProfile
 from sayane.evaluators.judge_config import JudgeConfig
+from sayane.evaluators.list_diff import important_terms_judge_payload
 
 _UIB_KEYS = ("UD", "MI", "CH", "DT", "VP", "FG")
 _DEFAULT_UIB_AXIS = 0.5
@@ -85,14 +86,23 @@ def review_with_llm(
 ) -> LLMReview:
     """Call OpenAI-compatible chat completions API."""
     profile_summary = _profile_summary(profile)
-    user_msg = (
-        f"Profile:\n{profile_summary}\n\n"
-        f"Captured content:\n{content[:4000]}\n\n"
-        f"Proposal section: {proposal.section}\n"
-        f"Proposal add: {json.dumps(proposal.add, ensure_ascii=False)}\n"
-        f"Proposal items: {json.dumps(proposal.items, ensure_ascii=False)}\n"
-        f"Summary: {proposal.summary or ''}"
-    )
+    if proposal.section == "important_terms":
+        diff_payload = important_terms_judge_payload(proposal)
+        user_msg = (
+            f"Profile:\n{profile_summary}\n\n"
+            f"List diff (do not treat as full-list replacement):\n"
+            f"{json.dumps(diff_payload, ensure_ascii=False)}\n\n"
+            f"Summary: {proposal.summary or ''}"
+        )
+    else:
+        user_msg = (
+            f"Profile:\n{profile_summary}\n\n"
+            f"Captured content:\n{content[:4000]}\n\n"
+            f"Proposal section: {proposal.section}\n"
+            f"Proposal add: {json.dumps(proposal.add, ensure_ascii=False)}\n"
+            f"Proposal items: {json.dumps(proposal.items, ensure_ascii=False)}\n"
+            f"Summary: {proposal.summary or ''}"
+        )
     prompt = _JUDGE_PROMPT.format(rde_classes=", ".join(_RDE_CLASSES))
     if locale and str(locale).lower().startswith("ja"):
         prompt += (

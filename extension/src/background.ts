@@ -21,7 +21,27 @@ import {
   readPageFromTab,
   readSelectionFromTab,
 } from "./content-script-client.js";
+import { afterCaptureNotifyReview } from "./sidepanel-client.js";
+import type { ReviewCaptureSource } from "./review-session.js";
 import type { BackgroundMessage, BackgroundResponse } from "./types.js";
+import type { CaptureResult } from "./types.js";
+
+async function finishCaptureFlow(
+  windowId: number | undefined,
+  captured: CaptureResult,
+  meta: { source: ReviewCaptureSource; profileId: string; rawCaptureText?: string },
+): Promise<void> {
+  if (windowId == null) {
+    return;
+  }
+  await afterCaptureNotifyReview(windowId, {
+    captureId: captured.id,
+    source: meta.source,
+    profileId: meta.profileId,
+    candidateIds: [captured.id],
+    rawCaptureText: meta.rawCaptureText ?? "",
+  });
+}
 
 chrome.runtime.onMessage.addListener(
   (
@@ -96,6 +116,11 @@ chrome.runtime.onMessage.addListener(
                 requiresReview: false,
               },
             );
+            await finishCaptureFlow(message.windowId, captured, {
+              source: "selection",
+              profileId: message.profileId ?? "default",
+              rawCaptureText: text,
+            });
             return { ok: true, data: captured };
           }
           case "CAPTURE_PAGE": {
@@ -123,6 +148,11 @@ chrome.runtime.onMessage.addListener(
                 extractor: page.extractor,
               },
             );
+            await finishCaptureFlow(message.windowId, captured, {
+              source: "page",
+              profileId: message.profileId ?? "default",
+              rawCaptureText: page.raw ?? page.cleaned,
+            });
             return { ok: true, data: captured };
           }
           case "CAPTURE_CLIPBOARD": {
@@ -142,8 +172,14 @@ chrome.runtime.onMessage.addListener(
                 captureSource: "clipboard",
                 captureConfidence: "high",
                 requiresReview: false,
+                captureWarnings: message.captureWarnings ?? [],
               },
             );
+            await finishCaptureFlow(message.windowId, captured, {
+              source: "clipboard",
+              profileId: message.profileId ?? "default",
+              rawCaptureText: text,
+            });
             return { ok: true, data: captured };
           }
           case "INSERT_CONTEXT_PACKET": {

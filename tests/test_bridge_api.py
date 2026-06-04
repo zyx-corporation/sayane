@@ -37,7 +37,11 @@ def test_health_without_auth(bridge_env: tuple[TestClient, BridgeConfig, str]) -
     client, _, _ = bridge_env
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    data = response.json()
+    assert data["status"] == "ok"
+    assert "version" in data
+    assert "source_updated_at" in data
+    assert data.get("component") == "sayane"
 
 
 def test_profiles_requires_auth(bridge_env: tuple[TestClient, BridgeConfig, str]) -> None:
@@ -387,6 +391,40 @@ def test_candidate_reject(bridge_env: tuple[TestClient, BridgeConfig, str]) -> N
     )
     assert second_reject.status_code == 400
     assert second_reject.json()["error"] == "invalid_candidate_transition"
+
+
+def test_candidate_voice_tone_approve_requires_force_critical(
+    bridge_env: tuple[TestClient, BridgeConfig, str],
+) -> None:
+    client, _, token = bridge_env
+    capture = client.post(
+        "/capture",
+        headers=_auth(token),
+        json={
+            "content": "voice.tone:\n- collaborative and direct",
+            "source": "test",
+        },
+    )
+    assert capture.status_code == 200
+    cid = capture.json()["id"]
+
+    evaluated = client.post(
+        f"/candidates/{cid}/evaluate",
+        headers=_auth(token),
+        json={"level": 1},
+    )
+    assert evaluated.status_code == 200
+
+    denied = client.post(
+        f"/candidates/{cid}/approve",
+        headers=_auth(token),
+        json={"force_critical": False},
+    )
+    assert denied.status_code == 400
+    raw = denied.json()
+    body = raw.get("detail", raw)
+    assert body["error"] == "requires_force_critical"
+    assert body["section"] == "voice.tone"
 
 
 def test_candidate_critical_approve_requires_force(

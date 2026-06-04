@@ -157,6 +157,81 @@ def test_no_effective_proposal_review_required() -> None:
     assert fixed.operation == "parse_failed_or_no_effective_update"
 
 
+def test_important_terms_partial_yaml_section() -> None:
+    text = """important_terms:
+  - "柏崎刈羽原子力発電所"
+  - "制度詩学"
+  - "RDE"
+"""
+    config = BridgeConfig()
+    candidate = create_from_capture(
+        config,
+        content=text,
+        source_type="clipboard",
+        raw_content=text,
+        capture_meta=CaptureMetadata(
+            user_selected=True,
+            capture_source="clipboard",
+            capture_confidence="high",
+        ),
+    )
+    assert candidate.proposal.section == "important_terms"
+    assert "persona:" not in (candidate.raw_capture or "")
+    assert "preferred_name" not in (candidate.raw_capture or "")
+
+    from sayane.bridge.candidate_api import _source_excerpt, get_candidate
+
+    assert "important_terms" in _source_excerpt(candidate)
+    detail = get_candidate(config, candidate.id)
+    assert "important_terms" in detail["source_excerpt"]
+    assert "preferred_name" not in detail["source_excerpt"]
+
+
+def test_clipboard_fragment_preserves_exact_lines_in_raw_capture() -> None:
+    path = Path(__file__).resolve().parents[1] / "docs" / "sample-context-chatgpt.yaml"
+    lines = path.read_text(encoding="utf-8").splitlines()
+    fragment = "\n".join(lines[320:334])
+    assert "important_terms" in fragment
+    assert "persona:" not in fragment.splitlines()[0]
+
+    config = BridgeConfig()
+    candidate = create_from_capture(
+        config,
+        content=fragment,
+        source_type="clipboard",
+        raw_content=fragment,
+        capture_meta=CaptureMetadata(
+            user_selected=True,
+            capture_source="clipboard",
+            capture_confidence="high",
+        ),
+    )
+    assert candidate.proposal.section == "important_terms"
+    assert candidate.raw_capture == fragment
+    assert "柏崎刈羽原子力発電所" in (candidate.raw_capture or "")
+    assert "ZAI統合アーキテクチャ" in (candidate.raw_capture or "")
+    assert "preferred_name" not in (candidate.raw_capture or "")
+
+
+def test_candidate_summary_preview_uses_raw_capture() -> None:
+    from sayane.bridge.candidate_api import _capture_preview_text
+
+    config = BridgeConfig()
+    candidate = create_from_capture(
+        config,
+        content="ignored-for-preview",
+        source_type="clipboard",
+        raw_content="clipboard raw excerpt",
+        capture_meta=CaptureMetadata(
+            user_selected=True,
+            capture_source="clipboard",
+            capture_confidence="high",
+        ),
+    )
+    assert "clipboard raw excerpt" in _capture_preview_text(candidate)
+    assert "ignored-for-preview" not in _capture_preview_text(candidate)
+
+
 def test_raw_capture_matches_content_for_selection() -> None:
     config = BridgeConfig()
     text = PERSONA_YAML
@@ -188,3 +263,58 @@ def test_user_explicit_capture_sources(capture_source: str, user_selected: bool)
         capture_source=capture_source,  # type: ignore[arg-type]
     )
     assert meta.capture_source == capture_source
+
+
+def test_clipboard_full_persona_adds_warning() -> None:
+    from sayane.bridge.capture_store import save_capture
+    from sayane.bridge.models import CaptureRequest
+
+    lines = ["persona:"] + [f"  field_{i}: value" for i in range(40)]
+    content = "\n".join(lines)
+    config = BridgeConfig()
+    response = save_capture(
+        config,
+        CaptureRequest(
+            content=content,
+            source="clipboard",
+            capture_source="clipboard",
+            user_selected=True,
+        ),
+    )
+    assert "full_persona_document_detected" in response.warnings
+
+
+def test_clipboard_many_important_terms_adds_warning() -> None:
+    from sayane.bridge.capture_store import save_capture
+    from sayane.bridge.models import CaptureRequest
+
+    text = (Path(__file__).resolve().parents[1] / "xxx.yaml").read_text(encoding="utf-8")
+    config = BridgeConfig()
+    response = save_capture(
+        config,
+        CaptureRequest(
+            content=text,
+            source="clipboard",
+            capture_source="clipboard",
+            user_selected=True,
+        ),
+    )
+    assert "clipboard_many_important_terms" in response.warnings
+
+
+def test_clipboard_important_terms_only_has_no_full_persona_warning() -> None:
+    from sayane.bridge.capture_store import save_capture
+    from sayane.bridge.models import CaptureRequest
+
+    content = "important_terms:\n  - \"RDE\"\n  - \"Sayane\""
+    config = BridgeConfig()
+    response = save_capture(
+        config,
+        CaptureRequest(
+            content=content,
+            source="clipboard",
+            capture_source="clipboard",
+            user_selected=True,
+        ),
+    )
+    assert "full_persona_document_detected" not in response.warnings

@@ -134,6 +134,7 @@ class SayaneProfile(BaseModel):
     context_index: ContextIndex
     lineage: Lineage
     canonical_terms: list[CanonicalTerm] = Field(default_factory=list)
+    important_terms: list[str] = Field(default_factory=list)
 
 
 class PromptIR(BaseModel):

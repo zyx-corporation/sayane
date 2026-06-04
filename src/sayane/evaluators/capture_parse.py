@@ -9,6 +9,10 @@ import yaml
 
 from sayane.core.candidate import CandidateProposal, CaptureMetadata
 from sayane.core.models import SayaneProfile
+from sayane.evaluators.list_diff import (
+    important_terms_display_summary,
+    important_terms_profile_diff,
+)
 
 SECTION_REVIEW_REQUIRED = "review_required"
 OPERATION_PARSE_FAILED = "parse_failed"
@@ -22,7 +26,7 @@ _BROKEN_INLINE_KEY_RE = re.compile(
 
 _YAML_LIKE_RE = re.compile(
     r"^(persona|person|organization|development_preferences|writing_preferences|"
-    r"communication_mode|major_projects|projects|values|identity)\s*:",
+    r"communication_mode|major_projects|projects|values|identity|important_terms)\s*:",
     re.IGNORECASE | re.MULTILINE,
 )
 
@@ -152,6 +156,8 @@ def _walk_profile_values(profile: SayaneProfile) -> dict[str, list[str]]:
                 add(field, val)
         for style in mode.collaboration_style:
             add("communication_mode.collaboration_style[]", style)
+    for term in profile.important_terms:
+        add("important_terms[]", term)
     for concept in profile.knowledge.concepts if profile.knowledge else []:
         add("core_concepts[].name", concept)
     for project in profile.major_projects:
@@ -244,6 +250,60 @@ def classify_persona_yaml(
     )
 
 
+def classify_important_terms_yaml(
+    parsed: dict[str, Any],
+    profile: SayaneProfile | None,
+) -> CandidateProposal:
+    terms_raw = parsed.get("important_terms")
+    if not isinstance(terms_raw, list):
+        return build_parse_failed_proposal("important_terms must be a YAML list")
+    captured: list[str] = []
+    for entry in terms_raw:
+        text = _normalize_scalar(entry)
+        if text:
+            captured.append(text)
+    existing = list(profile.important_terms) if profile else []
+    ld = important_terms_profile_diff(existing, captured)
+    items = [
+        {
+            "section": "important_terms",
+            "name": name,
+            "yaml_path": "important_terms[]",
+        }
+        for name in ld.added
+    ]
+    already_present = [
+        {
+            "path": "important_terms[]",
+            "name": name,
+            "yaml_path": "important_terms[]",
+        }
+        for name in ld.unchanged
+    ]
+    if not items and already_present:
+        operation = "no_op_or_duplicate"
+    elif items:
+        operation = "list_add"
+    else:
+        operation = OPERATION_NO_EFFECTIVE
+    summary = important_terms_display_summary(
+        CandidateProposal(
+            section="important_terms",
+            operation=operation,
+            items=items,
+            already_present=already_present,
+        ),
+    )
+    return CandidateProposal(
+        section="important_terms",
+        operation=operation,
+        add=[],
+        items=items,
+        already_present=already_present,
+        summary=summary,
+    )
+
+
 def build_proposal_for_yaml_content(
     content: str,
     profile: SayaneProfile | None,
@@ -260,6 +320,10 @@ def build_proposal_for_yaml_content(
         return build_parse_failed_proposal("YAML parse failed: root must be a mapping")
 
     keys = top_level_yaml_keys(parsed)
+    if keys == {"important_terms"} or (
+        len(keys) == 1 and "important_terms" in keys
+    ):
+        return classify_important_terms_yaml(parsed, profile)
     if "persona" in keys or "person" in keys:
         return classify_persona_yaml(parsed, profile)
 

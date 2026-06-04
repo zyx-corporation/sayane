@@ -79,4 +79,26 @@ describe("deriveCaptureAvailability", () => {
     assert.equal(avail.canCaptureSelection, false);
     assert.equal(avail.canCapturePage, true);
   });
+
+  it("enables selection capture when ping uses cached selection length", () => {
+    const avail = deriveCaptureAvailability(
+      { kind: "connected" },
+      {
+        kind: "readable",
+        ping: ping({
+          selectionTextLength: 24,
+          selectionCurrentLength: 0,
+          selectionCachedLength: 24,
+          selectionCacheAgeMs: 1200,
+        }),
+      },
+      1,
+      "https://chatgpt.com/",
+      t,
+    );
+    assert.equal(avail.canCaptureSelection, true);
+    assert.ok(
+      avail.debugLines.some((line) => line.includes("debug.selection_cached_length")),
+    );
+  });
 });

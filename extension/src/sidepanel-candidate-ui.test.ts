@@ -44,7 +44,8 @@ test("applyCardActionUi uses getApproveAvailability for approve buttons", () => 
   assert.ok(src.includes("approveOptionsFor"));
   assert.ok(src.includes("canApproveCandidate"));
   assert.ok(src.includes("readApproveContextFromButton"));
-  assert.ok(src.includes("bindExplicitConfirmRefresh"));
+  assert.ok(src.includes("bindApproveInputsRefresh"));
+  assert.ok(src.includes("bindApproveInputRefresh"));
   assert.ok(src.includes("expandedActionsForApproveButton"));
   assert.ok(!src.includes("canInitiateApproveFromDetail"));
   assert.ok(!src.includes("ensureEvaluatedForApprove"));
@@ -89,6 +90,19 @@ test("blocked and unsupported sections stay approve-disabled", () => {
     }),
   );
   assert.equal(blocked.enabled, false);
+});
+
+test("override panel wires input refresh for expanded approve button", () => {
+  assert.ok(src.includes(".override-reason"));
+  assert.ok(src.includes(".override-check"));
+  assert.ok(src.includes("bindApproveInputsRefresh(actions, c.id)"));
+  assert.ok(src.includes("refreshExpandedApproveUi(c.id)"));
+  const bindBlock = src.match(
+    /function bindApproveInputsRefresh[\s\S]*?function refreshExpandedApproveUi/,
+  );
+  assert.ok(bindBlock);
+  assert.ok(bindBlock![0].includes(".override-reason"));
+  assert.ok(bindBlock![0].includes(".override-check"));
 });
 
 test("persona dump blocks compact quick approve", () => {

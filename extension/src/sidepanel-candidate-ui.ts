@@ -413,18 +413,42 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     );
   }
 
-  function bindExplicitConfirmRefresh(
+  function bindApproveInputRefresh(
+    input: HTMLInputElement | null | undefined,
+    refresh: () => void,
+  ): void {
+    if (!input) return;
+    input.addEventListener("input", refresh);
+    input.addEventListener("change", refresh);
+    if (input.type === "checkbox") {
+      input.addEventListener("click", refresh);
+    } else {
+      input.addEventListener("compositionend", refresh);
+    }
+  }
+
+  /** Recompute expanded approve button when explicit or override inputs change. */
+  function bindApproveInputsRefresh(
     actions: HTMLElement,
     candidateId: string,
   ): void {
     const refresh = () => refreshExpandedApproveUi(candidateId);
-    const reason = actions.querySelector<HTMLInputElement>(".explicit-confirm-reason");
-    const check = actions.querySelector<HTMLInputElement>(".explicit-confirm-check");
-    reason?.addEventListener("input", refresh);
-    reason?.addEventListener("change", refresh);
-    reason?.addEventListener("compositionend", refresh);
-    check?.addEventListener("change", refresh);
-    check?.addEventListener("click", refresh);
+    bindApproveInputRefresh(
+      actions.querySelector<HTMLInputElement>(".explicit-confirm-reason"),
+      refresh,
+    );
+    bindApproveInputRefresh(
+      actions.querySelector<HTMLInputElement>(".explicit-confirm-check"),
+      refresh,
+    );
+    bindApproveInputRefresh(
+      actions.querySelector<HTMLInputElement>(".override-reason"),
+      refresh,
+    );
+    bindApproveInputRefresh(
+      actions.querySelector<HTMLInputElement>(".override-check"),
+      refresh,
+    );
   }
 
   function refreshExpandedApproveUi(candidateId: string): void {
@@ -950,7 +974,6 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
       explicitPanel.appendChild(label);
       actions.appendChild(explicitPanel);
       actions.dataset.requiresExplicitConfirmation = "1";
-      bindExplicitConfirmRefresh(actions, c.id);
     }
 
     const needsSectionOverride =
@@ -969,14 +992,12 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
       reasonInput.type = "text";
       reasonInput.placeholder = t("detail.critical_override_reason_placeholder");
       reasonInput.className = "override-reason";
-      reasonInput.addEventListener("input", () => refreshExpandedApproveUi(c.id));
       criticalPanel.appendChild(reasonInput);
       const label = document.createElement("label");
       label.className = "critical-override-label";
       const check = document.createElement("input");
       check.type = "checkbox";
       check.className = "override-check";
-      check.addEventListener("change", () => refreshExpandedApproveUi(c.id));
       label.appendChild(check);
       const span = document.createElement("span");
       span.textContent = isCriticalRde
@@ -1010,6 +1031,8 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     approveBtn.addEventListener("click", () => {
       handleApproveClick(c, actions, false);
     });
+    bindApproveInputsRefresh(actions, c.id);
+    refreshExpandedApproveUi(c.id);
 
     const rejectBtn = document.createElement("button");
     rejectBtn.type = "button";
@@ -1233,7 +1256,16 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     quickActions.className = "card-quick-actions";
 
     const mergeSection = c.section ?? "";
-    const hideCompactApprove = requiresExplicitContextConfirmation(mergeSection);
+    const detailForCompact = cardState.get(c.id)?.detail;
+    const compactSection = detailForCompact?.proposal?.section ?? mergeSection;
+    const compactCriticalRde =
+      detailForCompact?.evaluation?.rde_class === "Critical Distortion"
+      || c.rde_class === "Critical Distortion";
+    const compactNeedsOverrideUi =
+      compactCriticalRde
+      || (requiresForceCriticalMerge(compactSection) && isCriticalSection(compactSection));
+    const hideCompactApprove =
+      requiresExplicitContextConfirmation(compactSection) || compactNeedsOverrideUi;
     if (!hideCompactApprove) {
       const approveBtn = document.createElement("button");
       approveBtn.type = "button";

@@ -210,6 +210,145 @@ describe("getApproveAvailability", () => {
     assert.equal(c.rde_class, "Authorized Transformation");
   });
 
+  it("override-required starts disabled", () => {
+    const c = summary({
+      status: "evaluated",
+      section: "values.core",
+      rde_class: "Authorized Transformation",
+    });
+    const avail = getApproveAvailability(c);
+    assert.equal(avail.kind, "requires_override");
+    assert.equal(avail.enabled, false);
+    assert.equal(canApproveCandidate(c), false);
+  });
+
+  it("override reason only is not enough", () => {
+    const c = summary({
+      status: "evaluated",
+      section: "values.core",
+      rde_class: "Authorized Transformation",
+    });
+    const avail = getApproveAvailability(c, undefined, {
+      overrideConfirmation: { required: true, checked: false, reason: "reason only" },
+    });
+    assert.equal(avail.enabled, false);
+  });
+
+  it("override checkbox only is not enough", () => {
+    const c = summary({
+      status: "evaluated",
+      section: "values.core",
+      rde_class: "Authorized Transformation",
+    });
+    const avail = getApproveAvailability(c, undefined, {
+      overrideConfirmation: { required: true, checked: true, reason: "" },
+    });
+    assert.equal(avail.enabled, false);
+    assert.equal(avail.reasonKey, "detail.critical_override_reason_required");
+  });
+
+  it("override reason and checkbox enable approve when base allows", () => {
+    const c = summary({
+      status: "evaluated",
+      section: "values.core",
+      rde_class: "Authorized Transformation",
+    });
+    assert.equal(
+      canApproveCandidate(c, undefined, {
+        overrideConfirmation: {
+          required: true,
+          checked: true,
+          reason: "understood the merge impact",
+        },
+      }),
+      true,
+    );
+  });
+
+  it("clearing override reason disables approve again", () => {
+    const c = summary({
+      status: "evaluated",
+      section: "values.core",
+      rde_class: "Authorized Transformation",
+    });
+    const ready = getApproveAvailability(c, undefined, {
+      overrideConfirmation: { required: true, checked: true, reason: "ok" },
+    });
+    assert.equal(ready.enabled, true);
+    const cleared = getApproveAvailability(c, undefined, {
+      overrideConfirmation: { required: true, checked: true, reason: "   " },
+    });
+    assert.equal(cleared.enabled, false);
+  });
+
+  it("unchecking override checkbox disables approve again", () => {
+    const c = summary({
+      status: "evaluated",
+      section: "values.core",
+      rde_class: "Authorized Transformation",
+    });
+    const unchecked = getApproveAvailability(c, undefined, {
+      overrideConfirmation: { required: true, checked: false, reason: "ok" },
+    });
+    assert.equal(unchecked.enabled, false);
+  });
+
+  it("blocked section stays disabled with override inputs", () => {
+    const c = summary({
+      status: "evaluated",
+      section: "identity.name",
+      rde_class: "Authorized Transformation",
+    });
+    assert.equal(
+      canApproveCandidate(c, undefined, {
+        overrideConfirmation: { required: true, checked: true, reason: "ok" },
+      }),
+      false,
+    );
+  });
+
+  it("unsupported section stays disabled with override inputs", () => {
+    const c = summary({
+      status: "evaluated",
+      section: "persona",
+      rde_class: "Authorized Transformation",
+    });
+    assert.equal(
+      canApproveCandidate(c, undefined, {
+        overrideConfirmation: { required: true, checked: true, reason: "ok" },
+      }),
+      false,
+    );
+  });
+
+  it("readApproveContextFromActions reads critical override fields", () => {
+    if (typeof document === "undefined") return;
+    const actions = document.createElement("div");
+    actions.dataset.hasCriticalSection = "1";
+    const reason = document.createElement("input");
+    reason.className = "override-reason";
+    reason.value = "override reason";
+    const check = document.createElement("input");
+    check.type = "checkbox";
+    check.className = "override-check";
+    check.checked = true;
+    actions.append(reason, check);
+
+    const ctx = readApproveContextFromActions(actions);
+    assert.equal(ctx.overrideConfirmation?.checked, true);
+    assert.equal(ctx.overrideConfirmation?.reason, "override reason");
+
+    const c = summary({
+      status: "evaluated",
+      section: "values.core",
+      rde_class: "Authorized Transformation",
+    });
+    assert.equal(
+      canApproveCandidate(c, undefined, { overrideConfirmation: ctx.overrideConfirmation }),
+      true,
+    );
+  });
+
   it("approving card action state disables approve", () => {
     const c = summary({
       status: "evaluated",

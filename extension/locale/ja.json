@@ -245,6 +245,8 @@
   "review.filter.inferred_extension": "推論補完",
   "review.filter.low_value": "低リスク",
   "review.filter.debug": "Debug",
+  "review.empty_no_candidates_from_capture": "この Capture から新しい候補は作成されませんでした。保存済み文脈と一致したか、現在の抽出ルールでは候補化されませんでした。",
+  "review.empty_no_candidates": "候補はまだありません。ページまたはクリップボードから Capture を実行してください。",
   "review.empty_filter": "このフィルタに該当する候補はありません。",
   "review.expand": "詳細",
   "review.later": "あとで",

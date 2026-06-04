@@ -245,6 +245,8 @@
   "review.filter.inferred_extension": "Inferred fill-in",
   "review.filter.low_value": "Low risk",
   "review.filter.debug": "Debug",
+  "review.empty_no_candidates_from_capture": "No new Candidates were created from this Capture. The content may already match stored context, or no extractable Candidate was found.",
+  "review.empty_no_candidates": "No Candidates yet. Capture from a page or clipboard to start.",
   "review.empty_filter": "No candidates match this filter.",
   "review.expand": "Details",
   "review.later": "Later",

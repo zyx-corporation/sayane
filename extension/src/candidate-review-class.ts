@@ -63,7 +63,17 @@ export function classifyCandidate(c: CandidateSummary): CandidateReviewClass {
   const preview = c.content_preview ?? "";
 
   if (c.evaluation_status === "judge_failed") {
-    return "debug_only";
+    // Judge failure means LLM review was unavailable, not that the
+    // candidate is debug-only. Keep it visible for manual review.
+    if (c.status === "evaluated" || c.rde_class) {
+      const rde = c.rde_class;
+      if (rde === "Preserved") return "duplicate_or_confirmed";
+      if (rde === "Critical Distortion" || rde === "Suspicious Drift") {
+        return "reject_recommended";
+      }
+      return "new_candidate";
+    }
+    return "new_candidate";
   }
 
   if (c.status === "approved" || c.status === "rejected") {

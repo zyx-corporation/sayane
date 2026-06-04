@@ -67,4 +67,5 @@ class CandidateLineage(BaseModel):
     context_path: str | None = None
     source_candidate_id: str | None = None
     revised_candidate_id: str | None = None
+    operation: str | None = None
     events: list[LineageEvent] = Field(default_factory=list)

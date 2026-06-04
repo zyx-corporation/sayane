@@ -273,6 +273,13 @@ def build_candidate_lineage(
     )
     rde = candidate.evaluation.rde_class if candidate.evaluation else None
 
+    # Collect operation from events metadata for display.
+    operation = None
+    for event in events:
+        if isinstance(event.metadata, dict) and event.metadata.get("operation"):
+            operation = str(event.metadata["operation"])
+            break
+
     return CandidateLineage(
         capture_id=candidate.id,
         candidate_id=candidate.id,
@@ -286,7 +293,13 @@ def build_candidate_lineage(
         captured_at=candidate.source.captured_at.isoformat(),
         decision=_decision_from_candidate(candidate),  # type: ignore[arg-type]
         context_path=context_path if candidate.status == "approved" else None,
+        source_candidate_id=(
+            candidate.parent_capture_id
+            or (candidate.storage_policy.target_path if candidate.storage_policy else None)
+            or None
+        ),
         events=events,
+        operation=operation,
     )
 
 

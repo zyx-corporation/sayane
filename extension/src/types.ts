@@ -74,7 +74,16 @@ export interface CandidateSummary {
   display_summary?: string | null;
   capture_source?: CaptureSourceKind | string | null;
   proposal_operation?: string | null;
+  storage_policy?: CandidateStoragePolicy | null;
+  parent_capture_id?: string | null;
 }
+
+export type CandidateStoragePolicy = {
+  storage_kind: "profile_ir" | "context_note" | "prompt_fragment" | "debug_only";
+  target_path: string;
+  prompt_export: "default" | "on_demand" | "never";
+  sensitivity: "public" | "internal" | "private" | "sensitive";
+};
 
 export type CaptureSourceKind = "selection" | "clipboard" | "page";
 

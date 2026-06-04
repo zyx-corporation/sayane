@@ -1668,13 +1668,27 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     const empty = $("empty-msg");
     const container = $("candidate-cards");
     const visible = container.querySelectorAll(".review-card").length;
-    if (visible === 0) {
-      empty.hidden = false;
-      empty.textContent = t("review.empty_filter");
-    } else {
+    if (visible > 0) {
       empty.hidden = true;
       empty.textContent = "";
+      return;
     }
+
+    // #138: Differentiate empty states via structured state (not UI text).
+    const sessionHasCapture = Boolean(currentReviewSession?.rawCaptureText?.trim());
+    const sessionCandidateCount = allCandidates.length;
+
+    if (sessionHasCapture && sessionCandidateCount === 0) {
+      // Active capture produced no candidates at all.
+      empty.textContent = t("review.empty_no_candidates_from_capture");
+    } else if (sessionCandidateCount > 0) {
+      // Candidates exist but are hidden by current filter.
+      empty.textContent = t("review.empty_filter");
+    } else {
+      // No review session, no capture yet.
+      empty.textContent = t("review.empty_no_candidates");
+    }
+    empty.hidden = false;
   }
 
   function renderCards(preferId?: string): void {

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Sayane — 候補レビュー</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        font-size: 14px;
+        color: #333;
+        background: #fafafa;
+      }
+      #app-root[aria-busy="true"] {
+        cursor: wait;
+      }
+      .sticky-header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: #fafafa;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 10px 12px 8px;
+      }
+      .context-banner {
+        margin: 0 0 8px;
+        padding: 8px 10px;
+        font-size: 0.72rem;
+        line-height: 1.45;
+        color: #555;
+        background: #f0f0f0;
+        border-radius: 4px;
+        border: 1px solid #e8e8e8;
+      }
+      .filter-row {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+      .filter-row select {
+        flex: 1;
+        font-size: 0.8rem;
+        padding: 6px 8px;
+      }
+      .btn-icon {
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        padding: 6px 10px;
+        cursor: pointer;
+        font-size: 0.85rem;
+      }
+      .candidate-cards {
+        padding: 8px 12px 16px;
+      }
+      .review-card {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        padding: 10px;
+        margin-bottom: 10px;
+      }
+      .class-badge {
+        display: inline-block;
+        font-size: 0.68rem;
+        font-weight: 600;
+        padding: 2px 6px;
+        border-radius: 3px;
+        background: #eceff1;
+        color: #455a64;
+        margin-bottom: 6px;
+      }
+      .class-reject_recommended {
+        background: #ffebee;
+        color: #b71c1c;
+      }
+      .class-sensitive_review {
+        background: #fff8e1;
+        color: #8a6d00;
+      }
+      .class-conflict,
+      .class-meaning_changed {
+        background: #fff3e0;
+        color: #e65100;
+      }
+      .card-summary {
+        font-size: 0.78rem;
+        margin: 0 0 6px;
+        color: #444;
+        line-height: 1.4;
+      }
+      .card-action-hint {
+        font-size: 0.72rem;
+        font-weight: 600;
+        margin: 0 0 4px;
+        color: #1565c0;
+      }
+      .card-risk-hint {
+        font-size: 0.68rem;
+        margin: 0 0 8px;
+        color: #666;
+      }
+      .card-quick-actions {
+        margin-bottom: 6px;
+      }
+      .btn-later {
+        font-size: 0.72rem;
+        padding: 4px 10px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        background: #fff;
+        cursor: pointer;
+      }
+      .card-expand summary {
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        color: #1976d2;
+        padding: 4px 0;
+      }
+      .card-expanded-body {
+        margin-top: 8px;
+        border-top: 1px solid #eee;
+        padding-top: 8px;
+      }
+      .persona-warning {
+        font-size: 0.72rem;
+        color: #8a6d00;
+        background: #fffde7;
+        border: 1px solid #ffe082;
+        border-radius: 4px;
+        padding: 8px;
+        margin: 0 0 8px;
+      }
+      .subheading {
+        font-size: 0.72rem;
+        font-weight: 600;
+        margin: 8px 0 4px;
+      }
+      .meta-line {
+        font-size: 0.72rem;
+        color: #666;
+      }
+      .content-preview {
+        font-size: 0.68rem;
+        max-height: 120px;
+        overflow: auto;
+        background: #f5f5f5;
+        padding: 6px;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .proposal-list {
+        font-size: 0.72rem;
+        margin: 0 0 8px 1.2em;
+        padding: 0;
+      }
+      .diff-panel {
+        font-size: 0.68rem;
+        padding: 6px;
+        background: #f5f5f5;
+        border-radius: 3px;
+        margin-bottom: 8px;
+      }
+      .diff-add {
+        color: #2e7d32;
+      }
+      .diff-add::before {
+        content: "+ ";
+        font-weight: 600;
+      }
+      .diff-present {
+        color: #888;
+        text-decoration: line-through;
+      }
+      .diff-present::before {
+        content: "= ";
+      }
+      .eval-notes {
+        font-size: 0.68rem;
+        margin: 0 0 8px 1.2em;
+        padding: 0;
+      }
+      .row {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 6px;
+      }
+      .row select,
+      .row button {
+        flex: 1;
+      }
+      .btn-primary {
+        background: #1976d2;
+        color: #fff;
+        border: none;
+        border-radius: 3px;
+        padding: 6px;
+        cursor: pointer;
+      }
+      .btn-approve {
+        background: #2e7d32;
+        color: #fff;
+        border: none;
+        border-radius: 3px;
+        padding: 6px;
+        cursor: pointer;
+      }
+      .btn-reject {
+        background: #c62828;
+        color: #fff;
+        border: none;
+        border-radius: 3px;
+        padding: 6px;
+        cursor: pointer;
+      }
+      .reject-reason,
+      .override-reason {
+        width: 100%;
+        padding: 6px 8px;
+        font-size: 0.72rem;
+        margin-bottom: 6px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+      }
+      .critical-override-panel {
+        border: 1px solid #ffcdd2;
+        background: #ffebee;
+        border-radius: 4px;
+        padding: 8px;
+        margin-bottom: 6px;
+      }
+      .critical-override-warning {
+        font-size: 0.68rem;
+        color: #b71c1c;
+        margin: 0 0 6px;
+      }
+      .critical-override-label {
+        display: flex;
+        gap: 6px;
+        font-size: 0.68rem;
+        color: #b71c1c;
+      }
+      .debug-block {
+        font-size: 0.65rem;
+        background: #263238;
+        color: #eceff1;
+        padding: 8px;
+        border-radius: 4px;
+        overflow: auto;
+      }
+      .status {
+        font-size: 0.75rem;
+        padding: 0 12px 12px;
+        min-height: 1.5em;
+      }
+      .status.error {
+        color: #b00020;
+      }
+      .empty-msg {
+        font-size: 0.78rem;
+        color: #777;
+        padding: 24px 12px;
+        text-align: center;
+      }
+      .rde-badge {
+        display: inline-block;
+        font-size: 0.65rem;
+        padding: 1px 5px;
+        border-radius: 3px;
+        margin-bottom: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app-root" aria-busy="false">
+      <header class="sticky-header">
+        <p class="context-banner" data-i18n="sidepanel.context_banner">
+          Sayane保存文脈との比較結果です。LLMの記憶ではありません。
+        </p>
+        <div class="filter-row">
+          <select id="filter-select" aria-label="Filter">
+            <option value="review_required" data-i18n="review.filter.review_required" selected>
+              要判断
+            </option>
+            <option value="all" data-i18n="review.filter.all">すべて</option>
+            <option value="reject_recommended" data-i18n="review.filter.reject_recommended">
+              拒否推奨
+            </option>
+            <option value="has_diff" data-i18n="review.filter.has_diff">差分あり</option>
+            <option value="inferred_extension" data-i18n="review.filter.inferred_extension">
+              推論補完
+            </option>
+            <option value="low_value" data-i18n="review.filter.low_value">低リスク</option>
+            <option value="debug" data-i18n="review.filter.debug">Debug</option>
+          </select>
+          <button
+            type="button"
+            id="btn-refresh-candidates"
+            class="btn-icon"
+            data-i18n-title="candidate.refresh"
+            aria-label="Refresh"
+          >
+            ↻
+          </button>
+        </div>
+      </header>
+      <div id="candidate-cards" class="candidate-cards" role="list"></div>
+      <p id="empty-msg" class="empty-msg" hidden data-i18n="review.empty_filter"></p>
+      <p id="status-msg" class="status"></p>
+    </div>
+    <script type="module" src="dist/sidepanel.js"></script>
+  </body>
+</html>

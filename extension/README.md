@@ -35,6 +35,10 @@ See [../docs/extension-e2e.md](../docs/extension-e2e.md).
 
 Chrome → Extensions → Load unpacked → select this `extension/` folder (manifest **0.3.8+**).
 
+Extension icons live in `icons/` (generated from `icons/source.png` via `npm run icons:generate`).
+
+Candidate review runs in the **Chrome side panel** (`sidepanel.html`). The popup is for Capture and opening the side panel.
+
 ## Features
 
 UI state (busy vs unavailable cursors): [../docs/ui-design-principles.md](../docs/ui-design-principles.md).

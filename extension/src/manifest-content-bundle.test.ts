@@ -8,6 +8,31 @@ import { CONTENT_SCRIPT_BUNDLE } from "./content-script-bundle.js";
 const extRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 describe("content script bundle / manifest", () => {
+  it("manifest declares extension icons that exist on disk", () => {
+    const manifest = JSON.parse(
+      readFileSync(join(extRoot, "manifest.json"), "utf8"),
+    ) as {
+      icons?: Record<string, string>;
+      action?: { default_icon?: Record<string, string> };
+    };
+    const paths = new Set([
+      ...Object.values(manifest.icons ?? {}),
+      ...Object.values(manifest.action?.default_icon ?? {}),
+    ]);
+    assert.ok(paths.size > 0, "manifest must declare icons");
+    for (const rel of paths) {
+      assert.ok(existsSync(join(extRoot, rel)), `${rel} must exist`);
+    }
+  });
+
+  it("manifest declares side panel default path", () => {
+    const manifest = JSON.parse(
+      readFileSync(join(extRoot, "manifest.json"), "utf8"),
+    ) as { side_panel?: { default_path?: string } };
+    assert.equal(manifest.side_panel?.default_path, "sidepanel.html");
+    assert.ok(existsSync(join(extRoot, "sidepanel.html")));
+  });
+
   it("manifest content_scripts references the bundle file that exists on disk", () => {
     const manifest = JSON.parse(
       readFileSync(join(extRoot, "manifest.json"), "utf8"),

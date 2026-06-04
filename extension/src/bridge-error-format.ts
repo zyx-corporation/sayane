@@ -43,6 +43,14 @@ export function formatUserFacingBridgeError(
     });
   }
 
+  if (
+    details
+    && (details.error === "explicit_confirmation_required"
+      || details.error === "explicit_confirmation_reason_required")
+  ) {
+    return t("review.approve_explicit_check_and_reason");
+  }
+
   if (details && details.error === "invalid_candidate_transition") {
     if (typeof details.message === "string") {
       return mapKnownCoreMessage(details.message, loc);

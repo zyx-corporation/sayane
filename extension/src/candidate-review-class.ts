@@ -1,5 +1,6 @@
 /** UI-facing review classification for candidate list filtering. */
 
+import { getApproveAvailability } from "./approve-availability.js";
 import type { CandidateSummary } from "./types.js";
 
 export type CandidateReviewClass =
@@ -196,11 +197,53 @@ export function riskHintKeyForCandidate(c: CandidateSummary): string {
 }
 
 export function recommendedActionKeyForCandidate(c: CandidateSummary): string {
-  if (c.section === "important_terms") {
-    const cls = classifyCandidate(c);
-    if (cls === "new_candidate" || cls === "meaning_changed") {
+  const cls = classifyCandidate(c);
+
+  if (c.status === "pending") {
+    return c.section === "important_terms"
+      ? "review.action.evaluate_before_approve"
+      : "review.action.new_candidate";
+  }
+
+  const avail = getApproveAvailability(c, undefined, { compact: true });
+
+  if (avail.kind === "resolved") {
+    return cls === "duplicate_or_confirmed"
+      ? "review.action.no_approve_needed"
+      : "review.action.low_value";
+  }
+
+  if (avail.kind === "needs_evaluation") {
+    return "review.action.evaluate_before_approve";
+  }
+
+  if (avail.kind === "blocked") {
+    if (cls === "reject_recommended") return "review.action.reject_recommended";
+    if (cls === "sensitive_review") return "review.action.sensitive_review";
+    if (cls === "duplicate_or_confirmed") return "review.action.no_approve_needed";
+    return "review.action.sensitive_review";
+  }
+
+  if (avail.kind === "requires_override") {
+    return "review.action.sensitive_review";
+  }
+
+  if (avail.kind === "needs_explicit_confirmation") {
+    return "review.action.explicit_confirm_before_approve";
+  }
+
+  if (avail.kind === "can_approve") {
+    if (
+      c.section === "important_terms"
+      && (cls === "new_candidate" || cls === "meaning_changed")
+    ) {
       return "review.action.important_terms_add";
     }
+    if (cls === "duplicate_or_confirmed") {
+      return "review.action.no_approve_needed";
+    }
+    return recommendedActionKey(cls);
   }
-  return recommendedActionKey(classifyCandidate(c));
+
+  return recommendedActionKey(cls);
 }

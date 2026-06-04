@@ -619,3 +619,65 @@ def test_candidate_judge_auth_error_keeps_pending(
     summary = next(item for item in listed.json() if item["id"] == cid)
     assert summary["status"] == "pending"
     assert summary["evaluation_status"] == "judge_failed"
+
+
+def test_important_terms_approve_requires_explicit_confirmation(
+    bridge_env: tuple[TestClient, BridgeConfig, str],
+) -> None:
+    client, _, token = bridge_env
+    content = (Path(__file__).resolve().parents[1] / "xxx.yaml").read_text(
+        encoding="utf-8",
+    )
+    capture = client.post(
+        "/capture",
+        headers=_auth(token),
+        json={"content": content, "source": "clipboard", "section": "important_terms"},
+    )
+    assert capture.status_code == 200
+    cid = capture.json()["id"]
+
+    evaluated = client.post(
+        f"/candidates/{cid}/evaluate",
+        headers=_auth(token),
+        json={"level": 1},
+    )
+    assert evaluated.status_code == 200
+    assert evaluated.json()["status"] == "evaluated"
+
+    denied = client.post(
+        f"/candidates/{cid}/approve",
+        headers=_auth(token),
+        json={"force_critical": False},
+    )
+    assert denied.status_code == 400
+    assert denied.json()["error"] == "explicit_confirmation_required"
+
+    denied_reason = client.post(
+        f"/candidates/{cid}/approve",
+        headers=_auth(token),
+        json={
+            "force_critical": False,
+            "explicit_confirmation": {
+                "section": "important_terms",
+                "checked": True,
+                "reason": "   ",
+            },
+        },
+    )
+    assert denied_reason.status_code == 400
+    assert denied_reason.json()["error"] == "explicit_confirmation_reason_required"
+
+    approved = client.post(
+        f"/candidates/{cid}/approve",
+        headers=_auth(token),
+        json={
+            "force_critical": False,
+            "explicit_confirmation": {
+                "section": "important_terms",
+                "checked": True,
+                "reason": "差分を確認済み。",
+            },
+        },
+    )
+    assert approved.status_code == 200
+    assert approved.json()["status"] == "approved"

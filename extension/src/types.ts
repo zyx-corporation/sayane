@@ -254,6 +254,12 @@ export type BackgroundMessage =
       candidateId: string;
       forceCritical?: boolean;
       overrideReason?: string;
+      explicitConfirmation?: {
+        section: string;
+        checked: true;
+        reason: string;
+        confirmedAt: string;
+      };
     }
   | { type: "BRIDGE_REJECT_CANDIDATE"; candidateId: string; reason?: string }
   | { type: "OPEN_SIDE_PANEL"; windowId?: number }

@@ -9,6 +9,7 @@ from sayane.evaluators.heuristic_match import (
 )
 
 CRITICAL_ROOTS = frozenset({"identity", "values", "policy", "voice"})
+CRITICAL_CONTEXT_SECTIONS = frozenset({"important_terms"})
 BLOCKED_SECTIONS = frozenset({"identity.name", "identity.preferred_name"})
 FORCE_ALLOWED_SECTIONS = frozenset(
     {

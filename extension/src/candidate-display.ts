@@ -93,7 +93,8 @@ export function canApproveWithCriticalOverride(
   status: CandidateStatus,
   category: CandidateCategory | null,
 ): boolean {
-  if (status !== "evaluated" || !category) return false;
+  if (status !== "evaluated") return false;
+  if (!category) return true;
   if (category === "Critical Distortion") return true;
   return canApprove(status, category);
 }

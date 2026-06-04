@@ -33,3 +33,8 @@ test("canApproveWithCriticalOverride allows evaluated critical for override flow
     false,
   );
 });
+
+test("canApproveWithCriticalOverride allows evaluated when category is missing", () => {
+  assert.equal(canApproveWithCriticalOverride("evaluated", null), true);
+  assert.equal(canApproveWithCriticalOverride("pending", null), false);
+});

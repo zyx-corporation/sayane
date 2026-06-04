@@ -6,6 +6,13 @@ const BLOCKED_SECTIONS = new Set(["identity.name", "identity.preferred_name"]);
 
 const CRITICAL_ROOTS = new Set(["identity", "values", "policy", "voice"]);
 
+/** Sections that require checkbox + adopt reason before approve (UI + Bridge). */
+export const CRITICAL_CONTEXT_SECTIONS = new Set(["important_terms"]);
+
+export function requiresExplicitContextConfirmation(section: string): boolean {
+  return CRITICAL_CONTEXT_SECTIONS.has(section);
+}
+
 const FORCE_ALLOWED_SECTIONS = new Set([
   "values.core",
   "voice.tone",

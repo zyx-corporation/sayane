@@ -194,16 +194,25 @@ export async function diffCandidate(candidateId: string): Promise<CandidateDiff>
   return (await res.json()) as CandidateDiff;
 }
 
+export type ExplicitConfirmationPayload = {
+  section: string;
+  checked: true;
+  reason: string;
+  confirmed_at: string;
+};
+
 export async function approveCandidate(
   candidateId: string,
   forceCritical = false,
   overrideReason?: string,
+  explicitConfirmation?: ExplicitConfirmationPayload,
 ): Promise<Record<string, unknown>> {
   const res = await bridgeFetch(`/candidates/${encodeURIComponent(candidateId)}/approve`, {
     method: "POST",
     body: JSON.stringify({
       force_critical: forceCritical,
       override_reason: overrideReason ?? null,
+      explicit_confirmation: explicitConfirmation ?? null,
     }),
   });
   return (await res.json()) as Record<string, unknown>;

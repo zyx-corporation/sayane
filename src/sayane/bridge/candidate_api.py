@@ -4,7 +4,7 @@ from typing import Any
 
 from sayane.bridge.config import BridgeConfig
 from sayane.core.candidate import CandidateUpdate
-from sayane.evaluators.sections import can_merge_section
+from sayane.evaluators.sections import CRITICAL_CONTEXT_SECTIONS, can_merge_section
 from sayane.evaluators.list_diff import important_terms_display_summary
 from sayane.evaluators.service import (
     approve_candidate,
@@ -107,6 +107,7 @@ def post_approve(
     *,
     force_critical: bool = False,
     override_reason: str | None = None,
+    explicit_confirmation: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     existing = load_candidate(config, candidate_id)
     if existing.status != "evaluated":
@@ -139,6 +140,31 @@ def post_approve(
                 rde_category=rde_category,
             )
     section = existing.proposal.section
+    if section in CRITICAL_CONTEXT_SECTIONS:
+        ec = explicit_confirmation or {}
+        if not ec.get("checked"):
+            raise CandidateOperationError(
+                error="explicit_confirmation_required",
+                message=(
+                    "Explicit confirmation is required for critical section merge."
+                ),
+                candidate_id=candidate_id,
+                status=existing.status,
+                rde_category=rde_category,
+                section=section,
+            )
+        reason = (ec.get("reason") or "").strip()
+        if not reason:
+            raise CandidateOperationError(
+                error="explicit_confirmation_reason_required",
+                message=(
+                    "Explicit confirmation reason is required for critical section merge."
+                ),
+                candidate_id=candidate_id,
+                status=existing.status,
+                rde_category=rde_category,
+                section=section,
+            )
     if not can_merge_section(section, force_critical=force_critical):
         raise CandidateOperationError(
             error="requires_force_critical",

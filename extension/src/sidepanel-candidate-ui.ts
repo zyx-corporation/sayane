@@ -3,7 +3,6 @@
  */
 
 import {
-  canApproveWithCriticalOverride,
   canEvaluate,
   canReject,
   categoryLabel,
@@ -13,18 +12,27 @@ import {
   type CandidateCategory,
 } from "./candidate-display.js";
 import {
+  canApproveCandidate,
+  effectiveCandidateStatus,
+  getApproveAvailability,
+  readApproveContextFromActions,
+  syncSummaryFromDetail,
+  type ApproveAvailability,
+} from "./approve-availability.js";
+import {
   classifyCandidate,
   isPersonaDump,
   matchesReviewFilter,
   recommendedActionKeyForCandidate,
   reviewClassLabelKey,
   riskHintKeyForCandidate,
-  shouldBlockBulkApprove,
   type ReviewFilterId,
 } from "./candidate-review-class.js";
 import {
   isAutoMergeSupported,
   isBlockedMergeSection,
+  isCriticalSection,
+  requiresExplicitContextConfirmation,
   requiresForceCriticalMerge,
 } from "./merge-policy.js";
 import { loadConfig } from "./config.js";
@@ -130,7 +138,8 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     const actionState = record?.state ?? "idle";
     const busy = isBusyActionState(actionState);
     const c = allCandidates.find((item) => item.id === candidateId);
-    const detail = cardState.get(candidateId)?.detail;
+    const rawDetail = cardState.get(candidateId)?.detail;
+    const detail = rawDetail === null ? undefined : rawDetail;
 
     const statusBadge = card.querySelector<HTMLElement>(".card-action-status");
     if (isResolvedActionState(actionState)) {
@@ -191,12 +200,39 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
         return;
       }
       if (btn.classList.contains("btn-approve")) {
-        const canApprove =
+        const compact = btn.classList.contains("btn-compact");
+        const actionsEl = compact ? null : findExpandedActions(candidateId);
+        const avail = getApproveAvailability(
+          c,
+          detail ?? undefined,
+          approveOptionsFor(c, detail ?? undefined, actionsEl, compact),
+        );
+        const canUse =
           actionState !== "approved"
-          && (detail
-            ? canInitiateApproveFromDetail(c, detail)
-            : canQuickApprove(c));
-        applyDisabledWithCursorHint(btn, !canApprove, canApprove ? null : "unavailable");
+          && canApproveCandidate(
+            c,
+            detail ?? undefined,
+            approveOptionsFor(c, detail ?? undefined, actionsEl, compact),
+          );
+        applyDisabledWithCursorHint(btn, !canUse, canUse ? null : "unavailable");
+        if (!busy && actionState !== "approved") {
+          const label = t(avail.labelKey);
+          btn.dataset.idleLabel = label;
+          if (actionState === "idle") btn.textContent = label;
+          btn.title = avail.reasonKey ? t(avail.reasonKey) : "";
+        }
+        if (!compact) {
+          const hint = actionsEl?.querySelector<HTMLElement>(".approve-blocked-hint");
+          if (hint) {
+            if (avail.reasonKey && !canUse) {
+              hint.hidden = false;
+              hint.textContent = t(avail.reasonKey);
+            } else {
+              hint.hidden = true;
+              hint.textContent = "";
+            }
+          }
+        }
       } else if (btn.classList.contains("btn-reject")) {
         applyDisabledWithCursorHint(
           btn,
@@ -344,53 +380,105 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     return detail;
   }
 
-  /** Compact card approve — persona / sensitive_review must open details first. */
-  function canQuickApprove(c: CandidateSummary): boolean {
-    if (!isAutoMergeSupported(c.section ?? "")) return false;
-    if (shouldBlockBulkApprove(c)) return false;
-    return canInitiateApprove(c);
-  }
-
-  /** Approve from expanded panel (pending → auto-evaluate on click, then approve). */
-  function canInitiateApprove(c: CandidateSummary): boolean {
-    if (c.status === "approved" || c.status === "rejected") return false;
-    if (requiresForceCriticalMerge(c.section ?? "")) return false;
-    if (c.status === "pending") return true;
-    if (c.rde_class === "Critical Distortion") return false;
-    return canApproveWithCriticalOverride(
-      c.status,
-      (c.rde_class ?? null) as CandidateCategory | null,
-    );
-  }
-
-  function canInitiateApproveFromDetail(
+  function approveOptionsFor(
     c: CandidateSummary,
-    detail: CandidateDetail,
-  ): boolean {
-    if (detail.status === "approved" || detail.status === "rejected") return false;
-    if (requiresForceCriticalMerge(detail.proposal.section)) return false;
-    if (detail.status === "pending") return true;
-    const category = (detail.evaluation?.rde_class ?? null) as CandidateCategory | null;
-    return canApproveWithCriticalOverride(detail.status, category);
+    detail: CandidateDetail | undefined,
+    actionsEl: HTMLElement | null | undefined,
+    compact: boolean,
+  ) {
+    return {
+      compact,
+      cardActionState: getCardAction(c.id),
+      ...readApproveContextFromActions(actionsEl),
+    };
   }
 
-  function approveButtonTitle(c: CandidateSummary, compact: boolean): string {
-    if (compact && shouldBlockBulkApprove(c)) return t("review.approve_blocked_hint");
-    if (c.status === "pending") return t("review.approve_will_evaluate_hint");
-    return "";
+  function findExpandedActions(candidateId: string): HTMLElement | null {
+    const card = document.querySelector<HTMLElement>(
+      `[data-candidate-id="${candidateId}"]`,
+    );
+    return card?.querySelector<HTMLElement>(".card-expanded-actions") ?? null;
   }
 
-  async function ensureEvaluatedForApprove(
+  function refreshExpandedApproveUi(candidateId: string): void {
+    applyCardActionUi(candidateId);
+  }
+
+  function resolveActionsEl(
     candidateId: string,
-  ): Promise<CandidateSummary | null> {
-    let summary = allCandidates.find((item) => item.id === candidateId);
-    if (!summary) return null;
-    if (summary.status !== "pending") return summary;
+    actionsEl: HTMLElement,
+    compact: boolean,
+  ): HTMLElement {
+    if (!compact) {
+      return findExpandedActions(candidateId) ?? actionsEl;
+    }
+    return actionsEl;
+  }
 
-    const level = Math.min(getStoredEvalLevel(), 3);
-    await runEvaluate(candidateId, level);
-    summary = allCandidates.find((item) => item.id === candidateId);
-    return summary ?? null;
+  function handleApproveClick(
+    c: CandidateSummary,
+    actionsEl: HTMLElement,
+    compact: boolean,
+  ): void {
+    const summary = allCandidates.find((item) => item.id === c.id);
+    if (!summary) {
+      setStatus(t("review.approve_not_found"), true);
+      return;
+    }
+    const detail = cardState.get(c.id)?.detail ?? undefined;
+    syncSummaryFromDetail(summary, detail);
+    const resolvedActions = resolveActionsEl(c.id, actionsEl, compact);
+    const opts = approveOptionsFor(summary, detail, resolvedActions, compact);
+    const avail = getApproveAvailability(summary, detail, opts);
+    if (avail.kind === "needs_evaluation") {
+      setStatus(t("review.approve_requires_evaluation"), true);
+      return;
+    }
+    if (!canApproveCandidate(summary, detail, opts)) {
+      const reason = avail.reasonKey ?? "review.approve_blocked_after_eval";
+      setStatus(t(reason), true);
+      if (!compact) {
+        const hint = resolvedActions.querySelector<HTMLElement>(".approve-blocked-hint");
+        if (hint) {
+          hint.hidden = false;
+          hint.textContent = t(reason);
+        }
+      }
+      return;
+    }
+    void runApproveEvaluated(c.id, resolvedActions);
+  }
+
+  function applyApproveButtonState(
+    btn: HTMLButtonElement,
+    c: CandidateSummary,
+    detail: CandidateDetail | null | undefined,
+    compact: boolean,
+    actionsEl?: HTMLElement | null,
+    hintEl?: HTMLElement | null,
+  ): ApproveAvailability {
+    const resolvedDetail = detail === null ? undefined : detail;
+    const avail = getApproveAvailability(
+      c,
+      resolvedDetail,
+      approveOptionsFor(c, resolvedDetail, actionsEl ?? null, compact),
+    );
+    const label = t(avail.labelKey);
+    btn.textContent = label;
+    btn.dataset.idleLabel = label;
+    btn.title = avail.reasonKey ? t(avail.reasonKey) : "";
+    const canUse = canApproveCandidate(c, resolvedDetail, approveOptionsFor(c, resolvedDetail, actionsEl ?? null, compact));
+    applyDisabledWithCursorHint(btn, !canUse, canUse ? null : "unavailable");
+    if (hintEl) {
+      if (avail.reasonKey && !avail.enabled) {
+        hintEl.hidden = false;
+        hintEl.textContent = t(avail.reasonKey);
+      } else {
+        hintEl.hidden = true;
+        hintEl.textContent = "";
+      }
+    }
+    return avail;
   }
 
   function renderListDiffLines(
@@ -787,9 +875,44 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
       actions.appendChild(unsupportedWarn);
     }
 
+    const needsExplicitConfirm = requiresExplicitContextConfirmation(mergeSection);
+    if (needsExplicitConfirm) {
+      const explicitPanel = document.createElement("div");
+      explicitPanel.className = "explicit-confirm-panel";
+      const warn = document.createElement("p");
+      warn.className = "explicit-confirm-warning";
+      warn.textContent = t("detail.force_critical_section_warning", {
+        section: mergeSection,
+      });
+      explicitPanel.appendChild(warn);
+      const adoptReason = document.createElement("input");
+      adoptReason.type = "text";
+      adoptReason.placeholder = t("detail.explicit_confirm_reason_placeholder");
+      adoptReason.className = "explicit-confirm-reason";
+      adoptReason.addEventListener("input", () => refreshExpandedApproveUi(c.id));
+      explicitPanel.appendChild(adoptReason);
+      const label = document.createElement("label");
+      label.className = "explicit-confirm-label";
+      const check = document.createElement("input");
+      check.type = "checkbox";
+      check.className = "explicit-confirm-check";
+      check.addEventListener("change", () => refreshExpandedApproveUi(c.id));
+      label.appendChild(check);
+      const span = document.createElement("span");
+      span.textContent = t("detail.force_critical_section_confirm", {
+        section: mergeSection,
+      });
+      label.appendChild(span);
+      explicitPanel.appendChild(label);
+      actions.appendChild(explicitPanel);
+      actions.dataset.requiresExplicitConfirmation = "1";
+    }
+
+    const needsSectionOverride =
+      needsForceMerge && isCriticalSection(mergeSection);
     const criticalPanel = document.createElement("div");
     criticalPanel.className = "critical-override-panel";
-    criticalPanel.hidden = !isCriticalRde && !needsForceMerge;
+    criticalPanel.hidden = !isCriticalRde && !needsSectionOverride;
     if (!criticalPanel.hidden) {
       const warn = document.createElement("p");
       warn.className = "critical-override-warning";
@@ -801,12 +924,14 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
       reasonInput.type = "text";
       reasonInput.placeholder = t("detail.critical_override_reason_placeholder");
       reasonInput.className = "override-reason";
+      reasonInput.addEventListener("input", () => refreshExpandedApproveUi(c.id));
       criticalPanel.appendChild(reasonInput);
       const label = document.createElement("label");
       label.className = "critical-override-label";
       const check = document.createElement("input");
       check.type = "checkbox";
       check.className = "override-check";
+      check.addEventListener("change", () => refreshExpandedApproveUi(c.id));
       label.appendChild(check);
       const span = document.createElement("span");
       span.textContent = isCriticalRde
@@ -817,7 +942,7 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
       actions.appendChild(criticalPanel);
 
       if (isCriticalRde) actions.dataset.hasCriticalRde = "1";
-      if (needsForceMerge) actions.dataset.hasCriticalSection = "1";
+      if (needsSectionOverride) actions.dataset.hasCriticalSection = "1";
     }
 
     const rejectInput = document.createElement("input");
@@ -826,21 +951,19 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     rejectInput.className = "reject-reason";
     actions.appendChild(rejectInput);
 
+    const approveHint = document.createElement("p");
+    approveHint.className = "approve-blocked-hint";
+    approveHint.hidden = true;
+    actions.appendChild(approveHint);
+
     const btnRow = document.createElement("div");
     btnRow.className = "row";
     const approveBtn = document.createElement("button");
     approveBtn.type = "button";
     approveBtn.className = "btn-approve";
-    approveBtn.textContent = t("candidate.approve");
-    approveBtn.disabled =
-      isBusyActionState(getCardAction(c.id))
-      || blockedSection
-      || mergeUnsupported
-      || !canInitiateApproveFromDetail(c, detail);
-    approveBtn.dataset.idleLabel = t("candidate.approve");
-    approveBtn.title = approveButtonTitle(c, false);
+    applyApproveButtonState(approveBtn, c, detail, false, actions, approveHint);
     approveBtn.addEventListener("click", () => {
-      void runApprove(c.id, actions);
+      handleApproveClick(c, actions, false);
     });
 
     const rejectBtn = document.createElement("button");
@@ -918,54 +1041,74 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
       setCardAction(candidateId, "idle");
       return;
     }
-    cardState.delete(candidateId);
+    const evaluated = res.data as CandidateDetail;
+    const item = allCandidates.find((entry) => entry.id === candidateId);
+    if (item) syncSummaryFromDetail(item, evaluated);
+    cardState.set(candidateId, { diffLoaded: false, detail: evaluated });
     setCardAction(candidateId, "idle");
     setStatus(t("status.evaluated", { summary: "" }));
     await reloadCandidateCard(candidateId);
   }
 
-  async function runApprove(candidateId: string, actionsEl: HTMLElement): Promise<void> {
+  async function runApproveEvaluated(
+    candidateId: string,
+    actionsEl: HTMLElement,
+  ): Promise<void> {
     expandedCandidateIds.add(candidateId);
-    const summary = await ensureEvaluatedForApprove(candidateId);
+    const summary = allCandidates.find((item) => item.id === candidateId);
     if (!summary) {
       setStatus(t("review.approve_not_found"), true);
       return;
     }
-    if (summary.status === "pending") {
-      setStatus(t("review.approve_evaluate_failed"), true);
+    const rawDetail = cardState.get(candidateId)?.detail;
+    const detail = rawDetail === null ? undefined : rawDetail;
+    syncSummaryFromDetail(summary, detail);
+    if (effectiveCandidateStatus(summary, detail) === "pending") {
+      setStatus(t("review.evaluate_before_approve_done"), true);
       return;
     }
-    const category = (summary.rde_class ?? null) as CandidateCategory | null;
-    if (!canApproveWithCriticalOverride(summary.status, category)) {
-      if (category === "Critical Distortion") {
-        setStatus(t("detail.critical_override_required"), true);
-      } else {
-        setStatus(t("review.approve_blocked_after_eval"), true);
-      }
+    const approveOpts = approveOptionsFor(summary, detail, actionsEl, false);
+    const avail = getApproveAvailability(summary, detail, approveOpts);
+    if (!canApproveCandidate(summary, detail, approveOpts)) {
+      if (avail.reasonKey) setStatus(t(avail.reasonKey), true);
       return;
     }
 
-    const needsOverride =
-      actionsEl.dataset.hasCriticalRde === "1"
-      || actionsEl.dataset.hasCriticalSection === "1";
-    const overrideCheck = actionsEl.querySelector(".override-check") as HTMLInputElement | null;
+    const section = detail?.proposal.section ?? summary.section ?? "";
+    const needsRdeOverride = actionsEl.dataset.hasCriticalRde === "1";
+    const needsSectionOverride = actionsEl.dataset.hasCriticalSection === "1";
+    const needsOverride = needsRdeOverride || needsSectionOverride;
     const overrideReason = actionsEl.querySelector(".override-reason") as HTMLInputElement | null;
-    if (needsOverride && overrideCheck && !overrideCheck.checked) {
+    if (needsOverride && !window.confirm(t("detail.critical_override_confirm_dialog"))) {
       setStatus(t("detail.critical_override_required"), true);
       return;
     }
-    if (needsOverride && overrideReason && !overrideReason.value.trim()) {
-      setStatus(t("detail.critical_override_reason_required"), true);
-      return;
-    }
-    if (needsOverride && !window.confirm(t("detail.critical_override_confirm_dialog"))) return;
+
+    const explicitReason = actionsEl.querySelector(
+      ".explicit-confirm-reason",
+    ) as HTMLInputElement | null;
+    const explicitCheck = actionsEl.querySelector(
+      ".explicit-confirm-check",
+    ) as HTMLInputElement | null;
+    const explicitConfirmation =
+      actionsEl.dataset.requiresExplicitConfirmation === "1"
+      && explicitCheck?.checked
+      && explicitReason?.value.trim()
+        ? {
+            section,
+            checked: true as const,
+            reason: explicitReason.value.trim(),
+            confirmedAt: new Date().toISOString(),
+          }
+        : undefined;
 
     setCardAction(candidateId, "approving");
     const res = await send({
       type: "BRIDGE_APPROVE_CANDIDATE",
       candidateId,
-      forceCritical: needsOverride && Boolean(overrideCheck?.checked),
+      forceCritical: needsOverride,
       overrideReason: needsOverride ? overrideReason?.value.trim() : undefined,
+      explicitConfirmation,
     });
     if (!res.ok) {
       setCardAction(candidateId, "error", { rawError: res.error });
@@ -1049,11 +1192,9 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     approveBtn.className = "btn-approve btn-compact";
     approveBtn.textContent = t("candidate.approve");
     approveBtn.dataset.idleLabel = t("candidate.approve");
-    approveBtn.disabled =
-      isBusyActionState(getCardAction(c.id)) || !canQuickApprove(c);
-    approveBtn.title = approveButtonTitle(c, true);
+    applyApproveButtonState(approveBtn, c, cardState.get(c.id)?.detail, true);
     approveBtn.addEventListener("click", () => {
-      void runApprove(c.id, document.createElement("div"));
+      handleApproveClick(c, document.createElement("div"), true);
     });
 
     const rejectBtn = document.createElement("button");

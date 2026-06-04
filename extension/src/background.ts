@@ -82,15 +82,25 @@ chrome.runtime.onMessage.addListener(
             };
           case "BRIDGE_DIFF_CANDIDATE":
             return { ok: true, data: await diffCandidate(message.candidateId) };
-          case "BRIDGE_APPROVE_CANDIDATE":
+          case "BRIDGE_APPROVE_CANDIDATE": {
+            const explicit = message.explicitConfirmation;
             return {
               ok: true,
               data: await approveCandidate(
                 message.candidateId,
                 message.forceCritical ?? false,
                 message.overrideReason,
+                explicit
+                  ? {
+                      section: explicit.section,
+                      checked: true,
+                      reason: explicit.reason,
+                      confirmed_at: explicit.confirmedAt,
+                    }
+                  : undefined,
               ),
             };
+          }
           case "BRIDGE_REJECT_CANDIDATE":
             return {
               ok: true,

@@ -121,11 +121,17 @@ def create_app(config: BridgeConfig | None = None) -> FastAPI:
         _: Annotated[None, Depends(require_bearer)],
     ) -> dict:
         try:
+            explicit = (
+                body.explicit_confirmation.model_dump(mode="json")
+                if body.explicit_confirmation
+                else None
+            )
             return candidate_api.post_approve(
                 cfg,
                 candidate_id,
                 force_critical=body.force_critical,
                 override_reason=body.override_reason,
+                explicit_confirmation=explicit,
             )
         except FileNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc

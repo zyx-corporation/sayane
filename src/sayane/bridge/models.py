@@ -61,9 +61,17 @@ class EvaluateCandidateRequest(BaseModel):
     level: int = Field(default=1, ge=1, le=3)
 
 
+class ExplicitConfirmationPayload(BaseModel):
+    section: str
+    checked: bool = True
+    reason: str
+    confirmed_at: str | None = None
+
+
 class ApproveCandidateRequest(BaseModel):
     force_critical: bool = False
     override_reason: str | None = None
+    explicit_confirmation: ExplicitConfirmationPayload | None = None
 
 
 class RejectCandidateRequest(BaseModel):

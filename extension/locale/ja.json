@@ -364,6 +364,8 @@
   "review.approve_blocked_rde_unresolved_gap": "分類が「{category}」のため採用できません。差分を解消するか、棄却してください。チェックと理由だけでは採用できません。",
   "review.approve_blocked_rde_suspicious_drift": "分類が「{category}」のため採用できません。追加候補の意味と差分を確認してください。必要なら棄却してください。チェックと理由だけでは採用できません。",
   "review.approve_blocked_rde_critical_distortion": "分類が「{category}」のため、そのまま採用できません。重大な歪曲として扱われます。",
+  "review.approve_already_approved": "この候補はすでに採用済みです。",
+  "review.approve_already_rejected": "この候補はすでに却下済みです。",
   "review.approve_unavailable_generic": "現在この候補は採用できません。",
   "review.approve_not_found": "候補が見つかりません。一覧を更新してください。",
   "review.approve_evaluate_failed": "評価に失敗したため、採用できません。評価ボタンで再試行してください。"

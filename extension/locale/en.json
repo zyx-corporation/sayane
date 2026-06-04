@@ -364,6 +364,8 @@
   "review.approve_blocked_rde_unresolved_gap": "Cannot approve: classified as “{category}”. Resolve the diff or reject. Checking the box and entering a reason does not enable approve.",
   "review.approve_blocked_rde_suspicious_drift": "Cannot approve: classified as “{category}”. Review the meaning of proposed additions and the diff; reject if needed. Checking the box and entering a reason does not enable approve.",
   "review.approve_blocked_rde_critical_distortion": "Cannot approve as-is: classified as “{category}” (critical distortion).",
+  "review.approve_already_approved": "This candidate has already been approved.",
+  "review.approve_already_rejected": "This candidate has already been rejected.",
   "review.approve_unavailable_generic": "This candidate cannot be approved right now.",
   "review.approve_not_found": "Candidate not found. Refresh the list.",
   "review.approve_evaluate_failed": "Evaluation failed, so approve is not available. Try Evaluate again."

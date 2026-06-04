@@ -209,6 +209,9 @@ export function getApproveAvailability(
       kind: "resolved",
       enabled: false,
       labelKey: "candidate.approve",
+      reasonKey: status === "approved"
+        ? "review.approve_already_approved"
+        : "review.approve_already_rejected",
     };
   }
 

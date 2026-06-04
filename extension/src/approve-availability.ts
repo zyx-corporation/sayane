@@ -55,6 +55,13 @@ export type ApproveAvailability = {
   reasonKey?: string;
 };
 
+export function effectiveCandidateStatus(
+  c: CandidateSummary,
+  detail?: CandidateDetail,
+): CandidateSummary["status"] {
+  return detail?.status ?? c.status;
+}
+
 function candidateCategory(
   c: CandidateSummary,
   detail?: CandidateDetail,
@@ -141,6 +148,14 @@ export function readApproveContextFromActions(
   };
 }
 
+/** Read confirmation fields from the expanded actions panel containing this button. */
+export function readApproveContextFromButton(
+  btn: HTMLButtonElement | null | undefined,
+): Pick<ApproveAvailabilityOptions, "explicitConfirmation" | "overrideConfirmation"> {
+  const actionsEl = btn?.closest<HTMLElement>(".card-expanded-actions") ?? null;
+  return readApproveContextFromActions(actionsEl);
+}
+
 export function getApproveAvailability(
   c: CandidateSummary,
   detail?: CandidateDetail,
@@ -148,8 +163,8 @@ export function getApproveAvailability(
 ): ApproveAvailability {
   const compact = options?.compact ?? false;
   const cardActionState = options?.cardActionState ?? "idle";
-  const status = detail?.status ?? c.status;
-  const section = detail?.proposal.section ?? c.section ?? "";
+  const status = effectiveCandidateStatus(c, detail);
+  const section = detail?.proposal?.section ?? c.section ?? "";
   const category = candidateCategory(c, detail);
 
   if (status === "approved" || status === "rejected") {
@@ -288,13 +303,6 @@ export function canQuickApprove(
   if (effectiveCandidateStatus(c, detail) !== "evaluated") return false;
   const avail = getApproveAvailability(c, detail, { compact: true });
   return avail.kind === "can_approve" && avail.enabled;
-}
-
-export function effectiveCandidateStatus(
-  c: CandidateSummary,
-  detail?: CandidateDetail,
-): CandidateSummary["status"] {
-  return detail?.status ?? c.status;
 }
 
 export function syncSummaryFromDetail(

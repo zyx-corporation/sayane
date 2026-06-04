@@ -43,7 +43,9 @@ test("pending candidates do not auto-approve or auto-evaluate from approve click
 test("applyCardActionUi uses getApproveAvailability for approve buttons", () => {
   assert.ok(src.includes("approveOptionsFor"));
   assert.ok(src.includes("canApproveCandidate"));
-  assert.ok(src.includes("readApproveContextFromActions"));
+  assert.ok(src.includes("readApproveContextFromButton"));
+  assert.ok(src.includes("bindExplicitConfirmRefresh"));
+  assert.ok(src.includes("expandedActionsForApproveButton"));
   assert.ok(!src.includes("canInitiateApproveFromDetail"));
   assert.ok(!src.includes("ensureEvaluatedForApprove"));
 });

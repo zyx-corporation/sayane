@@ -16,6 +16,7 @@ import {
   effectiveCandidateStatus,
   getApproveAvailability,
   readApproveContextFromActions,
+  readApproveContextFromButton,
   syncSummaryFromDetail,
   type ApproveAvailability,
 } from "./approve-availability.js";
@@ -140,6 +141,7 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     const c = allCandidates.find((item) => item.id === candidateId);
     const rawDetail = cardState.get(candidateId)?.detail;
     const detail = rawDetail === null ? undefined : rawDetail;
+    if (c && detail) syncSummaryFromDetail(c, detail);
 
     const statusBadge = card.querySelector<HTMLElement>(".card-action-status");
     if (isResolvedActionState(actionState)) {
@@ -201,19 +203,19 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
       }
       if (btn.classList.contains("btn-approve")) {
         const compact = btn.classList.contains("btn-compact");
-        const actionsEl = compact ? null : findExpandedActions(candidateId);
-        const avail = getApproveAvailability(
+        const actionsEl = compact
+          ? null
+          : expandedActionsForApproveButton(btn, candidateId);
+        const opts = approveOptionsFor(
           c,
           detail ?? undefined,
-          approveOptionsFor(c, detail ?? undefined, actionsEl, compact),
+          actionsEl,
+          compact,
+          btn,
         );
+        const avail = getApproveAvailability(c, detail ?? undefined, opts);
         const canUse =
-          actionState !== "approved"
-          && canApproveCandidate(
-            c,
-            detail ?? undefined,
-            approveOptionsFor(c, detail ?? undefined, actionsEl, compact),
-          );
+          actionState !== "approved" && canApproveCandidate(c, detail ?? undefined, opts);
         applyDisabledWithCursorHint(btn, !canUse, canUse ? null : "unavailable");
         if (!busy && actionState !== "approved") {
           const label = t(avail.labelKey);
@@ -385,19 +387,44 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     detail: CandidateDetail | undefined,
     actionsEl: HTMLElement | null | undefined,
     compact: boolean,
+    approveBtn?: HTMLButtonElement | null,
   ) {
+    const contextFromDom =
+      approveBtn && !compact
+        ? readApproveContextFromButton(approveBtn)
+        : readApproveContextFromActions(actionsEl);
     return {
       compact,
       cardActionState: getCardAction(c.id),
-      ...readApproveContextFromActions(actionsEl),
+      ...contextFromDom,
     };
   }
 
-  function findExpandedActions(candidateId: string): HTMLElement | null {
-    const card = document.querySelector<HTMLElement>(
-      `[data-candidate-id="${candidateId}"]`,
+  function expandedActionsForApproveButton(
+    btn: HTMLButtonElement,
+    candidateId: string,
+  ): HTMLElement | null {
+    return (
+      btn.closest<HTMLElement>(".card-expanded-actions")
+      ?? document
+        .querySelector<HTMLElement>(`[data-candidate-id="${candidateId}"]`)
+        ?.querySelector<HTMLElement>(".card-expanded-actions")
+      ?? null
     );
-    return card?.querySelector<HTMLElement>(".card-expanded-actions") ?? null;
+  }
+
+  function bindExplicitConfirmRefresh(
+    actions: HTMLElement,
+    candidateId: string,
+  ): void {
+    const refresh = () => refreshExpandedApproveUi(candidateId);
+    const reason = actions.querySelector<HTMLInputElement>(".explicit-confirm-reason");
+    const check = actions.querySelector<HTMLInputElement>(".explicit-confirm-check");
+    reason?.addEventListener("input", refresh);
+    reason?.addEventListener("change", refresh);
+    reason?.addEventListener("compositionend", refresh);
+    check?.addEventListener("change", refresh);
+    check?.addEventListener("click", refresh);
   }
 
   function refreshExpandedApproveUi(candidateId: string): void {
@@ -408,9 +435,18 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     candidateId: string,
     actionsEl: HTMLElement,
     compact: boolean,
+    approveBtn?: HTMLButtonElement | null,
   ): HTMLElement {
     if (!compact) {
-      return findExpandedActions(candidateId) ?? actionsEl;
+      return (
+        approveBtn?.closest<HTMLElement>(".card-expanded-actions")
+        ?? actionsEl.closest<HTMLElement>(".card-expanded-actions")
+        ?? expandedActionsForApproveButton(
+          approveBtn ?? (actionsEl.querySelector(".btn-approve") as HTMLButtonElement),
+          candidateId,
+        )
+        ?? actionsEl
+      );
     }
     return actionsEl;
   }
@@ -428,7 +464,7 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     const detail = cardState.get(c.id)?.detail ?? undefined;
     syncSummaryFromDetail(summary, detail);
     const resolvedActions = resolveActionsEl(c.id, actionsEl, compact);
-    const opts = approveOptionsFor(summary, detail, resolvedActions, compact);
+    const opts = approveOptionsFor(summary, detail, resolvedActions, compact, null);
     const avail = getApproveAvailability(summary, detail, opts);
     if (avail.kind === "needs_evaluation") {
       setStatus(t("review.approve_requires_evaluation"), true);
@@ -458,19 +494,25 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     hintEl?: HTMLElement | null,
   ): ApproveAvailability {
     const resolvedDetail = detail === null ? undefined : detail;
-    const avail = getApproveAvailability(
+    const resolvedActions =
+      actionsEl
+      ?? (compact ? null : expandedActionsForApproveButton(btn, c.id));
+    const opts = approveOptionsFor(
       c,
       resolvedDetail,
-      approveOptionsFor(c, resolvedDetail, actionsEl ?? null, compact),
+      resolvedActions,
+      compact,
+      btn,
     );
+    const avail = getApproveAvailability(c, resolvedDetail, opts);
     const label = t(avail.labelKey);
     btn.textContent = label;
     btn.dataset.idleLabel = label;
     btn.title = avail.reasonKey ? t(avail.reasonKey) : "";
-    const canUse = canApproveCandidate(c, resolvedDetail, approveOptionsFor(c, resolvedDetail, actionsEl ?? null, compact));
+    const canUse = canApproveCandidate(c, resolvedDetail, opts);
     applyDisabledWithCursorHint(btn, !canUse, canUse ? null : "unavailable");
     if (hintEl) {
-      if (avail.reasonKey && !avail.enabled) {
+      if (avail.reasonKey && !canUse) {
         hintEl.hidden = false;
         hintEl.textContent = t(avail.reasonKey);
       } else {
@@ -744,6 +786,10 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     detail: CandidateDetail,
   ): void {
     body.textContent = "";
+    const prev = cardState.get(c.id);
+    cardState.set(c.id, { diffLoaded: prev?.diffLoaded ?? false, detail });
+    const summary = allCandidates.find((item) => item.id === c.id);
+    if (summary) syncSummaryFromDetail(summary, detail);
     renderPersonaWarning(body, c, detail);
 
     const captureExcerpt = captureExcerptForReview(detail, currentReviewSession);
@@ -889,14 +935,12 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
       adoptReason.type = "text";
       adoptReason.placeholder = t("detail.explicit_confirm_reason_placeholder");
       adoptReason.className = "explicit-confirm-reason";
-      adoptReason.addEventListener("input", () => refreshExpandedApproveUi(c.id));
       explicitPanel.appendChild(adoptReason);
       const label = document.createElement("label");
       label.className = "explicit-confirm-label";
       const check = document.createElement("input");
       check.type = "checkbox";
       check.className = "explicit-confirm-check";
-      check.addEventListener("change", () => refreshExpandedApproveUi(c.id));
       label.appendChild(check);
       const span = document.createElement("span");
       span.textContent = t("detail.force_critical_section_confirm", {
@@ -906,6 +950,7 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
       explicitPanel.appendChild(label);
       actions.appendChild(explicitPanel);
       actions.dataset.requiresExplicitConfirmation = "1";
+      bindExplicitConfirmRefresh(actions, c.id);
     }
 
     const needsSectionOverride =
@@ -1187,15 +1232,20 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     const quickActions = document.createElement("div");
     quickActions.className = "card-quick-actions";
 
-    const approveBtn = document.createElement("button");
-    approveBtn.type = "button";
-    approveBtn.className = "btn-approve btn-compact";
-    approveBtn.textContent = t("candidate.approve");
-    approveBtn.dataset.idleLabel = t("candidate.approve");
-    applyApproveButtonState(approveBtn, c, cardState.get(c.id)?.detail, true);
-    approveBtn.addEventListener("click", () => {
-      handleApproveClick(c, document.createElement("div"), true);
-    });
+    const mergeSection = c.section ?? "";
+    const hideCompactApprove = requiresExplicitContextConfirmation(mergeSection);
+    if (!hideCompactApprove) {
+      const approveBtn = document.createElement("button");
+      approveBtn.type = "button";
+      approveBtn.className = "btn-approve btn-compact";
+      approveBtn.textContent = t("candidate.approve");
+      approveBtn.dataset.idleLabel = t("candidate.approve");
+      applyApproveButtonState(approveBtn, c, cardState.get(c.id)?.detail, true);
+      approveBtn.addEventListener("click", () => {
+        handleApproveClick(c, document.createElement("div"), true);
+      });
+      quickActions.appendChild(approveBtn);
+    }
 
     const rejectBtn = document.createElement("button");
     rejectBtn.type = "button";
@@ -1217,7 +1267,6 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
       article.remove();
       updateEmptyState();
     });
-    quickActions.appendChild(approveBtn);
     quickActions.appendChild(rejectBtn);
     quickActions.appendChild(laterBtn);
     article.appendChild(quickActions);

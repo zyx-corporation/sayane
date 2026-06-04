@@ -5,6 +5,7 @@ import {
   canQuickApprove,
   effectiveCandidateStatus,
   getApproveAvailability,
+  readApproveContextFromActions,
   syncSummaryFromDetail,
 } from "./approve-availability.js";
 import type { CandidateDetail } from "./types.js";
@@ -164,6 +165,35 @@ describe("getApproveAvailability", () => {
     });
     assert.equal(ready.kind, "can_approve");
     assert.equal(ready.enabled, true);
+  });
+
+  it("readApproveContextFromActions reads checkbox and reason from actions panel", () => {
+    if (typeof document === "undefined") return;
+    const actions = document.createElement("div");
+    actions.dataset.requiresExplicitConfirmation = "1";
+    const reason = document.createElement("input");
+    reason.className = "explicit-confirm-reason";
+    reason.value = "確認済み";
+    const check = document.createElement("input");
+    check.type = "checkbox";
+    check.className = "explicit-confirm-check";
+    check.checked = true;
+    actions.append(reason, check);
+
+    const ctx = readApproveContextFromActions(actions);
+    assert.equal(ctx.explicitConfirmation?.checked, true);
+    assert.equal(ctx.explicitConfirmation?.reason, "確認済み");
+
+    const c = summary({
+      status: "evaluated",
+      rde_class: "Authorized Transformation",
+    });
+    assert.equal(
+      canApproveCandidate(c, undefined, {
+        explicitConfirmation: ctx.explicitConfirmation,
+      }),
+      true,
+    );
   });
 
   it("effective status prefers detail over stale summary", () => {

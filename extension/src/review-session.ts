@@ -55,12 +55,13 @@ export function parseReviewSession(raw: unknown): CandidateReviewSession | null 
   };
 }
 
-/** Keep only candidates that belong to the current review session. */
+/** Keep only candidates that belong to the current review session.
+ * When no session is active, show all candidates (graceful fallback). */
 export function filterCandidatesForReviewSession(
   bridgeCandidates: CandidateSummary[],
   session: CandidateReviewSession | null,
 ): CandidateSummary[] {
-  if (!session) return [];
+  if (!session) return bridgeCandidates;
   const ids = new Set(session.candidateIds);
   return bridgeCandidates.filter((c) => ids.has(c.id));
 }

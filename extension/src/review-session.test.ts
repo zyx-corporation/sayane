@@ -82,12 +82,15 @@ test("filterCandidatesForReviewSession keeps only current session ids", () => {
   assert.equal(visible[0]?.id, "new");
 });
 
-test("filterCandidatesForReviewSession returns empty without session", () => {
-  const src = readFileSync(join(extRoot, "src", "review-session.ts"), "utf8");
-  assert.ok(src.includes("beginReviewSession"));
-  assert.ok(src.includes("candidateIds: [...params.candidateIds]"));
-  assert.ok(!src.includes("candidateIds.push"));
-  assert.ok(!/\.push\(\.\.\./.test(src));
+test("filterCandidatesForReviewSession returns all without session (graceful fallback)", () => {
+  const bridge = [
+    summary({ id: "a", content_preview: "first" }),
+    summary({ id: "b", content_preview: "second" }),
+  ];
+  const visible = filterCandidatesForReviewSession(bridge, null);
+  assert.equal(visible.length, 2);
+  assert.equal(visible[0]?.id, "a");
+  assert.equal(visible[1]?.id, "b");
 });
 
 test("sidepanel candidate UI scopes list to current review session", () => {

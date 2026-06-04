@@ -178,9 +178,12 @@ def test_important_terms_partial_capture_all_unchanged() -> None:
     parsed, _ = try_parse_yaml(fragment)
     assert isinstance(parsed, dict)
     proposal = classify_important_terms_yaml(parsed, _profile_with_terms())
-    assert proposal.operation == "no_op_or_duplicate"
+    # All captured terms are already in profile, but the capture is shorter →
+    # this is a removal intent (list_remove), not no_op_or_duplicate.
+    assert proposal.operation == "list_remove"
     assert proposal.items == []
     assert len(proposal.already_present) == 6
+    assert len(proposal.remove) == 5  # 11 profile terms - 6 captured = 5 removed
 
 
 def test_important_terms_sayane_add_when_only_in_major_projects() -> None:

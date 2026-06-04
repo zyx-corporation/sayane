@@ -271,4 +271,5 @@ def _candidate_summary(c: CandidateUpdate) -> dict[str, Any]:
         "capture_source": (
             c.capture_meta.capture_source if c.capture_meta else c.source.type
         ),
+        "proposal_operation": c.proposal.operation,
     }

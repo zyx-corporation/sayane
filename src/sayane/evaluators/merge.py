@@ -62,8 +62,28 @@ def merge_candidate_into_profile(
 
 
 def _merge_important_terms(profile: SayaneProfile, candidate: CandidateUpdate) -> None:
-    """Append proposal items to important_terms with case-insensitive dedup."""
+    """Apply add and remove mutations to important_terms with case-insensitive dedup."""
     existing_keys = {term.strip().casefold() for term in profile.important_terms if term.strip()}
+
+    # Remove terms requested for deletion
+    if candidate.proposal.remove:
+        remove_keys = {
+            (item.get("name") or "").strip().casefold()
+            for item in candidate.proposal.remove
+            if (item.get("name") or "").strip()
+        }
+        if remove_keys:
+            profile.important_terms = [
+                term
+                for term in profile.important_terms
+                if term.strip().casefold() not in remove_keys
+            ]
+            # Rebuild existing_keys from updated list
+            existing_keys = {
+                term.strip().casefold() for term in profile.important_terms if term.strip()
+            }
+
+    # Add new terms
     for item in candidate.proposal.items:
         name = (item.get("name") or "").strip()
         if not name:

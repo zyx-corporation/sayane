@@ -828,6 +828,20 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
         }
         parent.appendChild(ul);
       }
+      if (listDiff.removed.length > 0) {
+        const remLabel = document.createElement("p");
+        remLabel.className = "diff-section-label";
+        remLabel.textContent = t("review.list_diff_removed");
+        parent.appendChild(remLabel);
+        const ul = document.createElement("ul");
+        ul.className = "proposal-list proposal-removed";
+        for (const name of listDiff.removed) {
+          const li = document.createElement("li");
+          li.textContent = `important_terms[] · ${name}`;
+          ul.appendChild(li);
+        }
+        parent.appendChild(ul);
+      }
       const unchangedCount = listDiff.unchanged.length;
       if (unchangedCount > 0) {
         const details = document.createElement("details");

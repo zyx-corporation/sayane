@@ -110,7 +110,12 @@ def list_diff_for_important_terms(proposal: CandidateProposal) -> ListDiff:
         for item in proposal.already_present
         if (item.get("name") or "").strip()
     ]
-    return ListDiff(added=added, removed=[], unchanged=unchanged)
+    removed = [
+        (item.get("name") or "").strip()
+        for item in proposal.remove
+        if (item.get("name") or "").strip()
+    ]
+    return ListDiff(added=added, removed=removed, unchanged=unchanged)
 
 
 def important_terms_profile_diff(
@@ -137,16 +142,39 @@ def important_terms_display_summary(
     locale: str | None = None,
 ) -> str:
     diff = list_diff_for_important_terms(proposal)
+    ja = bool(locale and str(locale).lower().startswith("ja"))
+    if diff.added and diff.removed:
+        names_add = ", ".join(diff.added)
+        names_rem = ", ".join(diff.removed)
+        if ja:
+            return (
+                f"important_terms: {len(diff.added)} 件追加、"
+                f"{len(diff.removed)} 件削除の候補があります。"
+                f"追加: {names_add} / 削除: {names_rem}"
+            )
+        return (
+            f"important_terms: {len(diff.added)} term(s) to add, "
+            f"{len(diff.removed)} term(s) to remove — "
+            f"add: {names_add} / remove: {names_rem}"
+        )
     if diff.added:
         names = ", ".join(diff.added)
-        if locale and str(locale).lower().startswith("ja"):
+        if ja:
             return (
                 f"important_terms に {len(diff.added)} 件の追加候補があります。"
                 f"追加: {names}"
             )
         return f"important_terms: {len(diff.added)} term(s) to add — {names}"
-    if diff.unchanged and not diff.added:
-        if locale and str(locale).lower().startswith("ja"):
+    if diff.removed:
+        names = ", ".join(diff.removed)
+        if ja:
+            return (
+                f"important_terms から {len(diff.removed)} 件の削除候補があります。"
+                f"削除: {names}"
+            )
+        return f"important_terms: {len(diff.removed)} term(s) to remove — {names}"
+    if diff.unchanged and not diff.added and not diff.removed:
+        if ja:
             return f"important_terms: 既存と一致 ({len(diff.unchanged)} 件)"
         return f"important_terms: all {len(diff.unchanged)} term(s) already in profile"
     return proposal.summary or "important_terms"

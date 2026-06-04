@@ -84,12 +84,24 @@ export function listDiffFromProposal(detail: CandidateDetail): ListDiff | null {
   const unchanged = (detail.proposal.already_present ?? [])
     .map((item) => String(item.name ?? "").trim())
     .filter(Boolean);
+  const removed: string[] = detail.proposal.remove
+    ? (detail.proposal.remove as Array<{ name?: string }>)
+        .map((item) => String(item.name ?? "").trim())
+        .filter(Boolean)
+    : [];
   return {
     added,
-    removed: [],
+    removed,
     unchanged,
     unchangedCount: unchanged.length,
-    operation: added.length > 0 ? "list_add" : "list_unchanged",
+    operation:
+      added.length > 0 && removed.length > 0
+        ? "list_update"
+        : added.length > 0
+          ? "list_add"
+          : removed.length > 0
+            ? "list_remove"
+            : "list_unchanged",
   };
 }
 

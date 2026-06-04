@@ -36,6 +36,8 @@ const NOTE_MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     no_concrete_proposal_items: "具体的な提案項目が抽出されませんでした。",
     non_critical_knowledge_extension: "Captureから得られた非重大な知識補完です。",
     important_terms_list_add: "important_terms に {count} 件の追加候補があります。既存 {unchanged} 件は変更されません。",
+    important_terms_list_remove: "important_terms から {count} 件の削除候補があります。既存 {unchanged} 件は維持されます。",
+    important_terms_list_update: "important_terms に {add_count} 件の追加と {remove_count} 件の削除候補があります。既存 {unchanged} 件は変更されません。",
     important_terms_no_change: "important_terms の項目はすべて既存Profileと一致しています。",
     proposal_adds_existing_projects:
       "既存プロジェクトを明確な理由なく再追加しようとしています。",
@@ -87,6 +89,9 @@ const NOTE_MESSAGES: Record<SupportedLocale, Record<string, string>> = {
       "communication_mode-derived values should not be added to knowledge.concepts.",
     no_concrete_proposal_items: "No concrete proposal items extracted.",
     non_critical_knowledge_extension: "Non-critical knowledge extension from capture.",
+    important_terms_list_add: "{count} important_terms to add (existing {unchanged} unchanged).",
+    important_terms_list_remove: "{count} important_terms to remove (existing {unchanged} kept).",
+    important_terms_list_update: "{add_count} important_terms to add, {remove_count} to remove (existing {unchanged} unchanged).",
     section_change_requires_manual_review: "Section change requires manual review.",
     proposal_adds_existing_projects:
       "Proposal adds existing projects without clear justification.",

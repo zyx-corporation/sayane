@@ -78,6 +78,10 @@ export function classifyCandidate(c: CandidateSummary): CandidateReviewClass {
         return "reject_recommended";
       }
     }
+    // Detect removal intent via structured proposal_operation (not UI text).
+    if (c.proposal_operation === "list_remove") {
+      return "meaning_changed";
+    }
     return "new_candidate";
   }
 
@@ -187,9 +191,10 @@ export function riskHintKey(cls: CandidateReviewClass): string {
 
 export function riskHintKeyForCandidate(c: CandidateSummary): string {
   if (c.section === "important_terms") {
-    const withSummary = c as CandidateSummary & { display_summary?: string | null };
-    const summary = withSummary.display_summary ?? c.content_preview ?? "";
-    if (/追加候補|term\(s\) to add/i.test(summary)) {
+    if (c.proposal_operation === "list_remove") {
+      return "review.risk.important_terms_remove";
+    }
+    if (c.proposal_operation === "list_add" || c.proposal_operation === "list_update") {
       return "review.risk.important_terms_add";
     }
   }
@@ -235,9 +240,13 @@ export function recommendedActionKeyForCandidate(c: CandidateSummary): string {
   if (avail.kind === "can_approve") {
     if (
       c.section === "important_terms"
-      && (cls === "new_candidate" || cls === "meaning_changed")
     ) {
-      return "review.action.important_terms_add";
+      if (c.proposal_operation === "list_remove") {
+        return "review.action.important_terms_remove";
+      }
+      if (cls === "new_candidate" || cls === "meaning_changed") {
+        return "review.action.important_terms_add";
+      }
     }
     if (cls === "duplicate_or_confirmed") {
       return "review.action.no_approve_needed";

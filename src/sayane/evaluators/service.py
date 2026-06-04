@@ -279,6 +279,14 @@ def approve_candidate(
     }
     if override_reason:
         meta["override_reason"] = override_reason
+    if candidate.proposal.remove:
+        meta["removed"] = [
+            (item.get("name") or "").strip()
+            for item in candidate.proposal.remove
+            if (item.get("name") or "").strip()
+        ]
+    if candidate.proposal.operation in ("list_remove", "list_update"):
+        meta["operation"] = candidate.proposal.operation
     record_lineage_event(
         config,
         candidate.target_profile_id,

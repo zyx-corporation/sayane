@@ -2,6 +2,6 @@
 
 export const EXTENSION_BUILD_INFO = {
   version: "0.3.0",
-  sourceUpdatedAt: "2026-06-04T14:04:05.364Z",
+  sourceUpdatedAt: "2026-06-04T16:25:20.597Z",
   component: "sayane-extension",
 } as const;

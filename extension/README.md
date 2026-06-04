@@ -41,7 +41,8 @@ Candidate review runs in the **Chrome side panel** (`sidepanel.html`). The popup
 
 ## Features
 
-UI state (busy vs unavailable cursors): [../docs/ui-design-principles.md](../docs/ui-design-principles.md).
+UI state (busy vs unavailable cursors): [../docs/ui-design-principles.md](../docs/ui-design-principles.md).  
+Extension i18n-safe implementation rules: [../docs/extension-i18n-coding-principles.md](../docs/extension-i18n-coding-principles.md).
 
 | Action | Description |
 |--------|-------------|

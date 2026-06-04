@@ -640,6 +640,10 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     }
     addRow("review.lineage.evaluation", evalText);
     addRow("review.lineage.decision", lineageDecisionLabel(lineage.decision));
+    if (lineage.operation) {
+      const opLabel = t(`review.lineage.operation.${lineage.operation}`);
+      addRow("review.lineage.operation", opLabel === `review.lineage.operation.${lineage.operation}` ? lineage.operation : opLabel);
+    }
     if (lineage.context_path) {
       addRow("review.lineage.target", lineage.context_path);
     }

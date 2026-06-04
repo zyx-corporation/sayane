@@ -202,6 +202,7 @@ export interface CandidateLineage {
   context_path?: string | null;
   source_candidate_id?: string | null;
   revised_candidate_id?: string | null;
+  operation?: string | null;
   events: LineageEvent[];
 }
 

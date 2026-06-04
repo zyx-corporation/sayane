@@ -201,3 +201,22 @@ def _try_split_persona_ir_candidates(
             generator_id="sayane.persona_ir_split",
         )
         save_candidate(config, ir_candidate)
+        # Record lineage for persona IR split.
+        from sayane.lineage.record import record_lineage_event
+
+        record_lineage_event(
+            config,
+            ir_candidate.target_profile_id,
+            operation="persona_ir_split",
+            node_kind="candidate",
+            actor="bridge",
+            capture_id=parent.id,
+            candidate_id=ir_candidate.id,
+            source_candidate_id=parent.id,
+            context_path=draft.target_path,
+            metadata={
+                "operation": "persona_ir_split",
+                "target_path": draft.target_path,
+                "storage_kind": draft.policy.storage_kind,
+            },
+        )

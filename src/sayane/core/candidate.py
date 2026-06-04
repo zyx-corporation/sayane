@@ -83,6 +83,7 @@ class CandidateProposal(BaseModel):
     operation: str = "add"
     add: list[str] = Field(default_factory=list)
     items: list[dict[str, str]] = Field(default_factory=list)
+    remove: list[dict[str, str]] = Field(default_factory=list)
     already_present: list[dict[str, str]] = Field(default_factory=list)
     summary: str | None = None
     parse_error: str | None = None

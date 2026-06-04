@@ -155,6 +155,26 @@ def classify_rde(
             notes.append(heuristic_note("important_terms_no_change"))
             return "Preserved", notes
         add_count = len(proposal.items)
+        remove_count = len(proposal.remove)
+        if proposal.operation == "list_remove":
+            notes.append(
+                heuristic_note(
+                    "important_terms_list_remove",
+                    count=remove_count,
+                    unchanged=len(proposal.already_present),
+                ),
+            )
+            return "Authorized Transformation", notes
+        if proposal.operation == "list_update":
+            notes.append(
+                heuristic_note(
+                    "important_terms_list_update",
+                    add_count=add_count,
+                    remove_count=remove_count,
+                    unchanged=len(proposal.already_present),
+                ),
+            )
+            return "Authorized Transformation", notes
         notes.append(
             heuristic_note(
                 "important_terms_list_add",

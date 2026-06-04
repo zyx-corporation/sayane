@@ -280,8 +280,20 @@ def classify_important_terms_yaml(
         }
         for name in ld.unchanged
     ]
-    if not items and already_present:
+    removed = [
+        {
+            "path": "important_terms[]",
+            "name": name,
+            "yaml_path": "important_terms[]",
+        }
+        for name in ld.removed
+    ]
+    if not items and already_present and not removed:
         operation = "no_op_or_duplicate"
+    elif not items and removed:
+        operation = "list_remove"
+    elif items and removed:
+        operation = "list_update"
     elif items:
         operation = "list_add"
     else:
@@ -292,6 +304,7 @@ def classify_important_terms_yaml(
             operation=operation,
             items=items,
             already_present=already_present,
+            remove=removed,
         ),
     )
     return CandidateProposal(
@@ -299,6 +312,7 @@ def classify_important_terms_yaml(
         operation=operation,
         add=[],
         items=items,
+        remove=removed,
         already_present=already_present,
         summary=summary,
     )

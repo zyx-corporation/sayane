@@ -73,6 +73,7 @@ export interface CandidateSummary {
   content_preview: string;
   display_summary?: string | null;
   capture_source?: CaptureSourceKind | string | null;
+  proposal_operation?: string | null;
 }
 
 export type CaptureSourceKind = "selection" | "clipboard" | "page";
@@ -107,6 +108,7 @@ export interface CandidateDetail extends CandidateSummary {
       section?: string;
       value?: string;
     }>;
+    remove?: Array<{ name?: string; path?: string; yaml_path?: string }>;
     already_present?: Array<{ name?: string; summary?: string; path?: string; value?: string }>;
     summary: string | null;
   };

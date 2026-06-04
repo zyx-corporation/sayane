@@ -25,8 +25,11 @@ import { getActiveCaptureTab } from "./tab-target.js";
 import type { OptionsUpdatedMessage } from "./options-notify.js";
 import {
   analyzeClipboardText,
+  buildLargeImportantTermsConfirmMessage,
+  parseImportantTermsInCapture,
   shouldConfirmLargeImportantTermsCapture,
 } from "./clipboard-preview.js";
+import type { ImportantTermsPreflightSummary } from "./types.js";
 
 function $(id: string): HTMLElement {
   const el = document.getElementById(id);
@@ -495,10 +498,20 @@ $("btn-capture-clipboard").addEventListener("click", () => {
         setStatus(t("capture.clipboard_empty"), true);
         return;
       }
+      const terms = parseImportantTermsInCapture(text);
       const preview = analyzeClipboardText(text);
       if (shouldConfirmLargeImportantTermsCapture(preview)) {
+        let preflight: ImportantTermsPreflightSummary | null = null;
+        const preRes = await send({
+          type: "BRIDGE_PREFLIGHT_IMPORTANT_TERMS",
+          content: text,
+          profileId: selectedProfileId(),
+        });
+        if (preRes.ok && preRes.data) {
+          preflight = preRes.data as ImportantTermsPreflightSummary;
+        }
         const proceed = globalThis.confirm(
-          t("capture.clipboard_confirm_many", { count: String(preview.importantTermsCount) }),
+          buildLargeImportantTermsConfirmMessage(preview, preflight, t),
         );
         if (!proceed) {
           setStatus(t("capture.clipboard_confirm_cancelled"));
@@ -507,7 +520,7 @@ $("btn-capture-clipboard").addEventListener("click", () => {
         }
       }
       const captureWarnings: string[] = [];
-      if (preview.importantTermsCount > 8) {
+      if (terms.length > 8) {
         captureWarnings.push("clipboard_many_important_terms");
       }
       const windowId = await getCaptureWindowId();

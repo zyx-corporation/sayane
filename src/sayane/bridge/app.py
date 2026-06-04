@@ -17,9 +17,12 @@ from sayane.bridge.models import (
     CompileRequest,
     ContextPacketResponse,
     EvaluateCandidateRequest,
+    ImportantTermsPreflightRequest,
+    ImportantTermsPreflightResponse,
     ProfileSummary,
     RejectCandidateRequest,
 )
+from sayane.bridge.preflight import preview_important_terms_diff
 from sayane.bridge.service import compile_prompt, list_profiles
 from sayane.core.build_info import get_build_info
 from sayane.storage.candidates import load_candidate
@@ -67,6 +70,26 @@ def create_app(config: BridgeConfig | None = None) -> FastAPI:
     ) -> CaptureResponse:
         try:
             return save_capture(cfg, body)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @app.post(
+        "/preflight/important-terms",
+        response_model=ImportantTermsPreflightResponse,
+    )
+    def post_preflight_important_terms(
+        body: ImportantTermsPreflightRequest,
+        _: Annotated[None, Depends(require_bearer)],
+    ) -> ImportantTermsPreflightResponse:
+        try:
+            payload = preview_important_terms_diff(
+                cfg,
+                profile_id=body.profile_id,
+                content=body.content,
+            )
+            return ImportantTermsPreflightResponse(**payload)
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 

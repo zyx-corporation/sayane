@@ -6,6 +6,7 @@ import type {
   CandidateSummary,
   CaptureResult,
   ContextPacket,
+  ImportantTermsPreflightSummary,
   ProfileSummary,
 } from "./types.js";
 
@@ -120,6 +121,17 @@ export async function probeBridge(
 export async function listProfiles(): Promise<ProfileSummary[]> {
   const res = await bridgeFetch("/profiles");
   return (await res.json()) as ProfileSummary[];
+}
+
+export async function preflightImportantTerms(
+  content: string,
+  profileId = "default",
+): Promise<ImportantTermsPreflightSummary> {
+  const res = await bridgeFetch("/preflight/important-terms", {
+    method: "POST",
+    body: JSON.stringify({ content, profile_id: profileId }),
+  });
+  return (await res.json()) as ImportantTermsPreflightSummary;
 }
 
 export type CaptureRequestOptions = {

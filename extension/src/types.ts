@@ -201,7 +201,14 @@ export type BackgroundMessage =
       forceCritical?: boolean;
       overrideReason?: string;
     }
-  | { type: "BRIDGE_REJECT_CANDIDATE"; candidateId: string; reason?: string };
+  | { type: "BRIDGE_REJECT_CANDIDATE"; candidateId: string; reason?: string }
+  | { type: "OPEN_SIDE_PANEL"; windowId?: number }
+  | { type: "CANDIDATES_CHANGED"; candidateId?: string | null };
+
+export type CandidatesChangedMessage = {
+  type: "CANDIDATES_CHANGED";
+  candidateId?: string | null;
+};
 
 export type BackgroundResponse =
   | { ok: true; data?: unknown }

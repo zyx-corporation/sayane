@@ -160,6 +160,14 @@ chrome.runtime.onMessage.addListener(
             }
             return { ok: true, data: { inserted: true } };
           }
+          case "OPEN_SIDE_PANEL": {
+            if (message.windowId != null) {
+              await chrome.sidePanel.open({ windowId: message.windowId });
+            }
+            return { ok: true };
+          }
+          case "CANDIDATES_CHANGED":
+            return { ok: true };
           default:
             return { ok: false, error: "Unknown message type" };
         }
@@ -178,4 +186,5 @@ chrome.runtime.onMessage.addListener(
 
 chrome.runtime.onInstalled.addListener(() => {
   console.info("[Sayane] extension installed (Phase 3)");
+  void chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false });
 });

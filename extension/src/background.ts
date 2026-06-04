@@ -12,6 +12,8 @@ import {
   fetchContextPacket,
   formatContextPacketForInsert,
   getCandidate,
+  getCandidateLineage,
+  getCaptureLineage,
   listCandidates,
   listProfiles,
   rejectCandidate,
@@ -82,6 +84,16 @@ chrome.runtime.onMessage.addListener(
             };
           case "BRIDGE_DIFF_CANDIDATE":
             return { ok: true, data: await diffCandidate(message.candidateId) };
+          case "BRIDGE_GET_CANDIDATE_LINEAGE":
+            return {
+              ok: true,
+              data: await getCandidateLineage(message.candidateId),
+            };
+          case "BRIDGE_GET_CAPTURE_LINEAGE":
+            return {
+              ok: true,
+              data: await getCaptureLineage(message.captureId),
+            };
           case "BRIDGE_APPROVE_CANDIDATE": {
             const explicit = message.explicitConfirmation;
             return {

@@ -170,6 +170,26 @@ def create_app(config: BridgeConfig | None = None) -> FastAPI:
         except FileNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
 
+    @app.get("/candidates/{candidate_id}/lineage")
+    def get_candidate_lineage(
+        candidate_id: str,
+        _: Annotated[None, Depends(require_bearer)],
+    ) -> dict:
+        try:
+            return candidate_api.get_candidate_lineage(cfg, candidate_id)
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    @app.get("/captures/{capture_id}/lineage")
+    def get_capture_lineage(
+        capture_id: str,
+        _: Annotated[None, Depends(require_bearer)],
+    ) -> dict:
+        try:
+            return candidate_api.get_capture_lineage(cfg, capture_id)
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+
     @app.get("/context-packet", response_model=ContextPacketResponse)
     def get_context_packet(
         _: Annotated[None, Depends(require_bearer)],

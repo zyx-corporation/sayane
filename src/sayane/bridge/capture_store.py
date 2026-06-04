@@ -83,6 +83,32 @@ def save_capture(config: BridgeConfig, request: CaptureRequest) -> CaptureRespon
         raw_content=request.raw_content,
         capture_meta=capture_meta,
     )
+    from sayane.lineage.record import record_lineage_event
+
+    record_lineage_event(
+        config,
+        candidate.target_profile_id,
+        operation="capture_created",
+        node_kind="capture",
+        actor="system",
+        capture_id=candidate.id,
+        candidate_id=candidate.id,
+        source_url=candidate.source.uri,
+        source_kind=source_kind,
+        metadata={"section": candidate.proposal.section},
+    )
+    record_lineage_event(
+        config,
+        candidate.target_profile_id,
+        operation="candidate_generated",
+        node_kind="candidate",
+        actor="bridge",
+        capture_id=candidate.id,
+        candidate_id=candidate.id,
+        source_url=candidate.source.uri,
+        source_kind=source_kind,
+        metadata={"section": candidate.proposal.section},
+    )
     candidate_path = config.candidates_dir / f"{candidate.id}.json"
     return CaptureResponse(
         id=candidate.id,

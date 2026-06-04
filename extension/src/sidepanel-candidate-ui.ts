@@ -76,6 +76,7 @@ import type {
   BackgroundResponse,
   CandidateDetail,
   CandidateDiff,
+  CandidateLineage,
   CandidateSummary,
   SupportedLocale,
 } from "./types.js";
@@ -597,6 +598,66 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     return avail;
   }
 
+  function lineageSourceLabel(kind: string | null | undefined): string {
+    if (kind === "selection") return t("review.lineage.source_selection");
+    if (kind === "clipboard") return t("review.lineage.source_clipboard");
+    if (kind === "page") return t("review.lineage.source_page");
+    return kind ?? "—";
+  }
+
+  function lineageDecisionLabel(
+    decision: CandidateLineage["decision"],
+  ): string {
+    const key = `review.lineage.decision_${decision}` as const;
+    const label = t(key);
+    return label === key ? decision : label;
+  }
+
+  function renderCandidateLineage(host: HTMLElement, lineage: CandidateLineage): void {
+    host.replaceChildren();
+    const dl = document.createElement("dl");
+    dl.className = "lineage-summary";
+    const addRow = (labelKey: string, value: string): void => {
+      const dt = document.createElement("dt");
+      dt.textContent = t(labelKey);
+      const dd = document.createElement("dd");
+      dd.textContent = value;
+      dl.append(dt, dd);
+    };
+    addRow(
+      "review.lineage.capture",
+      `${lineageSourceLabel(lineage.source_kind)} · ${lineage.captured_at.slice(0, 19)}`,
+    );
+    addRow("review.lineage.candidate", lineage.candidate_id.slice(0, 12));
+    const loc = locale();
+    let evalText = t("review.lineage.not_evaluated");
+    if (lineage.rde_class && isKnownRdeCategory(lineage.rde_class)) {
+      evalText = `${t("review.lineage.evaluated")} · ${categoryLabel(lineage.rde_class, loc)}`;
+    } else if (lineage.evaluation_status === "judge_failed") {
+      evalText = t("review.lineage.judge_failed");
+    } else if (lineage.status === "evaluated") {
+      evalText = t("review.lineage.evaluated");
+    }
+    addRow("review.lineage.evaluation", evalText);
+    addRow("review.lineage.decision", lineageDecisionLabel(lineage.decision));
+    if (lineage.context_path) {
+      addRow("review.lineage.target", lineage.context_path);
+    }
+    if (lineage.source_candidate_id) {
+      addRow(
+        "review.lineage.revised_from",
+        lineage.source_candidate_id.slice(0, 12),
+      );
+    }
+    host.appendChild(dl);
+    if (lineage.source_url) {
+      const url = document.createElement("p");
+      url.className = "lineage-url meta-line";
+      url.textContent = lineage.source_url;
+      host.appendChild(url);
+    }
+  }
+
   function renderListDiffLines(
     container: HTMLElement,
     listDiff: ReturnType<typeof listDiffFromBridgeDiff>,
@@ -880,10 +941,24 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     sectionRow.textContent = `${t("detail.section")}: ${detail.proposal.section}`;
     body.appendChild(sectionRow);
 
-    const lineageRow = document.createElement("p");
-    lineageRow.className = "meta-line lineage-line";
-    lineageRow.textContent = `${t("review.lineage")}: ${detail.id.slice(0, 12)} · ${c.captured_at.slice(0, 19)}`;
-    body.appendChild(lineageRow);
+    const lineageBlock = document.createElement("details");
+    lineageBlock.className = "lineage-panel";
+    lineageBlock.open = true;
+    const lineageSummary = document.createElement("summary");
+    lineageSummary.textContent = t("review.lineage");
+    lineageBlock.appendChild(lineageSummary);
+    const lineageBody = document.createElement("div");
+    lineageBody.className = "lineage-body";
+    lineageBody.textContent = t("review.lineage.loading");
+    lineageBlock.appendChild(lineageBody);
+    body.appendChild(lineageBlock);
+    void send({ type: "BRIDGE_GET_CANDIDATE_LINEAGE", candidateId: c.id }).then((res) => {
+      if (!res.ok) {
+        lineageBody.textContent = t("review.lineage.unavailable");
+        return;
+      }
+      renderCandidateLineage(lineageBody, res.data as CandidateLineage);
+    });
 
     const captureLabel = document.createElement("p");
     captureLabel.className = "subheading";

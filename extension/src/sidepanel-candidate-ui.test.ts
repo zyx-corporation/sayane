@@ -51,6 +51,8 @@ test("applyCardActionUi uses getApproveAvailability for approve buttons", () => 
   assert.ok(src.includes("expandedApproveSync.get(candidateId)"));
   assert.ok(src.includes("approveUnavailableMessage"));
   assert.ok(src.includes("approve-blocked-hint"));
+  assert.ok(src.includes("BRIDGE_GET_CANDIDATE_LINEAGE"));
+  assert.ok(src.includes("renderCandidateLineage"));
   assert.ok(!src.includes("canInitiateApproveFromDetail"));
   assert.ok(!src.includes("ensureEvaluatedForApprove"));
 });

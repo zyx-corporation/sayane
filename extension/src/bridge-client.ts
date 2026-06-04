@@ -2,6 +2,7 @@ import { loadConfig } from "./config.js";
 import type {
   CandidateDetail,
   CandidateDiff,
+  CandidateLineage,
   CandidateSummary,
   CaptureResult,
   ContextPacket,
@@ -192,6 +193,22 @@ export async function evaluateCandidate(
 export async function diffCandidate(candidateId: string): Promise<CandidateDiff> {
   const res = await bridgeFetch(`/candidates/${encodeURIComponent(candidateId)}/diff`);
   return (await res.json()) as CandidateDiff;
+}
+
+export async function getCandidateLineage(
+  candidateId: string,
+): Promise<CandidateLineage> {
+  const res = await bridgeFetch(
+    `/candidates/${encodeURIComponent(candidateId)}/lineage`,
+  );
+  return (await res.json()) as CandidateLineage;
+}
+
+export async function getCaptureLineage(captureId: string): Promise<CandidateLineage> {
+  const res = await bridgeFetch(
+    `/captures/${encodeURIComponent(captureId)}/lineage`,
+  );
+  return (await res.json()) as CandidateLineage;
 }
 
 export type ExplicitConfirmationPayload = {

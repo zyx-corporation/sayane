@@ -140,6 +140,51 @@ export interface CandidateDetail extends CandidateSummary {
     | null;
 }
 
+export type LineageOperation =
+  | "capture_created"
+  | "candidate_generated"
+  | "candidate_evaluated"
+  | "candidate_diffed"
+  | "candidate_approved"
+  | "candidate_rejected"
+  | "candidate_deferred"
+  | "candidate_revised"
+  | "context_written"
+  | "persona_ir_split";
+
+export interface LineageEvent {
+  id: string;
+  operation: LineageOperation;
+  node_kind: string;
+  timestamp: string;
+  actor?: string;
+  capture_id?: string | null;
+  candidate_id?: string | null;
+  context_path?: string | null;
+  source_kind?: string | null;
+  source_url?: string | null;
+  note?: string | null;
+  metadata?: Record<string, unknown>;
+}
+
+export interface CandidateLineage {
+  capture_id: string;
+  candidate_id: string;
+  profile_id: string;
+  status: string;
+  evaluation_status?: string | null;
+  rde_class?: string | null;
+  section?: string | null;
+  source_kind?: string | null;
+  source_url?: string | null;
+  captured_at: string;
+  decision: "pending" | "approved" | "rejected" | "deferred" | "evaluated";
+  context_path?: string | null;
+  source_candidate_id?: string | null;
+  revised_candidate_id?: string | null;
+  events: LineageEvent[];
+}
+
 export interface CandidateDiff {
   add?: unknown[];
   remove?: unknown[];
@@ -249,6 +294,8 @@ export type BackgroundMessage =
   | { type: "BRIDGE_GET_CANDIDATE"; candidateId: string }
   | { type: "BRIDGE_EVALUATE_CANDIDATE"; candidateId: string; level: number }
   | { type: "BRIDGE_DIFF_CANDIDATE"; candidateId: string }
+  | { type: "BRIDGE_GET_CANDIDATE_LINEAGE"; candidateId: string }
+  | { type: "BRIDGE_GET_CAPTURE_LINEAGE"; captureId: string }
   | {
       type: "BRIDGE_APPROVE_CANDIDATE";
       candidateId: string;

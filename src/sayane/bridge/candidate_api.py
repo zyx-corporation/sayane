@@ -214,6 +214,20 @@ def get_diff(config: BridgeConfig, candidate_id: str) -> dict[str, Any]:
     return diff_candidate(config, candidate_id)
 
 
+def get_candidate_lineage(config: BridgeConfig, candidate_id: str) -> dict[str, Any]:
+    from sayane.lineage.query import build_candidate_lineage
+
+    lineage = build_candidate_lineage(config, candidate_id)
+    return lineage.model_dump(mode="json")
+
+
+def get_capture_lineage(config: BridgeConfig, capture_id: str) -> dict[str, Any]:
+    from sayane.lineage.query import build_capture_lineage
+
+    lineage = build_capture_lineage(config, capture_id)
+    return lineage.model_dump(mode="json")
+
+
 def _source_excerpt(c: CandidateUpdate, max_len: int = 1200) -> str:
     """Raw capture input for UI — never stored Profile IR (`content` field)."""
     text = (c.raw_capture or c.cleaned_capture or "").strip()

@@ -37,7 +37,7 @@ from sayane.evaluators.authorization_guards import (
 )
 from sayane.storage.candidates import load_candidate, save_candidate
 from sayane.storage.git_integration import auto_commit_profile_store
-from sayane.storage.lineage_store import append_record
+from sayane.lineage.record import record_lineage_event
 
 
 def evaluate_candidate(
@@ -159,6 +159,25 @@ def evaluate_candidate(
     candidate.status = "evaluated"
     candidate.evaluation_status = "completed"
     save_candidate(config, candidate)
+    source_kind = (
+        candidate.capture_meta.capture_source if candidate.capture_meta else None
+    )
+    record_lineage_event(
+        config,
+        candidate.target_profile_id,
+        operation="candidate_evaluated",
+        node_kind="evaluation",
+        actor="llm" if llm_review else "bridge",
+        capture_id=candidate.id,
+        candidate_id=candidate.id,
+        source_url=candidate.source.uri,
+        source_kind=source_kind,
+        metadata={
+            "rde_class": final_class,
+            "level": level,
+            "evaluation_status": candidate.evaluation_status,
+        },
+    )
     return candidate
 
 
@@ -244,27 +263,47 @@ def approve_candidate(
     candidate.status = "approved"
     save_candidate(config, candidate)
 
-    append_record(
+    section = candidate.proposal.section
+    source_kind = (
+        candidate.capture_meta.capture_source if candidate.capture_meta else None
+    )
+    meta = {
+        "rde_class": (
+            candidate.evaluation.rde_class if candidate.evaluation else None
+        ),
+        "evaluation_level": (
+            candidate.evaluation.level if candidate.evaluation else None
+        ),
+        "added": candidate.proposal.add,
+        "force_critical": force_critical,
+    }
+    if override_reason:
+        meta["override_reason"] = override_reason
+    record_lineage_event(
         config,
         candidate.target_profile_id,
-        "candidate_approved",
-        {
-            "candidate_id": candidate.id,
-            "rde_class": (
-                candidate.evaluation.rde_class if candidate.evaluation else None
-            ),
-            "evaluation_level": (
-                candidate.evaluation.level if candidate.evaluation else None
-            ),
-            "section": candidate.proposal.section,
-            "added": candidate.proposal.add,
-            "force_critical": force_critical,
-            **(
-                {"override_reason": override_reason}
-                if override_reason
-                else {}
-            ),
-        },
+        operation="candidate_approved",
+        node_kind="decision",
+        actor="user",
+        capture_id=candidate.id,
+        candidate_id=candidate.id,
+        context_path=section,
+        source_url=candidate.source.uri,
+        source_kind=source_kind,
+        metadata=meta,
+    )
+    record_lineage_event(
+        config,
+        candidate.target_profile_id,
+        operation="context_written",
+        node_kind="context_entry",
+        actor="bridge",
+        capture_id=candidate.id,
+        candidate_id=candidate.id,
+        context_path=section,
+        source_url=candidate.source.uri,
+        source_kind=source_kind,
+        metadata=meta,
     )
     return candidate
 
@@ -277,11 +316,21 @@ def reject_candidate(
     candidate = load_candidate(config, candidate_id)
     candidate.status = "rejected"
     save_candidate(config, candidate)
-    append_record(
+    source_kind = (
+        candidate.capture_meta.capture_source if candidate.capture_meta else None
+    )
+    record_lineage_event(
         config,
         candidate.target_profile_id,
-        "candidate_rejected",
-        {"candidate_id": candidate.id, "reason": reason},
+        operation="candidate_rejected",
+        node_kind="decision",
+        actor="user",
+        capture_id=candidate.id,
+        candidate_id=candidate.id,
+        source_url=candidate.source.uri,
+        source_kind=source_kind,
+        note=reason,
+        metadata={"reason": reason} if reason else {},
     )
     return candidate
 

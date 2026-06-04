@@ -89,6 +89,15 @@ export function classifyCandidate(c: CandidateSummary): CandidateReviewClass {
     return "sensitive_review";
   }
 
+  // #124: IR-split candidates from structured persona have storage_policy.
+  if (c.storage_policy?.storage_kind === "profile_ir") {
+    if (c.status === "evaluated") {
+      const rde = c.rde_class;
+      if (rde === "Preserved") return "duplicate_or_confirmed";
+    }
+    return "new_candidate";
+  }
+
   if (section === "review_required" || section === "mixed_sections") {
     return "sensitive_review";
   }
@@ -190,6 +199,9 @@ export function riskHintKey(cls: CandidateReviewClass): string {
 }
 
 export function riskHintKeyForCandidate(c: CandidateSummary): string {
+  if (c.storage_policy?.storage_kind === "profile_ir") {
+    return "review.risk.persona_ir_split";
+  }
   if (c.section === "important_terms") {
     if (c.proposal_operation === "list_remove") {
       return "review.risk.important_terms_remove";

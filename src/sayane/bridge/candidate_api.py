@@ -272,4 +272,6 @@ def _candidate_summary(c: CandidateUpdate) -> dict[str, Any]:
             c.capture_meta.capture_source if c.capture_meta else c.source.type
         ),
         "proposal_operation": c.proposal.operation,
+        "storage_policy": c.storage_policy.model_dump(mode="json") if c.storage_policy else None,
+        "parent_capture_id": c.parent_capture_id,
     }

@@ -1,6 +1,9 @@
 """Candidate Update models (pre-merge profile changes)."""
 
+from __future__ import annotations
+
 from datetime import datetime
+from enum import Enum
 from typing import Literal
 
 from typing import Any, Self
@@ -164,3 +167,23 @@ class CandidateUpdate(BaseModel):
     supplemental_evaluations: list[CandidateEvaluation] = Field(default_factory=list)
     user_authorization_audits: list[UserAuthorizationAudit] = Field(default_factory=list)
     accountability_logs: list[AccountabilityLog] = Field(default_factory=list)
+    storage_policy: CandidateStoragePolicy | None = None
+    parent_capture_id: str | None = None
+
+
+# --- Candidate Storage Policy ---
+
+PromptExportPolicy = Literal["default", "on_demand", "never"]
+CandidateStorageKindStr = Literal["profile_ir", "context_note", "prompt_fragment", "debug_only"]
+CandidateSensitivityStr = Literal["public", "internal", "private", "sensitive"]
+
+
+class CandidateStoragePolicy(BaseModel):
+    """Storage and export policy for IR-split persona candidates."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    storage_kind: CandidateStorageKindStr = "profile_ir"
+    target_path: str
+    prompt_export: PromptExportPolicy = "default"
+    sensitivity: CandidateSensitivityStr = "internal"

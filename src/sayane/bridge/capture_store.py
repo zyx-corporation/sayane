@@ -1,12 +1,14 @@
 """Persist capture payloads as candidate updates (not profile merge)."""
 
+from __future__ import annotations
+
 import re
 from typing import Literal
 
 from sayane.bridge.config import BridgeConfig
 from sayane.bridge.models import CaptureRequest, CaptureResponse
 from sayane.bridge.service import resolve_profile_path
-from sayane.core.candidate import CaptureMetadata
+from sayane.core.candidate import CaptureMetadata, CandidateUpdate
 from sayane.core.loader import load_profile
 from sayane.core.profile_quality import capture_content_warnings
 from sayane.evaluators.list_diff import parse_yaml_list_section
@@ -83,6 +85,10 @@ def save_capture(config: BridgeConfig, request: CaptureRequest) -> CaptureRespon
         raw_content=request.raw_content,
         capture_meta=capture_meta,
     )
+
+    # #124: Split structured persona YAML into IR candidates when detected.
+    _try_split_persona_ir_candidates(config, candidate)
+
     from sayane.lineage.record import record_lineage_event
 
     record_lineage_event(
@@ -115,3 +121,83 @@ def save_capture(config: BridgeConfig, request: CaptureRequest) -> CaptureRespon
         path=str(candidate_path),
         warnings=warnings,
     )
+
+
+def _try_split_persona_ir_candidates(
+    config: BridgeConfig,
+    parent: CandidateUpdate,
+) -> None:
+    """If the capture is a structured persona YAML, generate IR-split candidates.
+
+    The parent (raw blob) candidate remains blocked as sensitive_review.
+    Subsidiary IR candidates are created with proper storage policies.
+    """
+    import yaml
+
+    from sayane.evaluators.persona_ir_split import (
+        build_ir_proposal,
+        detect_structured_persona_document,
+        split_persona_to_ir_candidates,
+    )
+    from sayane.storage.candidates import list_candidate_ids, load_candidate, save_candidate
+
+    try:
+        parsed = yaml.safe_load(parent.content)
+    except yaml.YAMLError:
+        return
+    if not isinstance(parsed, dict):
+        return
+    if not detect_structured_persona_document(parsed):
+        return
+
+    drafts = split_persona_to_ir_candidates(parsed)
+    if not drafts:
+        return
+
+    # Load existing approved candidates to detect duplicates by target_path + value.
+    approved_by_target: dict[str, set[str]] = {}
+    for cid in list_candidate_ids(config):
+        try:
+            existing = load_candidate(config, cid)
+        except Exception:
+            continue
+        if existing.status != "approved":
+            continue
+        if existing.storage_policy is None:
+            continue
+        tp = existing.storage_policy.target_path
+        approved_by_target.setdefault(tp, set()).add(existing.content.strip())
+
+    from datetime import UTC, datetime
+
+    from sayane.core.candidate import CandidateSource
+
+    for draft in drafts:
+        content = draft.content_preview()
+        # Skip if same target_path + same content already approved.
+        existing_set = approved_by_target.get(draft.target_path, set())
+        if content in existing_set:
+            continue
+
+        proposal = build_ir_proposal(draft)
+        ir_candidate = CandidateUpdate(
+            id=f"{parent.id}-ir-{draft.target_path.replace('.', '-')}",
+            status="pending",
+            locale=parent.locale,
+            target_profile_id=parent.target_profile_id,
+            content=content,
+            raw_capture=parent.raw_capture,
+            cleaned_capture=content,
+            display_summary=draft.display_summary(parent.locale),
+            capture_meta=parent.capture_meta,
+            source=CandidateSource(
+                type=f"persona_ir_split/{parent.source.type}",
+                uri=parent.source.uri,
+                captured_at=datetime.now(UTC),
+            ),
+            proposal=proposal,
+            storage_policy=draft.policy,
+            parent_capture_id=parent.id,
+            generator_id="sayane.persona_ir_split",
+        )
+        save_candidate(config, ir_candidate)

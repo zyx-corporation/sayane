@@ -929,6 +929,39 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     parent.appendChild(p);
   }
 
+  function renderStoragePolicy(parent: HTMLElement, detail: CandidateDetail): void {
+    const sp = detail.storage_policy;
+    if (!sp) return;
+    const container = document.createElement("div");
+    container.className = "storage-policy-panel";
+    const heading = document.createElement("p");
+    heading.className = "subheading";
+    heading.textContent = t("detail.storage_policy");
+    container.appendChild(heading);
+    const dl = document.createElement("dl");
+    dl.className = "storage-policy-list";
+    const addRow = (labelKey: string, value: string): void => {
+      const dt = document.createElement("dt");
+      dt.textContent = t(labelKey);
+      const dd = document.createElement("dd");
+      dd.textContent = value;
+      dl.append(dt, dd);
+    };
+    addRow("detail.target_path", sp.target_path);
+    addRow("detail.storage_kind", t(`detail.storage_kind.${sp.storage_kind}`));
+    addRow("detail.prompt_export", t(`detail.prompt_export.${sp.prompt_export}`));
+    addRow("detail.sensitivity", t(`detail.sensitivity.${sp.sensitivity}`));
+    if (detail.parent_capture_id) {
+      addRow("detail.parent_capture", detail.parent_capture_id.slice(0, 12));
+    }
+    container.appendChild(dl);
+    const note = document.createElement("p");
+    note.className = "card-why";
+    note.textContent = t("review.risk.persona_ir_split");
+    container.appendChild(note);
+    parent.appendChild(container);
+  }
+
   function renderExpandedBody(
     body: HTMLElement,
     c: CandidateSummary,
@@ -943,6 +976,11 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
 
     const captureExcerpt = captureExcerptForReview(detail, currentReviewSession);
     renderCaptureScopeWarnings(body, detail, captureExcerpt);
+
+    // #124: Show storage policy for IR-split candidates.
+    if (detail.storage_policy) {
+      renderStoragePolicy(body, detail);
+    }
 
     const why = document.createElement("p");
     why.className = "card-why";

@@ -534,6 +534,44 @@ def _register_core_commands(app: typer.Typer) -> None:
             typer.echo(f"  Details: {result.details}")
 
     @app.command()
+    def transfer_report(
+        output: Annotated[Path, typer.Option("--output", "-o", help="Output file path.")] = Path("docs/transfer-tests/transfer-regression-report.md"),
+        format: Annotated[str, typer.Option("--format", help="Output format: markdown | json")] = "markdown",
+        fixtures_dir: Annotated[Path, typer.Option("--fixtures", help="Transfer fixtures directory.")] = Path("docs/transfer-tests"),
+        audit_path: Annotated[Path | None, typer.Option("--audit", help="Audit store path.")] = None,
+        fail_on_warnings: Annotated[bool, typer.Option("--fail-on-warnings")] = False,
+    ) -> None:
+        """Generate a cross-LLM transfer regression dashboard report (Phase 10)."""
+        from sayane.core.audit_trail import AuditStore
+        from sayane.core.transfer_report import generate_transfer_report, render_markdown_report
+
+        audit_dir = audit_path.parent if audit_path else Path.home() / ".sayane" / "audit"
+        audit_store = AuditStore(audit_dir) if audit_path else AuditStore(audit_dir)
+
+        report = generate_transfer_report(
+            transfer_dir=fixtures_dir,
+            audit_store=audit_store,
+            profile_path=Path("examples/profiles/minimal.yaml"),
+        )
+
+        if format == "json":
+            import json as _json
+            content = _json.dumps(report, ensure_ascii=False, indent=2)
+        else:
+            content = render_markdown_report(report)
+
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(content, encoding="utf-8")
+        typer.echo(f"Report written: {output}")
+
+        # Exit code
+        status = report["status"]
+        if status == "FAIL":
+            raise typer.Exit(1)
+        if fail_on_warnings and status == "PASS_WITH_WARNINGS":
+            raise typer.Exit(1)
+
+    @app.command()
     def serve(
         host: Annotated[str, typer.Option("--host")] = "127.0.0.1",
         port: Annotated[int, typer.Option("--port")] = 38741,

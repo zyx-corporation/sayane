@@ -1,0 +1,43 @@
+# A2b review decisions fixture (Phase 7)
+fixture: a2b_review_decisions
+source:
+  bundle: docs/transfer-tests/a2b-claude-return.yml
+  profile: examples/profiles/minimal.yaml
+candidates:
+  - id: candidate-001
+    section: technical
+    action: add
+    proposed:
+      preferences:
+        - RDE
+        - Sayane
+    flags:
+      - review_required
+      - unstable_placement
+      - semantic_overlap
+    decision:
+      type: reject
+      reason: "RDE and Sayane should not be flattened into generic technical preferences."
+
+  - id: candidate-002
+    section: principles
+    action: add
+    proposed:
+      - RDE
+      - Sayane
+    flags:
+      - semantic_overlap
+      - review_required
+    decision:
+      type: modify
+      applied_value:
+        principles:
+          - RDE
+          - Context portability via Sayane
+      reason: "RDE belongs to principles; Sayane should be represented as a context portability basis."
+expected:
+  profile_updated: true
+  rejected_candidate_recorded: true
+  modified_candidate_recorded: true
+  lineage_events_count: 2
+  overlap_group_resolved: true

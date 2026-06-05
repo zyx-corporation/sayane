@@ -403,6 +403,61 @@ def _register_core_commands(app: typer.Typer) -> None:
             typer.echo(f"  Note: {ow.get('note', '')}")
 
     @app.command()
+    def review(
+        action: Annotated[str, typer.Argument(help="list | approve | reject | modify | defer")],
+        candidate_id: Annotated[str | None, typer.Argument()] = None,
+        reason: Annotated[str | None, typer.Option("--reason", help="Reason for decision.")] = None,
+        value: Annotated[str | None, typer.Option("--value", help="Applied value for modify (JSON).")] = None,
+    ) -> None:
+        """Review import candidates: list, approve, reject, modify, defer (Phase 7)."""
+        import json as _json
+        from sayane.core.review_decision import (
+            ReviewDecision,
+            list_decisions,
+            save_decision,
+            validate_decision,
+        )
+
+        if action == "list":
+            decisions = list_decisions()
+            if not decisions:
+                typer.echo("No review decisions recorded.")
+                return
+            typer.echo(f"{len(decisions)} review decision(s):")
+            for d in decisions:
+                applied = f" → {_json.dumps(d.applied_value, ensure_ascii=False)[:80]}" if d.applied_value else ""
+                typer.echo(f"  [{d.decision.upper()}] {d.candidate_id} ({d.original_section}) — {d.reason[:60]}{applied}")
+            return
+
+        if not candidate_id:
+            raise typer.BadParameter("candidate_id required for approve/reject/modify/defer")
+
+        applied_value = None
+        if value:
+            try:
+                applied_value = _json.loads(value)
+            except _json.JSONDecodeError:
+                raise typer.BadParameter(f"Invalid JSON for --value: {value}")
+
+        decision = ReviewDecision(
+            candidate_id=candidate_id,
+            decision=action,  # type: ignore[arg-type]
+            reason=reason or "",
+            applied_value=applied_value,
+            original_section="imported",
+            original_action="add",
+        )
+
+        errors = validate_decision(decision, has_review_required=("review_required" in (reason or "")))
+        if errors:
+            for e in errors:
+                typer.echo(f"Error: {e}", err=True)
+            raise typer.Exit(1)
+
+        save_decision("default", decision)
+        typer.echo(f"Decision recorded: [{decision.decision.upper()}] {candidate_id} — lineage event: {decision.lineage_event_id[:12]}")
+
+    @app.command()
     def serve(
         host: Annotated[str, typer.Option("--host")] = "127.0.0.1",
         port: Annotated[int, typer.Option("--port")] = 38741,

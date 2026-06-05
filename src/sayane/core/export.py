@@ -26,6 +26,87 @@ _PROMPT_NEVER_SECTIONS: frozenset[str] = frozenset({
     "identity.contact",
 })
 
+# --- Export noise filtering (#155) ---
+# These are structural noise patterns, not i18n-dependent text.
+# They match fragments that leak from capture/review UI into profile data.
+
+_EXPORT_NOISE_SUBSTRINGS: tuple[str, ...] = (
+    "Capture",
+    "Candidate",
+    "Popup",
+    "Sayane —",
+    "Side Panel",
+    "Debug",
+    "このフィルタ",
+    "差分ビュー",
+    "候補メタデータ",
+    "元の文脈",
+    "候補文脈",
+    "RDE評価",
+    "注意点",
+    "保存済み Sayane 文脈",
+    "提案される変更",
+)
+
+_EXPORT_NOISE_EXACT: frozenset[str] = frozenset({
+    "debug_only",
+    "transient_session",
+    "ui_noise",
+})
+
+
+def _is_noise_value(value: str) -> bool:
+    """Check if a string value is export noise."""
+    stripped = value.strip()
+    if not stripped:
+        return True
+    if stripped.lower() in _EXPORT_NOISE_EXACT:
+        return True
+    for pattern in _EXPORT_NOISE_SUBSTRINGS:
+        if pattern.lower() in stripped.lower():
+            return True
+    return False
+
+
+def _filter_noise_from_list(items: list[Any]) -> list[Any]:
+    """Remove noise entries and deduplicate a list."""
+    seen: set[str] = set()
+    result: list[Any] = []
+    for item in items:
+        if isinstance(item, str):
+            if _is_noise_value(item):
+                continue
+            key = item.strip().lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            result.append(item)
+        elif isinstance(item, dict):
+            result.append(item)
+        else:
+            result.append(item)
+    return result
+
+
+def _clean_export_data(data: dict[str, Any]) -> dict[str, Any]:
+    """Apply noise filtering to profile data before export. Recurses into nested dicts."""
+    cleaned: dict[str, Any] = {}
+    for key, value in data.items():
+        if isinstance(value, list):
+            filtered = _filter_noise_from_list(value)
+            if filtered:
+                cleaned[key] = filtered
+        elif isinstance(value, dict):
+            nested = _clean_export_data(value)
+            if nested:
+                cleaned[key] = nested
+        elif isinstance(value, str):
+            if not _is_noise_value(value):
+                cleaned[key] = value
+        elif value is not None:
+            cleaned[key] = value
+    return cleaned
+
 
 def _pick_profile_sections(profile: SayaneProfile, scopes: list[str]) -> dict[str, Any]:
     """Return a nested dict of profile sections covered by the requested scopes."""
@@ -36,7 +117,8 @@ def _pick_profile_sections(profile: SayaneProfile, scopes: list[str]) -> dict[st
             keys.update(sections)
 
     profile_dict = profile.model_dump(mode="json")
-    return {k: v for k, v in profile_dict.items() if k in keys and v is not None}
+    raw = {k: v for k, v in profile_dict.items() if k in keys and v is not None}
+    return _clean_export_data(raw)
 
 
 def export_yaml(profile: SayaneProfile, scopes: list[str]) -> str:

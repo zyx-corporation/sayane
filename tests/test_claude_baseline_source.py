@@ -40,3 +40,21 @@ def test_claude_source_no_ui_noise():
     assert "Capture" not in text
     assert "Candidate" not in text
     assert "フィルタ" not in text
+
+
+def test_claude_source_has_sayane_identity_clarification():
+    text = SOURCE.read_text(encoding="utf-8")
+    assert "Sayane is the external context portability system" in text
+    assert "not the receiving assistant" in text
+
+
+def test_technical_and_principles_not_identical_arrays():
+    """Technical Preferences and Principles must not be identical (#157)."""
+    text = SOURCE.read_text(encoding="utf-8")
+    if "## Technical Preferences" in text and "## Principles" in text:
+        import re
+        tech_match = re.search(r"## Technical Preferences\n\n((?:- .+\n?)*)", text)
+        princ_match = re.search(r"## Principles\n\n((?:- .+\n?)*)", text)
+        if tech_match and princ_match:
+            assert tech_match.group(1).strip() != princ_match.group(1).strip(), \
+                "Technical Preferences and Principles must differ"

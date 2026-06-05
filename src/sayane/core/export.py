@@ -419,9 +419,9 @@ def _export_markdown_compact(profile: SayaneProfile, scopes: list[str], target_n
                 lines.append("")
                 has_axioms = True
 
-    # Principles (from knowledge concepts)
+    # Principles (from knowledge concepts) — only when principles scope is active
     knowledge = data.get("knowledge")
-    if isinstance(knowledge, dict):
+    if isinstance(knowledge, dict) and "principles" in scopes:
         concepts = knowledge.get("concepts", [])
         if concepts:
             lines.append("## Principles")

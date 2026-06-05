@@ -4,10 +4,10 @@
 
 - Source: Sayane external profile
 - LLM memory: false
-- Generated: 2026-06-05T08:12:05Z
+- Generated: 2026-06-05T08:38:47Z
 - Target: Claude
 - Format: markdown
-- Scopes: identity, interaction, writing, technical
+- Scopes: identity, interaction, technical, ethics
 
 ## How to Use This Context
 
@@ -24,15 +24,42 @@ This profile is external context supplied by Sayane. It is not Claude memory. Sa
 - Language: ja
 - Tone: precise, logical
 
-## Principles
+## Philosophical Stance
 
-- RDE
-- Sayane
+### Axiom 1
+
+Quote:
+
+> human dignity
+
+Interpretation: not provided
+
+### Axiom 2
+
+Quote:
+
+> explicit uncertainty
+
+Interpretation: not provided
+
+## Response Policy
+
+Prefer:
+- structured reasoning
+- RDE-oriented difference review
+- clear distinction between facts, hypotheses, and interpretations
+
+Avoid:
+- unsupported overclaiming
+- collapsing user quotes into model interpretations
 
 ## Technical Preferences
 
 - RDE
-- Sayane
+- Context Portability
+- local-first
+- auditability
+- TDD
 
 ## Export Policy Notes
 

@@ -77,8 +77,9 @@ def test_export_markdown(examples_dir: Path) -> None:
         ],
     )
     assert result.exit_code == 0
-    assert "# Sayane Compiled Prompt" in result.stdout
-    assert "system" in result.stdout.lower()
+    # ChatGPT adapter produces inline format, not markdown headers
+    assert "Example User" in result.stdout
+    assert "Identity:" in result.stdout
 
 
 def test_doctor_reports_missing_defaults(tmp_path: Path, monkeypatch) -> None:

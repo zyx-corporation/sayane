@@ -37,3 +37,7 @@ def test_markdown_identity_interaction_technical_ethics_matches_golden():
 
 def test_prompt_identity_interaction_matches_golden():
     _assert_match(export_prompt(_profile(), ["identity", "interaction"]), "prompt-identity-interaction.txt")
+
+
+def test_chatgpt_markdown_identity_interaction_matches_golden():
+    _assert_match(export_markdown(_profile(), ["identity", "interaction"], target="chatgpt"), "chatgpt-identity-interaction.txt")

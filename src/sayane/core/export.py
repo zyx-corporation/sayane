@@ -45,6 +45,12 @@ def export_yaml(profile: SayaneProfile, scopes: list[str]) -> str:
 
 def export_markdown(profile: SayaneProfile, scopes: list[str], target: str = "generic") -> str:
     """Export selected scopes as human-readable Markdown."""
+    if target == "chatgpt":
+        return _export_markdown_chatgpt(profile, scopes)
+    return _export_markdown_generic(profile, scopes, target)
+
+
+def _export_markdown_generic(profile: SayaneProfile, scopes: list[str], target: str) -> str:
     data = _pick_profile_sections(profile, scopes)
     lines: list[str] = []
     lines.append(f"# Sayane Context Bundle")
@@ -227,5 +233,86 @@ def export_prompt(profile: SayaneProfile, scopes: list[str], target: str = "gene
         lines.append("Important terms:")
         for t in terms:
             lines.append(f"- {t}")
+
+    return "\n".join(lines)
+
+
+def _export_markdown_chatgpt(profile: SayaneProfile, scopes: list[str]) -> str:
+    """ChatGPT-optimized markdown: no code fences, concise sections, explicit context header."""
+    data = _pick_profile_sections(profile, scopes)
+    lines: list[str] = []
+    # ChatGPT reads this as context, not a code block
+    lines.append("[Context — Sayane stored profile, not LLM memory]")
+    lines.append("")
+
+    ident = data.get("identity")
+    if isinstance(ident, dict):
+        parts = []
+        if ident.get("name"):
+            parts.append(f"Name: {ident['name']}")
+        if ident.get("preferred_name"):
+            parts.append(f"Preferred: {ident['preferred_name']}")
+        roles = ident.get("roles", [])
+        if roles:
+            parts.append(f"Roles: {', '.join(roles)}")
+        if parts:
+            lines.append("Identity: " + " | ".join(parts))
+            lines.append("")
+
+    voice = data.get("voice")
+    cm = data.get("communication_mode")
+    if isinstance(voice, dict) or isinstance(cm, dict):
+        parts = []
+        if isinstance(voice, dict):
+            if voice.get("default_language"):
+                parts.append(f"Language: {voice['default_language']}")
+            tone = voice.get("tone", [])
+            if tone:
+                parts.append(f"Tone: {', '.join(tone)}")
+        if isinstance(cm, dict):
+            cs = cm.get("collaboration_style", [])
+            if cs:
+                parts.append(f"Collaboration: {', '.join(cs)}")
+        if parts:
+            lines.append("Interaction: " + " | ".join(parts))
+            lines.append("")
+
+    values = data.get("values")
+    if isinstance(values, dict):
+        core = values.get("core", [])
+        if core:
+            lines.append("Values: " + "; ".join(core))
+            lines.append("")
+
+    policy = data.get("policy")
+    if isinstance(policy, dict):
+        resp = policy.get("response")
+        if isinstance(resp, dict):
+            prefer = resp.get("prefer", [])
+            avoid = resp.get("avoid", [])
+            if prefer:
+                lines.append("Preferred: " + "; ".join(prefer))
+                lines.append("")
+            if avoid:
+                lines.append("Avoid: " + "; ".join(avoid))
+                lines.append("")
+
+    knowledge = data.get("knowledge")
+    if isinstance(knowledge, dict):
+        concepts = knowledge.get("concepts", [])
+        if concepts:
+            lines.append("Concepts: " + ", ".join(concepts))
+            lines.append("")
+
+    projects = data.get("major_projects", [])
+    if projects:
+        names = [p.get("name", "") for p in projects if isinstance(p, dict)]
+        lines.append("Projects: " + ", ".join(names))
+        lines.append("")
+
+    terms = data.get("important_terms", [])
+    if terms:
+        lines.append("Terms: " + ", ".join(str(t) for t in terms[:20]))
+        lines.append("")
 
     return "\n".join(lines)

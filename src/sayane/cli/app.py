@@ -719,6 +719,53 @@ def _register_core_commands(app: typer.Typer) -> None:
         raise typer.BadParameter(f"Unknown action: {action}")
 
     @app.command()
+    def key(
+        action: Annotated[str, typer.Argument(help="generate | list")],
+    ) -> None:
+        """Generate or list Ed25519 signing keys (Phase 16)."""
+        from sayane.core.signing import generate_keypair, list_keys
+
+        if action == "generate":
+            info = generate_keypair()
+            typer.echo(f"Key generated: {info['key_id']}")
+            typer.echo(f"  Private: {info['private_key_path']}")
+            typer.echo(f"  Public:  {info['public_key_path']}")
+        elif action == "list":
+            keys = list_keys()
+            if not keys:
+                typer.echo("No keys found.")
+            for k in keys:
+                typer.echo(f"  {k['key_id']} (private: {k['has_private']})")
+        else:
+            raise typer.BadParameter(f"Unknown action: {action}")
+
+    @app.command()
+    def sign(
+        bundle_path: Annotated[Path, typer.Argument(help="Bundle to sign.")],
+        key_id: Annotated[str | None, typer.Option("--key", help="Key ID to sign with.")] = None,
+    ) -> None:
+        """Sign a context bundle (Phase 16)."""
+        from sayane.core.import_bundle import parse_bundle
+        from sayane.core.signing import sign_data, signed_payload_for_bundle, list_keys, verify_signature
+        import yaml as _yaml
+
+        if key_id is None:
+            keys = list_keys()
+            priv_keys = [k for k in keys if k["has_private"] == "True"]
+            if not priv_keys:
+                raise typer.BadParameter("No private keys found. Run 'sayane key generate' first.")
+            key_id = priv_keys[0]["key_id"]
+
+        parsed = parse_bundle(bundle_path)
+        if parsed is None:
+            raise typer.BadParameter(f"Could not parse bundle: {bundle_path}")
+
+        signed = sign_data(parsed, key_id, payload_fn=signed_payload_for_bundle)
+        bundle_path.write_text(_yaml.safe_dump(signed, allow_unicode=True, sort_keys=False), encoding="utf-8")
+        result = verify_signature(signed, payload_fn=signed_payload_for_bundle)
+        typer.echo(f"Bundle signed: {key_id} → status: {result['status']}")
+
+    @app.command()
     def serve(
         host: Annotated[str, typer.Option("--host")] = "127.0.0.1",
         port: Annotated[int, typer.Option("--port")] = 38741,

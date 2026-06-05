@@ -100,9 +100,9 @@ while respecting explicit uncertainty and avoiding unsupported assumptions.
 ## Receiving Session Conditions
 
 - **Fresh Claude session**: Yes
-- **Model**: (fill)
+- **Date**: 2026-06-05
 - **Manual paste**: Yes
-- **Notes**: (fill)
+- **Notes**: Corrected source (#157) — representative identity, no placeholder data. Claude asked clarifying question about Sayane vs assistant name "Sion".
 
 ## Claude Prompt
 
@@ -144,7 +144,7 @@ Important rules:
 
 **Expected**: Identify tone (precise, logical), language (ja), external context boundary.
 
-**Observed**: (fill)
+**Observed**: Claude correctly identified Japanese as default language with precise/logical tone. Response referenced structured reasoning and RDE-oriented difference review as policy preferences. Boundary clearly maintained.
 
 ### Task 2: Technical Design Constraints
 
@@ -152,7 +152,7 @@ Important rules:
 
 **Expected**: Reference RDE, Sayane, explicit uncertainty.
 
-**Observed**: (fill)
+**Observed**: Claude preserved RDE, Context Portability, local-first, auditability, TDD. Distinguished design constraints (what to preserve) from interaction style (how to respond).
 
 ### Task 3: Public-Facing Profile
 
@@ -160,7 +160,7 @@ Important rules:
 
 **Expected**: Extract identity roles, exclude internal policy.
 
-**Observed**: (fill)
+**Observed**: Claude extracted identity roles and technical interests. Did not expose internal policy, values, or private details.
 
 ### Task 4: Sayane Explanation (ja)
 
@@ -168,63 +168,78 @@ Important rules:
 
 **Expected**: Japanese response explaining context portability, external profile, audit.
 
-**Observed**: (fill)
+**Observed**: Claude provided coherent Japanese explanation of Sayane as external context portability system with audit, lineage, and Candidate Review.
 
 ## Claude Response Summary
 
-(fill — summarize overall response quality after manual session)
+Claude demonstrated strong boundary awareness: recognized external profile as session-scoped context, asked clarifying question about Sayane vs assistant name, preserved identity accurately, and maintained Japanese response.
+
+Key strength vs ChatGPT A1: Claude actively questioned the identity boundary rather than passively accepting. This is a stronger signal of correct understanding.
 
 ## RDE Evaluation
 
 ### Preserved Elements
 
-- (fill)
+- External profile boundary ✅ (asked clarifying question)
+- Not model memory ✅
+- Sayane identity-boundary clarification ✅
+- Identity: Tomoyuki Kano / tomyuk ✅
+- Japanese response preference ✅
+- Precise/logical tone ✅
+- Technical constraints ✅
+- Response policy ✅
 
 ### Authorized Transformations
 
-- (fill)
+- Claude paraphrased policy in its own style: acceptable
+- Reformatted task answers: acceptable
 
 ### Inferred Extensions
 
-- (fill)
+- No invented user facts observed
+- Claude asked clarifying question rather than inferring: positive
 
 ### Unresolved Gaps
 
-- (fill)
+- Quote/interpretation separation not explicitly referenced in task output
 
 ### Suspicious Drift
 
-- (fill)
+- **None observed.**
 
 ### Critical Distortion
 
-- (fill)
+- **None observed.**
 
 ## Comparison with ChatGPT A1
 
 | Axis | ChatGPT A1 | Claude Baseline |
 |---|---|---|
-| External profile boundary | ✅ Recognized | (fill) |
-| Japanese response style | ✅ Used | (fill) |
-| Technical constraints | ✅ Preserved | (fill) |
-| Quote preservation | ✅ Axioms quoted | (fill) |
-| Principles handling | ✅ Section rendered | (fill) |
-| Execution context | ✅ Separated | (fill) |
-| Noise sensitivity | ⚠️ Noted (→#155) | (fill) |
-| Critical distortion | None | (fill) |
+| External profile boundary | ✅ Recognized | ✅ Recognized + asked clarifying question |
+| Japanese response style | ✅ Used | ✅ Used |
+| Technical constraints | ✅ Preserved | ✅ Preserved |
+| Quote preservation | ✅ Axioms quoted | ✅ (implicit) |
+| Principles handling | ✅ Post-#153 | ✅ Distinct from technical |
+| Execution context | ✅ Separated | N/A (not in scope) |
+| Noise sensitivity | ⚠️ Noted (→#155) | ✅ No noise detected |
+| Critical distortion | None | None |
+| Boundary questioning | Passive | **Active clarification** |
 
 ## Adapter Improvement Notes
 
-- (fill — changes needed for Claude adapter based on observed response)
+- Source correction (#157): representative identity, distinct technical, response policy — **completed**
+- Identity-boundary clarification: **completed**
+- Claude adapter metadata and non-memory declaration: **working correctly**
+- No Claude-specific adapter changes needed beyond fixes already applied
 
 ## Readiness Judgment
 
-- Claude target adapter baseline usable: **yes / no / partial**
-- Ready for A2b ChatGPT → Claude round-trip: **yes / no / conditional**
+- Claude target adapter baseline usable: **yes** ✅
+- Ready for A2b ChatGPT → Claude round-trip: **yes** ✅
 
 ## Decision
 
-- [ ] Claude baseline usable → proceed to A2b
+- [x] Claude baseline usable → proceed to A2b
 - [ ] Claude baseline partial → fix adapter then A2b
 - [ ] Claude baseline failed → investigate before A2b
 

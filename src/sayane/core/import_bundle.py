@@ -58,19 +58,26 @@ class ImportMetadata:
 # --- Bundle parsing ---
 
 def parse_bundle(path: Path) -> dict[str, Any] | None:
-    """Parse a portable context bundle (YAML or Markdown)."""
+    """Parse a portable context bundle (YAML, JSON, or Markdown)."""
     text = path.read_text(encoding="utf-8")
-    if text.strip().startswith("{"):
-        # JSON
+    stripped = text.strip()
+
+    if stripped.startswith("{"):
         return json.loads(text)
-    if text.strip().startswith("#"):
-        # Markdown: extract YAML frontmatter or parse sections
-        return _parse_markdown_bundle(text)
-    # YAML
+
+    # YAML: try first, since YAML comments start with #
     try:
-        return yaml.safe_load(text) or {}
+        parsed = yaml.safe_load(text)
+        if isinstance(parsed, dict) and parsed:
+            return parsed
     except yaml.YAMLError:
-        return None
+        pass
+
+    # Markdown: parse sections if not YAML
+    if stripped.startswith("# "):
+        return _parse_markdown_bundle(text)
+
+    return None
 
 
 def _parse_markdown_bundle(text: str) -> dict[str, Any]:
@@ -108,6 +115,12 @@ _IMPORTABLE_SECTIONS = frozenset({
     "policy",
     "major_projects",
     "important_terms",
+    # A2 round-trip extended sections
+    "interaction",
+    "writing",
+    "technical",
+    "principles",
+    "execution_context",
 })
 
 

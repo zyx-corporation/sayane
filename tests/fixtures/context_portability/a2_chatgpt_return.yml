@@ -1,0 +1,49 @@
+# A2 ChatGPT return bundle fixture (expected shape)
+
+metadata:
+  source: "chatgpt_roundtrip"
+  source_profile_type: "Sayane external profile"
+  llm_memory: false
+  target_for_import: "sayane"
+  generated_by: "chatgpt"
+  roundtrip_stage: "A2"
+  uncertainty: "items are candidates, not canonical facts"
+
+identity:
+  name: "Example User"
+  preferred_name: "example"
+  roles:
+    - "developer"
+
+interaction:
+  tone: "precise, logical"
+  language: "ja"
+  # ChatGPT may add inferred fields — should become review_required candidates
+  notes: "ChatGPT inference — verify against canonical source"
+
+writing:
+  # ChatGPT may infer writing preferences from tone
+  style: "concise, structured"
+
+technical:
+  concepts:
+    - "RDE"
+    - "Sayane"
+    - "Context Portability"
+
+principles:
+  - "Context is stored and audited outside the LLM"
+  - "Candidate Review separates extraction from approval"
+
+execution_context:
+  # ChatGPT may infer project details — mark as candidates
+
+notes:
+  inferred:
+    - "writing style inferred from interaction tone"
+    - "Context Portability principle inferred from concepts"
+  unresolved:
+    - "execution_context has no source data"
+  unchanged:
+    - "identity"
+    - "interaction tone and language"

@@ -159,7 +159,7 @@ def analyze_semantic_placement(
         # Check if current section is discouraged
         section_key = section.lower()
         is_discouraged = any(
-            section_key == ds.lower() or section_key.startswith(ds.lower())
+            section_key == ds.lower() or ds.lower().startswith(section_key + ".")
             for ds in concept.discouraged_sections
         )
         if not is_discouraged:
@@ -170,7 +170,7 @@ def analyze_semantic_placement(
             term=concept.term,
             current_section=section,
             preferred_sections=concept.preferred_sections,
-            message=f"{concept.term} may be flattened if imported as a generic {section}.",
+            message=f"{concept.term} may be flattened if imported as a generic {section} preference.",
         ))
 
     return warnings

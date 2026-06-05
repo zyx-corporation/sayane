@@ -543,8 +543,14 @@ def _register_core_commands(app: typer.Typer) -> None:
 
     @app.command()
     def audit(
-        action: Annotated[str, typer.Argument(help="list | by-candidate | by-term | unresolved")],
+        action: Annotated[str, typer.Argument(help="list | by-candidate | by-term | unresolved | export")],
         query_value: Annotated[str | None, typer.Argument()] = None,
+        format: Annotated[str | None, typer.Option("--format", help="Export format: markdown | json | jsonl")] = "markdown",
+        output: Annotated[Path | None, typer.Option("--output", "-o", help="Output file.")] = None,
+        candidate: Annotated[str | None, typer.Option("--candidate", help="Filter by candidate.")] = None,
+        term: Annotated[str | None, typer.Option("--term", help="Filter by term.")] = None,
+        decision: Annotated[str | None, typer.Option("--decision", help="Filter by decision.")] = None,
+        redact: Annotated[bool, typer.Option("--redact")] = False,
     ) -> None:
         """Query the review decision audit trail (Phase 8)."""
         from sayane.core.audit_trail import get_audit_store
@@ -577,6 +583,23 @@ def _register_core_commands(app: typer.Typer) -> None:
             typer.echo(f"{len(matches)} record(s) for term '{query_value}':")
             for r in matches:
                 typer.echo(f"  [{r['decision']['type'].upper()}] {r['candidate']['section']} — flags={r['candidate'].get('flags', [])}")
+
+        elif action == "export":
+            from sayane.core.audit_export import build_export
+            content = build_export(
+                store,
+                format=format or "markdown",
+                candidate_id=candidate,
+                term=term,
+                decision=decision,
+                redact=redact,
+            )
+            if output:
+                output.parent.mkdir(parents=True, exist_ok=True)
+                output.write_text(content, encoding="utf-8")
+                typer.echo(f"Audit export written: {output}")
+            else:
+                typer.echo(content)
 
         else:
             raise typer.BadParameter(f"Unknown audit action: {action}")

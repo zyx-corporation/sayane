@@ -1,0 +1,53 @@
+# Representative profile for Claude baseline transfer tests (#157)
+version: "0.1.0"
+kind: "SayaneProfile"
+identity:
+  name: "Tomoyuki Kano"
+  preferred_name: "tomyuk"
+  roles:
+    - "代表"
+    - "エンジニア"
+    - "アーキテクト"
+organization:
+  name: "ZYX Corp株式会社"
+voice:
+  default_language: "ja"
+  tone:
+    - "precise"
+    - "logical"
+    - "explicit uncertainty"
+values:
+  core:
+    - "human dignity"
+    - "explicit uncertainty"
+    - "local-first autonomy"
+knowledge:
+  concepts:
+    - "RDE"
+    - "Context Portability"
+    - "Kotone"
+    - "Sayane"
+major_projects:
+  - name: "Sayane"
+    summary: "context portability tool"
+  - name: "Kotone"
+    summary: "local-first AI context foundation"
+communication_mode:
+  collaboration_style:
+    - "structured reasoning"
+    - "RDE-oriented difference review"
+    - "clear distinction between facts, hypotheses, and interpretations"
+policy:
+  response:
+    prefer:
+      - "structured reasoning"
+      - "RDE-oriented difference review"
+    avoid:
+      - "unsupported overclaiming"
+      - "collapsing user quotes into model interpretations"
+important_terms:
+  - "RDE"
+  - "Context Portability"
+  - "Kotone"
+  - "Sayane"
+  - "ΔM"

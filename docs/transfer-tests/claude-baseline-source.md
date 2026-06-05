@@ -4,7 +4,7 @@
 
 - Source: Sayane external profile
 - LLM memory: false
-- Generated: 2026-06-05T07:39:33Z
+- Generated: 2026-06-05T07:54:47Z
 - Target: Claude
 - Format: markdown
 - Scopes: identity, interaction, writing, technical
@@ -15,9 +15,9 @@ This profile is external context supplied by Sayane. It is not Claude memory. Us
 
 ## Identity
 
-- Name: Example User
-- Preferred name: example
-- Roles: developer
+- Name: Tomoyuki Kano
+- Preferred name: tomyuk
+- Roles: 代表, エンジニア, アーキテクト
 
 ## Interaction Preferences
 
@@ -38,4 +38,3 @@ This profile is external context supplied by Sayane. It is not Claude memory. Us
 
 - Some private or sensitive fields may be omitted.
 - `promptExport: never` fields are not included.
-

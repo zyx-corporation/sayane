@@ -2,9 +2,30 @@
 
 ## Status
 
-**Procedure documented. Awaiting manual Claude session.**
+**Source corrected (#157). Awaiting manual Claude session with representative profile.**
 
-> Counterpart to A1: ChatGPT baseline.
+> Initial source contained placeholder fixture data ("Example User", "example", "developer").
+> Corrected 2026-06-05 per #157.
+
+## Baseline Source Correction
+
+The first manual Claude review identified that the exported source used generic fixture identity values. This was invalid for preservation-quality evaluation.
+
+**Corrected source** uses representative profile data:
+
+```yaml
+identity:
+  name: "Tomoyuki Kano"
+  preferred_name: "tomyuk"
+  roles: ["代表", "エンジニア", "アーキテクト"]
+```
+
+Guard tests in `tests/test_claude_baseline_source.py` prevent regression (5 tests):
+- No placeholder identity in manual baseline source
+- Representative identity fields present
+- Metadata boundary preserved
+- No formation/private data
+- No UI noise
 
 ## Test Metadata
 
@@ -47,9 +68,9 @@ Use it to guide responses within this session,
 while respecting explicit uncertainty and avoiding unsupported assumptions.
 
 ## Identity
-- Name: Example User
-- Preferred name: example
-- Roles: developer
+- Name: Tomoyuki Kano
+- Preferred name: tomyuk
+- Roles: 代表, エンジニア, アーキテクト
 
 ## Interaction Preferences
 - Language: ja

@@ -766,6 +766,59 @@ def _register_core_commands(app: typer.Typer) -> None:
         typer.echo(f"Bundle signed: {key_id} → status: {result['status']}")
 
     @app.command()
+    def package(
+        action: Annotated[str, typer.Argument(help="create | inspect | verify")],
+        path: Annotated[Path | None, typer.Argument()] = None,
+        output: Annotated[Path, typer.Option("--output", "-o", help="Output directory.")] = Path("./sayane-export-package"),
+        bundle: Annotated[Path | None, typer.Option("--bundle", help="Context bundle.")] = None,
+        audit_export: Annotated[Path | None, typer.Option("--audit-export", help="Audit export file.")] = None,
+        transfer_report: Annotated[Path | None, typer.Option("--transfer-report", help="Transfer report file.")] = None,
+        policy_file: Annotated[Path | None, typer.Option("--policy-file", help="Policy file.")] = None,
+        sign: Annotated[bool, typer.Option("--sign")] = False,
+    ) -> None:
+        """Create, inspect, or verify a signed export package (Phase 17)."""
+        from sayane.core.export_package import create_package, inspect_package, verify_package
+
+        if action == "create":
+            artifacts: dict[str, Path] = {}
+            if bundle: artifacts["bundle"] = bundle
+            if audit_export: artifacts["audit"] = audit_export
+            if transfer_report: artifacts["report"] = transfer_report
+            if policy_file: artifacts["policy"] = policy_file
+
+            manifest = create_package(
+                output_dir=output,
+                artifacts={k: v for k, v in artifacts.items() if v},
+                sign=sign,
+            )
+            typer.echo(f"Package created: {output}")
+            typer.echo(f"  Package ID: {manifest.get('package_id')}")
+            typer.echo(f"  Artifacts: {manifest.get('summary', {}).get('artifact_count', 0)}")
+
+        elif action == "inspect":
+            pkg_dir = path or Path(".")
+            manifest = inspect_package(pkg_dir)
+            if manifest is None:
+                typer.echo("Manifest missing or invalid.")
+                return
+            typer.echo(f"Package: {manifest.get('package_id')}")
+            for art in manifest.get("artifacts", []):
+                sig = art.get("signature", {}).get("status", "?")
+                typer.echo(f"  {art['role']}: {art['path']} (sig: {sig})")
+
+        elif action == "verify":
+            pkg_dir = path or Path(".")
+            result = verify_package(pkg_dir)
+            typer.echo(f"Package verification: {result['status']}")
+            for e in result["errors"]:
+                typer.echo(f"  Error: {e}")
+            for w in result["warnings"]:
+                typer.echo(f"  Warning: {w}")
+
+        else:
+            raise typer.BadParameter(f"Unknown action: {action}")
+
+    @app.command()
     def serve(
         host: Annotated[str, typer.Option("--host")] = "127.0.0.1",
         port: Annotated[int, typer.Option("--port")] = 38741,

@@ -1,22 +1,67 @@
-"""Import portable context bundles as reviewable Candidates (#143)."""
+"""Import portable context bundles as reviewable Candidates (#143).
+
+Import must not directly merge into canonical context.
+The safe flow is: parse → diff → generate Candidates → review → approve.
+"""
 
 from __future__ import annotations
 
+import json
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
 import yaml
 
+from sayane.core.candidate import (
+    CandidateProposal,
+    CandidateSource,
+    CandidateStoragePolicy,
+    CandidateUpdate,
+    CaptureMetadata,
+)
 from sayane.core.models import SayaneProfile
 from sayane.core.export import SCOPE_SECTIONS
 
+# --- Import metadata ---
+
+
+class ImportMetadata:
+    """Metadata attached to each imported candidate for lineage tracking."""
+
+    def __init__(
+        self,
+        import_id: str,
+        source_path: str | None = None,
+        source_format: str = "yaml",
+        source_target: str | None = None,
+        source_scopes: list[str] | None = None,
+    ) -> None:
+        self.import_id = import_id
+        self.source_path = source_path
+        self.source_format = source_format
+        self.source_target = source_target
+        self.source_scopes = source_scopes or []
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "import_id": self.import_id,
+            "source_path": self.source_path,
+            "source_format": self.source_format,
+            "source_target": self.source_target,
+            "source_scopes": self.source_scopes,
+            "imported_at": datetime.now(UTC).isoformat(),
+        }
+
+
+# --- Bundle parsing ---
 
 def parse_bundle(path: Path) -> dict[str, Any] | None:
     """Parse a portable context bundle (YAML or Markdown)."""
     text = path.read_text(encoding="utf-8")
     if text.strip().startswith("{"):
         # JSON
-        import json
         return json.loads(text)
     if text.strip().startswith("#"):
         # Markdown: extract YAML frontmatter or parse sections
@@ -127,3 +172,80 @@ def import_bundle_as_candidates(
             })
 
     return candidates
+
+
+# --- Candidate creation from import ---
+
+
+def create_import_candidates(
+    bundle: dict[str, Any],
+    profile: SayaneProfile,
+    *,
+    import_meta: ImportMetadata,
+    target_profile_id: str = "default",
+) -> list[CandidateUpdate]:
+    """Generate CandidateUpdate records from an imported bundle.
+
+    Each candidate is saved with import metadata and storage policy.
+    Does NOT merge into profile — only creates pending candidates.
+    """
+    drafts = import_bundle_as_candidates(bundle, profile)
+    candidates: list[CandidateUpdate] = []
+    now = datetime.now(UTC)
+
+    for draft in drafts:
+        section = draft["section"]
+        proposed = draft["proposed_value"]
+        content = json.dumps(proposed, ensure_ascii=False)
+        proposal = CandidateProposal(
+            section=section,
+            operation="bundle_imported",
+            add=[],
+            items=[{"section": section, "name": k, "value": str(v)}
+                   for k, v in (proposed.items() if isinstance(proposed, dict) else {})]
+            if isinstance(proposed, dict)
+            else [{"section": section, "name": str(v)} for v in (proposed if isinstance(proposed, list) else [proposed])],
+            summary=f"Imported from {import_meta.source_path or 'bundle'}: {section}",
+        )
+        candidate = CandidateUpdate(
+            id=uuid4().hex,
+            status="pending",
+            target_profile_id=target_profile_id,
+            content=content,
+            raw_capture=content,
+            cleaned_capture=content,
+            display_summary=f"[Import] {section}: {draft['action']}",
+            source=CandidateSource(
+                type=f"bundle_import/{import_meta.source_format}",
+                uri=import_meta.source_path,
+                captured_at=now,
+            ),
+            proposal=proposal,
+            storage_policy=CandidateStoragePolicy(
+                storage_kind="profile_ir",
+                target_path=section,
+                prompt_export=_infer_prompt_export(section),
+                sensitivity=_infer_sensitivity(section),
+            ),
+            parent_capture_id=import_meta.import_id,
+            generator_id="sayane.bundle_import",
+        )
+        candidates.append(candidate)
+
+    return candidates
+
+
+def _infer_prompt_export(section: str) -> str:
+    if section in ("identity.contact",):
+        return "never"
+    if section in ("major_projects", "execution_context", "knowledge"):
+        return "on_demand"
+    return "default"
+
+
+def _infer_sensitivity(section: str) -> str:
+    if section in ("identity.contact",):
+        return "private"
+    if section in ("values", "policy"):
+        return "internal"
+    return "internal"

@@ -1,0 +1,50 @@
+# A2b candidate review UI fixture (Phase 12)
+fixture: a2b_candidate_review_ui
+policy: standard
+candidates:
+  - id: c-001
+    section: technical
+    action: add
+    proposed:
+      preferences:
+        - RDE
+        - Sayane
+    flags:
+      - review_required
+      - unstable_placement
+      - semantic_overlap
+    provenance:
+      bundle_id: bundle-sha256-example
+      verification_status: verified
+      transfer_path:
+        - Sayane
+        - ChatGPT
+        - Claude
+        - Sayane
+      external_context: true
+      llm_memory: false
+    policy:
+      profile: standard
+      status: WARN
+
+  - id: c-002
+    section: principles
+    action: add
+    proposed:
+      - RDE
+      - Sayane
+    flags:
+      - semantic_overlap
+      - review_required
+    policy:
+      profile: standard
+      status: WARN
+
+overlap_groups:
+  - id: overlap-001
+    terms:
+      - rde
+      - sayane
+    candidates:
+      - c-001
+      - c-002

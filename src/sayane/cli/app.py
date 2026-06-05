@@ -411,12 +411,13 @@ def _register_core_commands(app: typer.Typer) -> None:
 
     @app.command()
     def review(
-        action: Annotated[str, typer.Argument(help="list | approve | reject | modify | defer")],
+        action: Annotated[str, typer.Argument(help="list | show | overlap | approve | reject | modify | defer")],
         candidate_id: Annotated[str | None, typer.Argument()] = None,
         reason: Annotated[str | None, typer.Option("--reason", help="Reason for decision.")] = None,
         value: Annotated[str | None, typer.Option("--value", help="Applied value for modify (JSON).")] = None,
+        filter_flag: Annotated[str | None, typer.Option("--filter", help="Filter candidates: review_required | blocked | semantic_overlap | boundary_sensitive.")] = None,
     ) -> None:
-        """Review import candidates: list, approve, reject, modify, defer (Phase 7)."""
+        """Review import candidates (Phase 7/12)."""
         import json as _json
         from sayane.core.review_decision import (
             ReviewDecision,
@@ -430,10 +431,58 @@ def _register_core_commands(app: typer.Typer) -> None:
             if not decisions:
                 typer.echo("No review decisions recorded.")
                 return
-            typer.echo(f"{len(decisions)} review decision(s):")
-            for d in decisions:
+            filtered = decisions
+            if filter_flag:
+                filtered = [d for d in decisions if filter_flag in (d.review_flags or [])]
+            typer.echo(f"{len(filtered)} review decision(s):")
+            for d in filtered:
                 applied = f" → {_json.dumps(d.applied_value, ensure_ascii=False)[:80]}" if d.applied_value else ""
-                typer.echo(f"  [{d.decision.upper()}] {d.candidate_id} ({d.original_section}) — {d.reason[:60]}{applied}")
+                flags = f" [{', '.join(d.review_flags)}]" if d.review_flags else ""
+                typer.echo(f"  [{d.decision.upper()}] {d.candidate_id} ({d.original_section}) — {d.reason[:60]}{applied}{flags}")
+            return
+
+        if action == "show":
+            if not candidate_id:
+                raise typer.BadParameter("candidate_id required for show")
+            # Phase 12: provenance-aware detail view
+            decisions = [d for d in list_decisions() if d.candidate_id == candidate_id]
+            d = decisions[-1] if decisions else None
+            typer.echo(f"=== Candidate Detail: {candidate_id} ===")
+            if d:
+                typer.echo(f"  Section: {d.original_section}")
+                typer.echo(f"  Action:  {d.original_action}")
+                typer.echo(f"  Decision: {d.decision.upper()}")
+                if d.review_flags:
+                    typer.echo(f"  Flags:   {', '.join(d.review_flags)}")
+                if d.review_warnings:
+                    typer.echo(f"  Warnings:")
+                    for w in d.review_warnings:
+                        typer.echo(f"    - {w.get('message', w)}")
+                if d.transfer_path:
+                    typer.echo(f"  Transfer path: {' → '.join(d.transfer_path)}")
+                typer.echo(f"  Reason:  {d.reason or 'N/A'}")
+                if d.applied_value:
+                    typer.echo(f"  Applied: {_json.dumps(d.applied_value, ensure_ascii=False)[:120]}")
+                typer.echo(f"  Lineage: {d.lineage_event_id[:12]}")
+            else:
+                typer.echo("  No decisions recorded. Import a bundle first, then use review approve/reject/modify/defer.")
+            return
+
+        if action == "overlap":
+            from sayane.core.review_decision import get_overlap_resolution
+            if candidate_id:
+                res = get_overlap_resolution(candidate_id)
+                if res:
+                    typer.echo(f"Overlap Group: {res.overlap_id}")
+                    typer.echo(f"  Terms: {', '.join(res.terms)}")
+                    typer.echo(f"  Candidates: {', '.join(res.candidate_ids)}")
+                    typer.echo(f"  Resolved: {res.resolved}")
+                    if res.resolution_reason:
+                        typer.echo(f"  Reason: {res.resolution_reason}")
+                else:
+                    typer.echo("Overlap group not found.")
+            else:
+                typer.echo("Usage: sayane review overlap <overlap-id>")
             return
 
         if not candidate_id:

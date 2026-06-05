@@ -316,3 +316,26 @@ def _infer_sensitivity(section: str) -> str:
     if section in ("values", "policy"):
         return "internal"
     return "internal"
+
+
+def import_bundle_with_semantic_review(
+    bundle: dict[str, Any],
+    profile: SayaneProfile,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Import bundle as candidates and run semantic review pass (Phase 6).
+
+    Returns (candidates, review_result) where review_result contains
+    per-candidate flags/warnings and cross-candidate overlap warnings.
+    Does NOT auto-approve, auto-reject, or modify candidates.
+    """
+    from sayane.core.semantic_review import run_semantic_review
+
+    candidates = import_bundle_as_candidates(bundle, profile)
+    review = run_semantic_review(candidates)
+
+    review_dict = {
+        "candidate_flags": review.candidate_flags,
+        "candidate_warnings": review.candidate_warnings,
+        "overlap_warnings": review.overlap_warnings,
+    }
+    return candidates, review_dict

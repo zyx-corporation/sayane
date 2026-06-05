@@ -1,0 +1,82 @@
+metadata:
+  source: "a2b_chatgpt_claude_roundtrip"
+  upstream_source: "chatgpt_roundtrip"
+  source_profile_type: "Sayane external profile"
+  llm_memory: false
+  target_for_import: "sayane"
+  generated_by: "claude"
+  roundtrip_stage: "A2b"
+  uncertainty: "items are candidates, not canonical facts"
+  boundary_note: "This bundle passed through ChatGPT before reaching Claude. Both are separate external systems. Neither is the user's canonical context."
+
+identity:
+  # ChatGPT used a placeholder, not the original identity. Preserved as-is.
+  name: "Example User"
+  preferred_name: "example"
+  roles:
+    - "developer"
+
+interaction_style:
+  language: "ja"
+  tone:
+    - "precise"
+    - "logical"
+
+response_policy:
+  prefer:
+    - "structured reasoning"
+  avoid:
+    - "unsupported overclaiming"
+
+technical:
+  preferences:
+    - "RDE"
+    - "Sayane"
+
+principles:
+  - "RDE"
+  - "Sayane"
+
+philosophical_stance:
+  axioms:
+    - quote: "human dignity"
+      interpretation: "not provided"
+    - quote: "explicit uncertainty"
+      interpretation: "not provided"
+
+inferred_or_uncertain:
+  items:
+    - field: "identity.name / identity.preferred_name"
+      status: "placeholder; not a confirmable user fact"
+    - field: "philosophical_stance.axioms[*].interpretation"
+      status: "not provided upstream; left unfilled by Claude"
+
+identity_boundary_check:
+  sayane_is_context_system: true
+  chatgpt_is_not_user: true
+  claude_is_not_user: true
+  profile_is_external: true
+  profile_is_not_memory: true
+
+notes:
+  preserved_from_upstream:
+    - "identity placeholder (Example User / example) preserved, not replaced with real identity"
+    - "roles: [developer]"
+    - "interaction language: ja"
+    - "response prefer (structured reasoning) and avoid (unsupported overclaiming)"
+    - "technical preferences and principles: RDE, Sayane"
+    - "important_terms (RDE, Sayane) reflected via technical.preferences and principles"
+    - "philosophical axioms retained with interpretation 'not provided'"
+    - "upstream omitted-fields note (private/sensitive; promptExport: never)"
+  upstream_inferred_kept_as_inferred:
+    - "none -- ChatGPT's notes.inferred was empty"
+  new_inferred_by_claude:
+    - "none -- Claude added no new user facts"
+  unresolved:
+    - "axiom interpretations remain unprovided"
+    - "execution_context was empty ({}) upstream; left empty"
+  structural_normalizations:
+    - "interaction -> interaction_style (target schema rename)"
+    - "writing -> response_policy (target schema rename)"
+    - "tone string 'precise, logical' split into list items ['precise', 'logical']"
+  rde_hint: "Upstream content was already minimal and uncertain; Claude must not strengthen it."

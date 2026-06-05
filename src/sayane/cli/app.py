@@ -361,14 +361,14 @@ def _register_core_commands(app: typer.Typer) -> None:
         profile: Annotated[Path | None, typer.Option("--profile")] = None,
     ) -> None:
         """Import a portable context bundle as reviewable Candidates (#143)."""
-        from sayane.core.import_bundle import import_bundle_as_candidates, parse_bundle
+        from sayane.core.import_bundle import import_bundle_with_semantic_review, parse_bundle
 
         path, loaded = _load(profile)
         parsed = parse_bundle(bundle)
         if parsed is None:
             raise typer.BadParameter(f"Could not parse bundle: {bundle}")
 
-        candidates = import_bundle_as_candidates(parsed, loaded)
+        candidates, review = import_bundle_with_semantic_review(parsed, loaded)
         if not candidates:
             typer.echo(t("import.no_candidates"))
             return
@@ -380,6 +380,27 @@ def _register_core_commands(app: typer.Typer) -> None:
             if c['current_value']:
                 typer.echo(f"  Current: {json.dumps(c['current_value'], ensure_ascii=False)[:120]}")
             typer.echo(f"  Proposed: {json.dumps(c['proposed_value'], ensure_ascii=False)[:120]}")
+            # Semantic review flags (Phase 6)
+            flags = review["candidate_flags"][i] if i < len(review["candidate_flags"]) else []
+            if flags:
+                typer.echo(f"  Flags:")
+                for flag in flags:
+                    typer.echo(f"    - {flag}")
+            warnings = review["candidate_warnings"][i] if i < len(review["candidate_warnings"]) else []
+            if warnings:
+                typer.echo(f"  Warnings:")
+                for w in warnings:
+                    typer.echo(f"    - {w['message']}")
+
+        # Cross-candidate overlap warnings
+        overlaps = review.get("overlap_warnings", [])
+        for ow in overlaps:
+            typer.echo(f"\n--- Overlap Warning ---")
+            typer.echo(f"  Terms:")
+            for term in ow.get("terms", []):
+                typer.echo(f"    - {term}")
+            typer.echo(f"  Candidates: {', '.join(str(i + 1) for i in ow.get('candidate_indices', []))}")
+            typer.echo(f"  Note: {ow.get('note', '')}")
 
     @app.command()
     def serve(

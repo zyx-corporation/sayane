@@ -46,7 +46,13 @@ def export_yaml(profile: SayaneProfile, scopes: list[str]) -> str:
 def export_markdown(profile: SayaneProfile, scopes: list[str], target: str = "generic") -> str:
     """Export selected scopes as human-readable Markdown."""
     if target == "chatgpt":
-        return _export_markdown_chatgpt(profile, scopes)
+        return _export_markdown_compact(profile, scopes, "ChatGPT")
+    if target in ("claude", "anthropic"):
+        return _export_markdown_compact(profile, scopes, "Claude")
+    if target in ("gemini", "google"):
+        return _export_markdown_compact(profile, scopes, "Gemini")
+    if target == "deepseek":
+        return _export_markdown_compact(profile, scopes, "DeepSeek")
     return _export_markdown_generic(profile, scopes, target)
 
 
@@ -237,12 +243,11 @@ def export_prompt(profile: SayaneProfile, scopes: list[str], target: str = "gene
     return "\n".join(lines)
 
 
-def _export_markdown_chatgpt(profile: SayaneProfile, scopes: list[str]) -> str:
-    """ChatGPT-optimized markdown: no code fences, concise sections, explicit context header."""
+def _export_markdown_compact(profile: SayaneProfile, scopes: list[str], target_name: str) -> str:
+    """Compact LLM-optimized format: no code fences, concise inline sections."""
     data = _pick_profile_sections(profile, scopes)
     lines: list[str] = []
-    # ChatGPT reads this as context, not a code block
-    lines.append("[Context — Sayane stored profile, not LLM memory]")
+    lines.append(f"[Context — Sayane stored profile, not LLM memory — target: {target_name}]")
     lines.append("")
 
     ident = data.get("identity")

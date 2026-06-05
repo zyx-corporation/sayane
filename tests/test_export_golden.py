@@ -15,8 +15,14 @@ def _golden(name: str) -> str:
     return FIXTURES.joinpath(name).read_text(encoding="utf-8").rstrip("\n")
 
 
+def _strip_timestamp(text: str) -> str:
+    """Remove generated timestamps so golden tests don't fail on date changes."""
+    import re
+    return re.sub(r"Generated: \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", "Generated: <TIMESTAMP>", text)
+
+
 def _assert_match(output: str, golden_name: str) -> None:
-    assert output.rstrip("\n") == _golden(golden_name)
+    assert _strip_timestamp(output.rstrip("\n")) == _strip_timestamp(_golden(golden_name))
 
 
 def test_markdown_identity_matches_golden():

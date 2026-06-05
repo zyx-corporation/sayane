@@ -23,7 +23,7 @@ def test_export_yaml_empty_scope():
 def test_export_markdown_has_identity_section():
     output = export_markdown(_profile(), ["identity"], target="chatgpt")
     assert "Example User" in output
-    assert "Identity:" in output
+    assert "## Identity" in output
 
 
 def test_export_markdown_scopes_header():

@@ -17,6 +17,9 @@ SCOPE_SECTIONS: dict[str, list[str]] = {
     "ethics": ["values", "policy"],
     "formation": ["identity", "values"],
     "important_terms": ["important_terms"],
+    "philosophy": ["values"],
+    "principles": ["knowledge"],
+    "execution": ["major_projects", "communication_mode"],
 }
 
 _PROMPT_NEVER_SECTIONS: frozenset[str] = frozenset({
@@ -244,80 +247,166 @@ def export_prompt(profile: SayaneProfile, scopes: list[str], target: str = "gene
 
 
 def _export_markdown_compact(profile: SayaneProfile, scopes: list[str], target_name: str) -> str:
-    """Compact LLM-optimized format: no code fences, concise inline sections."""
+    """Refined compact format with metadata, quote/interpretation, principles, execution_context."""
+    import datetime
     data = _pick_profile_sections(profile, scopes)
     lines: list[str] = []
-    lines.append(f"[Context — Sayane stored profile, not LLM memory — target: {target_name}]")
+    now = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    # Header
+    lines.append(f"# Sayane External Profile for {target_name}")
     lines.append("")
 
+    # Metadata
+    lines.append("## Metadata")
+    lines.append("")
+    lines.append(f"- Source: Sayane external profile")
+    lines.append(f"- LLM memory: false")
+    lines.append(f"- Generated: {now}")
+    lines.append(f"- Target: {target_name}")
+    lines.append(f"- Format: markdown")
+    lines.append(f"- Scopes: {', '.join(scopes)}")
+    lines.append("")
+
+    # Usage note
+    lines.append("## How to Use This Context")
+    lines.append("")
+    lines.append(
+        "This profile is external context supplied by Sayane. It is not "
+        f"{target_name} memory. Use it to guide responses within this session, "
+        "while respecting explicit uncertainty and avoiding unsupported assumptions."
+    )
+    lines.append("")
+
+    # Identity
     ident = data.get("identity")
     if isinstance(ident, dict):
-        parts = []
+        lines.append("## Identity")
+        lines.append("")
         if ident.get("name"):
-            parts.append(f"Name: {ident['name']}")
+            lines.append(f"- Name: {ident['name']}")
         if ident.get("preferred_name"):
-            parts.append(f"Preferred: {ident['preferred_name']}")
+            lines.append(f"- Preferred name: {ident['preferred_name']}")
         roles = ident.get("roles", [])
         if roles:
-            parts.append(f"Roles: {', '.join(roles)}")
-        if parts:
-            lines.append("Identity: " + " | ".join(parts))
-            lines.append("")
+            lines.append(f"- Roles: {', '.join(roles)}")
+        lines.append("")
 
+    # Interaction
     voice = data.get("voice")
     cm = data.get("communication_mode")
     if isinstance(voice, dict) or isinstance(cm, dict):
-        parts = []
+        lines.append("## Interaction Preferences")
+        lines.append("")
         if isinstance(voice, dict):
             if voice.get("default_language"):
-                parts.append(f"Language: {voice['default_language']}")
+                lines.append(f"- Language: {voice['default_language']}")
             tone = voice.get("tone", [])
             if tone:
-                parts.append(f"Tone: {', '.join(tone)}")
+                lines.append(f"- Tone: {', '.join(tone)}")
         if isinstance(cm, dict):
+            if cm.get("assistant_name_for_chatgpt"):
+                lines.append(f"- Assistant name: {cm['assistant_name_for_chatgpt']}")
+            if cm.get("preferred_address"):
+                lines.append(f"- Preferred address: {cm['preferred_address']}")
             cs = cm.get("collaboration_style", [])
             if cs:
-                parts.append(f"Collaboration: {', '.join(cs)}")
-        if parts:
-            lines.append("Interaction: " + " | ".join(parts))
-            lines.append("")
+                lines.append(f"- Collaboration style: {', '.join(cs)}")
+        lines.append("")
 
+    # Philosophical Stance (from values)
     values = data.get("values")
+    has_axioms = False
     if isinstance(values, dict):
         core = values.get("core", [])
         if core:
-            lines.append("Values: " + "; ".join(core))
+            lines.append("## Philosophical Stance")
+            lines.append("")
+            for i, axiom in enumerate(core):
+                lines.append(f"### Axiom {i + 1}")
+                lines.append("")
+                lines.append("Quote:")
+                lines.append("")
+                lines.append(f"> {axiom}")
+                lines.append("")
+                lines.append("Interpretation: not provided")
+                lines.append("")
+                has_axioms = True
+
+    # Principles (from knowledge concepts)
+    knowledge = data.get("knowledge")
+    if isinstance(knowledge, dict):
+        concepts = knowledge.get("concepts", [])
+        if concepts:
+            lines.append("## Principles")
+            lines.append("")
+            for c in concepts:
+                lines.append(f"- {c}")
             lines.append("")
 
+    # Policy
     policy = data.get("policy")
     if isinstance(policy, dict):
         resp = policy.get("response")
         if isinstance(resp, dict):
             prefer = resp.get("prefer", [])
             avoid = resp.get("avoid", [])
-            if prefer:
-                lines.append("Preferred: " + "; ".join(prefer))
+            if prefer or avoid:
+                lines.append("## Response Policy")
                 lines.append("")
-            if avoid:
-                lines.append("Avoid: " + "; ".join(avoid))
+                if prefer:
+                    lines.append("Prefer:")
+                    for p in prefer:
+                        lines.append(f"- {p}")
+                if avoid:
+                    lines.append("")
+                    lines.append("Avoid:")
+                    for a in avoid:
+                        lines.append(f"- {a}")
                 lines.append("")
 
-    knowledge = data.get("knowledge")
-    if isinstance(knowledge, dict):
+    # Technical / Concepts
+    if isinstance(knowledge, dict) and "philosophy" not in scopes:
+        # Only show as Concepts if not already shown as Principles
         concepts = knowledge.get("concepts", [])
-        if concepts:
-            lines.append("Concepts: " + ", ".join(concepts))
+        if concepts and "principles" not in scopes:
+            lines.append("## Technical Preferences")
+            lines.append("")
+            for c in concepts:
+                lines.append(f"- {c}")
             lines.append("")
 
+    # Execution Context
     projects = data.get("major_projects", [])
-    if projects:
-        names = [p.get("name", "") for p in projects if isinstance(p, dict)]
-        lines.append("Projects: " + ", ".join(names))
+    exec_cm = data.get("communication_mode")
+    has_exec = bool(projects) or isinstance(exec_cm, dict)
+    if has_exec:
+        lines.append("## Execution Context")
         lines.append("")
+        if projects:
+            lines.append("### Projects")
+            lines.append("")
+            for p in projects:
+                if isinstance(p, dict):
+                    name = p.get("name", "")
+                    summary = p.get("summary", "")
+                    lines.append(f"- **{name}**: {summary}" if summary else f"- {name}")
+            lines.append("")
 
+    # Important Terms
     terms = data.get("important_terms", [])
     if terms:
-        lines.append("Terms: " + ", ".join(str(t) for t in terms[:20]))
+        lines.append("## Important Terms")
         lines.append("")
+        for t in terms:
+            lines.append(f"- {t}")
+        lines.append("")
+
+    # Export Policy Notes
+    lines.append("## Export Policy Notes")
+    lines.append("")
+    lines.append("- Some private or sensitive fields may be omitted.")
+    lines.append("- `promptExport: never` fields are not included.")
+    lines.append("")
 
     return "\n".join(lines)

@@ -1,0 +1,61 @@
+# Rich fixture profile for ChatGPT export tests (#153)
+version: "0.1.0"
+kind: "SayaneProfile"
+identity:
+  name: "Tomoyuki Kano"
+  preferred_name: "Tomo"
+  roles:
+    - "developer"
+    - "researcher"
+organization:
+  name: "ZYX Corp株式会社"
+voice:
+  default_language: "ja"
+  tone:
+    - "precise"
+    - "logical"
+    - "explicit uncertainty"
+values:
+  core:
+    - "human dignity"
+    - "explicit uncertainty"
+    - "local-first autonomy"
+knowledge:
+  concepts:
+    - "RDE"
+    - "Context Portability"
+    - "Kotone"
+    - "Sayane"
+major_projects:
+  - name: "Sayane"
+    summary: "context portability tool"
+  - name: "Kotone"
+    summary: "local-first AI context foundation"
+communication_mode:
+  assistant_name_for_chatgpt: "Tomo"
+  preferred_address: "Tomo-san"
+  collaboration_style:
+    - "structured reasoning"
+    - "explicit assumptions"
+policy:
+  response:
+    prefer:
+      - "structured reasoning"
+      - "explicit uncertainty"
+    avoid:
+      - "unsupported overclaiming"
+      - "false confidence"
+important_terms:
+  - "RDE"
+  - "Context Portability"
+  - "Kotone"
+  - "Sayane"
+  - "ΔM"
+context_index:
+  entrypoint: "context/MyContext.md"
+  handoff: "context/AI_HANDOFF.md"
+  entries:
+    - "context/identity.md"
+    - "context/theory.md"
+    - "context/projects.md"
+    - "context/interaction.md"

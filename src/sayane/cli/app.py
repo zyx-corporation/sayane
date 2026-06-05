@@ -338,27 +338,22 @@ def _register_core_commands(app: typer.Typer) -> None:
         format: Annotated[str, typer.Option("--format")],
         target: Annotated[str, typer.Option("--target")] = "chatgpt",
         profile: Annotated[Path | None, typer.Option("--profile")] = None,
-        instruction: Annotated[str | None, typer.Option("--instruction")] = None,
+        scope: Annotated[str | None, typer.Option("--scope", help="Comma-separated scopes: identity,interaction,technical,...")] = None,
     ) -> None:
-        """Export compiled prompt as markdown."""
-        if format != "markdown":
-            raise typer.BadParameter(t("error.unsupported_format", format=format))
+        """Export profile context in yaml, markdown, or prompt format."""
+        from sayane.core.export import export_markdown, export_prompt, export_yaml
 
         path, loaded = _load(profile)
-        ir = build_prompt_ir(loaded, instruction=instruction, profile_root=path.parent)
-        compiled = get_adapter(target).compile(ir)
+        scopes = [s.strip() for s in scope.split(",") if s.strip()] if scope else ["identity", "interaction"]
 
-        typer.echo(t("export.title") + "\n")
-        typer.echo(t("export.target", target=compiled.target))
-        typer.echo(t("export.format", format=compiled.format) + "\n")
-        typer.echo(t("export.prompt_ir") + "\n")
-        typer.echo("```yaml")
-        typer.echo(yaml.safe_dump(ir.model_dump(mode="json"), allow_unicode=True, sort_keys=False))
-        typer.echo("```\n")
-        typer.echo(t("export.compiled") + "\n")
-        typer.echo("```json")
-        typer.echo(json.dumps(compiled.payload, ensure_ascii=False, indent=2))
-        typer.echo("```")
+        if format == "yaml":
+            typer.echo(export_yaml(loaded, scopes))
+        elif format == "markdown":
+            typer.echo(export_markdown(loaded, scopes, target))
+        elif format == "prompt":
+            typer.echo(export_prompt(loaded, scopes, target))
+        else:
+            raise typer.BadParameter(t("error.unsupported_format", format=format))
 
     @app.command()
     def serve(

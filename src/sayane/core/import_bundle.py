@@ -123,6 +123,50 @@ _IMPORTABLE_SECTIONS = frozenset({
     "execution_context",
 })
 
+# --- Import hygiene: placeholder / empty detection (#156) ---
+
+_PLACEHOLDER_IDENTITY_VALUES: frozenset[str] = frozenset({
+    "example user",
+    "example",
+    "developer",
+    "test user",
+    "sample user",
+    "test",
+    "sample",
+})
+
+
+def _is_placeholder_value(value: object) -> bool:
+    """Check if a string value is a known placeholder/fixture value."""
+    if not isinstance(value, str):
+        return False
+    return value.strip().lower() in _PLACEHOLDER_IDENTITY_VALUES
+
+
+def _contains_placeholder_identity(proposed: dict[str, Any]) -> bool:
+    """Check if identity dict contains only placeholder values."""
+    name = proposed.get("name", "")
+    preferred = proposed.get("preferred_name", "")
+    if _is_placeholder_value(name) or _is_placeholder_value(preferred):
+        return True
+    roles = proposed.get("roles", [])
+    if roles and all(_is_placeholder_value(r) for r in roles if isinstance(r, str)):
+        return True
+    return False
+
+
+def _is_empty_proposal(value: object) -> bool:
+    """Check if a proposed value is empty and should be skipped."""
+    if value is None:
+        return True
+    if isinstance(value, str) and value.strip() == "":
+        return True
+    if isinstance(value, dict) and not value:
+        return True
+    if isinstance(value, list) and not value:
+        return True
+    return False
+
 
 def import_bundle_as_candidates(
     bundle: dict[str, Any],
@@ -134,7 +178,9 @@ def import_bundle_as_candidates(
     - section: target profile section
     - current_value: value from profile (None if new)
     - proposed_value: value from bundle
-    - action: 'add' | 'update' | 'unchanged'
+    - action: 'add' | 'update' | 'skipped_placeholder' | 'skipped_empty'
+
+    Placeholder identity values and empty proposals are skipped (#156).
     """
     candidates: list[dict[str, Any]] = []
     profile_dict = profile.model_dump(mode="json")
@@ -144,6 +190,14 @@ def import_bundle_as_candidates(
             continue
         proposed = bundle[key]
         existing = profile_dict.get(key)
+
+        # Skip empty proposals (#156)
+        if _is_empty_proposal(proposed):
+            continue
+
+        # Skip placeholder identity updates (#156)
+        if key == "identity" and isinstance(proposed, dict) and _contains_placeholder_identity(proposed):
+            continue
 
         if existing is None and proposed:
             candidates.append({

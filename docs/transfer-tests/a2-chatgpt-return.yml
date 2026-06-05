@@ -1,66 +1,44 @@
 metadata:
-  source: chatgpt_roundtrip
-  source_profile_type: Sayane external profile
+  source: "chatgpt_roundtrip"
+  source_profile_type: "Sayane external profile"
   llm_memory: false
-  target_for_import: sayane
-  generated_by: chatgpt
-  roundtrip_stage: A2
-  uncertainty: items are candidates, not canonical facts
-
+  target_for_import: "sayane"
+  generated_by: "chatgpt"
+  roundtrip_stage: "A2"
+  uncertainty: "items are candidates, not canonical facts"
 identity:
-  name: Example User
-  preferred_name: example
+  name: "Example User"
+  preferred_name: "example"
   roles:
-    - developer
-
+    - "developer"
 interaction:
-  language: ja
-  tone:
-    - precise
-    - logical
-
+  language: "ja"
+  tone: "precise, logical"
 writing:
-  # Writing preferences were not explicitly stated in the source profile.
-  # The following is an inferred extension and should be treated as a candidate.
-  inferred_candidate:
-    style: structured, concise, explicit-uncertainty
-    note: "Inferred from interaction tone (precise, logical) and values (explicit uncertainty). Not explicitly confirmed in source profile."
-
+  prefer:
+    - "structured reasoning"
+  avoid:
+    - "unsupported overclaiming"
 technical:
-  concepts:
-    - RDE
-    - Sayane
-
+  preferences:
+    - "RDE"
+    - "Sayane"
 principles:
-  inferred_candidate:
-    items:
-      - Context is stored and audited outside the LLM
-      - Context portability must preserve source, scope, and lineage
-    note: "Extracted from Sayane-related concepts and project summaries. These are inferred extensions, not literal profile entries."
-
-execution_context:
-  inferred_candidate:
-    projects:
-      - name: Sayane
-        summary: context portability tool
-      - name: Kotone
-        summary: local-first AI context foundation
-    communication_mode:
-      collaboration_style: structured reasoning, explicit assumptions
-      assistant_name_for_chatgpt: Tomo
-      preferred_address: Tomo-san
-    note: "Projects and communication mode were present in source profile but structured here for execution_context. Candidate status: review required."
-
+  - "RDE"
+  - "Sayane"
+philosophical_stance:
+  axioms:
+    - quote: "human dignity"
+      interpretation: "not provided"
+    - quote: "explicit uncertainty"
+      interpretation: "not provided"
+execution_context: {}
+important_terms:
+  - "RDE"
+  - "Sayane"
 notes:
-  unchanged:
-    - identity
-    - interaction
-    - technical concepts
-  inferred:
-    - writing style inferred from tone and values
-    - principles interpreted from concepts and project context
-    - execution_context organized from project and communication data
-  unresolved:
-    - no explicit writing preferences in source
-    - no explicit execution_context section in source; data reorganized from other sections
-    - note field may need structural mapping adjustment for Sayane import
+  inferred: []
+  unresolved: []
+  omitted:
+    - "Private or sensitive fields may be omitted."
+    - "promptExport: never fields are not included."

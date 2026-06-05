@@ -5,6 +5,27 @@ All notable changes to the Sayane Community Edition (OSS) are documented in this
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
+## [1.0.0] - 2026-06-05 Context Acceptance
+
+### Summary
+
+Sayane v1.0.0 is the first stable architecture release for local-first LLM context acceptance, completing the Phase 3-19 implementation chain.
+
+### Added
+
+- Candidate-based context import flow
+- Semantic Review for overlap, unstable placement, boundary-sensitive
+- Human review workflow: approve, reject, modify, defer
+- Append-only audit trail
+- Bundle provenance and SHA-256 verification
+- Transfer regression dashboard
+- Policy profiles and custom policy files
+- Decision diff viewer
+- Audit export in Markdown/JSON/JSONL
+- Ed25519 signing and tamper detection
+- Signed export package
+- Public narrative, architecture diagrams, CLI reference
+
 
 ### Added
 - Phase 6–17 release closure: context acceptance, semantic review, human review workflow, audit trail, bundle provenance, regression dashboard, policy profiles, custom policy files, cryptographic signing, and signed export packages. See docs/release/phase6-17-release-closure.md.

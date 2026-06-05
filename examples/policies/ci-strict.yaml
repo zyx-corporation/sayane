@@ -1,0 +1,9 @@
+schema_version: sayane-policy-v1
+name: ci-strict
+extends: strict
+description: "CI policy: strict import verification, unsigned bundles allowed for now."
+rules:
+  bundle_verification:
+    signature_unsigned: warn
+  transfer_report:
+    fail_on_warnings: true

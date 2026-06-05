@@ -666,10 +666,12 @@ def _register_core_commands(app: typer.Typer) -> None:
 
     @app.command()
     def policy(
-        action: Annotated[str, typer.Argument(help="list | show")],
+        action: Annotated[str, typer.Argument(help="list | show | validate")],
         profile_name: Annotated[str | None, typer.Argument()] = None,
+        policy_file: Annotated[Path | None, typer.Option("--file", help="Policy file path.")] = None,
+        strict: Annotated[bool, typer.Option("--strict", help="Strict validation.")] = False,
     ) -> None:
-        """List or show import policy profiles (Phase 11)."""
+        """List, show, or validate import policy profiles (Phase 11/15)."""
         import json as _json
         from sayane.core.import_policy import get_policy, list_policies
 
@@ -678,9 +680,35 @@ def _register_core_commands(app: typer.Typer) -> None:
             typer.echo(f"Available policies: {', '.join(names)}")
             return
 
-        if action == "show":
+        if action == "validate":
+            if not policy_file:
+                raise typer.BadParameter("--file required for validate")
+            from sayane.core.policy_file import load_and_validate, resolve_effective_policy
+
+            policy_data, errors = load_and_validate(policy_file)
+            if errors:
+                typer.echo("Invalid policy file:")
+                for e in errors:
+                    typer.echo(f"  - {e}")
+                raise typer.Exit(2)
+            effective = resolve_effective_policy(policy_data)
+            typer.echo(f"Policy file valid: {policy_data['name']} (extends: {policy_data['extends']})")
+
+        elif action == "show":
+            if policy_file:
+                from sayane.core.policy_file import load_and_validate, resolve_effective_policy
+                policy_data, errors = load_and_validate(policy_file)
+                if errors:
+                    for e in errors:
+                        typer.echo(f"Error: {e}", err=True)
+                    raise typer.Exit(2)
+                effective = resolve_effective_policy(policy_data)
+                if effective:
+                    typer.echo(_json.dumps(effective, ensure_ascii=False, indent=2))
+                return
+
             if not profile_name:
-                raise typer.BadParameter("profile name required for 'show'")
+                raise typer.BadParameter("profile name or --file required for 'show'")
             profile = get_policy(profile_name)
             if profile is None:
                 typer.echo(f"Unknown policy: {profile_name}")

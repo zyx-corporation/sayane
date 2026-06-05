@@ -27,6 +27,7 @@ import {
   matchesReviewFilter,
   recommendedActionKeyForCandidate,
   reviewClassLabelKey,
+  reviewClassTooltipKey,
   riskHintKeyForCandidate,
   type ReviewFilterId,
 } from "./candidate-review-class.js";
@@ -1547,6 +1548,7 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     const badge = document.createElement("span");
     badge.className = `class-badge class-${cls}`;
     badge.textContent = t(reviewClassLabelKey(cls));
+    badge.title = t(reviewClassTooltipKey(cls));
     article.appendChild(badge);
 
     const summary = document.createElement("p");

@@ -192,6 +192,10 @@ export function reviewClassLabelKey(cls: CandidateReviewClass): string {
   return `review.class.${cls}`;
 }
 
+export function reviewClassTooltipKey(cls: CandidateReviewClass): string {
+  return `review.class.tooltip.${cls}`;
+}
+
 export function recommendedActionKey(cls: CandidateReviewClass): string {
   return `review.action.${cls}`;
 }

@@ -6,6 +6,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- Phase 6–17 release closure: context acceptance, semantic review, human review workflow, audit trail, bundle provenance, regression dashboard, policy profiles, custom policy files, cryptographic signing, and signed export packages. See docs/release/phase6-17-release-closure.md.
+
 ## [1.0.3] - 2026-05-31
 
 ### Added

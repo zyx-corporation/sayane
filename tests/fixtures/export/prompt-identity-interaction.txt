@@ -1,0 +1,8 @@
+[Context]
+
+You are interacting with: Example User
+Use preferred form of address: example
+Roles: developer
+
+Language: ja
+Tone: precise, logical

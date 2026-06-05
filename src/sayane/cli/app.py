@@ -457,6 +457,53 @@ def _register_core_commands(app: typer.Typer) -> None:
         save_decision("default", decision)
         typer.echo(f"Decision recorded: [{decision.decision.upper()}] {candidate_id} — lineage event: {decision.lineage_event_id[:12]}")
 
+        # Append to audit trail (Phase 8)
+        from sayane.core.audit_trail import build_audit_record, get_audit_store
+        store = get_audit_store()
+        audit = build_audit_record(decision, profile_updated=(action in ("approve", "modify")))
+        store.append(audit)
+        typer.echo(f"Audit: appended to {store.path}")
+
+    @app.command()
+    def audit(
+        action: Annotated[str, typer.Argument(help="list | by-candidate | by-term | unresolved")],
+        query_value: Annotated[str | None, typer.Argument()] = None,
+    ) -> None:
+        """Query the review decision audit trail (Phase 8)."""
+        from sayane.core.audit_trail import get_audit_store
+        store = get_audit_store()
+        records = store.read_all()
+
+        if action == "list":
+            if not records:
+                typer.echo("No audit records.")
+                return
+            typer.echo(f"{len(records)} audit record(s):")
+            for r in records[-20:]:  # last 20
+                d = r["decision"]
+                c = r["candidate"]
+                applied = f" → {json.dumps(r['result']['applied_value'], ensure_ascii=False)[:60]}" if r["result"]["applied_value"] else ""
+                typer.echo(f"  [{d['type'].upper()}] {c['section']} — {d['reason'][:60]}{applied}")
+
+        elif action == "by-candidate":
+            if not query_value:
+                raise typer.BadParameter("candidate_id required for by-candidate")
+            matches = store.query(candidate_id=query_value)
+            typer.echo(f"{len(matches)} record(s) for candidate {query_value}:")
+            for r in matches:
+                typer.echo(f"  [{r['decision']['type'].upper()}] {r['decision']['reason'][:80]}")
+
+        elif action == "by-term":
+            if not query_value:
+                raise typer.BadParameter("term required for by-term")
+            matches = store.query(term=query_value)
+            typer.echo(f"{len(matches)} record(s) for term '{query_value}':")
+            for r in matches:
+                typer.echo(f"  [{r['decision']['type'].upper()}] {r['candidate']['section']} — flags={r['candidate'].get('flags', [])}")
+
+        else:
+            raise typer.BadParameter(f"Unknown audit action: {action}")
+
     @app.command()
     def serve(
         host: Annotated[str, typer.Option("--host")] = "127.0.0.1",

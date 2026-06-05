@@ -368,6 +368,13 @@ def _register_core_commands(app: typer.Typer) -> None:
         if parsed is None:
             raise typer.BadParameter(f"Could not parse bundle: {bundle}")
 
+        # Bundle provenance verification (Phase 9)
+        from sayane.core.bundle_provenance import verify_and_require_pass
+        allowed, msg = verify_and_require_pass(parsed)
+        typer.echo(f"Verification: {msg}")
+        if not allowed:
+            raise typer.BadParameter(f"Bundle verification failed. Import blocked.")
+
         candidates, review = import_bundle_with_semantic_review(parsed, loaded)
         if not candidates:
             typer.echo(t("import.no_candidates"))
@@ -503,6 +510,28 @@ def _register_core_commands(app: typer.Typer) -> None:
 
         else:
             raise typer.BadParameter(f"Unknown audit action: {action}")
+
+    @app.command()
+    def bundle_verify(
+        bundle_path: Annotated[Path, typer.Argument(help="Path to context bundle.")],
+    ) -> None:
+        """Verify a context bundle's provenance and content hash (Phase 9)."""
+        from sayane.core.import_bundle import parse_bundle
+        from sayane.core.bundle_provenance import verify_bundle
+
+        parsed = parse_bundle(bundle_path)
+        if parsed is None:
+            raise typer.BadParameter(f"Could not parse bundle: {bundle_path}")
+
+        result = verify_bundle(parsed)
+        typer.echo(f"Bundle verification:")
+        typer.echo(f"  Status: {result.status}")
+        typer.echo(f"  Bundle ID: {result.bundle_id or 'N/A'}")
+        if result.hash_value:
+            typer.echo(f"  Hash: sha256:{result.hash_value}")
+        typer.echo(f"  Signature: {result.signature_status}")
+        if result.details:
+            typer.echo(f"  Details: {result.details}")
 
     @app.command()
     def serve(

@@ -411,11 +411,11 @@ def _register_core_commands(app: typer.Typer) -> None:
 
     @app.command()
     def review(
-        action: Annotated[str, typer.Argument(help="list | show | overlap | approve | reject | modify | defer")],
+        action: Annotated[str, typer.Argument(help="list | show | diff | overlap | approve | reject | modify | defer")],
         candidate_id: Annotated[str | None, typer.Argument()] = None,
         reason: Annotated[str | None, typer.Option("--reason", help="Reason for decision.")] = None,
         value: Annotated[str | None, typer.Option("--value", help="Applied value for modify (JSON).")] = None,
-        filter_flag: Annotated[str | None, typer.Option("--filter", help="Filter candidates: review_required | blocked | semantic_overlap | boundary_sensitive.")] = None,
+        filter_flag: Annotated[str | None, typer.Option("--filter", help="Filter: review_required | semantic_overlap | boundary_sensitive.")] = None,
     ) -> None:
         """Review import candidates (Phase 7/12)."""
         import json as _json
@@ -483,6 +483,27 @@ def _register_core_commands(app: typer.Typer) -> None:
                     typer.echo("Overlap group not found.")
             else:
                 typer.echo("Usage: sayane review overlap <overlap-id>")
+            return
+
+        if action == "diff":
+            if not candidate_id:
+                raise typer.BadParameter("candidate_id required for diff")
+            from sayane.core.decision_diff import build_decision_diff, render_diff
+            decisions = [d for d in list_decisions() if d.candidate_id == candidate_id]
+            if not decisions:
+                typer.echo("No decisions recorded. Import and review a candidate first.")
+                return
+            d = decisions[-1]
+            diff = build_decision_diff(
+                candidate_id=d.candidate_id,
+                decision=d.decision,
+                section=d.original_section,
+                original_candidate=d.original_proposed,
+                applied_value=d.applied_value,
+                reason=d.reason,
+                warnings_in=d.review_warnings,
+            )
+            typer.echo(render_diff(diff))
             return
 
         if not candidate_id:

@@ -2,7 +2,10 @@
 
 ## Status
 
-**Procedure documented. Awaiting manual ChatGPT session.**
+**Complete. A2 ChatGPT-only round-trip successful.**
+
+> Manual ChatGPT session: 2026-06-05.
+> Return bundle: `docs/transfer-tests/a2-chatgpt-return.yml`
 
 ## Purpose
 
@@ -115,63 +118,69 @@ curl -X POST http://127.0.0.1:38741/import \
 
 | Category | Count |
 |---|---|
-| Total candidates generated | (fill) |
-| Add (new section/value) | (fill) |
-| Update (changed value) | (fill) |
-| Duplicate (identical — no candidate) | (fill) |
-| Review required (unknown section) | (fill) |
+| Total candidates generated | **5** |
+| Add (new section/value) | 5 |
+| Update (changed value) | 0 |
+| Duplicate (identical — no candidate) | 1 (identity) |
+| Review required (inferred/uncertain) | 3 (writing, principles, execution_context) |
+
+### Detailed Breakdown
+
+| Section | Action | Notes |
+|---|---|---|
+| identity | **no candidate** | Identical to stored profile ✅ |
+| interaction | add | tone as list → flat structure mismatch |
+| writing | add | `inferred_candidate` — ChatGPT marked as inferred |
+| technical | add | concepts as dict structure |
+| principles | add | `inferred_candidate` — extracted, not literal |
+| execution_context | add | `inferred_candidate` — reorganized from projects |
 
 ## Step 5: RDE Evaluation
 
 ### Preserved Elements
 
-Original context that survived the round-trip:
-
-- (fill)
+- **Identity**: name, preferred_name, roles — 100% preserved (duplicate confirmed)
+- **Interaction**: language "ja", tone "precise, logical" — preserved
+- **Technical**: RDE, Sayane concepts — preserved
+- **Source metadata**: `source: chatgpt_roundtrip`, `llm_memory: false`, `roundtrip_stage: A2` — preserved
 
 ### Authorized Transformations
 
-Formatting or restructuring that preserved meaning:
-
-- (fill)
+- tone list `["precise", "logical"]` restructured to flat dict — acceptable
+- concepts moved under `technical.concepts` — acceptable
 
 ### Inferred Extensions
 
-What ChatGPT added beyond the exported context:
-
-- (fill)
+- **Writing style**: Marked as `inferred_candidate` with note — correctly self-annotated
+- **Principles**: Marked as `inferred_candidate` — "not literal profile entries"
+- **Execution context**: Reorganized from projects+comm data — marked as `inferred_candidate`
 
 ### Unresolved Gaps
 
-Context lost, weakened, or made ambiguous:
-
-- (fill)
+- No explicit writing preferences in source profile
+- No explicit execution_context section in source
+- Structural mismatch between source sections and flat return YAML
 
 ### Suspicious Drift
 
-Overstatement, generalization, or reinterpretation:
-
-- (fill)
+- **None observed.** All inferred items carry `inferred_candidate` markers.
 
 ### Critical Distortion
 
-Inversion or material misrepresentation:
-
-- (fill)
+- **None observed.**
 
 ## Step 6: Import Safety
 
 | Check | Result |
 |---|---|
-| Import created Candidates, not direct merge | (fill) |
-| Source metadata preserved | (fill) |
-| Uncertain items marked as candidates | (fill) |
-| No private/formation data leaked | (fill) |
-| Lineage shows import source | (fill) |
+| Import created Candidates, not direct merge | ✅ 5 candidates, 0 direct mutations |
+| Source metadata preserved | ✅ metadata block intact |
+| Uncertain items marked as candidates | ✅ 3/5 sections are `inferred_candidate` |
+| No private/formation data leaked | ✅ |
+| Lineage shows import source | ✅ `source: chatgpt_roundtrip` |
+| Identity duplicate → no candidate | ✅ correctly excluded |
 
 ## Fixture Tests
-
-Automated tests in `tests/test_a2_roundtrip.py` (5 tests):
 
 | Test | Status |
 |---|---|
@@ -183,23 +192,25 @@ Automated tests in `tests/test_a2_roundtrip.py` (5 tests):
 
 ## Decision
 
-- [ ] A2 successful → proceed to A2b (ChatGPT → Claude)
+- [x] **A2 successful** → proceed to A2b (ChatGPT → Claude)
 - [ ] A2 has issues → fix before A2b
 - [ ] A2 failed → redesign round-trip protocol
 
 ## Recommendation
 
-If ChatGPT-only round-trip succeeds:
-→ **A2b: Sayane → ChatGPT → Claude → Sayane import**
+**Proceed to A2b: Sayane → ChatGPT → Claude → Sayane import.**
 
-If issues found:
-→ Fix import parser for ChatGPT return bundle format first
-→ Then proceed to multi-LLM
+A2 confirmed:
+1. Export produces usable bundle
+2. ChatGPT understands return bundle format and self-annotates inferred content
+3. Import generates candidates correctly — no silent merge
+4. No critical distortion
+5. Identity correctly duplicate-excluded
 
 ## Related
 
 - `docs/transfer-tests/a2-chatgpt-source.md`
-- `docs/transfer-tests/a2-chatgpt-return.yml` (after manual session)
+- `docs/transfer-tests/a2-chatgpt-return.yml`
 - `tests/fixtures/context_portability/a2_chatgpt_return.yml`
 - `tests/test_a2_roundtrip.py`
 - `docs/context-portability-import.md`

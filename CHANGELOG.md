@@ -8,6 +8,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 - Phase 6–17 release closure: context acceptance, semantic review, human review workflow, audit trail, bundle provenance, regression dashboard, policy profiles, custom policy files, cryptographic signing, and signed export packages. See docs/release/phase6-17-release-closure.md.
+- Add public narrative and architecture documentation for Sayane context acceptance and verifiable handoff.
+- Add CLI command reference for review, audit, policy, signing, and package workflows.
 
 ## [1.0.3] - 2026-05-31
 

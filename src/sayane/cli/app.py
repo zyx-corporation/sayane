@@ -356,6 +356,32 @@ def _register_core_commands(app: typer.Typer) -> None:
             raise typer.BadParameter(t("error.unsupported_format", format=format))
 
     @app.command()
+    def import_bundle(
+        bundle: Annotated[Path, typer.Argument(help="Path to portable context bundle (yaml/md).")],
+        profile: Annotated[Path | None, typer.Option("--profile")] = None,
+    ) -> None:
+        """Import a portable context bundle as reviewable Candidates (#143)."""
+        from sayane.core.import_bundle import import_bundle_as_candidates, parse_bundle
+
+        path, loaded = _load(profile)
+        parsed = parse_bundle(bundle)
+        if parsed is None:
+            raise typer.BadParameter(f"Could not parse bundle: {bundle}")
+
+        candidates = import_bundle_as_candidates(parsed, loaded)
+        if not candidates:
+            typer.echo(t("import.no_candidates"))
+            return
+        typer.echo(t("import.candidates_header", count=len(candidates)))
+        for i, c in enumerate(candidates):
+            typer.echo(f"\n--- Candidate {i + 1} ---")
+            typer.echo(f"  Section: {c['section']}")
+            typer.echo(f"  Action:  {c['action']}")
+            if c['current_value']:
+                typer.echo(f"  Current: {json.dumps(c['current_value'], ensure_ascii=False)[:120]}")
+            typer.echo(f"  Proposed: {json.dumps(c['proposed_value'], ensure_ascii=False)[:120]}")
+
+    @app.command()
     def serve(
         host: Annotated[str, typer.Option("--host")] = "127.0.0.1",
         port: Annotated[int, typer.Option("--port")] = 38741,

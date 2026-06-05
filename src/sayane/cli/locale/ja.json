@@ -24,6 +24,8 @@
   "export.format": "- 形式: {format}",
   "export.prompt_ir": "## Prompt IR",
   "export.compiled": "## コンパイル結果",
+  "import.no_candidates": "差分はありません。バンドルの内容は保存済み文脈と一致しています。",
+  "import.candidates_header": "{count} 件の候補が見つかりました:",
   "serve.listening": "Local Bridge: http://{host}:{port} で待ち受け中",
   "serve.build_info": "Sayane {version} · コードベース更新 {updated_at}",
   "serve.token_file": "Bearer トークン: {path}",

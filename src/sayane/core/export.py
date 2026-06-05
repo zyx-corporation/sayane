@@ -355,7 +355,11 @@ def _export_markdown_compact(profile: SayaneProfile, scopes: list[str], target_n
     lines.append("")
     lines.append(
         "This profile is external context supplied by Sayane. It is not "
-        f"{target_name} memory. Use it to guide responses within this session, "
+        f"{target_name} memory. "
+        "Sayane is the external context portability system that generated "
+        "this profile. It is not the receiving assistant's name, identity, or memory. "
+        "This profile does not rename or redefine the receiving assistant. "
+        "Use it to guide responses within this session, "
         "while respecting explicit uncertainty and avoiding unsupported assumptions."
     )
     lines.append("")

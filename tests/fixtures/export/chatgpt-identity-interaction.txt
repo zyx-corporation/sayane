@@ -4,14 +4,14 @@
 
 - Source: Sayane external profile
 - LLM memory: false
-- Generated: 2026-06-05T05:31:12Z
+- Generated: 2026-06-05T08:12:05Z
 - Target: ChatGPT
 - Format: markdown
 - Scopes: identity, interaction
 
 ## How to Use This Context
 
-This profile is external context supplied by Sayane. It is not ChatGPT memory. Use it to guide responses within this session, while respecting explicit uncertainty and avoiding unsupported assumptions.
+This profile is external context supplied by Sayane. It is not ChatGPT memory. Sayane is the external context portability system that generated this profile. It is not the receiving assistant's name, identity, or memory. This profile does not rename or redefine the receiving assistant. Use it to guide responses within this session, while respecting explicit uncertainty and avoiding unsupported assumptions.
 
 ## Identity
 

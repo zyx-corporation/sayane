@@ -9,6 +9,15 @@
 
 ## Baseline Source Correction
 
+## Identity Boundary Observation
+
+In the first Claude manual review, Claude asked whether Sayane was the context
+system rather than a replacement for the assistant name. This was a useful
+positive signal, but the adapter now explicitly clarifies that Sayane is the
+external context portability system and does not rename or redefine the
+receiving assistant.
+
+
 The first manual Claude review identified that the exported source used generic fixture identity values. This was invalid for preservation-quality evaluation.
 
 **Corrected source** uses representative profile data:

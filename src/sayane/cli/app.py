@@ -572,6 +572,32 @@ def _register_core_commands(app: typer.Typer) -> None:
             raise typer.Exit(1)
 
     @app.command()
+    def policy(
+        action: Annotated[str, typer.Argument(help="list | show")],
+        profile_name: Annotated[str | None, typer.Argument()] = None,
+    ) -> None:
+        """List or show import policy profiles (Phase 11)."""
+        import json as _json
+        from sayane.core.import_policy import get_policy, list_policies
+
+        if action == "list":
+            names = list_policies()
+            typer.echo(f"Available policies: {', '.join(names)}")
+            return
+
+        if action == "show":
+            if not profile_name:
+                raise typer.BadParameter("profile name required for 'show'")
+            profile = get_policy(profile_name)
+            if profile is None:
+                typer.echo(f"Unknown policy: {profile_name}")
+                return
+            typer.echo(_json.dumps(profile, ensure_ascii=False, indent=2))
+            return
+
+        raise typer.BadParameter(f"Unknown action: {action}")
+
+    @app.command()
     def serve(
         host: Annotated[str, typer.Option("--host")] = "127.0.0.1",
         port: Annotated[int, typer.Option("--port")] = 38741,

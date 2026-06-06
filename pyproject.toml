@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "sayane"
-version = "1.0.4"
+version = "1.0.5"
 description = "Local-first persona and context portability for cross-LLM collaboration"
 readme = "README.md"
 license = "Apache-2.0"
@@ -25,6 +25,7 @@ dependencies = [
     "fastapi>=0.115",
     "pydantic>=2.10",
     "pyyaml>=6.0",
+    "cryptography>=41.0",
     "typer>=0.15",
     "uvicorn[standard]>=0.32",
     "mcp>=1.6",

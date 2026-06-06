@@ -411,10 +411,13 @@ def _register_core_commands(app: typer.Typer) -> None:
 
     @app.command()
     def review(
-        action: Annotated[str, typer.Argument(help="list | show | diff | overlap | approve | reject | modify | defer")],
+        action: Annotated[str, typer.Argument(help="list | show | diff | overlap | approve | reject | modify | defer | scoped-accept")],
         candidate_id: Annotated[str | None, typer.Argument()] = None,
         reason: Annotated[str | None, typer.Option("--reason", help="Reason for decision.")] = None,
         value: Annotated[str | None, typer.Option("--value", help="Applied value for modify (JSON).")] = None,
+        scope: Annotated[str | None, typer.Option("--scope", help="Accepted scope: level:target:subscope.")] = None,
+        conditions: Annotated[str | None, typer.Option("--conditions", help="Comma-separated conditions.")] = None,
+        negative: Annotated[str | None, typer.Option("--negative", help="Comma-separated negative constraints.")] = None,
         filter_flag: Annotated[str | None, typer.Option("--filter", help="Filter: review_required | semantic_overlap | boundary_sensitive.")] = None,
     ) -> None:
         """Review import candidates (Phase 7/12)."""
@@ -507,7 +510,35 @@ def _register_core_commands(app: typer.Typer) -> None:
             return
 
         if not candidate_id:
-            raise typer.BadParameter("candidate_id required for approve/reject/modify/defer")
+            raise typer.BadParameter("candidate_id required for approve/reject/modify/defer/scoped-accept")
+
+        if action == "scoped-accept":
+            scope_parts = (scope or "").split(":")
+            accepted_scope = {
+                "level": scope_parts[0] if len(scope_parts) > 0 else "project",
+                "target": scope_parts[1] if len(scope_parts) > 1 else None,
+                "sub_scope": scope_parts[2] if len(scope_parts) > 2 else None,
+            }
+            cond_list = [c.strip() for c in (conditions or "").split(",") if c.strip()]
+            neg_list = [n.strip() for n in (negative or "").split(",") if n.strip()]
+            decision = ReviewDecision(
+                candidate_id=candidate_id,
+                decision="scoped_accept",
+                reason=reason or "",
+                accepted_scope=accepted_scope,
+                conditions=cond_list,
+                negative_constraints=neg_list,
+                promotion_policy={"can_promote": False},
+                reuse_policy={"review_on_reuse": True},
+            )
+            errors = validate_decision(decision, has_review_required=True)
+            if errors:
+                for e in errors:
+                    typer.echo(f"Error: {e}", err=True)
+                raise typer.Exit(1)
+            save_decision("default", decision)
+            typer.echo(f"Scoped accept: {candidate_id} → {accepted_scope}")
+            return
 
         applied_value = None
         if value:

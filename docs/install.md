@@ -138,7 +138,7 @@ scoop install sayane
 
 | 方式 | 用途 |
 |------|------|
-| PyPI `pip install sayane` | **利用可能**（v1.0.3+、[#82](https://github.com/zyx-corporation/sayane/issues/82)） |
+| PyPI `pip install sayane` | **利用可能**（v1.0.5+、[#82](https://github.com/zyx-corporation/sayane/issues/82)） |
 
 ---
 
@@ -172,26 +172,26 @@ sayane serve                   # Bridge（Extension 用）
 
 ## PyPI
 
-**公開済み:** https://pypi.org/project/sayane/ （v1.0.3+）
+**公開済み:** https://pypi.org/project/sayane/ （v1.0.5+）
 
 ```bash
 pip install sayane
 # または特定版（zsh ではクォート推奨）:
-pip install 'sayane==1.0.3'
+pip install sayane==1.0.5
 ```
 
-> **zsh ユーザー:** `sayane==1.0.3` をクォートしないと `zsh: 1.0.3 not found` になることがあります。
+> **zsh ユーザー:** `sayane==1.0.5` をクォートしないと `zsh: 1.0.5 not found` になることがあります。
 
 PyPI には **CLI + Bridge + MCP** のみ含まれます。Chrome Extension は別途 [Extension マニュアル](extension-manual.md) を参照。
 
-初回公開: **2026-05-30** — `sayane==1.0.3` on https://pypi.org/project/sayane/ ([#82](https://github.com/zyx-corporation/sayane/issues/82) closed).
+初回公開: **2026-05-30** — `sayane==1.0.5` on https://pypi.org/project/sayane/ ([#82](https://github.com/zyx-corporation/sayane/issues/82) closed).
 
 Maintainer 手順（再公開時）: 以下チェックリスト。
 
 Git タグから直接:
 
 ```bash
-pip install "sayane @ git+https://github.com/zyx-corporation/sayane.git@v1.0.3"
+pip install "sayane @ git+https://github.com/zyx-corporation/sayane.git@v1.0.5"
 ```
 
 公開履歴は [CHANGELOG](../CHANGELOG.md) を参照。

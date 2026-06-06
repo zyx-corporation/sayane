@@ -78,7 +78,7 @@ Profile ドロップダウンは `/profiles` から取得。Candidate 一覧は 
 3. `sayane serve` 常駐 + Extension Options で token 設定
 4. popup → **Insert context (Open WebUI)**
 
-zsh で CLI を使う場合: `pip install 'sayane==1.0.3'`（`==` はクォート推奨）。
+zsh で CLI を使う場合: `pip install sayane==1.0.5`（`==` はクォート推奨）。
 
 | 症状 | 対処 |
 |------|------|

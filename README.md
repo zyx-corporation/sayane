@@ -32,7 +32,7 @@ Sayane separates your context from any single vendor memory or chat service. It 
 
 ## Current status
 
-Community Edition **v1.0.3** is available on PyPI and supports the core local-first workflow.
+Community Edition **v1.0.5** is available on PyPI and supports the core local-first workflow.
 
 | Interface | Status | Primary use |
 |-----------|--------|-------------|
@@ -49,7 +49,7 @@ Install the CLI first. See [docs/install.md](docs/install.md) for detailed insta
 
 ```bash
 # PyPI (macOS / Linux / Windows with Python 3.11+)
-pip install 'sayane==1.0.3'
+pip install sayane==1.0.5
 ```
 
 ```bash

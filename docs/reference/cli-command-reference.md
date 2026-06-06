@@ -1,5 +1,7 @@
 # Sayane CLI Command Reference
 
+Target: Sayane `1.0.5` (PyPI) / v1.0 Context Acceptance architecture.
+
 Phase 6–17 commands for context acceptance and verifiable handoff.
 
 ---

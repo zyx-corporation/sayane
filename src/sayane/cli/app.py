@@ -693,12 +693,12 @@ def _register_core_commands(app: typer.Typer) -> None:
     @app.command()
     def transfer_report(
         output: Annotated[Path, typer.Option("--output", "-o", help="Output file path.")] = Path("docs/transfer-tests/transfer-regression-report.md"),
-        format: Annotated[str, typer.Option("--format", help="Output format: markdown | json")] = "markdown",
+        format: Annotated[str, typer.Option("--format", help="Output format: markdown | json | html")] = "markdown",
         fixtures_dir: Annotated[Path, typer.Option("--fixtures", help="Transfer fixtures directory.")] = Path("docs/transfer-tests"),
         audit_path: Annotated[Path | None, typer.Option("--audit", help="Audit store path.")] = None,
         fail_on_warnings: Annotated[bool, typer.Option("--fail-on-warnings")] = False,
     ) -> None:
-        """Generate a cross-LLM transfer regression dashboard report (Phase 10)."""
+        """Generate a cross-LLM transfer regression dashboard report (Phase 10/F-5)."""
         from sayane.core.audit_trail import AuditStore
         from sayane.core.transfer_report import generate_transfer_report, render_markdown_report
 
@@ -714,6 +714,9 @@ def _register_core_commands(app: typer.Typer) -> None:
         if format == "json":
             import json as _json
             content = _json.dumps(report, ensure_ascii=False, indent=2)
+        elif format == "html":
+            from sayane.core.transfer_report_html import render_html_report
+            content = render_html_report(report)
         else:
             content = render_markdown_report(report)
 

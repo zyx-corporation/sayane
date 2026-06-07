@@ -1,0 +1,26 @@
+{
+  "id": "c-001",
+  "status": "scoped_accept",
+  "flags": ["review_required", "promotion_risk", "scope_leak_risk"],
+  "content": "Zenn第2回の導入部では、やや強い問題提起を許容する。",
+  "accepted_scope": {
+    "level": "project",
+    "target": "zenn-sayane-series",
+    "sub_scope": "article-02-introduction"
+  },
+  "conditions": [
+    "読者の問題意識を喚起する目的に限定",
+    "人格・恒常的嗜好として扱わない"
+  ],
+  "negative_constraints": [
+    "global writing preference に昇格しない",
+    "MCP出力時にscope注記を落とさない"
+  ],
+  "promotion_policy": {
+    "can_promote": false,
+    "requires_review_for": ["project_to_global", "example_to_rule"]
+  },
+  "reuse_policy": {
+    "review_on_reuse": true
+  }
+}

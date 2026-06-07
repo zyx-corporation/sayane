@@ -466,6 +466,21 @@ def _register_core_commands(app: typer.Typer) -> None:
                 typer.echo(f"  Reason:  {d.reason or 'N/A'}")
                 if d.applied_value:
                     typer.echo(f"  Applied: {_json.dumps(d.applied_value, ensure_ascii=False)[:120]}")
+                # F-1.5/F-3: scoped accept metadata
+                if d.decision == "scoped_accept":
+                    if d.accepted_scope:
+                        typer.echo(f"  Scope:   {d.accepted_scope.get('level', '?')}:{d.accepted_scope.get('target', '?')}:{d.accepted_scope.get('sub_scope', '?')}")
+                    if d.conditions:
+                        typer.echo(f"  Conditions:")
+                        for c in d.conditions:
+                            typer.echo(f"    - {c}")
+                    if d.negative_constraints:
+                        typer.echo(f"  Must NOT:")
+                        for nc in d.negative_constraints:
+                            typer.echo(f"    - {nc}")
+                    pp = d.promotion_policy or {}
+                    if pp.get("can_promote") is False:
+                        typer.echo(f"  Promotion: blocked (requires review)")
                 typer.echo(f"  Lineage: {d.lineage_event_id[:12]}")
             else:
                 typer.echo("  No decisions recorded. Import a bundle first, then use review approve/reject/modify/defer.")

@@ -831,7 +831,7 @@ def _register_core_commands(app: typer.Typer) -> None:
 
     @app.command()
     def package(
-        action: Annotated[str, typer.Argument(help="create | inspect | verify")],
+        action: Annotated[str, typer.Argument(help="create | inspect | verify | preview")],
         path: Annotated[Path | None, typer.Argument()] = None,
         output: Annotated[Path, typer.Option("--output", "-o", help="Output directory.")] = Path("./sayane-export-package"),
         bundle: Annotated[Path | None, typer.Option("--bundle", help="Context bundle.")] = None,
@@ -878,6 +878,12 @@ def _register_core_commands(app: typer.Typer) -> None:
                 typer.echo(f"  Error: {e}")
             for w in result["warnings"]:
                 typer.echo(f"  Warning: {w}")
+
+        elif action == "preview":
+            pkg_dir = path or Path(".")
+            from sayane.core.export_package import preview_package, render_preview_text
+            preview = preview_package(pkg_dir)
+            typer.echo(render_preview_text(preview))
 
         else:
             raise typer.BadParameter(f"Unknown action: {action}")

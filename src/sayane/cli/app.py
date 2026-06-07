@@ -573,6 +573,24 @@ def _register_core_commands(app: typer.Typer) -> None:
         typer.echo(f"Audit: appended to {store.path}")
 
     @app.command()
+    def context_compile(
+        target: Annotated[str, typer.Option("--target", help="Target tool: cursor | claude-desktop")] = "cursor",
+        mode: Annotated[str, typer.Option("--mode", help="Output mode: compact | full | strict")] = "full",
+        show_scope: Annotated[bool, typer.Option("--show-scope")] = False,
+    ) -> None:
+        """Compile MCP context with scoped accept metadata (F-2)."""
+        from sayane.core.review_decision import list_decisions
+        from sayane.core.mcp_context import build_compiled_context, render_compiled_context_text
+
+        scoped = [d for d in list_decisions() if d.decision == "scoped_accept"]
+        compiled = build_compiled_context(target=target, mode=mode, scoped_decisions=scoped)
+
+        if show_scope:
+            typer.echo(render_compiled_context_text(compiled))
+        else:
+            typer.echo(json.dumps(compiled, ensure_ascii=False, indent=2))
+
+    @app.command()
     def audit(
         action: Annotated[str, typer.Argument(help="list | by-candidate | by-term | unresolved | export")],
         query_value: Annotated[str | None, typer.Argument()] = None,

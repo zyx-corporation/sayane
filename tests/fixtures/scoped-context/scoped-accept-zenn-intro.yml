@@ -1,0 +1,37 @@
+# Scoped context acceptance fixture (F-1.5)
+candidate:
+  id: c-zenn-intro-001
+  source_scope:
+    level: selection
+    origin: "ChatGPT conversation fragment"
+    note: "Zenn第2回の導入部に関する部分文脈"
+  proposed_scope:
+    level: global
+    target: "writing_style"
+  content:
+    proposed_update: "技術記事では、強い問題提起を優先する。"
+  semantic_review:
+    flags:
+      - partial_context_overgeneralization
+      - promotion_risk
+      - trojan_context_risk
+decision:
+  type: scoped_accept
+  accepted_content: "Zenn第2回の導入部では、やや強い問題提起を許容する。"
+  accepted_scope:
+    level: project
+    target: "zenn-sayane-series"
+    sub_scope: "article-02-introduction"
+  conditions:
+    - "読者の問題意識を喚起する目的に限定"
+    - "人格・恒常的嗜好として扱わない"
+  negative_constraints:
+    - "global writing preference に昇格しない"
+    - "MCP出力時にscope注記を落とさない"
+  promotion_policy:
+    can_promote: false
+    requires_review_for:
+      - project_to_global
+      - example_to_rule
+  reuse_policy:
+    review_on_reuse: true

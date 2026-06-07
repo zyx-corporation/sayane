@@ -411,10 +411,13 @@ def _register_core_commands(app: typer.Typer) -> None:
 
     @app.command()
     def review(
-        action: Annotated[str, typer.Argument(help="list | show | diff | overlap | approve | reject | modify | defer")],
+        action: Annotated[str, typer.Argument(help="list | show | diff | overlap | approve | reject | modify | defer | scoped-accept")],
         candidate_id: Annotated[str | None, typer.Argument()] = None,
         reason: Annotated[str | None, typer.Option("--reason", help="Reason for decision.")] = None,
         value: Annotated[str | None, typer.Option("--value", help="Applied value for modify (JSON).")] = None,
+        scope: Annotated[str | None, typer.Option("--scope", help="Accepted scope: level:target:subscope.")] = None,
+        conditions: Annotated[str | None, typer.Option("--conditions", help="Comma-separated conditions.")] = None,
+        negative: Annotated[str | None, typer.Option("--negative", help="Comma-separated negative constraints.")] = None,
         filter_flag: Annotated[str | None, typer.Option("--filter", help="Filter: review_required | semantic_overlap | boundary_sensitive.")] = None,
     ) -> None:
         """Review import candidates (Phase 7/12)."""
@@ -463,6 +466,21 @@ def _register_core_commands(app: typer.Typer) -> None:
                 typer.echo(f"  Reason:  {d.reason or 'N/A'}")
                 if d.applied_value:
                     typer.echo(f"  Applied: {_json.dumps(d.applied_value, ensure_ascii=False)[:120]}")
+                # F-1.5/F-3: scoped accept metadata
+                if d.decision == "scoped_accept":
+                    if d.accepted_scope:
+                        typer.echo(f"  Scope:   {d.accepted_scope.get('level', '?')}:{d.accepted_scope.get('target', '?')}:{d.accepted_scope.get('sub_scope', '?')}")
+                    if d.conditions:
+                        typer.echo(f"  Conditions:")
+                        for c in d.conditions:
+                            typer.echo(f"    - {c}")
+                    if d.negative_constraints:
+                        typer.echo(f"  Must NOT:")
+                        for nc in d.negative_constraints:
+                            typer.echo(f"    - {nc}")
+                    pp = d.promotion_policy or {}
+                    if pp.get("can_promote") is False:
+                        typer.echo(f"  Promotion: blocked (requires review)")
                 typer.echo(f"  Lineage: {d.lineage_event_id[:12]}")
             else:
                 typer.echo("  No decisions recorded. Import a bundle first, then use review approve/reject/modify/defer.")
@@ -507,7 +525,35 @@ def _register_core_commands(app: typer.Typer) -> None:
             return
 
         if not candidate_id:
-            raise typer.BadParameter("candidate_id required for approve/reject/modify/defer")
+            raise typer.BadParameter("candidate_id required for approve/reject/modify/defer/scoped-accept")
+
+        if action == "scoped-accept":
+            scope_parts = (scope or "").split(":")
+            accepted_scope = {
+                "level": scope_parts[0] if len(scope_parts) > 0 else "project",
+                "target": scope_parts[1] if len(scope_parts) > 1 else None,
+                "sub_scope": scope_parts[2] if len(scope_parts) > 2 else None,
+            }
+            cond_list = [c.strip() for c in (conditions or "").split(",") if c.strip()]
+            neg_list = [n.strip() for n in (negative or "").split(",") if n.strip()]
+            decision = ReviewDecision(
+                candidate_id=candidate_id,
+                decision="scoped_accept",
+                reason=reason or "",
+                accepted_scope=accepted_scope,
+                conditions=cond_list,
+                negative_constraints=neg_list,
+                promotion_policy={"can_promote": False},
+                reuse_policy={"review_on_reuse": True},
+            )
+            errors = validate_decision(decision, has_review_required=True)
+            if errors:
+                for e in errors:
+                    typer.echo(f"Error: {e}", err=True)
+                raise typer.Exit(1)
+            save_decision("default", decision)
+            typer.echo(f"Scoped accept: {candidate_id} → {accepted_scope}")
+            return
 
         applied_value = None
         if value:
@@ -540,6 +586,24 @@ def _register_core_commands(app: typer.Typer) -> None:
         audit = build_audit_record(decision, profile_updated=(action in ("approve", "modify")))
         store.append(audit)
         typer.echo(f"Audit: appended to {store.path}")
+
+    @app.command()
+    def context_compile(
+        target: Annotated[str, typer.Option("--target", help="Target tool: cursor | claude-desktop")] = "cursor",
+        mode: Annotated[str, typer.Option("--mode", help="Output mode: compact | full | strict")] = "full",
+        show_scope: Annotated[bool, typer.Option("--show-scope")] = False,
+    ) -> None:
+        """Compile MCP context with scoped accept metadata (F-2)."""
+        from sayane.core.review_decision import list_decisions
+        from sayane.core.mcp_context import build_compiled_context, render_compiled_context_text
+
+        scoped = [d for d in list_decisions() if d.decision == "scoped_accept"]
+        compiled = build_compiled_context(target=target, mode=mode, scoped_decisions=scoped)
+
+        if show_scope:
+            typer.echo(render_compiled_context_text(compiled))
+        else:
+            typer.echo(json.dumps(compiled, ensure_ascii=False, indent=2))
 
     @app.command()
     def audit(
@@ -629,12 +693,12 @@ def _register_core_commands(app: typer.Typer) -> None:
     @app.command()
     def transfer_report(
         output: Annotated[Path, typer.Option("--output", "-o", help="Output file path.")] = Path("docs/transfer-tests/transfer-regression-report.md"),
-        format: Annotated[str, typer.Option("--format", help="Output format: markdown | json")] = "markdown",
+        format: Annotated[str, typer.Option("--format", help="Output format: markdown | json | html")] = "markdown",
         fixtures_dir: Annotated[Path, typer.Option("--fixtures", help="Transfer fixtures directory.")] = Path("docs/transfer-tests"),
         audit_path: Annotated[Path | None, typer.Option("--audit", help="Audit store path.")] = None,
         fail_on_warnings: Annotated[bool, typer.Option("--fail-on-warnings")] = False,
     ) -> None:
-        """Generate a cross-LLM transfer regression dashboard report (Phase 10)."""
+        """Generate a cross-LLM transfer regression dashboard report (Phase 10/F-5)."""
         from sayane.core.audit_trail import AuditStore
         from sayane.core.transfer_report import generate_transfer_report, render_markdown_report
 
@@ -650,6 +714,9 @@ def _register_core_commands(app: typer.Typer) -> None:
         if format == "json":
             import json as _json
             content = _json.dumps(report, ensure_ascii=False, indent=2)
+        elif format == "html":
+            from sayane.core.transfer_report_html import render_html_report
+            content = render_html_report(report)
         else:
             content = render_markdown_report(report)
 
@@ -767,7 +834,7 @@ def _register_core_commands(app: typer.Typer) -> None:
 
     @app.command()
     def package(
-        action: Annotated[str, typer.Argument(help="create | inspect | verify")],
+        action: Annotated[str, typer.Argument(help="create | inspect | verify | preview")],
         path: Annotated[Path | None, typer.Argument()] = None,
         output: Annotated[Path, typer.Option("--output", "-o", help="Output directory.")] = Path("./sayane-export-package"),
         bundle: Annotated[Path | None, typer.Option("--bundle", help="Context bundle.")] = None,
@@ -814,6 +881,12 @@ def _register_core_commands(app: typer.Typer) -> None:
                 typer.echo(f"  Error: {e}")
             for w in result["warnings"]:
                 typer.echo(f"  Warning: {w}")
+
+        elif action == "preview":
+            pkg_dir = path or Path(".")
+            from sayane.core.export_package import preview_package, render_preview_text
+            preview = preview_package(pkg_dir)
+            typer.echo(render_preview_text(preview))
 
         else:
             raise typer.BadParameter(f"Unknown action: {action}")

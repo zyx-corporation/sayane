@@ -1,8 +1,11 @@
-"""Candidate Review Decision Model and Lineage (Phase 7).
+"""Candidate Review Decision Model and Lineage (Phase 7, F-1.5).
 
 Review decisions connect semantic review metadata to human decisions.
 Auto-approve and auto-reject are forbidden.
 All decisions are recorded in lineage.
+
+F-1.5: scoped_accept adds scope, conditions, negative constraints,
+promotion policy, and reuse policy for conditional partial context acceptance.
 """
 
 from __future__ import annotations
@@ -12,7 +15,7 @@ from datetime import UTC, datetime
 from typing import Any, Literal
 from uuid import uuid4
 
-ReviewDecisionType = Literal["approve", "reject", "modify", "defer"]
+ReviewDecisionType = Literal["approve", "reject", "modify", "defer", "scoped_accept"]
 
 
 @dataclass
@@ -35,6 +38,14 @@ class ReviewDecision:
     # Lineage tracking
     lineage_event_id: str = field(default_factory=lambda: uuid4().hex)
     transfer_path: list[str] = field(default_factory=list)
+    # Scoped accept (F-1.5)
+    source_scope: dict[str, Any] | None = None
+    proposed_scope: dict[str, Any] | None = None
+    accepted_scope: dict[str, Any] | None = None
+    conditions: list[str] = field(default_factory=list)
+    negative_constraints: list[str] = field(default_factory=list)
+    promotion_policy: dict[str, Any] | None = None
+    reuse_policy: dict[str, Any] | None = None
 
 
 # --- Review decision store (in-memory for CLI; Bridge uses candidate storage) ---
@@ -95,6 +106,12 @@ def validate_decision(decision: ReviewDecision, has_review_required: bool) -> li
     if decision.decision == "modify" and decision.applied_value is None:
         errors.append("modify decision requires applied_value")
 
+    if decision.decision == "scoped_accept":
+        if not decision.reason.strip():
+            errors.append("scoped_accept requires an explicit reason")
+        if decision.accepted_scope is None:
+            errors.append("scoped_accept requires accepted_scope")
+
     return errors
 
 
@@ -102,7 +119,7 @@ def validate_decision(decision: ReviewDecision, has_review_required: bool) -> li
 
 def build_lineage_event(decision: ReviewDecision) -> dict[str, Any]:
     """Build a lineage event dict from a review decision."""
-    return {
+    event: dict[str, Any] = {
         "id": decision.lineage_event_id,
         "type": "candidate_review_decision",
         "created_at": decision.decided_at,
@@ -125,3 +142,16 @@ def build_lineage_event(decision: ReviewDecision) -> dict[str, Any]:
         },
         "transfer_path": decision.transfer_path,
     }
+
+    # Scoped accept metadata (F-1.5)
+    if decision.decision == "scoped_accept":
+        event["scoped_accept"] = {
+            "source_scope": decision.source_scope,
+            "accepted_scope": decision.accepted_scope,
+            "conditions": decision.conditions,
+            "negative_constraints": decision.negative_constraints,
+            "promotion_policy": decision.promotion_policy or {"can_promote": False},
+            "reuse_policy": decision.reuse_policy or {"review_on_reuse": True},
+        }
+
+    return event

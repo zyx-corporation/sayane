@@ -32,7 +32,7 @@ export function formatUserFacingBridgeError(
     const category = String(details.rde_category ?? "unknown");
     const label = categoryLabel(category as CandidateCategory, loc);
     if (loc === "ja") {
-      return `このCandidateは「${label}」と評価されているため、そのまま採用できません。`;
+      return `この更新候補は「${label}」と評価されているため、そのまま承認できません。`;
     }
     return t("error.unsafe_rde_category", { category: label });
   }
@@ -75,7 +75,7 @@ export function mapKnownCoreMessage(message: string, locale?: SupportedLocale): 
       return short;
     }
     if (locale === "ja") {
-      return "この候補はまだ自動保存に対応していない種類です。保存先セクションの対応が必要です。";
+      return "この更新候補はまだ自動保存に対応していない種類です。保存先セクションの対応が必要です。";
     }
     const named = t("error.merge_section_unsupported_named", { section });
     if (named !== "error.merge_section_unsupported_named") {
@@ -108,7 +108,7 @@ export function mapKnownCoreMessage(message: string, locale?: SupportedLocale): 
   if (key) return t(key);
 
   if (locale === "ja") {
-    const jaTemplate = "この候補はまだ自動保存に対応していない種類です。保存先セクションの対応が必要です。";
+    const jaTemplate = "この更新候補はまだ自動保存に対応していない種類です。保存先セクションの対応が必要です。";
     const fromCatalog = t("error.generic");
     return fromCatalog === "error.generic" ? jaTemplate : fromCatalog;
   }

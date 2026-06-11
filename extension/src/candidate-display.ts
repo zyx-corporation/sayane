@@ -6,10 +6,10 @@ export type CandidateCategory = NonNullable<CandidateSummary["rde_class"]>;
 
 export const STATUS_LABELS: Record<SupportedLocale, Record<CandidateStatus, string>> = {
   ja: {
-    pending: "未評価",
+    pending: "保留",
     evaluated: "評価済み",
-    approved: "採用済み",
-    rejected: "棄却済み",
+    approved: "承認済み",
+    rejected: "非承認済み",
   },
   en: {
     pending: "pending",

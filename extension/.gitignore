@@ -4,3 +4,4 @@ e2e/.bridge-pid.json
 test-results/
 playwright-report/
 blob-report/
+release/

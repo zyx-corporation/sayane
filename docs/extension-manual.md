@@ -17,13 +17,51 @@ Phase 3 の Sayane Chrome Extension は **補助 UI** ではあるが、**人間
 - **Insert** は ChatGPT / Claude / Gemini / DeepSeek / Open WebUI 等、`host_permissions` に列挙したサイト、または localhost Open WebUI。
 - manifest 更新後は Chrome の「更新」だけでは権限表示が変わらないことがある。**削除してから Load unpacked し直す**。
 
-## 2. ビルドと読み込み
+## 2. インストール
+
+### 2.1 GitHub Release zip 版（推奨）
+
+Zenn 記事の読者や一般利用者は、GitHub Release から zip をダウンロードして読み込む方法を推奨する。
+
+1. [GitHub Releases](https://github.com/zyx-corporation/sayane/releases) から `sayane-extension-vX.Y.Z.zip` をダウンロード
+2. zip を展開（`sayane-extension-vX.Y.Z/` ディレクトリができる）
+3. `chrome://extensions/` を開く
+4. **デベロッパーモード** を有効化
+5. 「**パッケージ化されていない拡張機能を読み込む**」→ 展開したディレクトリを選択
+
+**チェックサム確認（任意）:**
 
 ```bash
-cd extension && npm install && npm run build
+shasum -a 256 -c sayane-extension-vX.Y.Z.zip.sha256
+```
+
+**注意:**
+
+- この拡張は **Chrome Web Store 版ではありません**。GitHub Release から取得した zip のみを使ってください。
+- 選択範囲をローカルブリッジ（`127.0.0.1:38741`）へ送ります。外部クラウドへ直接送信しません。
+- Capture はプロファイルへの即時反映ではなく、更新候補の作成です。
+
+### 2.2 開発者向けビルド
+
+Extension を改修する開発者は、リポジトリからビルドする。
+
+```bash
+git clone https://github.com/zyx-corporation/sayane.git
+cd sayane/extension
+npm install
+npm run build
 ```
 
 Chrome の「パッケージ化されていない拡張機能を読み込む」→ `extension/` ディレクトリ。
+
+### 2.3 Release zip のビルド（メンテナ向け）
+
+```bash
+cd extension
+npm run package
+```
+
+`release/sayane-extension-vX.Y.Z.zip` と `.sha256` が生成される。
 
 ## 2.1 表示言語（i18n）
 

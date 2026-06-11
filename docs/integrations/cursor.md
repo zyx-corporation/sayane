@@ -55,19 +55,19 @@ Out of scope:
 
 ```mermaid
 flowchart TD
-    H[Human\nIntent / Question / Design stance] --> C[Cursor\nAI coding / Agent execution]
-    C --> Code[Code and Docs\nGenerated / Modified / Refactored]
+    H[Human<br/>Intent / Question / Design stance] --> C[Cursor<br/>AI coding / Agent execution]
+    C --> Code[Code and Docs<br/>Generated / Modified / Refactored]
 
-    C --> MCP[Sayane MCP Server\nDerived context interface]
-    MCP --> Core[Sayane Core\nProfile / Prompt IR / Candidate / Lineage]
+    C --> MCP[Sayane MCP Server<br/>Derived context interface]
+    MCP --> Core[Sayane Core<br/>Profile / Prompt IR / Candidate / Lineage]
 
-    Code --> Capture[Capture / Reverse Compile\nConversation and workspace-derived candidates]
-    Capture --> Candidate[Candidate Update\nReview before merge]
-    Candidate --> Eval[RDE / UIB Evaluation\nMeaning-change review]
+    Code --> Capture[Capture / Reverse Compile<br/>Conversation and workspace-derived candidates]
+    Capture --> Candidate[Candidate Update<br/>Review before merge]
+    Candidate --> Eval[RDE / UIB Evaluation<br/>Meaning-change review]
     Eval --> Decision[Approve / Reject / Scoped Accept]
     Decision --> Core
 
-    Core --> Report[Audit Report\nReason / Scope / Risk / Lineage]
+    Core --> Report[Audit Report<br/>Reason / Scope / Risk / Lineage]
     Report --> H
 
     subgraph Execution_Runtime[Execution runtime]

@@ -895,12 +895,77 @@ def _register_core_commands(app: typer.Typer) -> None:
     def serve(
         host: Annotated[str, typer.Option("--host")] = "127.0.0.1",
         port: Annotated[int, typer.Option("--port")] = 38741,
+        allow_all_interfaces: Annotated[
+            bool,
+            typer.Option(
+                "--allow-all-interfaces",
+                help="Allow binding to 0.0.0.0 / :: (requires firewall/VPN protection).",
+            ),
+        ] = False,
     ) -> None:
-        """Start the Local Bridge API server."""
+        """Start the Local Bridge API server.
+
+        By default, Sayane binds to 127.0.0.1 (localhost only).
+
+        Use --host <private-ip> to expose Sayane on a trusted private network
+        such as LAN, VPN, Tailscale, ZeroTier, or WireGuard.
+
+        Binding to 0.0.0.0 or :: requires --allow-all-interfaces and must
+        be protected by firewall, VPN, or authenticated reverse proxy.
+        Public unauthenticated exposure is not supported.
+        """
+        import ipaddress
         import uvicorn
 
-        if host not in ("127.0.0.1", "localhost", "::1"):
-            raise typer.BadParameter(t("error.bridge_localhost"))
+        # ---------- Network Policy validation ----------
+
+        host_lower = host.lower().strip()
+
+        if host_lower in ("0.0.0.0", "::"):
+            if not allow_all_interfaces:
+                typer.echo(
+                    t(
+                        "serve.error_all_interfaces",
+                        host=host,
+                    ),
+                    err=True,
+                )
+                raise typer.Exit(1)
+            # Allowed with strong warning (logged below)
+
+        # ---------- Classify network exposure ----------
+
+        is_loopback = host_lower in ("127.0.0.1", "::1", "localhost")
+        is_all_interfaces = host_lower in ("0.0.0.0", "::")
+
+        if is_all_interfaces:
+            exposure = "all_interfaces"
+        elif is_loopback:
+            exposure = "localhost"
+        else:
+            exposure = "non_localhost"
+
+        # ---------- Optional private IP detection ----------
+
+        def _is_private_ip(addr: str) -> bool:
+            try:
+                ip = ipaddress.ip_address(addr)
+                # 0.0.0.0 and :: are unspecified, not private
+                if ip.is_unspecified:
+                    return False
+                if isinstance(ip, ipaddress.IPv4Address):
+                    return (
+                        ip.is_private
+                        or ip.is_loopback
+                        or ip in ipaddress.IPv4Network("100.64.0.0/10")  # CGNAT / Tailscale
+                    )
+                return ip.is_private or ip.is_loopback
+            except ValueError:
+                return False
+
+        private = _is_private_ip(host_lower)
+
+        # ---------- Startup logging ----------
 
         config = BridgeConfig(host=host, port=port)
         from sayane.storage.base import StorageBackendError
@@ -923,8 +988,23 @@ def _register_core_commands(app: typer.Typer) -> None:
 
         build = get_build_info()
         token, created = load_or_create_token(config)
+
         typer.echo(t("serve.listening", host=host, port=port))
         typer.echo(format_build_info_startup_line(build))
+
+        # Network exposure info
+        if is_all_interfaces:
+            typer.echo(
+                t("serve.bind_all_interfaces_warning", host=host, port=port),
+            )
+        elif not is_loopback:
+            suffix = (
+                " " + t("serve.bind_private_ip")
+                if private
+                else " " + t("serve.bind_non_localhost")
+            )
+            typer.echo(t("serve.bind_non_localhost_warning", host=host, port=port) + suffix)
+
         typer.echo(t("serve.token_file", path=config.token_file))
         if created:
             typer.echo(t("serve.pairing", code=format_pairing_code(token)))

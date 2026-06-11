@@ -41,6 +41,7 @@ Commercial Edition 向けマニュアル（ライセンス、暗号化 SQLite、
 - [CLI / Local Bridge / Chrome Extension 設計](cli-chrome-extension.md)
 - [MCP Server Integration](mcp-integration.md)
 - [Cursor Integration Concept](integrations/cursor.md) — Cursor を実行環境として扱い、Sayane が文脈・意味変化・監査を担うための統合構想
+- [Cursor Acceptance Specification](integrations/cursor-acceptance-spec.md) — Cursor MCP 統合の受け入れ条件・検証ゲート
 - [Conversation Extract / Reverse Compile Pipeline](extraction-pipeline.md)
 - [Security Design](security.md)
 - [RDE / UIB 評価と Lineage](evaluation-lineage.md)

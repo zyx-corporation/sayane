@@ -122,7 +122,7 @@ export function statusWithJudgeLabel(
 ): string {
   const base = statusLabel(status, locale);
   if (evaluationStatus === "judge_failed") {
-    return locale === "ja" ? `${base} · LLM評価失敗` : `${base} · judge failed`;
+    return locale === "ja" ? `${base} · LLM判定に失敗` : `${base} · judge failed`;
   }
   return base;
 }

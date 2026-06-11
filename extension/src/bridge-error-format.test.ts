@@ -8,7 +8,7 @@ test("unsupported merge error is mapped to user-facing message", () => {
   }, "ja");
   assert.equal(
     message,
-    "この候補はまだ自動保存に対応していない種類です。保存先セクションの対応が必要です。",
+    "この更新候補はまだ自動保存に対応していない種類です。保存先セクションの対応が必要です。",
   );
   assert.ok(!message.includes("Unsupported merge section"));
 });

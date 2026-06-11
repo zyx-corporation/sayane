@@ -55,16 +55,16 @@ const NOTE_MESSAGES: Record<SupportedLocale, Record<string, string>> = {
       "ページ全体CaptureにUI文字列が含まれている可能性があります。",
     page_capture_low_confidence:
       "ページ全体Capture由来のため、低信頼入力として扱います。",
-    llm_judge_result: "LLM judge（{model}）は「{rde_class_label}」と評価しました。",
+    llm_judge_result: "LLM判定（{model}）: 「{rde_class_label}」",
     heuristic_merged_to_llm:
-      "ヒューリスティック評価では「{heuristic_label}」でしたが、LLM judge結果を反映して「{rde_class_label}」に統合されました。",
+      "ヒューリスティック評価では「{heuristic_label}」でしたが、LLM判定結果を反映して「{rde_class_label}」に統合されました。",
     llm_judge_suggested_kept_heuristic:
-      "LLM judgeは「{rde_class_label}」と評価しましたが、Sayaneのヒューリスティック評価「{heuristic_label}」を優先しました。",
+      "LLM判定は「{rde_class_label}」としましたが、Sayaneのヒューリスティック評価「{heuristic_label}」を優先しました。",
     llm_judge_capped_important_terms_list_add:
-      "LLM judgeは「{llm_rde_class_label}」と評価しましたが、important_terms の追加のみの差分のため「{rde_class_label}」を採用しました。用語名が未知でも、リスト追加だけでは疑わしい逸脱にはしません。",
-    llm_judge_skipped: "LLM judgeはスキップされました: {detail}",
-    llm_judge_failed: "LLM judgeに失敗しました: {detail}",
-    llm_judge_freeform_prefix: "LLM judgeの指摘: {text}",
+      "LLM判定は「{llm_rde_class_label}」としましたが、important_terms の追加のみの差分のため「{rde_class_label}」を採用しました。用語名が未知でも、リスト追加だけでは疑わしい逸脱にはしません。",
+    llm_judge_skipped: "LLM判定はスキップされました: {detail}",
+    llm_judge_failed: "LLM判定に失敗しました: {detail}",
+    llm_judge_freeform_prefix: "LLM判定の指摘: {text}",
   },
   en: {
     content_references_critical_profile_fields:

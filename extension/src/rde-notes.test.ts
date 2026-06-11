@@ -23,7 +23,7 @@ describe("rde-notes", () => {
       { source: "llm_judge", text: "Some novel explanation." },
       "ja",
     );
-    assert.match(text, /^LLM judgeの指摘:/);
+    assert.match(text, /^LLM判定の指摘:/);
   });
 
   it("keeps english for en locale", () => {

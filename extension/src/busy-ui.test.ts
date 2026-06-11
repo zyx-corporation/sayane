@@ -93,18 +93,18 @@ describe("busy-ui", () => {
       body: { classList: { add: () => {}, remove: () => {} } },
     } as unknown as Document;
     const root = { setAttribute: () => {} } as HTMLElement;
-    const approve = mockButton("採用");
+    const approve = mockButton("承認");
     const ctrl = new BusyUiController(root, doc);
     ctrl.registerButton("approve", approve, {
       busyKey: "approving",
-      idleLabel: "採用",
-      busyLabel: "採用中...",
+      idleLabel: "承認",
+      busyLabel: "承認中...",
       blockDuringCandidateMutation: true,
     });
     ctrl.begin("rejecting");
     assert.equal(approve.disabled, true);
     assert.equal(approve.getAttribute("data-cursor-hint"), "busy");
-    assert.equal(approve.textContent, "採用");
+    assert.equal(approve.textContent, "承認");
     ctrl.end("rejecting");
   });
 

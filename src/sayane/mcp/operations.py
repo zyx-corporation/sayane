@@ -133,16 +133,26 @@ class McpOperations:
     ) -> dict[str, Any]:
         """Build exposure-safe compiled context through MCP exposure guard.
 
-        Filters Candidate content through filter_mcp_exposable_candidates.
-        Only approved and scoped_accept content is included.
+        Loads review decisions from storage, filters through
+        filter_mcp_exposable_candidates, and returns only approved
+        and scoped_accept content.
+
         Pending, rejected, and deferred Candidate content is blocked.
+        Storage read failures result in empty decisions (fail safe).
         """
         from sayane.core.mcp_context import build_compiled_context as _build
+        from sayane.core.review_decision import load_review_decisions
+
+        try:
+            decisions = load_review_decisions(profile_id=profile_id)
+        except Exception:
+            decisions = []
 
         return _build(
             profile_id=profile_id,
             target=target,
             mode=mode,
+            scoped_decisions=decisions,
         )
 
 

@@ -65,6 +65,29 @@ def list_decisions(profile_id: str = "default") -> list[ReviewDecision]:
     return list(_decisions.get(profile_id, []))
 
 
+def load_review_decisions(
+    profile_id: str = "default",
+    project_id: str | None = None,
+) -> list[ReviewDecision]:
+    """Load review decisions for MCP compiled context.
+
+    This is the storage adapter for MCP context compilation.
+    It does NOT decide what to expose — that is deferred to
+    filter_mcp_exposable_candidates() in mcp_context.py.
+
+    Returns all decisions; callers must apply exposure policy.
+    """
+    decisions = list(_decisions.get(profile_id, []))
+    # Future: filter by project_id when project-scoped lineage is implemented
+    _ = project_id
+    return list(decisions)
+
+
+def clear_decisions(profile_id: str = "default") -> None:
+    """Clear all decisions for a profile (test helper)."""
+    _decisions.pop(profile_id, None)
+
+
 def get_decisions_for_candidate(candidate_id: str, profile_id: str = "default") -> list[ReviewDecision]:
     """Get decisions affecting a specific candidate."""
     return [d for d in _decisions.get(profile_id, []) if d.candidate_id == candidate_id]

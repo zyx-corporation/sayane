@@ -319,3 +319,186 @@ def test_compiled_context_blocks_deferred_candidate():
     assert compiled["included_approved_candidates"] == []
     assert len(compiled["blocked_candidates"]) >= 1
     assert compiled["blocked_candidates"][0]["exposes_content"] is False
+
+
+# ---------- Integration: load_review_decisions → compiled_context ----------
+
+
+def test_load_review_decisions_feeds_compiled_context_approved():
+    """Approved decision saved via save_decision appears in compiled_context."""
+    from sayane.core.review_decision import (
+        ReviewDecision,
+        clear_decisions,
+        save_decision,
+    )
+    from sayane.core.mcp_context import build_compiled_context
+
+    clear_decisions("test-load-1")
+    save_decision(
+        "test-load-1",
+        ReviewDecision(
+            candidate_id="c-load-approved",
+            decision="approve",
+            reason="Accepted.",
+            applied_value="Approved context for MCP.",
+            original_section="project.context",
+        ),
+    )
+
+    from sayane.core.review_decision import load_review_decisions
+
+    decisions = load_review_decisions(profile_id="test-load-1")
+    assert len(decisions) == 1
+    assert decisions[0].candidate_id == "c-load-approved"
+
+    compiled = build_compiled_context(
+        profile_id="test-load-1",
+        mode="full",
+        scoped_decisions=decisions,
+    )
+    assert len(compiled["included_approved_candidates"]) == 1
+    assert compiled["included_approved_candidates"][0]["content"] == "Approved context for MCP."
+
+    clear_decisions("test-load-1")
+
+
+def test_load_review_decisions_blocks_rejected_in_compiled_context():
+    """Rejected decision saved via save_decision is blocked in compiled_context."""
+    from sayane.core.review_decision import (
+        ReviewDecision,
+        clear_decisions,
+        save_decision,
+    )
+    from sayane.core.mcp_context import build_compiled_context
+
+    clear_decisions("test-load-2")
+    save_decision(
+        "test-load-2",
+        ReviewDecision(
+            candidate_id="c-load-rejected",
+            decision="reject",
+            reason="Too broad.",
+            applied_value="REJECTED CONTENT",
+        ),
+    )
+
+    from sayane.core.review_decision import load_review_decisions
+
+    decisions = load_review_decisions(profile_id="test-load-2")
+    compiled = build_compiled_context(
+        profile_id="test-load-2",
+        mode="full",
+        scoped_decisions=decisions,
+    )
+    assert compiled["included_approved_candidates"] == []
+    assert compiled["included_scoped_contexts"] == []
+    assert len(compiled["blocked_candidates"]) >= 1
+    assert compiled["blocked_candidates"][0]["candidate_id"] == "c-load-rejected"
+    assert compiled["blocked_candidates"][0]["exposes_content"] is False
+
+    clear_decisions("test-load-2")
+
+
+def test_load_review_decisions_blocks_deferred_in_compiled_context():
+    """Deferred decision is blocked in compiled_context."""
+    from sayane.core.review_decision import (
+        ReviewDecision,
+        clear_decisions,
+        save_decision,
+    )
+    from sayane.core.mcp_context import build_compiled_context
+
+    clear_decisions("test-load-3")
+    save_decision(
+        "test-load-3",
+        ReviewDecision(
+            candidate_id="c-load-deferred",
+            decision="defer",
+            reason="Needs review.",
+            applied_value="DEFERRED CONTENT",
+        ),
+    )
+
+    from sayane.core.review_decision import load_review_decisions
+
+    decisions = load_review_decisions(profile_id="test-load-3")
+    compiled = build_compiled_context(
+        profile_id="test-load-3",
+        mode="full",
+        scoped_decisions=decisions,
+    )
+    assert compiled["included_approved_candidates"] == []
+    assert len(compiled["blocked_candidates"]) >= 1
+    assert compiled["blocked_candidates"][0]["exposes_content"] is False
+
+    clear_decisions("test-load-3")
+
+
+def test_load_review_decisions_includes_scoped_accept_with_metadata():
+    """Scoped accept decision carries scope/conditions/constraints into compiled_context."""
+    from sayane.core.review_decision import (
+        ReviewDecision,
+        clear_decisions,
+        save_decision,
+    )
+    from sayane.core.mcp_context import build_compiled_context
+
+    clear_decisions("test-load-4")
+    save_decision(
+        "test-load-4",
+        ReviewDecision(
+            candidate_id="c-load-scoped",
+            decision="scoped_accept",
+            reason="Locally useful.",
+            accepted_scope={"level": "project", "target": "sayane", "sub_scope": "mcp"},
+            conditions=["Use only for MCP docs."],
+            negative_constraints=["Do not promote to global."],
+            promotion_policy={"can_promote": False},
+            reuse_policy={"review_on_reuse": True},
+        ),
+    )
+
+    from sayane.core.review_decision import load_review_decisions
+
+    decisions = load_review_decisions(profile_id="test-load-4")
+    compiled = build_compiled_context(
+        profile_id="test-load-4",
+        mode="full",
+        scoped_decisions=decisions,
+    )
+    assert len(compiled["included_scoped_contexts"]) == 1
+    ctx = compiled["included_scoped_contexts"][0]
+    assert ctx["accepted_scope"]["target"] == "sayane"
+    assert "Use only for MCP docs." in ctx["conditions"]
+    assert "Do not promote to global." in ctx["negative_constraints"]
+    assert ctx["promotion_policy"]["can_promote"] is False
+    assert ctx["reuse_policy"]["review_on_reuse"] is True
+    # Also appears in approved list
+    assert len(compiled["included_approved_candidates"]) == 1
+
+    clear_decisions("test-load-4")
+
+
+def test_empty_storage_returns_safe_empty_context():
+    """Storage with no decisions returns safe empty compiled context."""
+    from sayane.core.review_decision import clear_decisions, save_decision, ReviewDecision
+    from sayane.core.mcp_context import build_compiled_context
+
+    clear_decisions("test-load-empty")
+
+    from sayane.core.review_decision import load_review_decisions
+
+    decisions = load_review_decisions(profile_id="test-load-empty")
+    assert decisions == []
+
+    compiled = build_compiled_context(
+        profile_id="test-load-empty",
+        mode="compact",
+        scoped_decisions=decisions,
+    )
+    assert compiled["is_derived_context"] is True
+    assert compiled["included_approved_candidates"] == []
+    assert compiled["included_scoped_contexts"] == []
+    assert compiled["blocked_candidates"] == []
+
+    clear_decisions("test-load-empty")

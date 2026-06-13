@@ -5,3 +5,4 @@ test-results/
 playwright-report/
 blob-report/
 release/
+extension/src/build-info.ts

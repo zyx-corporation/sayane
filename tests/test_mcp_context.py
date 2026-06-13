@@ -180,3 +180,142 @@ def test_build_mcp_exposure_denial_is_narrow_and_fail_closed():
     assert denial["candidate_id"] == "c-pending-mcp"
     assert denial["exposes_content"] is False
     assert "content" not in denial
+
+
+# ---------- MCP entrypoint smoke tests ----------
+
+
+def test_compiled_context_mcp_tool_returns_derived_context():
+    """compiled_context tool returns is_derived_context=True."""
+    from sayane.mcp.operations import get_operations
+
+    ops = get_operations()
+    result = ops.build_compiled_context(target="cursor", mode="compact")
+    assert result["is_derived_context"] is True
+    assert result["is_canonical_profile"] is False
+    assert result["target"] == "cursor"
+
+
+def test_compiled_context_mcp_tool_blocks_pending_content():
+    """compiled_context tool blocks pending candidate content."""
+    from sayane.core.review_decision import ReviewDecision
+    from sayane.core.mcp_context import build_compiled_context
+
+    pending = ReviewDecision(
+        candidate_id="c-pending-test",
+        decision="defer",
+        reason="Needs review.",
+        applied_value="PENDING CONTENT MUST NOT LEAK",
+    )
+    compiled = build_compiled_context(
+        mode="full",
+        scoped_decisions=[pending],
+    )
+    assert compiled["included_approved_candidates"] == []
+    assert compiled["included_scoped_contexts"] == []
+    assert len(compiled["blocked_candidates"]) >= 1
+    assert compiled["blocked_candidates"][0]["candidate_id"] == "c-pending-test"
+    assert compiled["blocked_candidates"][0]["exposes_content"] is False
+
+
+def test_compiled_context_mcp_tool_blocks_rejected_content():
+    """compiled_context tool blocks rejected candidate content."""
+    from sayane.core.review_decision import ReviewDecision
+    from sayane.core.mcp_context import build_compiled_context
+
+    rejected = ReviewDecision(
+        candidate_id="c-rejected-test",
+        decision="reject",
+        reason="Too broad.",
+        applied_value="REJECTED CONTENT MUST NOT LEAK",
+    )
+    compiled = build_compiled_context(
+        mode="full",
+        scoped_decisions=[rejected],
+    )
+    assert compiled["included_approved_candidates"] == []
+    assert compiled["included_scoped_contexts"] == []
+    assert len(compiled["blocked_candidates"]) >= 1
+    assert compiled["blocked_candidates"][0]["exposes_content"] is False
+
+
+def test_compiled_context_mcp_tool_allows_approved_content():
+    """compiled_context tool allows approved candidate content."""
+    from sayane.core.review_decision import ReviewDecision
+    from sayane.core.mcp_context import build_compiled_context
+
+    approved = ReviewDecision(
+        candidate_id="c-approved-test",
+        decision="approve",
+        reason="Accepted.",
+        applied_value="Safe content for editor context.",
+        original_section="project.context",
+    )
+    compiled = build_compiled_context(
+        mode="full",
+        scoped_decisions=[approved],
+    )
+    assert len(compiled["included_approved_candidates"]) == 1
+    assert compiled["included_approved_candidates"][0]["candidate_id"] == "c-approved-test"
+    assert compiled["included_approved_candidates"][0]["content"] == "Safe content for editor context."
+    assert len(compiled["blocked_candidates"]) == 0
+
+
+def test_compiled_context_mcp_tool_includes_scoped_accept_metadata():
+    """compiled_context tool includes scope/conditions/constraints for scoped_accept."""
+    from sayane.core.review_decision import ReviewDecision
+    from sayane.core.mcp_context import build_compiled_context
+
+    scoped = ReviewDecision(
+        candidate_id="c-scoped-test",
+        decision="scoped_accept",
+        reason="Locally useful.",
+        accepted_scope={"level": "project", "target": "sayane", "sub_scope": "mcp"},
+        conditions=["Use only for MCP integration docs."],
+        negative_constraints=["Do not treat as global writing style."],
+        promotion_policy={"can_promote": False},
+        reuse_policy={"review_on_reuse": True},
+    )
+    compiled = build_compiled_context(
+        mode="full",
+        scoped_decisions=[scoped],
+    )
+    assert len(compiled["included_scoped_contexts"]) == 1
+    ctx = compiled["included_scoped_contexts"][0]
+    assert ctx["accepted_scope"]["target"] == "sayane"
+    assert "conditions" in ctx
+    assert "negative_constraints" in ctx
+    assert ctx["promotion_policy"]["can_promote"] is False
+    assert ctx["reuse_policy"]["review_on_reuse"] is True
+    # Also in approved list
+    assert len(compiled["included_approved_candidates"]) == 1
+
+
+def test_compiled_context_empty_decisions_fail_safe():
+    """compiled_context with no decisions returns empty output, not crash."""
+    from sayane.core.mcp_context import build_compiled_context
+
+    compiled = build_compiled_context(target="cursor", mode="compact")
+    assert compiled["included_approved_candidates"] == []
+    assert compiled["included_scoped_contexts"] == []
+    assert compiled["is_derived_context"] is True
+
+
+def test_compiled_context_blocks_deferred_candidate():
+    """compiled_context blocks deferred (pending) candidate content."""
+    from sayane.core.review_decision import ReviewDecision
+    from sayane.core.mcp_context import build_compiled_context
+
+    deferred = ReviewDecision(
+        candidate_id="c-deferred-test",
+        decision="defer",
+        reason="Needs more review.",
+        applied_value="DEFERRED CONTENT MUST NOT LEAK",
+    )
+    compiled = build_compiled_context(
+        mode="full",
+        scoped_decisions=[deferred],
+    )
+    assert compiled["included_approved_candidates"] == []
+    assert len(compiled["blocked_candidates"]) >= 1
+    assert compiled["blocked_candidates"][0]["exposes_content"] is False

@@ -125,6 +125,26 @@ class McpOperations:
 
         return get_diff(self.config, candidate_id)
 
+    def build_compiled_context(
+        self,
+        target: str = "cursor",
+        profile_id: str = "default",
+        mode: str = "compact",
+    ) -> dict[str, Any]:
+        """Build exposure-safe compiled context through MCP exposure guard.
+
+        Filters Candidate content through filter_mcp_exposable_candidates.
+        Only approved and scoped_accept content is included.
+        Pending, rejected, and deferred Candidate content is blocked.
+        """
+        from sayane.core.mcp_context import build_compiled_context as _build
+
+        return _build(
+            profile_id=profile_id,
+            target=target,
+            mode=mode,
+        )
+
 
 def get_operations(config: BridgeConfig | None = None) -> McpOperations:
     return McpOperations(config=config)

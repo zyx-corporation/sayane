@@ -130,6 +130,33 @@ def diff_candidate(candidate_id: str) -> str:
         return _dump({"error": str(exc)})
 
 
+@mcp.tool()
+def compiled_context(
+    target: str = "cursor",
+    profile_id: str = "default",
+    mode: str = "compact",
+) -> str:
+    """Build exposure-safe compiled context for AI editors.
+
+    Returns derived context through the MCP exposure policy guard.
+    Only approved and scoped_accept Candidate content is included.
+    Pending, rejected, and deferred Candidate content is blocked.
+
+    This is the recommended tool for Cursor and other AI editors
+    requesting Sayane context. It does NOT expose the canonical profile.
+    """
+    try:
+        return _dump(
+            get_operations().build_compiled_context(
+                target=target,
+                profile_id=profile_id,
+                mode=mode,
+            ),
+        )
+    except (FileNotFoundError, ValueError) as exc:
+        return _dump({"error": str(exc)})
+
+
 def run_stdio() -> None:
     """Run MCP server on stdio transport (Cursor, Claude Desktop, Cline, etc.)."""
     mcp.run(transport="stdio")

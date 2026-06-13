@@ -1,6 +1,13 @@
 """T-RDE tests for MCP Scoped Context Output (F-2)."""
 from sayane.core.review_decision import ReviewDecision, save_decision
-from sayane.core.mcp_context import build_compiled_context, render_compiled_context_text
+from sayane.core.mcp_context import (
+    build_compiled_context,
+    build_mcp_exposure_denial,
+    can_expose_candidate_content_via_mcp,
+    filter_mcp_exposable_candidates,
+    get_candidate_mcp_exposure_class,
+    render_compiled_context_text,
+)
 
 
 def _make_scoped_decision() -> ReviewDecision:
@@ -13,6 +20,42 @@ def _make_scoped_decision() -> ReviewDecision:
         negative_constraints=["global writing preference に昇格しない"],
         promotion_policy={"can_promote": False},
         reuse_policy={"review_on_reuse": True},
+    )
+
+
+def _make_approved_decision() -> ReviewDecision:
+    return ReviewDecision(
+        candidate_id="c-approved-mcp",
+        decision="approve",
+        reason="Accepted after human review.",
+        applied_value="Use Candidate review boundary for MCP reuse.",
+        original_section="project.context",
+        original_action="append",
+        original_proposed="Use Candidate review boundary for MCP reuse.",
+    )
+
+
+def _make_rejected_decision() -> ReviewDecision:
+    return ReviewDecision(
+        candidate_id="c-rejected-mcp",
+        decision="reject",
+        reason="Too broad for profile context.",
+        applied_value="MUST NOT LEAK",
+        original_section="profile.rules",
+        original_action="append",
+        original_proposed="MUST NOT LEAK",
+    )
+
+
+def _make_deferred_decision() -> ReviewDecision:
+    return ReviewDecision(
+        candidate_id="c-deferred-mcp",
+        decision="defer",
+        reason="Needs more review.",
+        applied_value="MUST NOT LEAK EITHER",
+        original_section="project.context",
+        original_action="append",
+        original_proposed="MUST NOT LEAK EITHER",
     )
 
 
@@ -65,3 +108,75 @@ def test_promotion_not_allowed_in_mcp():
     ctx = compiled["included_scoped_contexts"][0]
     policy = ctx.get("promotion_policy", {})
     assert policy.get("can_promote") is False
+
+
+def test_mcp_exposure_class_treats_missing_decision_as_pending():
+    assert get_candidate_mcp_exposure_class(None) == "pending_candidate"
+    assert can_expose_candidate_content_via_mcp(None) is False
+
+
+def test_mcp_exposure_guard_allows_approved_candidate():
+    decision = _make_approved_decision()
+    assert get_candidate_mcp_exposure_class(decision) == "approved_candidate"
+    assert can_expose_candidate_content_via_mcp(decision) is True
+
+
+def test_mcp_exposure_guard_allows_scoped_accept_candidate():
+    decision = _make_scoped_decision()
+    assert get_candidate_mcp_exposure_class(decision) == "approved_candidate"
+    assert can_expose_candidate_content_via_mcp(decision) is True
+
+
+def test_mcp_exposure_guard_blocks_rejected_candidate_content():
+    decision = _make_rejected_decision()
+    assert get_candidate_mcp_exposure_class(decision) == "rejected_candidate"
+    assert can_expose_candidate_content_via_mcp(decision) is False
+
+
+def test_mcp_exposure_guard_blocks_deferred_candidate_content():
+    decision = _make_deferred_decision()
+    assert get_candidate_mcp_exposure_class(decision) == "pending_candidate"
+    assert can_expose_candidate_content_via_mcp(decision) is False
+
+
+def test_filter_mcp_exposable_candidates_blocks_unaccepted_content():
+    approved = _make_approved_decision()
+    rejected = _make_rejected_decision()
+    deferred = _make_deferred_decision()
+    exposable, denials = filter_mcp_exposable_candidates([approved, rejected, deferred, None])
+    assert [d.candidate_id for d in exposable] == ["c-approved-mcp"]
+    assert len(denials) == 3
+    assert all(d["exposes_content"] is False for d in denials)
+
+
+def test_compiled_context_includes_approved_candidate_with_metadata():
+    approved = _make_approved_decision()
+    compiled = build_compiled_context(mode="full", scoped_decisions=[approved])
+    ctx = compiled["included_approved_candidates"][0]
+    assert ctx["candidate_id"] == "c-approved-mcp"
+    assert ctx["section"] == "project.context"
+    assert ctx["lineage_event_id"] == approved.lineage_event_id
+    assert ctx["content"] == "Use Candidate review boundary for MCP reuse."
+
+
+def test_compiled_context_blocks_rejected_candidate_content():
+    rejected = _make_rejected_decision()
+    compiled = build_compiled_context(mode="full", scoped_decisions=[rejected])
+    assert compiled["included_approved_candidates"] == []
+    assert compiled["included_scoped_contexts"] == []
+    assert compiled["blocked_candidates"][0]["candidate_id"] == "c-rejected-mcp"
+    assert compiled["blocked_candidates"][0]["exposes_content"] is False
+    rendered = render_compiled_context_text(compiled)
+    assert "MUST NOT LEAK" not in rendered
+
+
+def test_build_mcp_exposure_denial_is_narrow_and_fail_closed():
+    denial = build_mcp_exposure_denial(
+        "candidate_not_approved",
+        candidate_id="c-pending-mcp",
+        exposure_class="pending_candidate",
+    )
+    assert denial["ok"] is False
+    assert denial["candidate_id"] == "c-pending-mcp"
+    assert denial["exposes_content"] is False
+    assert "content" not in denial

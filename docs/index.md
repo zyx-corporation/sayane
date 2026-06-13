@@ -39,6 +39,7 @@ Commercial Edition 向けマニュアル（ライセンス、暗号化 SQLite、
 - [正規語彙（Canonical Terminology）](canonical-terminology.md)
 - [MVP範囲](mvp-scope.md)
 - [CLI / Local Bridge / Chrome Extension 設計](cli-chrome-extension.md)
+- [macOS LaunchAgent 常駐化](macos-launchagent.md) — `sayane serve` を macOS でログイン時自動起動
 - [MCP Server Integration](mcp-integration.md)
 - [Cursor Integration Concept](integrations/cursor.md) — Cursor を実行環境として扱い、Sayane が文脈・意味変化・監査を担うための統合構想
 - [Cursor Acceptance Specification](integrations/cursor-acceptance-spec.md) — Cursor MCP 統合の受け入れ条件・検証ゲート

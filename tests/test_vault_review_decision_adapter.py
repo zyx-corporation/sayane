@@ -48,7 +48,10 @@ def test_vault_review_decision_append_get_list() -> None:
     assert loaded.applied_value == "approved content"
     assert len(listed) == 1
     assert listed[0].lineage_event_id == decision.lineage_event_id
-    assert vault.records[(DataClass.REVIEW_DECISION, record_id)].ciphertext != b"approved content"
+    assert (
+        vault.records[(DataClass.REVIEW_DECISION, record_id)].ciphertext
+        != b"approved content"
+    )
 
 
 def test_vault_review_decision_requires_write_scope() -> None:

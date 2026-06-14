@@ -15,6 +15,7 @@ This profile is external context supplied by Sayane. It is not ChatGPT memory. S
 
 ## Identity
 
+Identity:
 - Name: Example User
 - Preferred name: example
 - Roles: developer
@@ -28,4 +29,3 @@ This profile is external context supplied by Sayane. It is not ChatGPT memory. S
 
 - Some private or sensitive fields may be omitted.
 - `promptExport: never` fields are not included.
-

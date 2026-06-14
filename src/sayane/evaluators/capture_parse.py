@@ -18,20 +18,19 @@ SECTION_REVIEW_REQUIRED = "review_required"
 OPERATION_PARSE_FAILED = "parse_failed"
 OPERATION_NO_EFFECTIVE = "parse_failed_or_no_effective_update"
 
-# Inline key after quoted string on the same line — common copy/paste breakage.
 _BROKEN_INLINE_KEY_RE = re.compile(
     r'["\'][^"\']*["\'][ \t]{2,}[a-z][a-z0-9_]*:\s*',
     re.IGNORECASE,
 )
-
 _YAML_LIKE_RE = re.compile(
     r"^(persona|person|organization|development_preferences|writing_preferences|"
     r"communication_mode|major_projects|projects|values|identity|important_terms)\s*:",
     re.IGNORECASE | re.MULTILINE,
 )
-
 _MARKDOWN_HEADING_RE = re.compile(r"(?m)^#+\s+")
 _MARKDOWN_BULLET_RE = re.compile(r"(?m)^\s*[-*•]\s+")
+_IMPORTANT_TERMS_FRAGMENT_RE = re.compile(r"(?m)^\s*important_terms\s*:\s*$", re.IGNORECASE)
+_LIST_ITEM_RE = re.compile(r"^\s*-\s*(.+?)\s*$")
 
 _PERSONA_ROOT_KEYS = frozenset(
     {
@@ -53,6 +52,8 @@ def looks_like_yaml_capture(content: str) -> bool:
     stripped = content.strip()
     if not stripped:
         return False
+    if _extract_important_terms_fragment(content):
+        return True
     if _MARKDOWN_HEADING_RE.search(content) and _MARKDOWN_BULLET_RE.search(content):
         return False
     if stripped.startswith("{") or stripped.startswith("["):
@@ -131,11 +132,35 @@ def _normalize_scalar(value: Any) -> str:
         return ""
     if isinstance(value, list):
         return ", ".join(_normalize_scalar(v) for v in value if v is not None)
-    return str(value).strip()
+    return str(value).strip().strip('"\'')
+
+
+def _extract_important_terms_fragment(content: str) -> list[str]:
+    lines = content.splitlines()
+    terms: list[str] = []
+    in_section = False
+    section_indent = 0
+    for line in lines:
+        if not in_section:
+            match = _IMPORTANT_TERMS_FRAGMENT_RE.match(line)
+            if match:
+                in_section = True
+                section_indent = len(line) - len(line.lstrip())
+            continue
+        if not line.strip():
+            continue
+        indent = len(line) - len(line.lstrip())
+        if indent <= section_indent and not _LIST_ITEM_RE.match(line):
+            break
+        item = _LIST_ITEM_RE.match(line)
+        if item:
+            text = _normalize_scalar(item.group(1))
+            if text:
+                terms.append(text)
+    return terms
 
 
 def _walk_profile_values(profile: SayaneProfile) -> dict[str, list[str]]:
-    """Flatten profile scalars for already_present matching."""
     index: dict[str, list[str]] = {}
 
     def add(path: str, raw: str) -> None:
@@ -172,15 +197,10 @@ def _walk_profile_values(profile: SayaneProfile) -> dict[str, list[str]]:
     return index
 
 
-def _collect_yaml_scalars(
-    node: Any,
-    path: str,
-    out: list[tuple[str, str, str]],
-) -> None:
+def _collect_yaml_scalars(node: Any, path: str, out: list[tuple[str, str, str]]) -> None:
     if isinstance(node, dict):
         for key, val in node.items():
-            key_str = str(key)
-            child = f"{path}.{key_str}" if path else key_str
+            child = f"{path}.{key}" if path else str(key)
             _collect_yaml_scalars(val, child, out)
         return
     if isinstance(node, list):
@@ -193,106 +213,52 @@ def _collect_yaml_scalars(
         out.append((section, path, text))
 
 
-def classify_persona_yaml(
-    parsed: dict[str, Any],
-    profile: SayaneProfile | None,
-) -> CandidateProposal:
+def classify_persona_yaml(parsed: dict[str, Any], profile: SayaneProfile | None) -> CandidateProposal:
     keys = persona_document_keys(parsed)
-    if "persona" in keys and len(keys) == 1:
-        root = parsed.get("persona") or parsed.get("Persona")
-        if isinstance(root, dict):
-            parsed = {"persona": root, **{k: v for k, v in parsed.items() if k != "persona"}}
-            keys = persona_document_keys(parsed)
-
     scalars: list[tuple[str, str, str]] = []
     _collect_yaml_scalars(parsed, "", scalars)
-
     profile_index = _walk_profile_values(profile) if profile else {}
     already_present: list[dict[str, str]] = []
     items: list[dict[str, str]] = []
     sections_seen: set[str] = set()
-
     for section, path, text in scalars:
-        if section in _PERSONA_ROOT_KEYS or section in {
-            "preferred_name",
-            "formal_name",
-            "email",
-            "role",
-        }:
+        if section in _PERSONA_ROOT_KEYS or section in {"preferred_name", "formal_name", "email", "role"}:
             sections_seen.add(section if section in _PERSONA_ROOT_KEYS else "persona")
-        key = text.casefold()
-        paths = profile_index.get(key, [])
+        paths = profile_index.get(text.casefold(), [])
         if paths:
             already_present.append({"path": paths[0], "name": text, "yaml_path": path})
         else:
             items.append({"section": section or "persona", "name": text, "yaml_path": path})
-
     if len(keys) > 1 or len(sections_seen) > 1:
         section = "mixed_sections"
         operation = "no_op_or_duplicate" if not items else "add_or_update"
-    elif not items and already_present:
-        section = SECTION_REVIEW_REQUIRED
-        operation = OPERATION_NO_EFFECTIVE
-    elif not items and not already_present:
+    elif not items:
         section = SECTION_REVIEW_REQUIRED
         operation = OPERATION_NO_EFFECTIVE
     else:
-        section = "mixed_sections" if len({i.get("section") for i in items}) > 1 else (
-            items[0].get("section", "persona") if items else SECTION_REVIEW_REQUIRED
-        )
-        operation = "add_or_update" if items else OPERATION_NO_EFFECTIVE
-
-    summary = (
-        f"Persona YAML: {len(items)} new field(s), {len(already_present)} already in profile"
-    )
+        item_sections = {item.get("section") for item in items}
+        section = "mixed_sections" if len(item_sections) > 1 else items[0].get("section", "persona")
+        operation = "add_or_update"
     return CandidateProposal(
         section=section,
         operation=operation,
         add=[],
         items=items,
         already_present=already_present,
-        summary=summary,
+        summary=f"Persona YAML: {len(items)} new field(s), {len(already_present)} already in profile",
     )
 
 
-def classify_important_terms_yaml(
-    parsed: dict[str, Any],
-    profile: SayaneProfile | None,
-) -> CandidateProposal:
+def classify_important_terms_yaml(parsed: dict[str, Any], profile: SayaneProfile | None) -> CandidateProposal:
     terms_raw = parsed.get("important_terms")
     if not isinstance(terms_raw, list):
         return build_parse_failed_proposal("important_terms must be a YAML list")
-    captured: list[str] = []
-    for entry in terms_raw:
-        text = _normalize_scalar(entry)
-        if text:
-            captured.append(text)
+    captured = [_normalize_scalar(entry) for entry in terms_raw if _normalize_scalar(entry)]
     existing = list(profile.important_terms) if profile else []
     ld = important_terms_profile_diff(existing, captured)
-    items = [
-        {
-            "section": "important_terms",
-            "name": name,
-            "yaml_path": "important_terms[]",
-        }
-        for name in ld.added
-    ]
-    already_present = [
-        {
-            "path": "important_terms[]",
-            "name": name,
-            "yaml_path": "important_terms[]",
-        }
-        for name in ld.unchanged
-    ]
-    removed = [
-        {
-            "path": "important_terms[]",
-            "name": name,
-            "yaml_path": "important_terms[]",
-        }
-        for name in ld.removed
-    ]
+    items = [{"section": "important_terms", "name": name, "yaml_path": "important_terms[]"} for name in ld.added]
+    already_present = [{"path": "important_terms[]", "name": name, "yaml_path": "important_terms[]"} for name in ld.unchanged]
+    removed = [{"path": "important_terms[]", "name": name, "yaml_path": "important_terms[]"} for name in ld.removed]
     if not items and already_present and not removed:
         operation = "no_op_or_duplicate"
     elif not items and removed:
@@ -303,47 +269,32 @@ def classify_important_terms_yaml(
         operation = "list_add"
     else:
         operation = OPERATION_NO_EFFECTIVE
-    summary = important_terms_display_summary(
-        CandidateProposal(
-            section="important_terms",
-            operation=operation,
-            items=items,
-            already_present=already_present,
-            remove=removed,
-        ),
-    )
-    return CandidateProposal(
+    proposal = CandidateProposal(
         section="important_terms",
         operation=operation,
         add=[],
         items=items,
         remove=removed,
         already_present=already_present,
-        summary=summary,
     )
+    proposal.summary = important_terms_display_summary(proposal)
+    return proposal
 
 
-def build_proposal_for_yaml_content(
-    content: str,
-    profile: SayaneProfile | None,
-    capture_meta: CaptureMetadata | None,
-) -> CandidateProposal | None:
+def build_proposal_for_yaml_content(content: str, profile: SayaneProfile | None, capture_meta: CaptureMetadata | None) -> CandidateProposal | None:
+    fragment_terms = _extract_important_terms_fragment(content)
+    if fragment_terms:
+        return classify_important_terms_yaml({"important_terms": fragment_terms}, profile)
     if not looks_like_yaml_capture(content):
         return None
-
     parsed, err = try_parse_yaml(content)
     if err:
         return build_parse_failed_proposal(err)
-
     if not isinstance(parsed, dict):
         return build_parse_failed_proposal("YAML parse failed: root must be a mapping")
-
     keys = top_level_yaml_keys(parsed)
-    if keys == {"important_terms"} or (
-        len(keys) == 1 and "important_terms" in keys
-    ):
+    if "important_terms" in keys and len(keys) == 1:
         return classify_important_terms_yaml(parsed, profile)
     if "persona" in keys or "person" in keys:
         return classify_persona_yaml(parsed, profile)
-
     return None

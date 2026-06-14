@@ -26,6 +26,12 @@ jobs:
       - name: Ruff format check
         run: ruff format --check src tests
 
+      - name: ADR 0001 targeted storage/security checks
+        run: |
+          pytest -v tests/test_storage_backend.py
+          pytest -v tests/test_storage_security_policy.py
+          pytest -v tests/test_mcp_context.py
+
       - name: Pytest
         run: pytest -v
 
@@ -44,7 +50,7 @@ jobs:
           /tmp/sayane-install-test/bin/sayane --version
 
   extension:
-    name: Extension (typecheck & build)
+    name: Extension (frozen: typecheck & build only)
     runs-on: ubuntu-latest
     defaults:
       run:

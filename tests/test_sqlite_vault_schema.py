@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import sqlite3
+
 from sayane.vault.sqlite_schema import (
     AUDIT_METADATA_COLUMNS,
     ENCRYPTED_RECORD_COLUMNS,
     KEYRING_COLUMNS,
     VaultTable,
     create_table_statements,
+    inspect_sqlite_tables,
+    quote_sqlite_identifier,
     required_table_contracts,
     validate_sqlite_vault_schema,
 )
@@ -78,3 +82,25 @@ def test_create_table_statements_include_no_plaintext_columns() -> None:
     assert "aad_json" in joined
     assert " plaintext" not in joined
     assert "master_key" not in joined
+
+
+def test_quote_sqlite_identifier_escapes_double_quotes() -> None:
+    assert quote_sqlite_identifier('a"b') == '"a""b"'
+
+
+def test_inspect_sqlite_tables_reads_metadata_only(tmp_path) -> None:
+    db_path = tmp_path / "vault.sqlite"
+    connection = sqlite3.connect(db_path)
+    try:
+        for statement in create_table_statements():
+            connection.execute(statement)
+        connection.commit()
+    finally:
+        connection.close()
+
+    tables = inspect_sqlite_tables(db_path)
+
+    assert tables["keyring"] == KEYRING_COLUMNS
+    assert tables["encrypted_records"] == ENCRYPTED_RECORD_COLUMNS
+    assert tables["audit_metadata"] == AUDIT_METADATA_COLUMNS
+    assert validate_sqlite_vault_schema(tables) == []

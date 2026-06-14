@@ -54,7 +54,8 @@ class VaultCandidateStore:
     def list(self, *, session: UnlockSession) -> list[CandidateUpdate]:
         """List CandidateUpdate records for this profile."""
         candidates: list[CandidateUpdate] = []
-        for candidate_id in self._vault.list_record_ids(DataClass.CANDIDATE, session=session):
+        record_ids = self._vault.list_record_ids(DataClass.CANDIDATE, session=session)
+        for candidate_id in record_ids:
             candidate = self.load(candidate_id, session=session)
             if candidate is None:
                 continue

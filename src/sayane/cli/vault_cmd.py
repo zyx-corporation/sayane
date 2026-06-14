@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from typing import Annotated
 
 import typer
@@ -13,7 +14,9 @@ from sayane.vault.sqlite_schema import (
     FORBIDDEN_PRODUCTION_COLUMNS,
     SCHEMA_VERSION,
     create_table_statements,
+    inspect_sqlite_tables,
     required_table_contracts,
+    validate_sqlite_vault_schema,
 )
 from sayane.vault.unlock_policy import UnlockLevel, default_unlock_policy
 
@@ -109,12 +112,29 @@ def register_vault_cli(app: typer.Typer) -> None:
     @vault_app.command("schema")
     def vault_schema(
         ddl: Annotated[bool, typer.Option("--ddl", help="Show reference CREATE TABLE statements.")] = False,
+        database: Annotated[Path | None, typer.Option("--database", help="Validate an existing SQLite database schema.")] = None,
         json_out: Annotated[bool, typer.Option("--json", help="Emit JSON.")] = False,
     ) -> None:
-        """Show SQLite Local Vault schema contract without opening a database."""
+        """Show or validate SQLite Local Vault schema contract."""
         payload = _schema_payload(include_ddl=ddl)
+        if database is not None:
+            tables = inspect_sqlite_tables(database)
+            errors = validate_sqlite_vault_schema(tables)
+            payload.update(
+                {
+                    "database": str(database),
+                    "validation_status": "pass" if not errors else "fail",
+                    "validation_errors": errors,
+                    "inspected_tables": [
+                        {"name": name, "columns": list(columns)} for name, columns in tables.items()
+                    ],
+                },
+            )
+
         if json_out:
             typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+            if payload.get("validation_status") == "fail":
+                raise typer.Exit(1)
             return
 
         typer.echo(f"SQLite Local Vault schema: {payload['schema_version']}")
@@ -128,6 +148,13 @@ def register_vault_cli(app: typer.Typer) -> None:
             typer.echo("  Reference DDL:")
             for statement in payload["create_table_statements"]:
                 typer.echo(statement)
+        if database is not None:
+            typer.echo(f"  Database: {database}")
+            typer.echo(f"  Validation: {payload['validation_status']}")
+            for error in payload.get("validation_errors", []):
+                typer.echo(f"    - {error}")
+            if payload.get("validation_status") == "fail":
+                raise typer.Exit(1)
 
     app.add_typer(vault_app, name="vault")
 

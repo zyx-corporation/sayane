@@ -29,8 +29,14 @@ def register_vault_cli(app: typer.Typer) -> None:
     @vault_app.command("status")
     def vault_status(
         profile_id: Annotated[str, typer.Option("--profile-id", help="Profile id.")] = "default",
-        test_mode: Annotated[bool, typer.Option("--test", help="Open explicit test-only runtime.")] = False,
-        sqlite_path: Annotated[Path | None, typer.Option("--sqlite", help="Open explicit test-only SQLite runtime at path.")] = None,
+        test_mode: Annotated[
+            bool,
+            typer.Option("--test", help="Open explicit test-only runtime."),
+        ] = False,
+        sqlite_path: Annotated[
+            Path | None,
+            typer.Option("--sqlite", help="Open explicit test-only SQLite runtime at path."),
+        ] = None,
         json_out: Annotated[bool, typer.Option("--json", help="Emit JSON.")] = False,
     ) -> None:
         """Show Local Vault runtime status without exposing plaintext records."""
@@ -103,7 +109,10 @@ def register_vault_cli(app: typer.Typer) -> None:
 
     @vault_app.command("policy")
     def vault_policy(
-        level: Annotated[str | None, typer.Option("--level", help="normal | sensitive | deep_private")] = None,
+        level: Annotated[
+            str | None,
+            typer.Option("--level", help="normal | sensitive | deep_private"),
+        ] = None,
         json_out: Annotated[bool, typer.Option("--json", help="Emit JSON.")] = False,
     ) -> None:
         """Show Local Vault unlock policy presets without opening the vault."""
@@ -126,8 +135,14 @@ def register_vault_cli(app: typer.Typer) -> None:
 
     @vault_app.command("schema")
     def vault_schema(
-        ddl: Annotated[bool, typer.Option("--ddl", help="Show reference CREATE TABLE statements.")] = False,
-        database: Annotated[Path | None, typer.Option("--database", help="Validate an existing SQLite database schema.")] = None,
+        ddl: Annotated[
+            bool,
+            typer.Option("--ddl", help="Show reference CREATE TABLE statements."),
+        ] = False,
+        database: Annotated[
+            Path | None,
+            typer.Option("--database", help="Validate an existing SQLite database schema."),
+        ] = None,
         json_out: Annotated[bool, typer.Option("--json", help="Emit JSON.")] = False,
     ) -> None:
         """Show or validate SQLite Local Vault schema contract."""
@@ -190,8 +205,8 @@ def _schema_payload(*, include_ddl: bool = False) -> dict[str, object]:
         "schema_version": SCHEMA_VERSION,
         "tables": [
             {
-                "name": contract.table.value,
-                "columns": list(contract.columns),
+                "name": contract.name,
+                "columns": list(contract.required_columns),
             }
             for contract in required_table_contracts()
         ],

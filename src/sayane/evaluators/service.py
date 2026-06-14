@@ -12,6 +12,7 @@ from sayane.core.candidate import (
 from sayane.core.authorization import EvaluatorDescriptor
 from sayane.core.evaluation_notes import heuristic_note
 from sayane.core.loader import load_profile
+from sayane.core.review_decision import ReviewDecision
 from sayane.evaluators.diff import profile_diff_for_candidate
 from sayane.evaluators.judge_config import load_judge_config
 from sayane.evaluators.llm_judge import (
@@ -37,6 +38,7 @@ from sayane.evaluators.authorization_guards import (
 )
 from sayane.storage.candidates import load_candidate, save_candidate
 from sayane.storage.git_integration import auto_commit_profile_store
+from sayane.storage.review_decisions import append_review_decision
 from sayane.lineage.record import record_lineage_event
 
 
@@ -273,7 +275,23 @@ def approve_candidate(
     candidate.status = "approved"
     save_candidate(config, candidate)
 
-    section = candidate.proposal.section
+    decision_reason = override_reason or "Approved after user review."
+    append_review_decision(
+        config,
+        candidate.target_profile_id,
+        ReviewDecision(
+            candidate_id=candidate.id,
+            decision="approve",
+            reason=decision_reason,
+            applied_value=candidate.content,
+            original_section=section,
+            original_action=candidate.proposal.operation,
+            original_proposed=candidate.content,
+            review_flags=candidate.evaluation.notes if candidate.evaluation else [],
+            review_warnings=[],
+        ),
+    )
+
     source_kind = (
         candidate.capture_meta.capture_source if candidate.capture_meta else None
     )
@@ -334,6 +352,21 @@ def reject_candidate(
     candidate = load_candidate(config, candidate_id)
     candidate.status = "rejected"
     save_candidate(config, candidate)
+    append_review_decision(
+        config,
+        candidate.target_profile_id,
+        ReviewDecision(
+            candidate_id=candidate.id,
+            decision="reject",
+            reason=reason or "Rejected after user review.",
+            applied_value=None,
+            original_section=candidate.proposal.section,
+            original_action=candidate.proposal.operation,
+            original_proposed=candidate.content,
+            review_flags=candidate.evaluation.notes if candidate.evaluation else [],
+            review_warnings=[],
+        ),
+    )
     source_kind = (
         candidate.capture_meta.capture_source if candidate.capture_meta else None
     )

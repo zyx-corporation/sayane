@@ -82,6 +82,11 @@ def required_table_contracts() -> tuple[TableContract, ...]:
     )
 
 
+def quote_sqlite_identifier(identifier: str) -> str:
+    """Quote a SQLite identifier for metadata-only PRAGMA inspection."""
+    return '"' + identifier.replace('"', '""') + '"'
+
+
 def inspect_sqlite_tables(path: Path) -> dict[str, tuple[str, ...]]:
     """Inspect table and column names from a SQLite database.
 
@@ -95,7 +100,8 @@ def inspect_sqlite_tables(path: Path) -> dict[str, tuple[str, ...]]:
         ).fetchall()
         tables: dict[str, tuple[str, ...]] = {}
         for (table_name,) in table_rows:
-            column_rows = connection.execute(f"PRAGMA table_info({table_name})").fetchall()
+            quoted = quote_sqlite_identifier(table_name)
+            column_rows = connection.execute(f"PRAGMA table_info({quoted})").fetchall()
             tables[table_name] = tuple(row[1] for row in column_rows)
         return tables
     finally:

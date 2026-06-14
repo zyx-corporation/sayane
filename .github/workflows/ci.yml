@@ -49,7 +49,7 @@ jobs:
         env:
           SAYANE_INSTALL_DIR: /tmp/sayane-install-test
           SAYANE_BIN_DIR: /tmp/sayane-install-test/bin
-          SAYANE_SOURCE_DIR: $${{ github.workspace }}
+          SAYANE_SOURCE_DIR: ${{ github.workspace }}
           SAYANE_SKIP_INIT: "1"
           SAYANE_YES: "1"
         run: |

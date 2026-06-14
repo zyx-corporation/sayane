@@ -42,6 +42,18 @@ from sayane.storage.review_decisions import append_review_decision
 from sayane.lineage.record import record_lineage_event
 
 
+def _review_flags_from_candidate(candidate: CandidateUpdate) -> list[str]:
+    """Return compact string flags for ReviewDecision persistence."""
+    flags: list[str] = []
+    if candidate.evaluation is not None:
+        flags.append(f"rde:{candidate.evaluation.rde_class}")
+        flags.append(f"level:{candidate.evaluation.level}")
+        flags.append(f"status:{candidate.evaluation_status}")
+    if candidate.capture_meta is not None:
+        flags.extend(f"capture:{w}" for w in candidate.capture_meta.capture_warnings)
+    return flags
+
+
 def evaluate_candidate(
     config: BridgeConfig,
     candidate_id: str,
@@ -96,11 +108,8 @@ def evaluate_candidate(
                 if llm_review.uib is not None:
                     uib = llm_review.uib
             except LLMJudgeRequestError as exc:
-                # Keep heuristic (level 1) evaluation instead of clearing it.
-                # status stays "evaluated"; evaluation_status marked judge_failed.
                 candidate.evaluation_status = "judge_failed"
                 candidate.evaluation_error = _judge_error_payload(exc)
-                # Preserve heuristic-only evaluation if not already set.
                 if candidate.evaluation is None:
                     candidate.evaluation = CandidateEvaluation(
                         level=1,
@@ -287,7 +296,7 @@ def approve_candidate(
             original_section=section,
             original_action=candidate.proposal.operation,
             original_proposed=candidate.content,
-            review_flags=candidate.evaluation.notes if candidate.evaluation else [],
+            review_flags=_review_flags_from_candidate(candidate),
             review_warnings=[],
         ),
     )
@@ -363,7 +372,7 @@ def reject_candidate(
             original_section=candidate.proposal.section,
             original_action=candidate.proposal.operation,
             original_proposed=candidate.content,
-            review_flags=candidate.evaluation.notes if candidate.evaluation else [],
+            review_flags=_review_flags_from_candidate(candidate),
             review_warnings=[],
         ),
     )

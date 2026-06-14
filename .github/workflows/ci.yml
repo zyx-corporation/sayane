@@ -44,6 +44,7 @@ jobs:
           pytest -v tests/test_vault_factory.py
           pytest -v tests/test_vault_cli.py
           pytest -v tests/test_sqlite_vault_schema.py
+          pytest -v tests/test_sqlite_vault_store.py
           pytest -v tests/test_mcp_context.py
 
       - name: Pytest

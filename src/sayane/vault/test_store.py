@@ -12,6 +12,7 @@ from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 from sayane.vault.contracts import (
+    CryptoProvider,
     DataClass,
     EncryptedRecord,
     KeyCapabilities,
@@ -124,6 +125,66 @@ class InMemoryTestVaultStore(VaultStore):
         if record is None:
             return None
         return _test_decrypt(record.ciphertext)
+
+    def delete(
+        self,
+        *,
+        data_class: DataClass,
+        record_id: str,
+        session: UnlockSession,
+    ) -> None:
+        _require_session(session, f"{data_class.value}:delete")
+        self.records.pop((data_class, record_id), None)
+
+    def list_record_ids(self, data_class: DataClass) -> list[str]:
+        return sorted(record_id for dc, record_id in self.records if dc == data_class)
+
+
+@dataclass
+class CryptoBackedInMemoryTestVaultStore(VaultStore):
+    """In-memory test vault that routes encryption through CryptoProvider."""
+
+    crypto: CryptoProvider
+    records: dict[tuple[DataClass, str], EncryptedRecord] = field(default_factory=dict)
+
+    def mode(self) -> VaultStoreMode:
+        return VaultStoreMode.TEST
+
+    def is_plaintext_default(self) -> bool:
+        return False
+
+    def put(
+        self,
+        *,
+        data_class: DataClass,
+        record_id: str,
+        plaintext: bytes,
+        aad: dict,
+        session: UnlockSession,
+    ) -> EncryptedRecord:
+        _require_session(session, f"{data_class.value}:write")
+        record = self.crypto.encrypt_record(
+            record_id=record_id,
+            data_class=data_class,
+            plaintext=plaintext,
+            aad=aad,
+            session=session,
+        )
+        self.records[(data_class, record_id)] = record
+        return record
+
+    def get(
+        self,
+        *,
+        data_class: DataClass,
+        record_id: str,
+        session: UnlockSession,
+    ) -> bytes | None:
+        _require_session(session, f"{data_class.value}:read")
+        record = self.records.get((data_class, record_id))
+        if record is None:
+            return None
+        return self.crypto.decrypt_record(record, session=session)
 
     def delete(
         self,

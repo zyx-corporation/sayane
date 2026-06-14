@@ -256,6 +256,8 @@ Implemented SQLite schema contract:
   - `TableContract`
   - `required_table_contracts()`
   - `validate_sqlite_vault_schema()`
+  - `inspect_sqlite_tables()`
+  - `quote_sqlite_identifier()`
   - `create_table_statements()`
 
 The schema contract defines three required table families:
@@ -267,6 +269,8 @@ The schema contract defines three required table families:
 | `audit_metadata` | non-secret audit metadata for vault operations |
 
 The contract requires `wrapped_dek`, `ciphertext`, and `aad_json` style fields, and explicitly rejects production schema columns such as `plaintext`, `plain_text`, `raw_content`, `master_key`, `unwrapped_dek`, and `private_key`.
+
+`inspect_sqlite_tables()` reads only SQLite metadata via `sqlite_master` and `PRAGMA table_info`; it must not select record rows or expose encrypted record content. This supports `sayane vault schema --database` as a schema validation tool, not a data inspection tool.
 
 Implemented test-only infrastructure:
 
@@ -316,8 +320,10 @@ Implemented diagnostic entrypoint:
   - `sayane vault schema --json`
   - `sayane vault schema --ddl`
   - `sayane vault schema --ddl --json`
+  - `sayane vault schema --database <path>`
+  - `sayane vault schema --database <path> --json`
 
-The diagnostic commands are non-destructive and do not expose plaintext records. `vault status` checks runtime readiness and remains fail-closed for production while the backend is unimplemented. `vault policy` displays unlock policy presets without opening the runtime. `vault schema` displays the SQLite schema contract without opening a database.
+The diagnostic commands are non-destructive and do not expose plaintext records. `vault status` checks runtime readiness and remains fail-closed for production while the backend is unimplemented. `vault policy` displays unlock policy presets without opening the runtime. `vault schema` displays the SQLite schema contract without opening a database by default. `vault schema --database` opens an existing SQLite file read-only and inspects schema metadata only; validation failure returns exit code 1.
 
 The current Vault adapters cover:
 
@@ -359,6 +365,8 @@ Required CI checks:
 - fail if production code stores a plaintext master key in config;
 - fail if plaintext SQLite is introduced as a production default;
 - fail if SQLite Local Vault schema contains plaintext, master key, unwrapped DEK, raw content, or private key columns;
+- fail if `sayane vault schema --database` reads record rows instead of schema metadata only;
+- fail if `sayane vault schema --database` cannot detect forbidden production columns;
 - fail if test-only vault providers become production defaults;
 - fail if test-only vault runtime can be opened as production default;
 - fail if `sayane vault status` opens test-only runtime without an explicit test flag.
@@ -410,6 +418,7 @@ Benefits:
 - Unlock session management now has a runtime seam that separates keychain unlock, scoped session validation, and repository access.
 - Unlock policy presets make normal / sensitive / deep_private timeout behavior executable and testable.
 - SQLite schema contract makes keyring / encrypted record boundaries executable before persistent storage is implemented.
+- SQLite schema metadata validation allows future vault files to be checked without reading record rows.
 - Vault diagnostics now expose runtime readiness without exposing plaintext or silently opening test-only storage.
 
 Costs:
@@ -449,4 +458,4 @@ This ADR preserves the meaning of local-first without weakening it into plain lo
 
 The key semantic boundary is that local vault access, UI unlock, and external tool access are different acts. Unlocking the UI must not imply that MCP, Bridge, or any extension can read the same context.
 
-The current implementation status should be read as bounded evidence, not proof of production security. The test-only vault components make the intended boundaries executable for CI, but they do not provide production cryptographic assurance. The guarded runtime factory adds an additional fail-closed boundary by making test-only vault runtime explicit rather than implicit. The session manager adds another boundary by requiring scoped sessions at runtime instead of treating unlock as a global process state. Unlock policy presets further separate normal, sensitive, and deep-private access by time and scope. SQLite schema contract tests prevent the future persistent store from normalizing plaintext or master-key columns into the production schema. The vault diagnostic commands add observability while preserving the same fail-closed boundary.
+The current implementation status should be read as bounded evidence, not proof of production security. The test-only vault components make the intended boundaries executable for CI, but they do not provide production cryptographic assurance. The guarded runtime factory adds an additional fail-closed boundary by making test-only vault runtime explicit rather than implicit. The session manager adds another boundary by requiring scoped sessions at runtime instead of treating unlock as a global process state. Unlock policy presets further separate normal, sensitive, and deep-private access by time and scope. SQLite schema contract tests prevent the future persistent store from normalizing plaintext or master-key columns into the production schema. Metadata-only validation allows existing SQLite vault files to be inspected for schema drift without inspecting record rows. The vault diagnostic commands add observability while preserving the same fail-closed boundary.

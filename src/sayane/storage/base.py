@@ -70,8 +70,15 @@ class StorageBundle:
 
     @property
     def uses_git_auto_commit(self) -> bool:
-        """Git auto-commit is disabled for backend/API callers by default."""
-        return False
+        """Return true only for filesystem stores already initialized as Git repos."""
+        if self.backend != "filesystem":
+            return False
+        try:
+            from sayane.storage.git_integration import is_git_repo
+
+            return is_git_repo(self.profile.profile_dir)
+        except Exception:
+            return False
 
 
 class StorageBackendError(RuntimeError):

@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import json
+import sqlite3
 
 from typer.testing import CliRunner
 
 from sayane.cli.app import build_app
+from sayane.vault.sqlite_schema import create_table_statements
 
 
 def test_vault_status_default_reports_no_production_backend() -> None:
@@ -86,3 +88,46 @@ def test_vault_schema_can_include_reference_ddl() -> None:
     assert "create table if not exists audit_metadata" in ddl
     assert "ciphertext" in ddl
     assert "master_key" not in ddl
+
+
+def test_vault_schema_database_validation_passes_for_reference_schema(tmp_path) -> None:
+    db_path = tmp_path / "vault.sqlite"
+    connection = sqlite3.connect(db_path)
+    try:
+        for statement in create_table_statements():
+            connection.execute(statement)
+        connection.commit()
+    finally:
+        connection.close()
+
+    result = CliRunner().invoke(
+        build_app(),
+        ["vault", "schema", "--database", str(db_path), "--json"],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["validation_status"] == "pass"
+    assert payload["validation_errors"] == []
+
+
+def test_vault_schema_database_validation_fails_for_plaintext_column(tmp_path) -> None:
+    db_path = tmp_path / "bad-vault.sqlite"
+    connection = sqlite3.connect(db_path)
+    try:
+        for statement in create_table_statements():
+            connection.execute(statement)
+        connection.execute("ALTER TABLE encrypted_records ADD COLUMN plaintext TEXT")
+        connection.commit()
+    finally:
+        connection.close()
+
+    result = CliRunner().invoke(
+        build_app(),
+        ["vault", "schema", "--database", str(db_path), "--json"],
+    )
+
+    assert result.exit_code == 1
+    payload = json.loads(result.stdout)
+    assert payload["validation_status"] == "fail"
+    assert any("forbidden columns: plaintext" in error for error in payload["validation_errors"])

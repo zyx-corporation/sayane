@@ -41,7 +41,8 @@ def register_vault_cli(app: typer.Typer) -> None:
     ) -> None:
         """Show Local Vault runtime status without exposing plaintext records."""
         if sqlite_path is not None and not test_mode:
-            raise typer.BadParameter("--sqlite requires --test")
+            typer.echo("--sqlite requires --test")
+            raise typer.Exit(2)
         mode = "test" if test_mode else "production"
         payload: dict[str, object] = {
             "profile_id": profile_id,

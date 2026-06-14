@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from enum import Enum
+from enum import StrEnum
 
 from sayane.vault.contracts import SecretStoreAssurance, UnlockSession
 
 
-class UnlockLevel(str, Enum):
+class UnlockLevel(StrEnum):
     """Human-facing unlock sensitivity levels."""
 
     NORMAL = "normal"
@@ -38,8 +38,9 @@ def default_unlock_policy(level: UnlockLevel) -> UnlockPolicy:
             default_scopes=(
                 "profile:read",
                 "project_context:read",
-                "mcp:compiled_context",
+                "mcp_preview:read",
             ),
+            requires_explicit_unlock=False,
         )
     if level == UnlockLevel.SENSITIVE:
         return UnlockPolicy(
@@ -65,35 +66,29 @@ def default_unlock_policy(level: UnlockLevel) -> UnlockPolicy:
             absolute_timeout_seconds=5 * 60,
             default_scopes=(
                 "deep_private:read",
-                "deep_private:write",
-                "deep_private:key",
                 "raw_capture:read",
-                "raw_capture:write",
-                "raw_capture:key",
                 "cloud_transfer_log:read",
-                "cloud_transfer_log:key",
             ),
         )
-    raise ValueError(f"Unsupported unlock level: {level}")
+    raise ValueError(f"unknown unlock level: {level}")
 
 
 def build_unlock_session_from_policy(
     *,
     session_id: str,
     purpose: str,
-    assurance: SecretStoreAssurance,
     policy: UnlockPolicy,
+    assurance: SecretStoreAssurance,
     now: datetime | None = None,
-    scopes: tuple[str, ...] | None = None,
 ) -> UnlockSession:
-    """Build an UnlockSession using policy timeout presets."""
-    current = now or datetime.now(UTC)
+    """Build an UnlockSession using one policy preset."""
+    started_at = now or datetime.now(UTC)
     return UnlockSession(
         session_id=session_id,
         purpose=purpose,
-        scopes=scopes or policy.default_scopes,
+        scopes=policy.default_scopes,
         assurance=assurance,
-        unlocked_at=current,
-        expires_at=current + timedelta(seconds=policy.absolute_timeout_seconds),
-        idle_expires_at=current + timedelta(seconds=policy.idle_timeout_seconds),
+        unlocked_at=started_at,
+        expires_at=started_at + timedelta(seconds=policy.absolute_timeout_seconds),
+        idle_expires_at=started_at + timedelta(seconds=policy.idle_timeout_seconds),
     )

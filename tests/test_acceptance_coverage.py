@@ -29,10 +29,8 @@ ACCEPTANCE_L1_COVERAGE: dict[str, str] = {
 
 
 def _import_test_module(nodeid: str):
-    """Import a test module the same way pytest does (tests/ on sys.path)."""
+    """Import a test module by its package-qualified pytest node id."""
     module_name, func_name = nodeid.split("::")
-    if module_name.startswith("tests."):
-        module_name = module_name.removeprefix("tests.")
     return importlib.import_module(module_name), func_name
 
 

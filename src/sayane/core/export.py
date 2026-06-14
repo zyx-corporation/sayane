@@ -37,11 +37,7 @@ _EXPORT_NOISE_SUBSTRINGS: tuple[str, ...] = (
     "保存済み Sayane 文脈",
     "提案される変更",
 )
-_EXPORT_NOISE_EXACT: frozenset[str] = frozenset({
-    "debug_only",
-    "transient_session",
-    "ui_noise",
-})
+_EXPORT_NOISE_EXACT: frozenset[str] = frozenset({"debug_only", "transient_session", "ui_noise"})
 
 
 def _is_noise_value(value: str) -> bool:
@@ -99,7 +95,6 @@ def _pick_profile_sections(profile: SayaneProfile, scopes: list[str]) -> dict[st
 
 
 def export_yaml(profile: SayaneProfile, scopes: list[str]) -> str:
-    """Export selected scopes as YAML."""
     import yaml
 
     data = _pick_profile_sections(profile, scopes)
@@ -107,7 +102,6 @@ def export_yaml(profile: SayaneProfile, scopes: list[str]) -> str:
 
 
 def export_markdown(profile: SayaneProfile, scopes: list[str], target: str = "generic") -> str:
-    """Export selected scopes as human-readable Markdown."""
     if target == "chatgpt":
         return _export_markdown_compact(profile, scopes, "ChatGPT")
     if target in ("claude", "anthropic"):
@@ -166,24 +160,51 @@ def _append_values_and_policy(lines: list[str], data: dict[str, Any]) -> None:
         for value in values["core"]:
             lines.append(f"- {value}")
         lines.append("")
+    _append_policy(lines, data)
+
+
+def _append_philosophical_stance(lines: list[str], data: dict[str, Any]) -> None:
+    values = data.get("values")
+    if not isinstance(values, dict):
+        return
+    core = values.get("core", [])
+    if not core:
+        return
+    lines.append("## Philosophical Stance")
+    lines.append("")
+    for index, axiom in enumerate(core, start=1):
+        lines.append(f"### Axiom {index}")
+        lines.append("")
+        lines.append("Quote:")
+        lines.append("")
+        lines.append(f"> {axiom}")
+        lines.append("")
+        lines.append("Interpretation: not provided")
+        lines.append("")
+
+
+def _append_policy(lines: list[str], data: dict[str, Any]) -> None:
     policy = data.get("policy")
-    if isinstance(policy, dict):
-        response = policy.get("response")
-        if isinstance(response, dict):
-            prefer = response.get("prefer", [])
-            avoid = response.get("avoid", [])
-            if prefer or avoid:
-                lines.append("## Response Policy")
-                lines.append("")
-                if prefer:
-                    lines.append("Prefer:")
-                    for item in prefer:
-                        lines.append(f"- {item}")
-                if avoid:
-                    lines.append("Avoid:")
-                    for item in avoid:
-                        lines.append(f"- {item}")
-                lines.append("")
+    if not isinstance(policy, dict):
+        return
+    response = policy.get("response")
+    if not isinstance(response, dict):
+        return
+    prefer = response.get("prefer", [])
+    avoid = response.get("avoid", [])
+    if not prefer and not avoid:
+        return
+    lines.append("## Response Policy")
+    lines.append("")
+    if prefer:
+        lines.append("Prefer:")
+        for item in prefer:
+            lines.append(f"- {item}")
+    if avoid:
+        lines.append("Avoid:")
+        for item in avoid:
+            lines.append(f"- {item}")
+    lines.append("")
 
 
 def _append_knowledge_projects_terms(lines: list[str], data: dict[str, Any]) -> None:
@@ -210,6 +231,35 @@ def _append_knowledge_projects_terms(lines: list[str], data: dict[str, Any]) -> 
         lines.append("")
         for term in terms:
             lines.append(f"- {term}")
+        lines.append("")
+
+
+def _append_principles(lines: list[str], data: dict[str, Any]) -> None:
+    knowledge = data.get("knowledge")
+    if not isinstance(knowledge, dict) or not knowledge.get("concepts"):
+        return
+    lines.append("## Principles")
+    lines.append("")
+    for concept in knowledge["concepts"]:
+        lines.append(f"- {concept}")
+    lines.append("")
+
+
+def _append_execution_context(lines: list[str], data: dict[str, Any]) -> None:
+    projects = data.get("major_projects", [])
+    cm = data.get("communication_mode")
+    if not projects and not isinstance(cm, dict):
+        return
+    lines.append("## Execution Context")
+    lines.append("")
+    if projects:
+        lines.append("### Projects")
+        lines.append("")
+        for project in projects:
+            if isinstance(project, dict):
+                name = project.get("name", "")
+                summary = project.get("summary", "")
+                lines.append(f"- **{name}**: {summary}" if summary else f"- {name}")
         lines.append("")
 
 
@@ -258,8 +308,15 @@ def _export_markdown_compact(profile: SayaneProfile, scopes: list[str], target_n
     if isinstance(ident, dict):
         _append_identity(lines, ident, legacy_label=True)
     _append_interaction(lines, data, "## Interaction Preferences")
-    _append_values_and_policy(lines, data)
-    _append_knowledge_projects_terms(lines, data)
+    if "ethics" in scopes or "philosophy" in scopes:
+        _append_philosophical_stance(lines, data)
+        _append_policy(lines, data)
+    elif "principles" in scopes:
+        _append_principles(lines, data)
+    elif "execution" in scopes:
+        _append_execution_context(lines, data)
+    else:
+        _append_knowledge_projects_terms(lines, data)
     lines.append("## Export Policy Notes")
     lines.append("")
     lines.append("- Some private or sensitive fields may be omitted.")
@@ -269,7 +326,6 @@ def _export_markdown_compact(profile: SayaneProfile, scopes: list[str], target_n
 
 
 def export_prompt(profile: SayaneProfile, scopes: list[str], target: str = "generic") -> str:
-    """Export as a compact prompt without promptExport-never contact fields."""
     data = _pick_profile_sections(profile, scopes)
     lines: list[str] = ["[Context]", ""]
     ident = data.get("identity")
@@ -301,21 +357,6 @@ def export_prompt(profile: SayaneProfile, scopes: list[str], target: str = "gene
         lines.append("Values:")
         for value in values["core"]:
             lines.append(f"- {value}")
-    policy = data.get("policy")
-    if isinstance(policy, dict):
-        response = policy.get("response")
-        if isinstance(response, dict):
-            prefer = response.get("prefer", [])
-            avoid = response.get("avoid", [])
-            if prefer:
-                lines.append("")
-                lines.append("Preferred responses:")
-                for item in prefer:
-                    lines.append(f"- {item}")
-            if avoid:
-                lines.append("")
-                lines.append("Avoid:")
-                for item in avoid:
-                    lines.append(f"- {item}")
+    _append_policy(lines, data)
     _append_knowledge_projects_terms(lines, data)
     return "\n".join(lines)

@@ -248,6 +248,26 @@ Implemented session management:
 
 `InMemoryUnlockSessionManager.open_policy_session()` can open sessions using the ADR 0001 unlock presets. This makes timeout and scope policy executable without treating unlock as a global process state.
 
+Implemented SQLite schema contract:
+
+- `src/sayane/vault/sqlite_schema.py`
+  - `SCHEMA_VERSION = local_vault.sqlite.v1`
+  - `VaultTable`
+  - `TableContract`
+  - `required_table_contracts()`
+  - `validate_sqlite_vault_schema()`
+  - `create_table_statements()`
+
+The schema contract defines three required table families:
+
+| Table | Purpose |
+| --- | --- |
+| `keyring` | wrapped DEK metadata and key status |
+| `encrypted_records` | encrypted vault record content with AAD binding |
+| `audit_metadata` | non-secret audit metadata for vault operations |
+
+The contract requires `wrapped_dek`, `ciphertext`, and `aad_json` style fields, and explicitly rejects production schema columns such as `plaintext`, `plain_text`, `raw_content`, `master_key`, `unwrapped_dek`, and `private_key`.
+
 Implemented test-only infrastructure:
 
 - `src/sayane/vault/test_store.py`
@@ -290,6 +310,8 @@ Implemented diagnostic entrypoint:
   - `sayane vault status --json`
   - `sayane vault status --test`
   - `sayane vault status --test --json`
+  - `sayane vault policy`
+  - `sayane vault policy --json`
 
 The diagnostic command is non-destructive and does not expose plaintext records. By default it checks production mode and reports the production Local Vault backend as unavailable while it remains unimplemented. Test-only runtime is shown only when `--test` is explicitly provided, and its output is marked `production_ready: false` and `test_only: true`.
 
@@ -321,6 +343,7 @@ Required CI checks:
 - run Local Vault contract tests;
 - run unlock policy preset tests;
 - run unlock session manager tests;
+- run SQLite Local Vault schema contract tests;
 - run test-only keychain / crypto / vault store tests;
 - run Vault-backed Candidate / ReviewDecision / Lineage adapter tests;
 - run Vault runtime factory tests;
@@ -331,6 +354,7 @@ Required CI checks:
 - fail if UI unlock state is treated as equivalent to MCP / Bridge / capture access;
 - fail if production code stores a plaintext master key in config;
 - fail if plaintext SQLite is introduced as a production default;
+- fail if SQLite Local Vault schema contains plaintext, master key, unwrapped DEK, raw content, or private key columns;
 - fail if test-only vault providers become production defaults;
 - fail if test-only vault runtime can be opened as production default;
 - fail if `sayane vault status` opens test-only runtime without an explicit test flag.
@@ -353,6 +377,7 @@ pytest tests/test_vault_lineage_adapter.py
 pytest tests/test_vault_repository_bundle.py
 pytest tests/test_vault_factory.py
 pytest tests/test_vault_cli.py
+pytest tests/test_sqlite_vault_schema.py
 pytest tests/test_mcp_context.py
 ```
 
@@ -380,6 +405,7 @@ Benefits:
 - Vault runtime construction now has a fail-closed seam that prevents test-only components from becoming production defaults.
 - Unlock session management now has a runtime seam that separates keychain unlock, scoped session validation, and repository access.
 - Unlock policy presets make normal / sensitive / deep_private timeout behavior executable and testable.
+- SQLite schema contract makes keyring / encrypted record boundaries executable before persistent storage is implemented.
 - Vault diagnostics now expose runtime readiness without exposing plaintext or silently opening test-only storage.
 
 Costs:
@@ -394,8 +420,7 @@ Costs:
 
 This ADR does not define:
 
-- the final persistent store schema;
-- the full migration path from in-memory store;
+- the final persistent store migration path;
 - cloud sync protocol;
 - multi-device key recovery;
 - organization/team key management;
@@ -405,7 +430,7 @@ This ADR does not define:
 
 - Implement production `PlatformKeychainProvider` backends.
 - Implement production `KeyManager` and `CryptoProvider` backends.
-- Define SQLite schema for keyring and encrypted records.
+- Implement the SQLite-backed encrypted persistent `VaultStore` using the schema contract.
 - Define Deep Private / Layer 3 classification in a separate ADR or specification.
 - Add production local vault security tests.
 - Ensure MCP Context Exposure Policy works only after scoped vault access.
@@ -420,4 +445,4 @@ This ADR preserves the meaning of local-first without weakening it into plain lo
 
 The key semantic boundary is that local vault access, UI unlock, and external tool access are different acts. Unlocking the UI must not imply that MCP, Bridge, or any extension can read the same context.
 
-The current implementation status should be read as bounded evidence, not proof of production security. The test-only vault components make the intended boundaries executable for CI, but they do not provide production cryptographic assurance. The guarded runtime factory adds an additional fail-closed boundary by making test-only vault runtime explicit rather than implicit. The session manager adds another boundary by requiring scoped sessions at runtime instead of treating unlock as a global process state. Unlock policy presets further separate normal, sensitive, and deep-private access by time and scope. The vault diagnostic command adds observability while preserving the same fail-closed boundary.
+The current implementation status should be read as bounded evidence, not proof of production security. The test-only vault components make the intended boundaries executable for CI, but they do not provide production cryptographic assurance. The guarded runtime factory adds an additional fail-closed boundary by making test-only vault runtime explicit rather than implicit. The session manager adds another boundary by requiring scoped sessions at runtime instead of treating unlock as a global process state. Unlock policy presets further separate normal, sensitive, and deep-private access by time and scope. SQLite schema contract tests prevent the future persistent store from normalizing plaintext or master-key columns into the production schema. The vault diagnostic command adds observability while preserving the same fail-closed boundary.

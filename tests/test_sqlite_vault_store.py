@@ -7,6 +7,7 @@ import sqlite3
 import pytest
 
 from sayane.vault.contracts import DataClass, VaultStoreError, VaultStoreMode
+from sayane.vault.sqlite_runtime import build_sqlite_test_vault_runtime
 from sayane.vault.sqlite_schema import inspect_sqlite_tables, validate_sqlite_vault_schema
 from sayane.vault.sqlite_store import SQLiteVaultStore
 from sayane.vault.test_crypto import TestOnlyCryptoProvider, TestOnlyKeyManager
@@ -102,3 +103,12 @@ def test_sqlite_vault_store_requires_scope(tmp_path) -> None:
             {"profile_id": "default"},
             narrow,
         )
+
+
+def test_sqlite_test_runtime_builder_is_explicit_and_not_plaintext(tmp_path) -> None:
+    runtime = build_sqlite_test_vault_runtime(path=tmp_path / "vault.sqlite", profile_id="default")
+
+    assert runtime.mode() if callable(getattr(runtime, "mode", None)) else runtime.mode == VaultStoreMode.TEST
+    assert runtime.vault.mode() == VaultStoreMode.TEST
+    assert runtime.vault.is_plaintext_default() is False
+    assert validate_sqlite_vault_schema(inspect_sqlite_tables(runtime.vault.path)) == []

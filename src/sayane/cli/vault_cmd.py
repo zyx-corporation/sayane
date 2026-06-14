@@ -9,6 +9,7 @@ import typer
 
 from sayane.vault.contracts import VaultStoreError
 from sayane.vault.factory import open_vault_runtime
+from sayane.vault.unlock_policy import UnlockLevel, default_unlock_policy
 
 
 def register_vault_cli(app: typer.Typer) -> None:
@@ -76,4 +77,38 @@ def register_vault_cli(app: typer.Typer) -> None:
             typer.echo(f"  Reason: {payload['reason']}")
             typer.echo("  Production Local Vault backend is intentionally fail-closed until implemented.")
 
+    @vault_app.command("policy")
+    def vault_policy(
+        level: Annotated[str | None, typer.Option("--level", help="normal | sensitive | deep_private")] = None,
+        json_out: Annotated[bool, typer.Option("--json", help="Emit JSON.")] = False,
+    ) -> None:
+        """Show Local Vault unlock policy presets without opening the vault."""
+        levels = [UnlockLevel(level)] if level else list(UnlockLevel)
+        policies = [_policy_payload(item) for item in levels]
+        payload: object = policies[0] if level else {"policies": policies}
+
+        if json_out:
+            typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+            return
+
+        for policy in policies:
+            typer.echo(f"Unlock policy: {policy['level']}")
+            typer.echo(f"  Idle timeout: {policy['idle_timeout_seconds']}s")
+            typer.echo(f"  Absolute timeout: {policy['absolute_timeout_seconds']}s")
+            typer.echo(f"  Explicit unlock: {policy['requires_explicit_unlock']}")
+            typer.echo("  Scopes:")
+            for scope in policy["scopes"]:
+                typer.echo(f"    - {scope}")
+
     app.add_typer(vault_app, name="vault")
+
+
+def _policy_payload(level: UnlockLevel) -> dict[str, object]:
+    policy = default_unlock_policy(level)
+    return {
+        "level": policy.level.value,
+        "idle_timeout_seconds": policy.idle_timeout_seconds,
+        "absolute_timeout_seconds": policy.absolute_timeout_seconds,
+        "requires_explicit_unlock": policy.requires_explicit_unlock,
+        "scopes": list(policy.default_scopes),
+    }

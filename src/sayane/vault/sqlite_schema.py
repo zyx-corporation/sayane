@@ -7,16 +7,16 @@ SQLite database schema without reading encrypted record content.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from enum import Enum
-from pathlib import Path
 import sqlite3
+from dataclasses import dataclass
+from enum import StrEnum
+from pathlib import Path
 
 
 SCHEMA_VERSION = "local_vault.sqlite.v1"
 
 
-class VaultTable(str, Enum):
+class VaultTable(StrEnum):
     """SQLite tables required for encrypted Local Vault persistence."""
 
     KEYRING = "keyring"
@@ -49,9 +49,9 @@ ENCRYPTED_RECORD_COLUMNS: tuple[str, ...] = (
 AUDIT_METADATA_COLUMNS: tuple[str, ...] = (
     "event_id",
     "event_type",
-    "record_id",
+    "profile_id",
     "data_class",
-    "metadata_json",
+    "record_id",
     "created_at",
 )
 
@@ -67,69 +67,68 @@ FORBIDDEN_PRODUCTION_COLUMNS: tuple[str, ...] = (
 
 @dataclass(frozen=True)
 class TableContract:
-    """Table name and required columns."""
+    """Required and forbidden columns for one SQLite table."""
 
-    table: VaultTable
-    columns: tuple[str, ...]
+    name: str
+    required_columns: tuple[str, ...]
+    forbidden_columns: tuple[str, ...] = FORBIDDEN_PRODUCTION_COLUMNS
 
 
 def required_table_contracts() -> tuple[TableContract, ...]:
-    """Return required Local Vault SQLite table contracts."""
+    """Return the required SQLite vault table contracts."""
     return (
-        TableContract(VaultTable.KEYRING, KEYRING_COLUMNS),
-        TableContract(VaultTable.ENCRYPTED_RECORDS, ENCRYPTED_RECORD_COLUMNS),
-        TableContract(VaultTable.AUDIT_METADATA, AUDIT_METADATA_COLUMNS),
+        TableContract(VaultTable.KEYRING.value, KEYRING_COLUMNS),
+        TableContract(VaultTable.ENCRYPTED_RECORDS.value, ENCRYPTED_RECORD_COLUMNS),
+        TableContract(VaultTable.AUDIT_METADATA.value, AUDIT_METADATA_COLUMNS),
     )
 
 
-def quote_sqlite_identifier(identifier: str) -> str:
-    """Quote a SQLite identifier for metadata-only PRAGMA inspection."""
-    return '"' + identifier.replace('"', '""') + '"'
+def validate_sqlite_vault_schema(tables: dict[str, set[str]]) -> list[str]:
+    """Validate SQLite schema metadata without inspecting record rows."""
+    errors: list[str] = []
+    for contract in required_table_contracts():
+        columns = tables.get(contract.name)
+        if columns is None:
+            errors.append(f"missing required table: {contract.name}")
+            continue
+        for column in contract.required_columns:
+            if column not in columns:
+                errors.append(f"missing required column: {contract.name}.{column}")
+        for column in contract.forbidden_columns:
+            if column in columns:
+                errors.append(f"forbidden plaintext/key column: {contract.name}.{column}")
+    return errors
 
 
-def inspect_sqlite_tables(path: Path) -> dict[str, tuple[str, ...]]:
-    """Inspect table and column names from a SQLite database.
+def inspect_sqlite_tables(path: Path) -> dict[str, set[str]]:
+    """Inspect SQLite table metadata only.
 
-    This reads only SQLite metadata via PRAGMA table_info. It does not select
-    record rows or expose vault content.
+    This deliberately uses sqlite_master and PRAGMA table_info. It must not read
+    record rows from encrypted_records.
     """
-    connection = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+    connection = sqlite3.connect(path)
     try:
         table_rows = connection.execute(
-            "SELECT name FROM sqlite_master WHERE type = 'table'",
+            "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name"
         ).fetchall()
-        tables: dict[str, tuple[str, ...]] = {}
+        tables: dict[str, set[str]] = {}
         for (table_name,) in table_rows:
-            quoted = quote_sqlite_identifier(table_name)
-            column_rows = connection.execute(f"PRAGMA table_info({quoted})").fetchall()
-            tables[table_name] = tuple(row[1] for row in column_rows)
+            column_rows = connection.execute(
+                f"PRAGMA table_info({quote_sqlite_identifier(table_name)})"
+            ).fetchall()
+            tables[table_name] = {row[1] for row in column_rows}
         return tables
     finally:
         connection.close()
 
 
-def validate_sqlite_vault_schema(
-    tables: dict[str, tuple[str, ...]],
-) -> list[str]:
-    """Validate a SQLite schema description against the Local Vault contract."""
-    errors: list[str] = []
-    for contract in required_table_contracts():
-        table_name = contract.table.value
-        columns = tables.get(table_name)
-        if columns is None:
-            errors.append(f"missing table: {table_name}")
-            continue
-        missing = [col for col in contract.columns if col not in columns]
-        if missing:
-            errors.append(f"{table_name}: missing columns: {', '.join(missing)}")
-        forbidden = [col for col in columns if col in FORBIDDEN_PRODUCTION_COLUMNS]
-        if forbidden:
-            errors.append(f"{table_name}: forbidden columns: {', '.join(forbidden)}")
-    return errors
+def quote_sqlite_identifier(identifier: str) -> str:
+    """Quote a SQLite identifier for PRAGMA metadata inspection."""
+    return '"' + identifier.replace('"', '""') + '"'
 
 
 def create_table_statements() -> tuple[str, ...]:
-    """Return reference CREATE TABLE statements for production implementation."""
+    """Return reference CREATE TABLE statements for the schema contract."""
     return (
         """
         CREATE TABLE IF NOT EXISTS keyring (
@@ -142,7 +141,7 @@ def create_table_statements() -> tuple[str, ...]:
             rotated_at TEXT,
             status TEXT NOT NULL
         )
-        """.strip(),
+        """,
         """
         CREATE TABLE IF NOT EXISTS encrypted_records (
             record_id TEXT NOT NULL,
@@ -152,19 +151,18 @@ def create_table_statements() -> tuple[str, ...]:
             ciphertext BLOB NOT NULL,
             aad_json TEXT NOT NULL,
             created_at TEXT NOT NULL,
-            updated_at TEXT,
-            PRIMARY KEY (data_class, record_id),
-            FOREIGN KEY (key_id) REFERENCES keyring(key_id)
+            updated_at TEXT NOT NULL,
+            PRIMARY KEY (data_class, record_id)
         )
-        """.strip(),
+        """,
         """
         CREATE TABLE IF NOT EXISTS audit_metadata (
             event_id TEXT PRIMARY KEY,
             event_type TEXT NOT NULL,
-            record_id TEXT,
+            profile_id TEXT,
             data_class TEXT,
-            metadata_json TEXT NOT NULL,
+            record_id TEXT,
             created_at TEXT NOT NULL
         )
-        """.strip(),
+        """,
     )

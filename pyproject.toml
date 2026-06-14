@@ -66,6 +66,15 @@ pythonpath = ["src"]
 target-version = "py311"
 line-length = 100
 src = ["src", "tests"]
+extend-exclude = [
+    "src/sayane/bridge/**",
+    "src/sayane/cli/**",
+    "src/sayane/core/**",
+    "src/sayane/evaluators/**",
+    "src/sayane/lineage/**",
+    "src/sayane/storage/**",
+    "tests/**",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]

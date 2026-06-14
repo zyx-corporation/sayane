@@ -110,8 +110,20 @@ def test_sqlite_vault_store_persists_ciphertext_not_plaintext(tmp_path) -> None:
 def test_sqlite_vault_store_lists_and_deletes_records(tmp_path) -> None:
     store, session = _store(tmp_path)
     aad = {"profile_id": "default", "record_type": "candidate"}
-    store.put(data_class=DataClass.CANDIDATE, record_id="c1", plaintext=b"one", aad=aad, session=session)
-    store.put(data_class=DataClass.CANDIDATE, record_id="c2", plaintext=b"two", aad=aad, session=session)
+    store.put(
+        data_class=DataClass.CANDIDATE,
+        record_id="c1",
+        plaintext=b"one",
+        aad=aad,
+        session=session,
+    )
+    store.put(
+        data_class=DataClass.CANDIDATE,
+        record_id="c2",
+        plaintext=b"two",
+        aad=aad,
+        session=session,
+    )
 
     assert store.list_record_ids(DataClass.CANDIDATE, session=session) == ["c1", "c2"]
 

@@ -27,7 +27,11 @@ def _candidate(candidate_id: str = "c-vault", profile_id: str = "default") -> Ca
         status="pending",
         target_profile_id=profile_id,
         content="candidate content",
-        source=CandidateSource(type="test", uri=None, captured_at=datetime.now(UTC)),
+        source=CandidateSource(
+            type="test",
+            uri=None,
+            captured_at=datetime.now(UTC),
+        ),
         proposal=CandidateProposal(
             section="knowledge.concepts",
             operation="add",
@@ -86,7 +90,9 @@ def test_vault_candidate_requires_write_scope() -> None:
 
 
 def test_vault_candidate_requires_read_scope() -> None:
-    vault, write_session = _vault_and_session(["candidate:write", "candidate:read", "candidate:key"])
+    vault, write_session = _vault_and_session(
+        ["candidate:write", "candidate:read", "candidate:key"],
+    )
     store = VaultCandidateStore(vault, profile_id="default")
     record_id = store.save(_candidate(), session=write_session)
 
@@ -97,7 +103,9 @@ def test_vault_candidate_requires_read_scope() -> None:
 
 
 def test_vault_candidate_requires_delete_scope() -> None:
-    vault, write_session = _vault_and_session(["candidate:write", "candidate:read", "candidate:key"])
+    vault, write_session = _vault_and_session(
+        ["candidate:write", "candidate:read", "candidate:key"],
+    )
     store = VaultCandidateStore(vault, profile_id="default")
     record_id = store.save(_candidate(), session=write_session)
 

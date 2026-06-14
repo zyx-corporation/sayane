@@ -67,6 +67,7 @@ target-version = "py311"
 line-length = 100
 src = ["src", "tests"]
 extend-exclude = [
+    "src/sayane/adapters/**",
     "src/sayane/bridge/**",
     "src/sayane/cli/**",
     "src/sayane/core/**",

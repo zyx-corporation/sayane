@@ -1,7 +1,18 @@
-"""Git commit integration for profile stores."""
+"""Git commit integration for profile stores.
 
+Git integration is retained as an explicit legacy/manual integration point.
+Implicit auto-commit is disabled by default while the Local Vault security model
+is being implemented.
+"""
+
+from __future__ import annotations
+
+import os
 import subprocess
 from pathlib import Path
+
+
+LEGACY_GIT_AUTOCOMMIT_ENV = "SAYANE_ENABLE_LEGACY_GIT_AUTOCOMMIT"
 
 
 class GitError(RuntimeError):
@@ -75,11 +86,24 @@ def commit_profile_store(
     return _run_git(profile_dir, "rev-parse", "HEAD")
 
 
-def auto_commit_profile_store(profile_dir: Path, message: str) -> str:
-    """Auto-init Git and commit profile changes (default until Commercial Edition encrypted SQLite).
+def legacy_git_autocommit_enabled() -> bool:
+    """Return True only when the user explicitly opts into legacy Git auto-commit."""
+    return os.environ.get(LEGACY_GIT_AUTOCOMMIT_ENV, "").lower() in {"1", "true", "yes", "on"}
 
-    Returns commit hash, or empty string if nothing to commit or Git is unavailable.
+
+def auto_commit_profile_store(profile_dir: Path, message: str) -> str:
+    """Optionally auto-init Git and commit profile changes.
+
+    Phase 4 keeps FileSystem storage as a local working store only. Implicit
+    Git auto-commit is disabled because Candidate / ReviewDecision / Lineage
+    may contain high-sensitivity context and external sync boundaries are not
+    finalized.
+
+    Set SAYANE_ENABLE_LEGACY_GIT_AUTOCOMMIT=1 to opt into the old behavior for
+    local/manual compatibility.
     """
+    if not legacy_git_autocommit_enabled():
+        return ""
     try:
         return commit_profile_store(profile_dir, message, init=True)
     except GitError:

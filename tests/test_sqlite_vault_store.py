@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 import sqlite3
+from datetime import UTC, datetime
 
 import pytest
 
@@ -21,7 +21,11 @@ def _store(tmp_path):
     keychain = TestOnlyKeychainProvider()
     key_manager = TestOnlyKeyManager(keychain=keychain)
     crypto = TestOnlyCryptoProvider(key_manager=key_manager)
-    store = SQLiteVaultStore(tmp_path / "vault.sqlite", crypto=crypto, store_mode=VaultStoreMode.TEST)
+    store = SQLiteVaultStore(
+        tmp_path / "vault.sqlite",
+        crypto=crypto,
+        store_mode=VaultStoreMode.TEST,
+    )
     session = keychain.unlock(
         "sqlite-vault-test",
         [
@@ -40,8 +44,15 @@ def _candidate(candidate_id: str = "c-sqlite") -> CandidateUpdate:
         status="pending",
         target_profile_id="default",
         content="sqlite candidate content",
-        source=CandidateSource(type="test", uri=None, captured_at=datetime.now(UTC)),
-        proposal=CandidateProposal(section="knowledge.concepts", add=["sqlite candidate content"]),
+        source=CandidateSource(
+            type="test",
+            uri=None,
+            captured_at=datetime.now(UTC),
+        ),
+        proposal=CandidateProposal(
+            section="knowledge.concepts",
+            add=["sqlite candidate content"],
+        ),
     )
 
 
@@ -71,7 +82,11 @@ def test_sqlite_vault_store_persists_ciphertext_not_plaintext(tmp_path) -> None:
     connection = sqlite3.connect(store.path)
     try:
         row = connection.execute(
-            "SELECT ciphertext, aad_json FROM encrypted_records WHERE data_class = ? AND record_id = ?",
+            """
+            SELECT ciphertext, aad_json
+            FROM encrypted_records
+            WHERE data_class = ? AND record_id = ?
+            """,
             (DataClass.CANDIDATE.value, "c1"),
         ).fetchone()
     finally:
@@ -120,7 +135,10 @@ def test_sqlite_vault_store_requires_scope(tmp_path) -> None:
 
 
 def test_sqlite_test_runtime_builder_is_explicit_and_not_plaintext(tmp_path) -> None:
-    runtime = build_sqlite_test_vault_runtime(path=tmp_path / "vault.sqlite", profile_id="default")
+    runtime = build_sqlite_test_vault_runtime(
+        path=tmp_path / "vault.sqlite",
+        profile_id="default",
+    )
 
     assert runtime.mode == VaultStoreMode.TEST
     assert runtime.vault.mode() == VaultStoreMode.TEST
@@ -129,7 +147,10 @@ def test_sqlite_test_runtime_builder_is_explicit_and_not_plaintext(tmp_path) -> 
 
 
 def test_sqlite_test_runtime_repository_bundle_round_trip(tmp_path) -> None:
-    runtime = build_sqlite_test_vault_runtime(path=tmp_path / "vault.sqlite", profile_id="default")
+    runtime = build_sqlite_test_vault_runtime(
+        path=tmp_path / "vault.sqlite",
+        profile_id="default",
+    )
     session = runtime.keychain.unlock(
         "sqlite-runtime-bundle-test",
         [
@@ -156,9 +177,16 @@ def test_sqlite_test_runtime_repository_bundle_round_trip(tmp_path) -> None:
         session=session,
     )
 
-    assert runtime.repositories.candidates.load(candidate_id, session=session).content == "sqlite candidate content"
-    assert runtime.repositories.review_decisions.get(decision_id, session=session).decision == "approve"
-    assert runtime.repositories.lineage.get(lineage_id, session=session)["candidate_id"] == candidate_id
+    candidate = runtime.repositories.candidates.load(candidate_id, session=session)
+    decision = runtime.repositories.review_decisions.get(decision_id, session=session)
+    lineage = runtime.repositories.lineage.get(lineage_id, session=session)
+
+    assert candidate is not None
+    assert candidate.content == "sqlite candidate content"
+    assert decision is not None
+    assert decision.decision == "approve"
+    assert lineage is not None
+    assert lineage["candidate_id"] == candidate_id
     assert runtime.repositories.smoke_check(session=session) == {
         "profile_id": "default",
         "candidate_count": 1,

@@ -70,13 +70,13 @@ class StorageBundle:
 
     @property
     def uses_git_auto_commit(self) -> bool:
-        """Git auto-commit is not enabled by default.
+        """Return whether explicit storage CLI operations should commit changes.
 
-        Phase 4 narrows Community storage to FileSystem-only local working
-        storage. Obsidian/Git/external sync integrations remain on hold until
-        the Local Vault security model is implemented.
+        FileSystem storage keeps legacy Git compatibility for explicit commands
+        such as `sayane storage index`. Implicit evaluator/service commits remain
+        guarded by SAYANE_ENABLE_LEGACY_GIT_AUTOCOMMIT.
         """
-        return False
+        return self.backend == "filesystem"
 
 
 class StorageBackendError(RuntimeError):

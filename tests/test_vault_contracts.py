@@ -42,6 +42,13 @@ def test_unlock_session_wildcard_scope() -> None:
     assert session.allows("deep_private:read") is True
 
 
+def test_unlock_session_require_scope() -> None:
+    session = _session(scopes=("candidate:read",))
+    session.require("candidate:read")
+    with pytest.raises(VaultStoreError, match="missing scope"):
+        session.require("candidate:write")
+
+
 def test_unlock_session_expires() -> None:
     now = datetime.now(UTC)
     session = UnlockSession(
@@ -95,7 +102,7 @@ class _PlaintextProductionStore:
     def delete(self, *, data_class, record_id, session) -> None:
         return None
 
-    def list_record_ids(self, data_class) -> list[str]:
+    def list_record_ids(self, data_class, *, session) -> list[str]:
         return []
 
 

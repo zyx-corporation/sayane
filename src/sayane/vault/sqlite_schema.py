@@ -73,6 +73,16 @@ class TableContract:
     required_columns: tuple[str, ...]
     forbidden_columns: tuple[str, ...] = FORBIDDEN_PRODUCTION_COLUMNS
 
+    @property
+    def table(self) -> VaultTable:
+        """Return the table enum for compatibility with schema tests."""
+        return VaultTable(self.name)
+
+    @property
+    def columns(self) -> tuple[str, ...]:
+        """Return required columns for compatibility with older callers."""
+        return self.required_columns
+
 
 def required_table_contracts() -> tuple[TableContract, ...]:
     """Return the required SQLite vault table contracts."""
@@ -83,26 +93,26 @@ def required_table_contracts() -> tuple[TableContract, ...]:
     )
 
 
-def validate_sqlite_vault_schema(tables: dict[str, set[str]]) -> list[str]:
+def validate_sqlite_vault_schema(tables: dict[str, tuple[str, ...] | set[str]]) -> list[str]:
     """Validate SQLite schema metadata without inspecting record rows."""
     errors: list[str] = []
     for contract in required_table_contracts():
         columns = tables.get(contract.name)
         if columns is None:
-            errors.append(f"missing required table: {contract.name}")
+            errors.append(f"missing table: {contract.name}")
             continue
-        for column in contract.required_columns:
-            if column not in columns:
-                errors.append(f"missing required column: {contract.name}.{column}")
+        missing = [column for column in contract.required_columns if column not in columns]
+        if missing:
+            errors.append(f"{contract.name}: missing columns: {', '.join(missing)}")
         forbidden = [column for column in contract.forbidden_columns if column in columns]
         if forbidden:
             errors.append(
-                f"{contract.name} forbidden columns: {', '.join(sorted(forbidden))}"
+                f"{contract.name}: forbidden columns: {', '.join(sorted(forbidden))}"
             )
     return errors
 
 
-def inspect_sqlite_tables(path: Path) -> dict[str, set[str]]:
+def inspect_sqlite_tables(path: Path) -> dict[str, tuple[str, ...]]:
     """Inspect SQLite table metadata only.
 
     This deliberately uses sqlite_master and PRAGMA table_info. It must not read
@@ -113,12 +123,12 @@ def inspect_sqlite_tables(path: Path) -> dict[str, set[str]]:
         table_rows = connection.execute(
             "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name"
         ).fetchall()
-        tables: dict[str, set[str]] = {}
+        tables: dict[str, tuple[str, ...]] = {}
         for (table_name,) in table_rows:
             column_rows = connection.execute(
                 f"PRAGMA table_info({quote_sqlite_identifier(table_name)})"
             ).fetchall()
-            tables[table_name] = {row[1] for row in column_rows}
+            tables[table_name] = tuple(row[1] for row in column_rows)
         return tables
     finally:
         connection.close()

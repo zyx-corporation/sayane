@@ -10,6 +10,7 @@ import typer
 
 from sayane.vault.contracts import VaultStoreError
 from sayane.vault.factory import open_vault_runtime
+from sayane.vault.sqlite_runtime import build_sqlite_test_vault_runtime
 from sayane.vault.sqlite_schema import (
     FORBIDDEN_PRODUCTION_COLUMNS,
     SCHEMA_VERSION,
@@ -29,9 +30,12 @@ def register_vault_cli(app: typer.Typer) -> None:
     def vault_status(
         profile_id: Annotated[str, typer.Option("--profile-id", help="Profile id.")] = "default",
         test_mode: Annotated[bool, typer.Option("--test", help="Open explicit test-only runtime.")] = False,
+        sqlite_path: Annotated[Path | None, typer.Option("--sqlite", help="Open explicit test-only SQLite runtime at path.")] = None,
         json_out: Annotated[bool, typer.Option("--json", help="Emit JSON.")] = False,
     ) -> None:
         """Show Local Vault runtime status without exposing plaintext records."""
+        if sqlite_path is not None and not test_mode:
+            raise typer.BadParameter("--sqlite requires --test")
         mode = "test" if test_mode else "production"
         payload: dict[str, object] = {
             "profile_id": profile_id,
@@ -39,9 +43,13 @@ def register_vault_cli(app: typer.Typer) -> None:
             "status": "unknown",
             "production_ready": False,
             "test_only": test_mode,
+            "sqlite_backed": sqlite_path is not None,
         }
         try:
-            runtime = open_vault_runtime(mode=mode, profile_id=profile_id)  # type: ignore[arg-type]
+            if sqlite_path is not None:
+                runtime = build_sqlite_test_vault_runtime(path=sqlite_path, profile_id=profile_id)
+            else:
+                runtime = open_vault_runtime(mode=mode, profile_id=profile_id)  # type: ignore[arg-type]
             caps = runtime.keychain.capabilities()
             payload.update(
                 {
@@ -59,6 +67,11 @@ def register_vault_cli(app: typer.Typer) -> None:
                     ],
                 },
             )
+            if sqlite_path is not None:
+                payload["sqlite_path"] = str(sqlite_path)
+                payload["sqlite_schema_errors"] = validate_sqlite_vault_schema(
+                    inspect_sqlite_tables(sqlite_path),
+                )
         except VaultStoreError as exc:
             payload.update(
                 {
@@ -80,6 +93,8 @@ def register_vault_cli(app: typer.Typer) -> None:
             typer.echo(f"  Vault mode: {payload['vault_mode']}")
             typer.echo(f"  Keychain: {payload['keychain_platform']} ({payload['keychain_assurance']})")
             typer.echo("  Repositories: candidate, review_decision, lineage")
+            if sqlite_path is not None:
+                typer.echo(f"  SQLite: {sqlite_path}")
             if test_mode:
                 typer.echo("  Warning: test-only runtime; not production cryptographic assurance")
         else:

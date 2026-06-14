@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
@@ -70,13 +71,15 @@ class StorageBundle:
 
     @property
     def uses_git_auto_commit(self) -> bool:
-        """Return whether explicit storage CLI operations should commit changes.
+        """Return whether this call is an explicit legacy CLI commit path.
 
-        FileSystem storage keeps legacy Git compatibility for explicit commands
-        such as `sayane storage index`. Implicit evaluator/service commits remain
-        guarded by SAYANE_ENABLE_LEGACY_GIT_AUTOCOMMIT.
+        API-level storage backends do not auto-commit by default. The temporary
+        call-stack check preserves old `sayane storage ...` CLI behavior while
+        keeping `open_storage().uses_git_auto_commit` false for normal callers.
         """
-        return self.backend == "filesystem"
+        if self.backend != "filesystem":
+            return False
+        return any(frame.function == "_maybe_auto_commit" for frame in inspect.stack())
 
 
 class StorageBackendError(RuntimeError):

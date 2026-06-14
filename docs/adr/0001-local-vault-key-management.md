@@ -205,6 +205,63 @@ Exports and backups must not bypass local vault protections.
 - Export keys should be separate from local storage DEKs.
 - Export events should be logged as audit metadata.
 
+## Current implementation status
+
+This ADR is partially implemented as an executable contract layer. The current implementation is not yet a production Local Vault, but it defines and tests the boundary that production implementations must satisfy.
+
+Implemented contract layer:
+
+- `src/sayane/vault/contracts.py`
+  - `DataClass`
+  - `SecretStoreAssurance`
+  - `VaultStoreMode`
+  - `PlatformKeychainProvider`
+  - `UnlockSession`
+  - `KeyManager`
+  - `CryptoProvider`
+  - `VaultStore`
+  - `assert_vault_store_safe_for_production()`
+
+Implemented test-only infrastructure:
+
+- `src/sayane/vault/test_store.py`
+  - `TestOnlyKeychainProvider`
+  - `InMemoryTestVaultStore`
+  - `CryptoBackedInMemoryTestVaultStore`
+- `src/sayane/vault/test_crypto.py`
+  - `TestOnlyKeyManager`
+  - `TestOnlyCryptoProvider`
+
+These test-only components are not cryptographic protection. They exist only to exercise the contract shape, scope checks, AAD binding, DEK separation, rotation/destroy semantics, and repository adapter behavior.
+
+Implemented Vault-backed repository adapters:
+
+- `src/sayane/storage/vault_candidates.py`
+  - `VaultCandidateStore`
+- `src/sayane/storage/vault_review_decisions.py`
+  - `VaultReviewDecisionStore`
+- `src/sayane/storage/vault_lineage.py`
+  - `VaultLineageStore`
+- `src/sayane/storage/vault_bundle.py`
+  - `VaultRepositoryBundle`
+  - `build_vault_repository_bundle()`
+
+The current Vault adapters cover:
+
+- Candidate records as `DataClass.CANDIDATE`
+- ReviewDecision records as `DataClass.REVIEW_DECISION`
+- Lineage records as `DataClass.LINEAGE`
+
+Current AAD binding includes profile identity, record type, schema version, and record-specific identifiers such as candidate id, decision type, event id, operation, and node kind where applicable.
+
+Current limitations:
+
+- No production OS-backed keychain provider exists yet.
+- No production cryptographic provider exists yet.
+- No SQLite-backed encrypted persistent VaultStore exists yet.
+- Test-only providers must not be selected by production defaults.
+- Existing FileSystem stores remain transitional local working stores until the Local Vault backend is production-ready.
+
 ## CI enforcement
 
 This ADR must be enforced by automated checks before Local Vault or persistent Candidate / ReviewDecision / Lineage storage becomes a default path.
@@ -214,28 +271,42 @@ Required CI checks:
 - run storage backend tests;
 - run storage security policy tests;
 - run MCP context exposure tests;
+- run Local Vault contract tests;
+- run test-only keychain / crypto / vault store tests;
+- run Vault-backed Candidate / ReviewDecision / Lineage adapter tests;
 - fail if filesystem storage enables implicit Git auto-commit by default;
 - fail if Candidate / ReviewDecision / Lineage write paths bypass the storage security policy;
 - fail if normal MCP context output exposes pending, rejected, or deferred Candidate content;
 - fail if UI unlock state is treated as equivalent to MCP / Bridge / capture access;
 - fail if production code stores a plaintext master key in config;
-- fail if plaintext SQLite is introduced as a production default.
+- fail if plaintext SQLite is introduced as a production default;
+- fail if test-only vault providers become production defaults.
 
-Minimum test targets:
+Current targeted CI checks:
 
 ```bash
 pytest tests/test_storage_backend.py
 pytest tests/test_storage_security_policy.py
+pytest tests/test_storage_write_policy.py
+pytest tests/test_review_decision_store.py
+pytest tests/test_vault_contracts.py
+pytest tests/test_vault_test_store.py
+pytest tests/test_vault_test_crypto.py
+pytest tests/test_vault_candidate_adapter.py
+pytest tests/test_vault_review_decision_adapter.py
+pytest tests/test_vault_lineage_adapter.py
+pytest tests/test_vault_repository_bundle.py
 pytest tests/test_mcp_context.py
 ```
 
-Future CI targets, once Local Vault modules exist:
+Future CI targets, once production Local Vault modules exist:
 
 ```bash
 pytest tests/test_vault_key_manager.py
 pytest tests/test_platform_keychain_provider.py
 pytest tests/test_unlock_session.py
 pytest tests/test_local_vault_persistence.py
+pytest tests/test_sqlite_vault_store.py
 ```
 
 CI may use deterministic in-memory or test keychain providers, but those providers must be clearly marked as test-only and must not be selected by production defaults.
@@ -249,6 +320,7 @@ Benefits:
 - Data-class separation supports Least Context and Right to Fade.
 - Deep Private / Layer 3 data receives stronger interaction friction.
 - MCP, Bridge, UI, and CLI can share a common vault without sharing all permissions.
+- Candidate / ReviewDecision / Lineage now have a clear migration seam from FileSystem local working stores to Local Vault repositories.
 
 Costs:
 
@@ -256,6 +328,7 @@ Costs:
 - Search and indexing over encrypted content require careful design.
 - Linux/headless environments need fallback UX.
 - Runtime compromise can still access unlocked data; memory discipline and timeout policy are required.
+- Test-only infrastructure must be kept clearly separated from production defaults.
 
 ## Non-goals
 
@@ -265,21 +338,25 @@ This ADR does not define:
 - the full migration path from in-memory store;
 - cloud sync protocol;
 - multi-device key recovery;
-- organization/team key management.
+- organization/team key management;
+- production cryptographic implementation details.
 
 ## Follow-up work
 
-- Implement `PlatformKeychainProvider` abstraction.
-- Implement `KeyManager` and `CryptoProvider` interfaces.
+- Implement production `PlatformKeychainProvider` backends.
+- Implement production `KeyManager` and `CryptoProvider` backends.
 - Define SQLite schema for keyring and encrypted records.
 - Add unlock session manager with idle and absolute timeout.
 - Define Deep Private / Layer 3 classification in a separate ADR or specification.
-- Add local vault security tests.
+- Add production local vault security tests.
 - Ensure MCP Context Exposure Policy works only after scoped vault access.
 - Add CI jobs that enforce this ADR's storage, key, unlock, and MCP exposure invariants.
+- Migrate Candidate / ReviewDecision / Lineage runtime paths from transitional FileSystem stores to Local Vault once production backends are ready.
 
 ## RDE audit note
 
 This ADR preserves the meaning of local-first without weakening it into plain local storage. Local storage is not safe merely because it is local. Sayane must protect local context with encryption, scoped unlock, capability separation, and retention policy.
 
 The key semantic boundary is that local vault access, UI unlock, and external tool access are different acts. Unlocking the UI must not imply that MCP, Bridge, or any extension can read the same context.
+
+The current implementation status should be read as bounded evidence, not proof of production security. The test-only vault components make the intended boundaries executable for CI, but they do not provide production cryptographic assurance.

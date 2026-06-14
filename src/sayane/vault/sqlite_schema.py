@@ -94,9 +94,11 @@ def validate_sqlite_vault_schema(tables: dict[str, set[str]]) -> list[str]:
         for column in contract.required_columns:
             if column not in columns:
                 errors.append(f"missing required column: {contract.name}.{column}")
-        for column in contract.forbidden_columns:
-            if column in columns:
-                errors.append(f"forbidden plaintext/key column: {contract.name}.{column}")
+        forbidden = [column for column in contract.forbidden_columns if column in columns]
+        if forbidden:
+            errors.append(
+                f"{contract.name} forbidden columns: {', '.join(sorted(forbidden))}"
+            )
     return errors
 
 

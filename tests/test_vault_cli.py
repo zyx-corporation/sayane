@@ -36,6 +36,34 @@ def test_vault_status_test_mode_requires_explicit_flag() -> None:
     assert payload["repositories"] == ["candidate", "review_decision", "lineage"]
 
 
+def test_vault_status_sqlite_requires_test_flag(tmp_path) -> None:
+    result = CliRunner().invoke(
+        build_app(),
+        ["vault", "status", "--sqlite", str(tmp_path / "vault.sqlite"), "--json"],
+    )
+
+    assert result.exit_code != 0
+    assert "--sqlite requires --test" in result.output
+
+
+def test_vault_status_sqlite_test_mode_is_explicit(tmp_path) -> None:
+    db_path = tmp_path / "vault.sqlite"
+    result = CliRunner().invoke(
+        build_app(),
+        ["vault", "status", "--test", "--sqlite", str(db_path), "--json"],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["status"] == "available"
+    assert payload["requested_mode"] == "test"
+    assert payload["test_only"] is True
+    assert payload["sqlite_backed"] is True
+    assert payload["sqlite_path"] == str(db_path)
+    assert payload["sqlite_schema_errors"] == []
+    assert payload["production_ready"] is False
+
+
 def test_vault_policy_lists_all_presets() -> None:
     result = CliRunner().invoke(build_app(), ["vault", "policy", "--json"])
 

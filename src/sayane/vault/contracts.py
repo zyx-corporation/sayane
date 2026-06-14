@@ -11,11 +11,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any, Protocol, runtime_checkable
 
 
-class DataClass(str, Enum):
+class DataClass(StrEnum):
     """Logical encryption boundary for Sayane data."""
 
     PROFILE = "profile"
@@ -30,7 +30,7 @@ class DataClass(str, Enum):
     DEEP_PRIVATE = "deep_private"
 
 
-class SecretStoreAssurance(str, Enum):
+class SecretStoreAssurance(StrEnum):
     """Assurance level of the key release backend."""
 
     OS_BACKED = "os_backed"
@@ -40,7 +40,7 @@ class SecretStoreAssurance(str, Enum):
     TEST_ONLY = "test_only"
 
 
-class VaultStoreMode(str, Enum):
+class VaultStoreMode(StrEnum):
     """Runtime mode of a vault store implementation."""
 
     PRODUCTION = "production"

@@ -8,6 +8,7 @@ scope checks before repositories or vault stores use a session.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from uuid import uuid4
 
 from sayane.vault.contracts import (
     PlatformKeychainProvider,
@@ -15,6 +16,7 @@ from sayane.vault.contracts import (
     UnlockSessionManager,
     VaultStoreError,
 )
+from sayane.vault.unlock_policy import UnlockLevel, build_unlock_session_from_policy, default_unlock_policy
 
 
 @dataclass
@@ -31,6 +33,26 @@ class InMemoryUnlockSessionManager(UnlockSessionManager):
     def open_session(self, purpose: str, scopes: list[str]) -> UnlockSession:
         """Open and track a new scoped unlock session."""
         session = self.keychain.unlock(purpose, scopes)
+        self.sessions[session.session_id] = session
+        return session
+
+    def open_policy_session(
+        self,
+        purpose: str,
+        level: UnlockLevel,
+        *,
+        scopes: tuple[str, ...] | None = None,
+    ) -> UnlockSession:
+        """Open and track a session using ADR 0001 timeout presets."""
+        caps = self.keychain.capabilities()
+        policy = default_unlock_policy(level)
+        session = build_unlock_session_from_policy(
+            session_id=uuid4().hex,
+            purpose=purpose,
+            assurance=caps.assurance,
+            policy=policy,
+            scopes=scopes,
+        )
         self.sessions[session.session_id] = session
         return session
 

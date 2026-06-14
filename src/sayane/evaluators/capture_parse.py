@@ -30,6 +30,9 @@ _YAML_LIKE_RE = re.compile(
     re.IGNORECASE | re.MULTILINE,
 )
 
+_MARKDOWN_HEADING_RE = re.compile(r"(?m)^#+\s+")
+_MARKDOWN_BULLET_RE = re.compile(r"(?m)^\s*[-*•]\s+")
+
 _PERSONA_ROOT_KEYS = frozenset(
     {
         "persona",
@@ -42,13 +45,15 @@ _PERSONA_ROOT_KEYS = frozenset(
         "values",
         "projects",
         "major_projects",
-    },
+    }
 )
 
 
 def looks_like_yaml_capture(content: str) -> bool:
     stripped = content.strip()
     if not stripped:
+        return False
+    if _MARKDOWN_HEADING_RE.search(content) and _MARKDOWN_BULLET_RE.search(content):
         return False
     if stripped.startswith("{") or stripped.startswith("["):
         return True

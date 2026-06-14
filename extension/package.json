@@ -6,7 +6,7 @@
   "scripts": {
     "build": "node scripts/generate-build-info.mjs && tsc && node scripts/bundle-content.mjs",
     "icons:generate": "node scripts/generate-icons.mjs",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "node scripts/generate-build-info.mjs && tsc --noEmit",
     "test": "npm run build && node --import tsx --test src/busy-ui.test.ts src/rde-notes.test.ts src/page-diagnostics.test.ts src/manifest-content-bundle.test.ts src/diff-summary.test.ts src/options-notify.test.ts src/capture-input-design.test.ts src/candidate-display.test.ts src/candidate-review-class.test.ts src/merge-policy.test.ts src/sidepanel-candidate-ui.test.ts src/config.test.ts src/sidepanel-client.test.ts src/review-session.test.ts src/capture-excerpt.test.ts src/list-diff.test.ts src/bridge-error-format.test.ts src/candidate-action-state.test.ts src/build-info-display.test.ts src/selection-cache.test.ts src/clipboard-preview.test.ts src/approve-availability.test.ts",
     "clean": "rm -rf dist",
     "package": "npm run clean && npm run build && node scripts/package-extension.mjs",

@@ -205,6 +205,41 @@ Exports and backups must not bypass local vault protections.
 - Export keys should be separate from local storage DEKs.
 - Export events should be logged as audit metadata.
 
+## CI enforcement
+
+This ADR must be enforced by automated checks before Local Vault or persistent Candidate / ReviewDecision / Lineage storage becomes a default path.
+
+Required CI checks:
+
+- run storage backend tests;
+- run storage security policy tests;
+- run MCP context exposure tests;
+- fail if filesystem storage enables implicit Git auto-commit by default;
+- fail if Candidate / ReviewDecision / Lineage write paths bypass the storage security policy;
+- fail if normal MCP context output exposes pending, rejected, or deferred Candidate content;
+- fail if UI unlock state is treated as equivalent to MCP / Bridge / capture access;
+- fail if production code stores a plaintext master key in config;
+- fail if plaintext SQLite is introduced as a production default.
+
+Minimum test targets:
+
+```bash
+pytest tests/test_storage_backend.py
+pytest tests/test_storage_security_policy.py
+pytest tests/test_mcp_context.py
+```
+
+Future CI targets, once Local Vault modules exist:
+
+```bash
+pytest tests/test_vault_key_manager.py
+pytest tests/test_platform_keychain_provider.py
+pytest tests/test_unlock_session.py
+pytest tests/test_local_vault_persistence.py
+```
+
+CI may use deterministic in-memory or test keychain providers, but those providers must be clearly marked as test-only and must not be selected by production defaults.
+
 ## Consequences
 
 Benefits:
@@ -241,6 +276,7 @@ This ADR does not define:
 - Define Deep Private / Layer 3 classification in a separate ADR or specification.
 - Add local vault security tests.
 - Ensure MCP Context Exposure Policy works only after scoped vault access.
+- Add CI jobs that enforce this ADR's storage, key, unlock, and MCP exposure invariants.
 
 ## RDE audit note
 

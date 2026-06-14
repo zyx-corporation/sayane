@@ -58,7 +58,7 @@ class SQLiteVaultStore(VaultStore):
         plaintext: bytes,
         aad: dict[str, str],
         session: UnlockSession,
-    ) -> None:
+    ) -> EncryptedRecord:
         session.require(f"{data_class.value}:write")
         encrypted = self.crypto.encrypt_record(
             record_id=record_id,
@@ -68,6 +68,7 @@ class SQLiteVaultStore(VaultStore):
             session=session,
         )
         self._upsert_record(encrypted)
+        return encrypted
 
     def get(
         self,
@@ -165,7 +166,13 @@ class SQLiteVaultStore(VaultStore):
         try:
             row = connection.execute(
                 """
-                SELECT record_id, data_class, key_id, nonce, ciphertext, aad_json, created_at
+                SELECT record_id,
+                       data_class,
+                       key_id,
+                       nonce,
+                       ciphertext,
+                       aad_json,
+                       created_at
                 FROM encrypted_records
                 WHERE data_class = ? AND record_id = ?
                 """,
@@ -181,7 +188,7 @@ class SQLiteVaultStore(VaultStore):
                 ciphertext=row[4],
                 aad=json.loads(row[5]),
                 created_at=datetime.fromisoformat(row[6]),
-                algorithm="test-only-sqlite-record",
+                algorithm="test-only-aad-bound-xor",
             )
         finally:
             connection.close()

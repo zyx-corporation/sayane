@@ -35,6 +35,7 @@ jobs:
           pytest -v tests/test_vault_contracts.py
           pytest -v tests/test_vault_test_store.py
           pytest -v tests/test_vault_test_crypto.py
+          pytest -v tests/test_vault_candidate_adapter.py
           pytest -v tests/test_vault_review_decision_adapter.py
           pytest -v tests/test_mcp_context.py
 
@@ -48,7 +49,7 @@ jobs:
         env:
           SAYANE_INSTALL_DIR: /tmp/sayane-install-test
           SAYANE_BIN_DIR: /tmp/sayane-install-test/bin
-          SAYANE_SOURCE_DIR: ${{ github.workspace }}
+          SAYANE_SOURCE_DIR: $${{ github.workspace }}
           SAYANE_SKIP_INIT: "1"
           SAYANE_YES: "1"
         run: |

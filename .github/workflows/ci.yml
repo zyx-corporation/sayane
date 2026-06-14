@@ -33,6 +33,7 @@ jobs:
           pytest -v tests/test_storage_write_policy.py
           pytest -v tests/test_review_decision_store.py
           pytest -v tests/test_vault_contracts.py
+          pytest -v tests/test_unlock_session_manager.py
           pytest -v tests/test_vault_test_store.py
           pytest -v tests/test_vault_test_crypto.py
           pytest -v tests/test_vault_candidate_adapter.py

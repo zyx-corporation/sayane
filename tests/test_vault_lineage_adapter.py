@@ -63,7 +63,11 @@ def test_vault_lineage_list_filters_profile_id() -> None:
     default_store = VaultLineageStore(vault, profile_id="default")
     other_store = VaultLineageStore(vault, profile_id="other")
 
-    default_id = default_store.append("capture_created", {"candidate_id": "c-default"}, session=session)
+    default_id = default_store.append(
+        "capture_created",
+        {"candidate_id": "c-default"},
+        session=session,
+    )
     other_store.append("capture_created", {"candidate_id": "c-other"}, session=session)
 
     listed = default_store.list(session=session)
@@ -80,7 +84,9 @@ def test_vault_lineage_requires_write_scope() -> None:
 
 
 def test_vault_lineage_requires_read_scope() -> None:
-    vault, write_session = _vault_and_session(["lineage:write", "lineage:read", "lineage:key"])
+    vault, write_session = _vault_and_session(
+        ["lineage:write", "lineage:read", "lineage:key"],
+    )
     store = VaultLineageStore(vault, profile_id="default")
     event_id = store.append("candidate_generated", {"candidate_id": "c1"}, session=write_session)
 

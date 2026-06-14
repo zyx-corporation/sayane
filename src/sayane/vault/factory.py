@@ -14,10 +14,12 @@ from sayane.storage.vault_bundle import VaultRepositoryBundle, build_vault_repos
 from sayane.vault.contracts import (
     PlatformKeychainProvider,
     UnlockSession,
+    UnlockSessionManager,
     VaultStore,
     VaultStoreError,
     VaultStoreMode,
 )
+from sayane.vault.session import InMemoryUnlockSessionManager
 from sayane.vault.test_crypto import TestOnlyCryptoProvider, TestOnlyKeyManager
 from sayane.vault.test_store import (
     CryptoBackedInMemoryTestVaultStore,
@@ -34,12 +36,21 @@ class VaultRuntime:
     mode: VaultStoreMode
     profile_id: str
     keychain: PlatformKeychainProvider
+    session_manager: UnlockSessionManager
     vault: VaultStore
     repositories: VaultRepositoryBundle
 
     def unlock(self, purpose: str, scopes: list[str]) -> UnlockSession:
-        """Open a scoped unlock session through the runtime keychain."""
-        return self.keychain.unlock(purpose, scopes)
+        """Open a scoped unlock session through the runtime session manager."""
+        return self.session_manager.open_session(purpose, scopes)
+
+    def require_scope(self, session_id: str, scope: str) -> UnlockSession:
+        """Require a valid scoped session through the runtime session manager."""
+        return self.session_manager.require_scope(session_id, scope)
+
+    def lock(self, session_id: str) -> None:
+        """Close one unlock session."""
+        self.session_manager.close_session(session_id)
 
     def require_not_test_only_for_production(self) -> None:
         """Raise if a production runtime uses a test-only keychain or store."""
@@ -60,6 +71,7 @@ def build_test_vault_runtime(*, profile_id: str = "default") -> VaultRuntime:
     be used as a production default.
     """
     keychain = TestOnlyKeychainProvider()
+    session_manager = InMemoryUnlockSessionManager(keychain)
     key_manager = TestOnlyKeyManager(keychain=keychain)
     crypto = TestOnlyCryptoProvider(key_manager=key_manager)
     vault = CryptoBackedInMemoryTestVaultStore(crypto=crypto)
@@ -68,6 +80,7 @@ def build_test_vault_runtime(*, profile_id: str = "default") -> VaultRuntime:
         mode=VaultStoreMode.TEST,
         profile_id=profile_id,
         keychain=keychain,
+        session_manager=session_manager,
         vault=vault,
         repositories=repositories,
     )

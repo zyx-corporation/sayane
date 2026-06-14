@@ -38,7 +38,7 @@ def default_unlock_policy(level: UnlockLevel) -> UnlockPolicy:
             default_scopes=(
                 "profile:read",
                 "project_context:read",
-                "mcp_preview:read",
+                "mcp:compiled_context",
             ),
             requires_explicit_unlock=False,
         )
@@ -80,13 +80,14 @@ def build_unlock_session_from_policy(
     policy: UnlockPolicy,
     assurance: SecretStoreAssurance,
     now: datetime | None = None,
+    scopes: tuple[str, ...] | None = None,
 ) -> UnlockSession:
     """Build an UnlockSession using one policy preset."""
     started_at = now or datetime.now(UTC)
     return UnlockSession(
         session_id=session_id,
         purpose=purpose,
-        scopes=policy.default_scopes,
+        scopes=scopes or policy.default_scopes,
         assurance=assurance,
         unlocked_at=started_at,
         expires_at=started_at + timedelta(seconds=policy.absolute_timeout_seconds),

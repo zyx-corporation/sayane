@@ -279,6 +279,13 @@ Implemented SQLite-backed encrypted persistence seam:
 
 `SQLiteVaultStore` persists `EncryptedRecord` rows into `encrypted_records` using an injected `CryptoProvider`. It reports `is_plaintext_default() == False`, enforces session scopes for read/write/delete/list operations, and stores ciphertext plus AAD metadata rather than plaintext content. This is not yet a production Local Vault backend because production OS-backed key release and production cryptography are still missing.
 
+Implemented explicit SQLite test runtime builder:
+
+- `src/sayane/vault/sqlite_runtime.py`
+  - `build_sqlite_test_vault_runtime()`
+
+`build_sqlite_test_vault_runtime()` wires `TestOnlyKeychainProvider`, `TestOnlyKeyManager`, `TestOnlyCryptoProvider`, `SQLiteVaultStore`, and `VaultRepositoryBundle` together for explicit test-only diagnostics and CI coverage. It exercises the encrypted persistence seam and repository adapter path, but it is not a production backend and must not be selected by production defaults.
+
 Implemented test-only infrastructure:
 
 - `src/sayane/vault/test_store.py`
@@ -309,8 +316,10 @@ Implemented guarded runtime construction:
   - `VaultRuntime`
   - `build_test_vault_runtime()`
   - `open_vault_runtime()`
+- `src/sayane/vault/sqlite_runtime.py`
+  - `build_sqlite_test_vault_runtime()`
 
-The runtime factory is intentionally fail-closed. Production and development Local Vault backends are not implemented yet, so `open_vault_runtime()` without `mode="test"` raises an error. Test-only components are available only through explicit `mode="test"` or `build_test_vault_runtime()` calls.
+The runtime factory is intentionally fail-closed. Production and development Local Vault backends are not implemented yet, so `open_vault_runtime()` without `mode="test"` raises an error. Test-only components are available only through explicit `mode="test"`, `build_test_vault_runtime()`, or `build_sqlite_test_vault_runtime()` calls.
 
 `VaultRuntime` now owns an `UnlockSessionManager`, so runtime callers can open, require, and close scoped sessions without directly sharing UI unlock state with external tools.
 
@@ -321,6 +330,7 @@ Implemented diagnostic entrypoint:
   - `sayane vault status --json`
   - `sayane vault status --test`
   - `sayane vault status --test --json`
+  - `sayane vault status --test --sqlite <path> --json`
   - `sayane vault policy`
   - `sayane vault policy --json`
   - `sayane vault schema`
@@ -330,7 +340,7 @@ Implemented diagnostic entrypoint:
   - `sayane vault schema --database <path>`
   - `sayane vault schema --database <path> --json`
 
-The diagnostic commands are non-destructive and do not expose plaintext records. `vault status` checks runtime readiness and remains fail-closed for production while the backend is unimplemented. `vault policy` displays unlock policy presets without opening the runtime. `vault schema` displays the SQLite schema contract without opening a database by default. `vault schema --database` opens an existing SQLite file read-only and inspects schema metadata only; validation failure returns exit code 1.
+The diagnostic commands are non-destructive and do not expose plaintext records. `vault status` checks runtime readiness and remains fail-closed for production while the backend is unimplemented. `vault status --test --sqlite <path> --json` opens only the explicit SQLite-backed test runtime and must report `test_only: true`, `sqlite_backed: true`, and `production_ready: false`. `vault policy` displays unlock policy presets without opening the runtime. `vault schema` displays the SQLite schema contract without opening a database by default. `vault schema --database` opens an existing SQLite file read-only and inspects schema metadata only; validation failure returns exit code 1.
 
 The current Vault adapters cover:
 
@@ -345,6 +355,7 @@ Current limitations:
 - No production OS-backed keychain provider exists yet.
 - No production cryptographic provider exists yet.
 - SQLite-backed encrypted persistence exists only as a store seam, not as the default production Local Vault backend.
+- SQLite-backed runtime construction exists only as an explicit test-only seam.
 - Test-only providers must not be selected by production defaults.
 - Existing FileSystem stores remain transitional local working stores until the Local Vault backend is production-ready.
 
@@ -375,11 +386,13 @@ Required CI checks:
 - fail if SQLite Local Vault schema contains plaintext, master key, unwrapped DEK, raw content, or private key columns;
 - fail if SQLite-backed VaultStore persists plaintext content instead of encrypted records;
 - fail if SQLite-backed VaultStore reports itself as plaintext default;
+- fail if explicit SQLite test runtime construction is treated as production-ready;
 - fail if `sayane vault schema --database` reads record rows instead of schema metadata only;
 - fail if `sayane vault schema --database` cannot detect forbidden production columns;
 - fail if test-only vault providers become production defaults;
 - fail if test-only vault runtime can be opened as production default;
-- fail if `sayane vault status` opens test-only runtime without an explicit test flag.
+- fail if `sayane vault status` opens test-only runtime without an explicit test flag;
+- fail if `sayane vault status --test --sqlite` is treated as a production backend path.
 
 Current targeted CI checks:
 
@@ -430,6 +443,7 @@ Benefits:
 - SQLite schema contract makes keyring / encrypted record boundaries executable before persistent storage is implemented.
 - SQLite schema metadata validation allows future vault files to be checked without reading record rows.
 - SQLite-backed VaultStore provides an encrypted persistence seam without making SQLite plaintext or production-default.
+- Explicit SQLite test runtime construction makes the SQLite persistence seam diagnosable without promoting it to production.
 - Vault diagnostics now expose runtime readiness without exposing plaintext or silently opening test-only storage.
 
 Costs:
@@ -448,25 +462,3 @@ This ADR does not define:
 - cloud sync protocol;
 - multi-device key recovery;
 - organization/team key management;
-- production cryptographic implementation details.
-
-## Follow-up work
-
-- Implement production `PlatformKeychainProvider` backends.
-- Implement production `KeyManager` and `CryptoProvider` backends.
-- Promote SQLite-backed encrypted `VaultStore` from store seam to production backend only after production key release and production crypto are available.
-- Define Deep Private / Layer 3 classification in a separate ADR or specification.
-- Add production local vault security tests.
-- Ensure MCP Context Exposure Policy works only after scoped vault access.
-- Add CI jobs that enforce this ADR's storage, key, unlock, and MCP exposure invariants.
-- Migrate Candidate / ReviewDecision / Lineage runtime paths from transitional FileSystem stores to Local Vault once production backends are ready.
-- Replace fail-closed production `open_vault_runtime()` behavior with a production backend only after OS-backed key release and encrypted persistence are implemented.
-- Add a runtime-level policy unlock helper once `VaultRuntime` factory changes can be safely applied.
-
-## RDE audit note
-
-This ADR preserves the meaning of local-first without weakening it into plain local storage. Local storage is not safe merely because it is local. Sayane must protect local context with encryption, scoped unlock, capability separation, and retention policy.
-
-The key semantic boundary is that local vault access, UI unlock, and external tool access are different acts. Unlocking the UI must not imply that MCP, Bridge, or any extension can read the same context.
-
-The current implementation status should be read as bounded evidence, not proof of production security. The test-only vault components make the intended boundaries executable for CI, but they do not provide production cryptographic assurance. The guarded runtime factory adds an additional fail-closed boundary by making test-only vault runtime explicit rather than implicit. The session manager adds another boundary by requiring scoped sessions at runtime instead of treating unlock as a global process state. Unlock policy presets further separate normal, sensitive, and deep-private access by time and scope. SQLite schema contract tests prevent the future persistent store from normalizing plaintext or master-key columns into the production schema. Metadata-only validation allows existing SQLite vault files to be inspected for schema drift without inspecting record rows. SQLite-backed VaultStore introduces persistence as an encrypted seam, not as plaintext storage or a production default. The vault diagnostic commands add observability while preserving the same fail-closed boundary.

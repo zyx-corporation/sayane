@@ -246,6 +246,15 @@ Implemented Vault-backed repository adapters:
   - `VaultRepositoryBundle`
   - `build_vault_repository_bundle()`
 
+Implemented guarded runtime construction:
+
+- `src/sayane/vault/factory.py`
+  - `VaultRuntime`
+  - `build_test_vault_runtime()`
+  - `open_vault_runtime()`
+
+The runtime factory is intentionally fail-closed. Production and development Local Vault backends are not implemented yet, so `open_vault_runtime()` without `mode="test"` raises an error. Test-only components are available only through explicit `mode="test"` or `build_test_vault_runtime()` calls.
+
 The current Vault adapters cover:
 
 - Candidate records as `DataClass.CANDIDATE`
@@ -274,13 +283,15 @@ Required CI checks:
 - run Local Vault contract tests;
 - run test-only keychain / crypto / vault store tests;
 - run Vault-backed Candidate / ReviewDecision / Lineage adapter tests;
+- run Vault runtime factory tests;
 - fail if filesystem storage enables implicit Git auto-commit by default;
 - fail if Candidate / ReviewDecision / Lineage write paths bypass the storage security policy;
 - fail if normal MCP context output exposes pending, rejected, or deferred Candidate content;
 - fail if UI unlock state is treated as equivalent to MCP / Bridge / capture access;
 - fail if production code stores a plaintext master key in config;
 - fail if plaintext SQLite is introduced as a production default;
-- fail if test-only vault providers become production defaults.
+- fail if test-only vault providers become production defaults;
+- fail if test-only vault runtime can be opened as production default.
 
 Current targeted CI checks:
 
@@ -296,6 +307,7 @@ pytest tests/test_vault_candidate_adapter.py
 pytest tests/test_vault_review_decision_adapter.py
 pytest tests/test_vault_lineage_adapter.py
 pytest tests/test_vault_repository_bundle.py
+pytest tests/test_vault_factory.py
 pytest tests/test_mcp_context.py
 ```
 
@@ -321,6 +333,7 @@ Benefits:
 - Deep Private / Layer 3 data receives stronger interaction friction.
 - MCP, Bridge, UI, and CLI can share a common vault without sharing all permissions.
 - Candidate / ReviewDecision / Lineage now have a clear migration seam from FileSystem local working stores to Local Vault repositories.
+- Vault runtime construction now has a fail-closed seam that prevents test-only components from becoming production defaults.
 
 Costs:
 
@@ -352,6 +365,7 @@ This ADR does not define:
 - Ensure MCP Context Exposure Policy works only after scoped vault access.
 - Add CI jobs that enforce this ADR's storage, key, unlock, and MCP exposure invariants.
 - Migrate Candidate / ReviewDecision / Lineage runtime paths from transitional FileSystem stores to Local Vault once production backends are ready.
+- Replace fail-closed production `open_vault_runtime()` behavior with a production backend only after OS-backed key release and encrypted persistence are implemented.
 
 ## RDE audit note
 
@@ -359,4 +373,4 @@ This ADR preserves the meaning of local-first without weakening it into plain lo
 
 The key semantic boundary is that local vault access, UI unlock, and external tool access are different acts. Unlocking the UI must not imply that MCP, Bridge, or any extension can read the same context.
 
-The current implementation status should be read as bounded evidence, not proof of production security. The test-only vault components make the intended boundaries executable for CI, but they do not provide production cryptographic assurance.
+The current implementation status should be read as bounded evidence, not proof of production security. The test-only vault components make the intended boundaries executable for CI, but they do not provide production cryptographic assurance. The guarded runtime factory adds an additional fail-closed boundary by making test-only vault runtime explicit rather than implicit.

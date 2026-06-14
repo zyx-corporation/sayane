@@ -18,7 +18,7 @@ from sayane.vault.contracts import (
     VaultStoreError,
     VaultStoreMode,
 )
-from sayane.vault.test_crypto import TestOnlyCryptoProvider
+from sayane.vault.test_crypto import TestOnlyCryptoProvider, TestOnlyKeyManager
 from sayane.vault.test_store import (
     CryptoBackedInMemoryTestVaultStore,
     TestOnlyKeychainProvider,
@@ -60,11 +60,8 @@ def build_test_vault_runtime(*, profile_id: str = "default") -> VaultRuntime:
     be used as a production default.
     """
     keychain = TestOnlyKeychainProvider()
-    crypto = TestOnlyCryptoProvider(key_manager=None)  # type: ignore[arg-type]
-    # Recreate with a key manager that shares this runtime keychain.
-    from sayane.vault.test_crypto import TestOnlyKeyManager
-
-    crypto = TestOnlyCryptoProvider(key_manager=TestOnlyKeyManager(keychain=keychain))
+    key_manager = TestOnlyKeyManager(keychain=keychain)
+    crypto = TestOnlyCryptoProvider(key_manager=key_manager)
     vault = CryptoBackedInMemoryTestVaultStore(crypto=crypto)
     repositories = build_vault_repository_bundle(vault, profile_id=profile_id)
     return VaultRuntime(

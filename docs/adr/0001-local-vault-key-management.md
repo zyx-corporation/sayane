@@ -265,6 +265,16 @@ The runtime factory is intentionally fail-closed. Production and development Loc
 
 `VaultRuntime` now owns an `UnlockSessionManager`, so runtime callers can open, require, and close scoped sessions without directly sharing UI unlock state with external tools.
 
+Implemented diagnostic entrypoint:
+
+- `src/sayane/cli/vault_cmd.py`
+  - `sayane vault status`
+  - `sayane vault status --json`
+  - `sayane vault status --test`
+  - `sayane vault status --test --json`
+
+The diagnostic command is non-destructive and does not expose plaintext records. By default it checks production mode and reports the production Local Vault backend as unavailable while it remains unimplemented. Test-only runtime is shown only when `--test` is explicitly provided, and its output is marked `production_ready: false` and `test_only: true`.
+
 The current Vault adapters cover:
 
 - Candidate records as `DataClass.CANDIDATE`
@@ -295,6 +305,7 @@ Required CI checks:
 - run test-only keychain / crypto / vault store tests;
 - run Vault-backed Candidate / ReviewDecision / Lineage adapter tests;
 - run Vault runtime factory tests;
+- run Vault diagnostic CLI tests;
 - fail if filesystem storage enables implicit Git auto-commit by default;
 - fail if Candidate / ReviewDecision / Lineage write paths bypass the storage security policy;
 - fail if normal MCP context output exposes pending, rejected, or deferred Candidate content;
@@ -302,7 +313,8 @@ Required CI checks:
 - fail if production code stores a plaintext master key in config;
 - fail if plaintext SQLite is introduced as a production default;
 - fail if test-only vault providers become production defaults;
-- fail if test-only vault runtime can be opened as production default.
+- fail if test-only vault runtime can be opened as production default;
+- fail if `sayane vault status` opens test-only runtime without an explicit test flag.
 
 Current targeted CI checks:
 
@@ -320,6 +332,7 @@ pytest tests/test_vault_review_decision_adapter.py
 pytest tests/test_vault_lineage_adapter.py
 pytest tests/test_vault_repository_bundle.py
 pytest tests/test_vault_factory.py
+pytest tests/test_vault_cli.py
 pytest tests/test_mcp_context.py
 ```
 
@@ -346,6 +359,7 @@ Benefits:
 - Candidate / ReviewDecision / Lineage now have a clear migration seam from FileSystem local working stores to Local Vault repositories.
 - Vault runtime construction now has a fail-closed seam that prevents test-only components from becoming production defaults.
 - Unlock session management now has a runtime seam that separates keychain unlock, scoped session validation, and repository access.
+- Vault diagnostics now expose runtime readiness without exposing plaintext or silently opening test-only storage.
 
 Costs:
 
@@ -385,4 +399,4 @@ This ADR preserves the meaning of local-first without weakening it into plain lo
 
 The key semantic boundary is that local vault access, UI unlock, and external tool access are different acts. Unlocking the UI must not imply that MCP, Bridge, or any extension can read the same context.
 
-The current implementation status should be read as bounded evidence, not proof of production security. The test-only vault components make the intended boundaries executable for CI, but they do not provide production cryptographic assurance. The guarded runtime factory adds an additional fail-closed boundary by making test-only vault runtime explicit rather than implicit. The session manager adds another boundary by requiring scoped sessions at runtime instead of treating unlock as a global process state.
+The current implementation status should be read as bounded evidence, not proof of production security. The test-only vault components make the intended boundaries executable for CI, but they do not provide production cryptographic assurance. The guarded runtime factory adds an additional fail-closed boundary by making test-only vault runtime explicit rather than implicit. The session manager adds another boundary by requiring scoped sessions at runtime instead of treating unlock as a global process state. The vault diagnostic command adds observability while preserving the same fail-closed boundary.

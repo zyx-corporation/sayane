@@ -60,8 +60,18 @@ def test_sqlite_vault_store_round_trip_and_schema_contract(tmp_path) -> None:
     store, session = _store(tmp_path)
     aad = {"profile_id": "default", "record_type": "candidate"}
 
-    store.put(DataClass.CANDIDATE, "c1", b"secret candidate", aad, session)
-    plaintext = store.get(DataClass.CANDIDATE, "c1", session)
+    store.put(
+        data_class=DataClass.CANDIDATE,
+        record_id="c1",
+        plaintext=b"secret candidate",
+        aad=aad,
+        session=session,
+    )
+    plaintext = store.get(
+        data_class=DataClass.CANDIDATE,
+        record_id="c1",
+        session=session,
+    )
 
     assert plaintext == b"secret candidate"
     assert store.mode() == VaultStoreMode.TEST
@@ -72,11 +82,11 @@ def test_sqlite_vault_store_round_trip_and_schema_contract(tmp_path) -> None:
 def test_sqlite_vault_store_persists_ciphertext_not_plaintext(tmp_path) -> None:
     store, session = _store(tmp_path)
     store.put(
-        DataClass.CANDIDATE,
-        "c1",
-        b"secret candidate",
-        {"profile_id": "default", "record_type": "candidate"},
-        session,
+        data_class=DataClass.CANDIDATE,
+        record_id="c1",
+        plaintext=b"secret candidate",
+        aad={"profile_id": "default", "record_type": "candidate"},
+        session=session,
     )
 
     connection = sqlite3.connect(store.path)
@@ -100,16 +110,16 @@ def test_sqlite_vault_store_persists_ciphertext_not_plaintext(tmp_path) -> None:
 def test_sqlite_vault_store_lists_and_deletes_records(tmp_path) -> None:
     store, session = _store(tmp_path)
     aad = {"profile_id": "default", "record_type": "candidate"}
-    store.put(DataClass.CANDIDATE, "c1", b"one", aad, session)
-    store.put(DataClass.CANDIDATE, "c2", b"two", aad, session)
+    store.put(data_class=DataClass.CANDIDATE, record_id="c1", plaintext=b"one", aad=aad, session=session)
+    store.put(data_class=DataClass.CANDIDATE, record_id="c2", plaintext=b"two", aad=aad, session=session)
 
     assert store.list_record_ids(DataClass.CANDIDATE, session=session) == ["c1", "c2"]
 
-    store.delete(DataClass.CANDIDATE, "c1", session)
+    store.delete(data_class=DataClass.CANDIDATE, record_id="c1", session=session)
 
     assert store.list_record_ids(DataClass.CANDIDATE, session=session) == ["c2"]
     with pytest.raises(VaultStoreError, match="record not found"):
-        store.get(DataClass.CANDIDATE, "c1", session)
+        store.get(data_class=DataClass.CANDIDATE, record_id="c1", session=session)
 
 
 def test_sqlite_vault_store_requires_scope(tmp_path) -> None:
@@ -126,11 +136,11 @@ def test_sqlite_vault_store_requires_scope(tmp_path) -> None:
 
     with pytest.raises(VaultStoreError, match="missing scope"):
         store.put(
-            DataClass.CANDIDATE,
-            "c1",
-            b"secret",
-            {"profile_id": "default"},
-            narrow,
+            data_class=DataClass.CANDIDATE,
+            record_id="c1",
+            plaintext=b"secret",
+            aad={"profile_id": "default"},
+            session=narrow,
         )
 
 

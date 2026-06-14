@@ -24,8 +24,14 @@ class StorageConfig:
 
     @property
     def uses_git_auto_commit(self) -> bool:
-        """Git auto-commit applies to filesystem backend only (until encrypted SQLite)."""
-        return self.backend == DEFAULT_BACKEND
+        """Return whether implicit Git auto-commit is active.
+
+        Phase 4 keeps FileSystem storage as a local working store only.
+        Git/Obsidian/external sync are on hold until the Local Vault security
+        model is implemented, so implicit Git auto-commit is disabled by
+        default even for the filesystem backend.
+        """
+        return False
 
 
 def config_path(home: Path | None = None) -> Path:

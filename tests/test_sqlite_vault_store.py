@@ -130,8 +130,7 @@ def test_sqlite_vault_store_lists_and_deletes_records(tmp_path) -> None:
     store.delete(data_class=DataClass.CANDIDATE, record_id="c1", session=session)
 
     assert store.list_record_ids(DataClass.CANDIDATE, session=session) == ["c2"]
-    with pytest.raises(VaultStoreError, match="record not found"):
-        store.get(data_class=DataClass.CANDIDATE, record_id="c1", session=session)
+    assert store.get(data_class=DataClass.CANDIDATE, record_id="c1", session=session) is None
 
 
 def test_sqlite_vault_store_requires_scope(tmp_path) -> None:

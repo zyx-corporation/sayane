@@ -1,13 +1,16 @@
 """SQLite Local Vault schema contract.
 
 This module defines the schema contract for the future production SQLite-backed
-Local Vault. It intentionally does not open a database or implement persistence.
+Local Vault. It does not implement persistence, but it can inspect an existing
+SQLite database schema without reading encrypted record content.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
+import sqlite3
 
 
 SCHEMA_VERSION = "local_vault.sqlite.v1"
@@ -77,6 +80,26 @@ def required_table_contracts() -> tuple[TableContract, ...]:
         TableContract(VaultTable.ENCRYPTED_RECORDS, ENCRYPTED_RECORD_COLUMNS),
         TableContract(VaultTable.AUDIT_METADATA, AUDIT_METADATA_COLUMNS),
     )
+
+
+def inspect_sqlite_tables(path: Path) -> dict[str, tuple[str, ...]]:
+    """Inspect table and column names from a SQLite database.
+
+    This reads only SQLite metadata via PRAGMA table_info. It does not select
+    record rows or expose vault content.
+    """
+    connection = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+    try:
+        table_rows = connection.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table'",
+        ).fetchall()
+        tables: dict[str, tuple[str, ...]] = {}
+        for (table_name,) in table_rows:
+            column_rows = connection.execute(f"PRAGMA table_info({table_name})").fetchall()
+            tables[table_name] = tuple(row[1] for row in column_rows)
+        return tables
+    finally:
+        connection.close()
 
 
 def validate_sqlite_vault_schema(

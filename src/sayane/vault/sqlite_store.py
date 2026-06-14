@@ -7,10 +7,11 @@ by itself.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from pathlib import Path
 import json
 import sqlite3
+from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
 
 from sayane.vault.contracts import (
     CryptoProvider,
@@ -51,6 +52,7 @@ class SQLiteVaultStore(VaultStore):
 
     def put(
         self,
+        *,
         data_class: DataClass,
         record_id: str,
         plaintext: bytes,
@@ -58,11 +60,18 @@ class SQLiteVaultStore(VaultStore):
         session: UnlockSession,
     ) -> None:
         session.require(f"{data_class.value}:write")
-        encrypted = self.crypto.encrypt_record(data_class, record_id, plaintext, aad, session)
+        encrypted = self.crypto.encrypt_record(
+            record_id=record_id,
+            data_class=data_class,
+            plaintext=plaintext,
+            aad=aad,
+            session=session,
+        )
         self._upsert_record(encrypted)
 
     def get(
         self,
+        *,
         data_class: DataClass,
         record_id: str,
         session: UnlockSession,
@@ -71,10 +80,11 @@ class SQLiteVaultStore(VaultStore):
         encrypted = self._load_record(data_class, record_id)
         if encrypted is None:
             raise VaultStoreError(f"record not found: {data_class.value}/{record_id}")
-        return self.crypto.decrypt_record(encrypted, session)
+        return self.crypto.decrypt_record(encrypted, session=session)
 
     def delete(
         self,
+        *,
         data_class: DataClass,
         record_id: str,
         session: UnlockSession,
@@ -163,8 +173,6 @@ class SQLiteVaultStore(VaultStore):
             ).fetchone()
             if row is None:
                 return None
-            from datetime import datetime
-
             return EncryptedRecord(
                 record_id=row[0],
                 data_class=DataClass(row[1]),
@@ -173,6 +181,7 @@ class SQLiteVaultStore(VaultStore):
                 ciphertext=row[4],
                 aad=json.loads(row[5]),
                 created_at=datetime.fromisoformat(row[6]),
+                algorithm="test-only-sqlite-record",
             )
         finally:
             connection.close()

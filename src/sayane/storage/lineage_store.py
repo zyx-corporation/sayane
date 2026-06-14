@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from sayane.bridge.config import BridgeConfig
+from sayane.storage.security_policy import require_local_working_store
 
 
 def lineage_path(config: BridgeConfig, profile_id: str) -> Path:
@@ -19,6 +20,7 @@ def append_record(
     payload: dict[str, Any],
 ) -> Path:
     path = lineage_path(config, profile_id)
+    require_local_working_store(path, record_class="lineage")
     path.parent.mkdir(parents=True, exist_ok=True)
     record = {
         "event": event,

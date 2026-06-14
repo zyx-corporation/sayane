@@ -7,7 +7,6 @@ is being implemented.
 
 from __future__ import annotations
 
-import inspect
 import os
 import subprocess
 from pathlib import Path
@@ -92,14 +91,14 @@ def legacy_git_autocommit_enabled() -> bool:
     return os.environ.get(LEGACY_GIT_AUTOCOMMIT_ENV, "").lower() in {"1", "true", "yes", "on"}
 
 
-def _explicit_cli_git_compat_call() -> bool:
-    """Return True for legacy CLI commands that historically created commits."""
-    return any(frame.function in {"init", "_maybe_auto_commit"} for frame in inspect.stack())
-
-
-def auto_commit_profile_store(profile_dir: Path, message: str) -> str:
+def auto_commit_profile_store(
+    profile_dir: Path,
+    message: str,
+    *,
+    explicit_cli: bool = False,
+) -> str:
     """Optionally auto-init Git and commit profile changes."""
-    if not legacy_git_autocommit_enabled() and not _explicit_cli_git_compat_call():
+    if not explicit_cli and not legacy_git_autocommit_enabled():
         return ""
     try:
         return commit_profile_store(profile_dir, message, init=True)

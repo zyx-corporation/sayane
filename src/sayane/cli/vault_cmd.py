@@ -9,6 +9,12 @@ import typer
 
 from sayane.vault.contracts import VaultStoreError
 from sayane.vault.factory import open_vault_runtime
+from sayane.vault.sqlite_schema import (
+    FORBIDDEN_PRODUCTION_COLUMNS,
+    SCHEMA_VERSION,
+    create_table_statements,
+    required_table_contracts,
+)
 from sayane.vault.unlock_policy import UnlockLevel, default_unlock_policy
 
 
@@ -100,6 +106,29 @@ def register_vault_cli(app: typer.Typer) -> None:
             for scope in policy["scopes"]:
                 typer.echo(f"    - {scope}")
 
+    @vault_app.command("schema")
+    def vault_schema(
+        ddl: Annotated[bool, typer.Option("--ddl", help="Show reference CREATE TABLE statements.")] = False,
+        json_out: Annotated[bool, typer.Option("--json", help="Emit JSON.")] = False,
+    ) -> None:
+        """Show SQLite Local Vault schema contract without opening a database."""
+        payload = _schema_payload(include_ddl=ddl)
+        if json_out:
+            typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+            return
+
+        typer.echo(f"SQLite Local Vault schema: {payload['schema_version']}")
+        typer.echo("  Required tables:")
+        for table in payload["tables"]:
+            typer.echo(f"    - {table['name']}: {', '.join(table['columns'])}")
+        typer.echo("  Forbidden production columns:")
+        for column in payload["forbidden_production_columns"]:
+            typer.echo(f"    - {column}")
+        if ddl:
+            typer.echo("  Reference DDL:")
+            for statement in payload["create_table_statements"]:
+                typer.echo(statement)
+
     app.add_typer(vault_app, name="vault")
 
 
@@ -112,3 +141,20 @@ def _policy_payload(level: UnlockLevel) -> dict[str, object]:
         "requires_explicit_unlock": policy.requires_explicit_unlock,
         "scopes": list(policy.default_scopes),
     }
+
+
+def _schema_payload(*, include_ddl: bool = False) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "schema_version": SCHEMA_VERSION,
+        "tables": [
+            {
+                "name": contract.table.value,
+                "columns": list(contract.columns),
+            }
+            for contract in required_table_contracts()
+        ],
+        "forbidden_production_columns": list(FORBIDDEN_PRODUCTION_COLUMNS),
+    }
+    if include_ddl:
+        payload["create_table_statements"] = list(create_table_statements())
+    return payload

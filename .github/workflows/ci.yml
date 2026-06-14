@@ -38,6 +38,7 @@ jobs:
           pytest -v tests/test_vault_candidate_adapter.py
           pytest -v tests/test_vault_review_decision_adapter.py
           pytest -v tests/test_vault_lineage_adapter.py
+          pytest -v tests/test_vault_repository_bundle.py
           pytest -v tests/test_mcp_context.py
 
       - name: Pytest

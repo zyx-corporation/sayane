@@ -223,12 +223,30 @@ Implemented contract layer:
   - `VaultStore`
   - `assert_vault_store_safe_for_production()`
 
+Implemented unlock policy presets:
+
+- `src/sayane/vault/unlock_policy.py`
+  - `UnlockLevel`
+  - `UnlockPolicy`
+  - `default_unlock_policy()`
+  - `build_unlock_session_from_policy()`
+
+The current presets encode the ADR 0001 timeout model:
+
+| Level | Idle timeout | Absolute timeout | Default scope family |
+| --- | --- | --- | --- |
+| `normal` | 15 min | 60 min | profile / project context / MCP compiled context read |
+| `sensitive` | 5 min | 15 min | candidate / review decision / lineage read-write-key |
+| `deep_private` | 3 min | 5 min | deep private / raw capture / cloud transfer detail |
+
 Implemented session management:
 
 - `src/sayane/vault/session.py`
   - `InMemoryUnlockSessionManager`
 
 `InMemoryUnlockSessionManager` delegates key release to a `PlatformKeychainProvider`, tracks session metadata, enforces session existence, rejects expired sessions, checks scopes, and closes sessions through the keychain. It is currently used by `VaultRuntime`.
+
+`InMemoryUnlockSessionManager.open_policy_session()` can open sessions using the ADR 0001 unlock presets. This makes timeout and scope policy executable without treating unlock as a global process state.
 
 Implemented test-only infrastructure:
 
@@ -301,6 +319,7 @@ Required CI checks:
 - run storage security policy tests;
 - run MCP context exposure tests;
 - run Local Vault contract tests;
+- run unlock policy preset tests;
 - run unlock session manager tests;
 - run test-only keychain / crypto / vault store tests;
 - run Vault-backed Candidate / ReviewDecision / Lineage adapter tests;
@@ -324,6 +343,7 @@ pytest tests/test_storage_security_policy.py
 pytest tests/test_storage_write_policy.py
 pytest tests/test_review_decision_store.py
 pytest tests/test_vault_contracts.py
+pytest tests/test_unlock_policy.py
 pytest tests/test_unlock_session_manager.py
 pytest tests/test_vault_test_store.py
 pytest tests/test_vault_test_crypto.py
@@ -359,6 +379,7 @@ Benefits:
 - Candidate / ReviewDecision / Lineage now have a clear migration seam from FileSystem local working stores to Local Vault repositories.
 - Vault runtime construction now has a fail-closed seam that prevents test-only components from becoming production defaults.
 - Unlock session management now has a runtime seam that separates keychain unlock, scoped session validation, and repository access.
+- Unlock policy presets make normal / sensitive / deep_private timeout behavior executable and testable.
 - Vault diagnostics now expose runtime readiness without exposing plaintext or silently opening test-only storage.
 
 Costs:
@@ -385,13 +406,13 @@ This ADR does not define:
 - Implement production `PlatformKeychainProvider` backends.
 - Implement production `KeyManager` and `CryptoProvider` backends.
 - Define SQLite schema for keyring and encrypted records.
-- Add idle and absolute timeout policy presets for runtime unlock sessions.
 - Define Deep Private / Layer 3 classification in a separate ADR or specification.
 - Add production local vault security tests.
 - Ensure MCP Context Exposure Policy works only after scoped vault access.
 - Add CI jobs that enforce this ADR's storage, key, unlock, and MCP exposure invariants.
 - Migrate Candidate / ReviewDecision / Lineage runtime paths from transitional FileSystem stores to Local Vault once production backends are ready.
 - Replace fail-closed production `open_vault_runtime()` behavior with a production backend only after OS-backed key release and encrypted persistence are implemented.
+- Add a runtime-level policy unlock helper once `VaultRuntime` factory changes can be safely applied.
 
 ## RDE audit note
 
@@ -399,4 +420,4 @@ This ADR preserves the meaning of local-first without weakening it into plain lo
 
 The key semantic boundary is that local vault access, UI unlock, and external tool access are different acts. Unlocking the UI must not imply that MCP, Bridge, or any extension can read the same context.
 
-The current implementation status should be read as bounded evidence, not proof of production security. The test-only vault components make the intended boundaries executable for CI, but they do not provide production cryptographic assurance. The guarded runtime factory adds an additional fail-closed boundary by making test-only vault runtime explicit rather than implicit. The session manager adds another boundary by requiring scoped sessions at runtime instead of treating unlock as a global process state. The vault diagnostic command adds observability while preserving the same fail-closed boundary.
+The current implementation status should be read as bounded evidence, not proof of production security. The test-only vault components make the intended boundaries executable for CI, but they do not provide production cryptographic assurance. The guarded runtime factory adds an additional fail-closed boundary by making test-only vault runtime explicit rather than implicit. The session manager adds another boundary by requiring scoped sessions at runtime instead of treating unlock as a global process state. Unlock policy presets further separate normal, sensitive, and deep-private access by time and scope. The vault diagnostic command adds observability while preserving the same fail-closed boundary.

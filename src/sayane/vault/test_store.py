@@ -136,7 +136,8 @@ class InMemoryTestVaultStore(VaultStore):
         _require_session(session, f"{data_class.value}:delete")
         self.records.pop((data_class, record_id), None)
 
-    def list_record_ids(self, data_class: DataClass) -> list[str]:
+    def list_record_ids(self, data_class: DataClass, *, session: UnlockSession) -> list[str]:
+        _require_session(session, f"{data_class.value}:read")
         return sorted(record_id for dc, record_id in self.records if dc == data_class)
 
 
@@ -196,7 +197,8 @@ class CryptoBackedInMemoryTestVaultStore(VaultStore):
         _require_session(session, f"{data_class.value}:delete")
         self.records.pop((data_class, record_id), None)
 
-    def list_record_ids(self, data_class: DataClass) -> list[str]:
+    def list_record_ids(self, data_class: DataClass, *, session: UnlockSession) -> list[str]:
+        _require_session(session, f"{data_class.value}:read")
         return sorted(record_id for dc, record_id in self.records if dc == data_class)
 
 

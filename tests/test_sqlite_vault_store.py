@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 import sqlite3
 
 import pytest
 
+from sayane.core.candidate import CandidateProposal, CandidateSource, CandidateUpdate
+from sayane.core.review_decision import ReviewDecision
 from sayane.vault.contracts import DataClass, VaultStoreError, VaultStoreMode
 from sayane.vault.sqlite_runtime import build_sqlite_test_vault_runtime
 from sayane.vault.sqlite_schema import inspect_sqlite_tables, validate_sqlite_vault_schema
@@ -29,6 +32,17 @@ def _store(tmp_path):
         ],
     )
     return store, session
+
+
+def _candidate(candidate_id: str = "c-sqlite") -> CandidateUpdate:
+    return CandidateUpdate(
+        id=candidate_id,
+        status="pending",
+        target_profile_id="default",
+        content="sqlite candidate content",
+        source=CandidateSource(type="test", uri=None, captured_at=datetime.now(UTC)),
+        proposal=CandidateProposal(section="knowledge.concepts", add=["sqlite candidate content"]),
+    )
 
 
 def test_sqlite_vault_store_round_trip_and_schema_contract(tmp_path) -> None:
@@ -112,3 +126,42 @@ def test_sqlite_test_runtime_builder_is_explicit_and_not_plaintext(tmp_path) -> 
     assert runtime.vault.mode() == VaultStoreMode.TEST
     assert runtime.vault.is_plaintext_default() is False
     assert validate_sqlite_vault_schema(inspect_sqlite_tables(runtime.vault.path)) == []
+
+
+def test_sqlite_test_runtime_repository_bundle_round_trip(tmp_path) -> None:
+    runtime = build_sqlite_test_vault_runtime(path=tmp_path / "vault.sqlite", profile_id="default")
+    session = runtime.keychain.unlock(
+        "sqlite-runtime-bundle-test",
+        [
+            "candidate:write",
+            "candidate:read",
+            "candidate:key",
+            "review_decision:write",
+            "review_decision:read",
+            "review_decision:key",
+            "lineage:write",
+            "lineage:read",
+            "lineage:key",
+        ],
+    )
+
+    candidate_id = runtime.repositories.candidates.save(_candidate(), session=session)
+    decision_id = runtime.repositories.review_decisions.append(
+        ReviewDecision(candidate_id=candidate_id, decision="approve", reason="ok"),
+        session=session,
+    )
+    lineage_id = runtime.repositories.lineage.append(
+        "candidate_approved",
+        {"candidate_id": candidate_id, "operation": "candidate_approved"},
+        session=session,
+    )
+
+    assert runtime.repositories.candidates.load(candidate_id, session=session).content == "sqlite candidate content"
+    assert runtime.repositories.review_decisions.get(decision_id, session=session).decision == "approve"
+    assert runtime.repositories.lineage.get(lineage_id, session=session)["candidate_id"] == candidate_id
+    assert runtime.repositories.smoke_check(session=session) == {
+        "profile_id": "default",
+        "candidate_count": 1,
+        "review_decision_count": 1,
+        "lineage_count": 1,
+    }

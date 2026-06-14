@@ -58,3 +58,31 @@ def test_vault_policy_can_show_sensitive_preset() -> None:
     assert "review_decision:write" in payload["scopes"]
     assert "lineage:write" in payload["scopes"]
     assert "deep_private:read" not in payload["scopes"]
+
+
+def test_vault_schema_reports_required_tables_and_forbidden_columns() -> None:
+    result = CliRunner().invoke(build_app(), ["vault", "schema", "--json"])
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["schema_version"] == "local_vault.sqlite.v1"
+    table_names = [table["name"] for table in payload["tables"]]
+    assert table_names == ["keyring", "encrypted_records", "audit_metadata"]
+    assert "wrapped_dek" in payload["tables"][0]["columns"]
+    assert "ciphertext" in payload["tables"][1]["columns"]
+    assert "aad_json" in payload["tables"][1]["columns"]
+    assert "plaintext" in payload["forbidden_production_columns"]
+    assert "master_key" in payload["forbidden_production_columns"]
+
+
+def test_vault_schema_can_include_reference_ddl() -> None:
+    result = CliRunner().invoke(build_app(), ["vault", "schema", "--ddl", "--json"])
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    ddl = "\n".join(payload["create_table_statements"]).lower()
+    assert "create table if not exists keyring" in ddl
+    assert "create table if not exists encrypted_records" in ddl
+    assert "create table if not exists audit_metadata" in ddl
+    assert "ciphertext" in ddl
+    assert "master_key" not in ddl

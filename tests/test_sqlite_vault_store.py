@@ -108,7 +108,7 @@ def test_sqlite_vault_store_requires_scope(tmp_path) -> None:
 def test_sqlite_test_runtime_builder_is_explicit_and_not_plaintext(tmp_path) -> None:
     runtime = build_sqlite_test_vault_runtime(path=tmp_path / "vault.sqlite", profile_id="default")
 
-    assert runtime.mode() if callable(getattr(runtime, "mode", None)) else runtime.mode == VaultStoreMode.TEST
+    assert runtime.mode == VaultStoreMode.TEST
     assert runtime.vault.mode() == VaultStoreMode.TEST
     assert runtime.vault.is_plaintext_default() is False
     assert validate_sqlite_vault_schema(inspect_sqlite_tables(runtime.vault.path)) == []

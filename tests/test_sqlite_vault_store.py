@@ -103,11 +103,11 @@ def test_sqlite_vault_store_lists_and_deletes_records(tmp_path) -> None:
     store.put(DataClass.CANDIDATE, "c1", b"one", aad, session)
     store.put(DataClass.CANDIDATE, "c2", b"two", aad, session)
 
-    assert store.list_record_ids(DataClass.CANDIDATE, session) == ["c1", "c2"]
+    assert store.list_record_ids(DataClass.CANDIDATE, session=session) == ["c1", "c2"]
 
     store.delete(DataClass.CANDIDATE, "c1", session)
 
-    assert store.list_record_ids(DataClass.CANDIDATE, session) == ["c2"]
+    assert store.list_record_ids(DataClass.CANDIDATE, session=session) == ["c2"]
     with pytest.raises(VaultStoreError, match="record not found"):
         store.get(DataClass.CANDIDATE, "c1", session)
 

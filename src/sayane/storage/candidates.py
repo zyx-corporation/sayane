@@ -12,6 +12,7 @@ from sayane.core.candidate import (
     CandidateUpdate,
     CaptureMetadata,
 )
+from sayane.storage.security_policy import require_local_working_store
 
 
 def _candidates_dir(config: BridgeConfig) -> Path:
@@ -59,8 +60,9 @@ def load_candidate(config: BridgeConfig, candidate_id: str) -> CandidateUpdate:
 
 
 def save_candidate(config: BridgeConfig, candidate: CandidateUpdate) -> Path:
-    _candidates_dir(config).mkdir(parents=True, exist_ok=True)
     path = _candidate_path(config, candidate.id)
+    require_local_working_store(path, record_class="candidate")
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         json.dumps(
             candidate.model_dump(mode="json"),

@@ -312,8 +312,12 @@ Implemented diagnostic entrypoint:
   - `sayane vault status --test --json`
   - `sayane vault policy`
   - `sayane vault policy --json`
+  - `sayane vault schema`
+  - `sayane vault schema --json`
+  - `sayane vault schema --ddl`
+  - `sayane vault schema --ddl --json`
 
-The diagnostic command is non-destructive and does not expose plaintext records. By default it checks production mode and reports the production Local Vault backend as unavailable while it remains unimplemented. Test-only runtime is shown only when `--test` is explicitly provided, and its output is marked `production_ready: false` and `test_only: true`.
+The diagnostic commands are non-destructive and do not expose plaintext records. `vault status` checks runtime readiness and remains fail-closed for production while the backend is unimplemented. `vault policy` displays unlock policy presets without opening the runtime. `vault schema` displays the SQLite schema contract without opening a database.
 
 The current Vault adapters cover:
 
@@ -445,4 +449,4 @@ This ADR preserves the meaning of local-first without weakening it into plain lo
 
 The key semantic boundary is that local vault access, UI unlock, and external tool access are different acts. Unlocking the UI must not imply that MCP, Bridge, or any extension can read the same context.
 
-The current implementation status should be read as bounded evidence, not proof of production security. The test-only vault components make the intended boundaries executable for CI, but they do not provide production cryptographic assurance. The guarded runtime factory adds an additional fail-closed boundary by making test-only vault runtime explicit rather than implicit. The session manager adds another boundary by requiring scoped sessions at runtime instead of treating unlock as a global process state. Unlock policy presets further separate normal, sensitive, and deep-private access by time and scope. SQLite schema contract tests prevent the future persistent store from normalizing plaintext or master-key columns into the production schema. The vault diagnostic command adds observability while preserving the same fail-closed boundary.
+The current implementation status should be read as bounded evidence, not proof of production security. The test-only vault components make the intended boundaries executable for CI, but they do not provide production cryptographic assurance. The guarded runtime factory adds an additional fail-closed boundary by making test-only vault runtime explicit rather than implicit. The session manager adds another boundary by requiring scoped sessions at runtime instead of treating unlock as a global process state. Unlock policy presets further separate normal, sensitive, and deep-private access by time and scope. SQLite schema contract tests prevent the future persistent store from normalizing plaintext or master-key columns into the production schema. The vault diagnostic commands add observability while preserving the same fail-closed boundary.

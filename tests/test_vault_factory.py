@@ -39,6 +39,19 @@ def test_open_vault_runtime_test_mode_builds_test_runtime() -> None:
     assert runtime.vault.mode() == VaultStoreMode.TEST
 
 
+def test_vault_runtime_uses_session_manager() -> None:
+    runtime = build_test_vault_runtime(profile_id="default")
+    session = runtime.unlock("factory-test", ["candidate:read"])
+
+    assert runtime.require_scope(session.session_id, "candidate:read") == session
+    with pytest.raises(VaultStoreError, match="missing scope"):
+        runtime.require_scope(session.session_id, "candidate:write")
+
+    runtime.lock(session.session_id)
+    with pytest.raises(VaultStoreError, match="not found"):
+        runtime.require_scope(session.session_id, "candidate:read")
+
+
 def test_test_vault_runtime_bundle_round_trip() -> None:
     runtime = build_test_vault_runtime(profile_id="default")
     session = runtime.unlock(
@@ -81,6 +94,7 @@ def test_production_runtime_rejects_test_only_components_if_misconfigured() -> N
         mode=VaultStoreMode.PRODUCTION,
         profile_id=runtime.profile_id,
         keychain=runtime.keychain,
+        session_manager=runtime.session_manager,
         vault=runtime.vault,
         repositories=runtime.repositories,
     )

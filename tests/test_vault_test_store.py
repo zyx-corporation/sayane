@@ -49,7 +49,7 @@ def test_in_memory_test_vault_put_get_delete() -> None:
         session=session,
     )
     assert record.ciphertext != b"candidate content"
-    assert store.list_record_ids(DataClass.CANDIDATE) == ["c1"]
+    assert store.list_record_ids(DataClass.CANDIDATE, session=session) == ["c1"]
     assert store.get(data_class=DataClass.CANDIDATE, record_id="c1", session=session) == b"candidate content"
 
     store.delete(data_class=DataClass.CANDIDATE, record_id="c1", session=session)

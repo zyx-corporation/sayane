@@ -10,6 +10,7 @@ import pytest
 from sayane.vault.contracts import VaultStoreError
 from sayane.vault.session import InMemoryUnlockSessionManager
 from sayane.vault.test_store import TestOnlyKeychainProvider
+from sayane.vault.unlock_policy import UnlockLevel
 
 
 def test_unlock_session_manager_opens_and_requires_scope() -> None:
@@ -22,6 +23,20 @@ def test_unlock_session_manager_opens_and_requires_scope() -> None:
 
     required = manager.require_scope(session.session_id, "candidate:read")
     assert required.session_id == session.session_id
+
+
+def test_unlock_session_manager_opens_policy_session() -> None:
+    manager = InMemoryUnlockSessionManager(TestOnlyKeychainProvider())
+
+    session = manager.open_policy_session("candidate review", UnlockLevel.SENSITIVE)
+
+    assert session.session_id in manager.sessions
+    assert session.allows("candidate:write") is True
+    assert session.allows("review_decision:write") is True
+    assert session.allows("lineage:write") is True
+    assert session.allows("deep_private:read") is False
+    assert session.idle_expires_at is not None
+    assert session.idle_expires_at < session.expires_at
 
 
 def test_unlock_session_manager_rejects_missing_session() -> None:

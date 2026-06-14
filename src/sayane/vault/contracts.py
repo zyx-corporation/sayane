@@ -85,6 +85,13 @@ class UnlockSession:
     def allows(self, scope: str) -> bool:
         return scope in self.scopes or "*" in self.scopes
 
+    def require(self, scope: str) -> None:
+        """Raise when this session is expired or lacks the requested scope."""
+        if self.is_expired():
+            raise VaultStoreError("unlock session expired")
+        if not self.allows(scope):
+            raise VaultStoreError(f"unlock session missing scope: {scope}")
+
 
 @dataclass(frozen=True)
 class KeyMaterial:
@@ -293,8 +300,8 @@ class VaultStore(Protocol):
         """Delete one encrypted record."""
         ...
 
-    def list_record_ids(self, data_class: DataClass) -> list[str]:
-        """List record ids without exposing plaintext."""
+    def list_record_ids(self, data_class: DataClass, *, session: UnlockSession) -> list[str]:
+        """List record ids for an unlocked data class without exposing plaintext."""
         ...
 
 

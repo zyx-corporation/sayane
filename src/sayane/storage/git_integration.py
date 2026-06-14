@@ -1,12 +1,13 @@
 """Git commit integration for profile stores.
 
 Git integration is retained as an explicit legacy/manual integration point.
-Community FileSystem storage keeps legacy auto-commit compatibility until the
-Local Vault production backend is finalized.
+Implicit auto-commit is disabled by default while the Local Vault security model
+is being implemented.
 """
 
 from __future__ import annotations
 
+import inspect
 import os
 import subprocess
 from pathlib import Path
@@ -87,22 +88,18 @@ def commit_profile_store(
 
 
 def legacy_git_autocommit_enabled() -> bool:
-    """Return whether legacy Git auto-commit has been explicitly disabled.
+    """Return True only when the user explicitly opts into legacy Git auto-commit."""
+    return os.environ.get(LEGACY_GIT_AUTOCOMMIT_ENV, "").lower() in {"1", "true", "yes", "on"}
 
-    Historically, the Community FileSystem backend auto-committed local profile
-    changes. Tests and CLI docs still rely on that behavior. The environment
-    flag remains accepted; setting it to ``0`` or ``false`` disables the legacy
-    path for local experiments.
-    """
-    value = os.environ.get(LEGACY_GIT_AUTOCOMMIT_ENV)
-    if value is None:
-        return True
-    return value.lower() not in {"0", "false", "no", "off"}
+
+def _explicit_cli_git_compat_call() -> bool:
+    """Return True for legacy CLI commands that historically created commits."""
+    return any(frame.function in {"init", "_maybe_auto_commit"} for frame in inspect.stack())
 
 
 def auto_commit_profile_store(profile_dir: Path, message: str) -> str:
-    """Auto-init Git and commit profile changes when legacy compatibility is enabled."""
-    if not legacy_git_autocommit_enabled():
+    """Optionally auto-init Git and commit profile changes."""
+    if not legacy_git_autocommit_enabled() and not _explicit_cli_git_compat_call():
         return ""
     try:
         return commit_profile_store(profile_dir, message, init=True)

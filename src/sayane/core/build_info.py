@@ -110,13 +110,12 @@ def get_build_info() -> BuildInfo:
 
 
 def format_source_updated_at(iso_timestamp: str) -> str:
-    """Human-readable local timestamp (no subsecond noise)."""
+    """Human-readable timestamp preserving the source timestamp's own offset."""
     dt = _parse_iso_timestamp(iso_timestamp)
     if dt is None:
         text = iso_timestamp.strip()
         return text[:19].replace("T", " ") if text else "—"
-    local = dt.astimezone()
-    return local.strftime("%Y-%m-%d %H:%M:%S %z")
+    return dt.strftime("%Y-%m-%d %H:%M:%S %z")
 
 
 def format_build_info_startup_line(build: BuildInfo) -> str:

@@ -106,8 +106,11 @@ def create_from_capture(
     now = datetime.now(UTC)
     candidate_id = uuid4().hex
     target_section = normalize_proposal_section(section) if section else None
-    profile_bundle = open_storage(home=config.home, profile=None, profile_id=profile_id)
-    profile = profile_bundle.profile.load()
+    try:
+        profile_bundle = open_storage(home=config.home, profile=None, profile_id=profile_id)
+        profile = profile_bundle.profile.load()
+    except Exception:
+        profile = None
 
     raw = raw_content if raw_content is not None else content
     user_explicit = capture_meta is not None and capture_meta.capture_source in (

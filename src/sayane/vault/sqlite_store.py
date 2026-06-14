@@ -19,7 +19,6 @@ from sayane.vault.contracts import (
     EncryptedRecord,
     UnlockSession,
     VaultStore,
-    VaultStoreError,
     VaultStoreMode,
 )
 from sayane.vault.sqlite_schema import create_table_statements
@@ -76,11 +75,11 @@ class SQLiteVaultStore(VaultStore):
         data_class: DataClass,
         record_id: str,
         session: UnlockSession,
-    ) -> bytes:
+    ) -> bytes | None:
         session.require(f"{data_class.value}:read")
         encrypted = self._load_record(data_class, record_id)
         if encrypted is None:
-            raise VaultStoreError(f"record not found: {data_class.value}/{record_id}")
+            return None
         return self.crypto.decrypt_record(encrypted, session=session)
 
     def delete(

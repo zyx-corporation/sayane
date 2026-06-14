@@ -36,6 +36,9 @@ def from_legacy_capture(data: dict) -> CandidateUpdate:
         status="pending",
         target_profile_id="default",
         content=content,
+        raw_capture=content,
+        cleaned_capture=content,
+        display_summary=content[:120] if content else None,
         source=CandidateSource(
             type=data.get("source") or "capture",
             uri=data.get("source_url"),

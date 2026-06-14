@@ -93,13 +93,19 @@ class SQLiteVaultStore(VaultStore):
     def list_record_ids(
         self,
         data_class: DataClass,
+        *,
         session: UnlockSession,
     ) -> list[str]:
         session.require(f"{data_class.value}:read")
         connection = sqlite3.connect(self.path)
         try:
             rows = connection.execute(
-                "SELECT record_id FROM encrypted_records WHERE data_class = ? ORDER BY created_at, record_id",
+                """
+                SELECT record_id
+                FROM encrypted_records
+                WHERE data_class = ?
+                ORDER BY created_at, record_id
+                """,
                 (data_class.value,),
             ).fetchall()
             return [row[0] for row in rows]

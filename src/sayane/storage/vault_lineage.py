@@ -54,7 +54,8 @@ class VaultLineageStore:
     def list(self, *, session: UnlockSession, limit: int | None = None) -> list[dict[str, Any]]:
         """List persisted lineage events for this profile."""
         records: list[dict[str, Any]] = []
-        for record_id in self._vault.list_record_ids(DataClass.LINEAGE, session=session):
+        record_ids = self._vault.list_record_ids(DataClass.LINEAGE, session=session)
+        for record_id in record_ids:
             raw = self._vault.get(
                 data_class=DataClass.LINEAGE,
                 record_id=record_id,

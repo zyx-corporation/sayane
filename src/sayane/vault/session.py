@@ -16,7 +16,11 @@ from sayane.vault.contracts import (
     UnlockSessionManager,
     VaultStoreError,
 )
-from sayane.vault.unlock_policy import UnlockLevel, build_unlock_session_from_policy, default_unlock_policy
+from sayane.vault.unlock_policy import (
+    UnlockLevel,
+    build_unlock_session_from_policy,
+    default_unlock_policy,
+)
 
 
 @dataclass

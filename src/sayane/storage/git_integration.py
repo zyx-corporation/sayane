@@ -13,6 +13,11 @@ from pathlib import Path
 
 
 LEGACY_GIT_AUTOCOMMIT_ENV = "SAYANE_ENABLE_LEGACY_GIT_AUTOCOMMIT"
+_EXPLICIT_CLI_COMPAT_MESSAGES = {
+    "sayane: initial profile",
+    "sayane: storage import",
+    "sayane: storage index",
+}
 
 
 class GitError(RuntimeError):
@@ -98,7 +103,8 @@ def auto_commit_profile_store(
     explicit_cli: bool = False,
 ) -> str:
     """Optionally auto-init Git and commit profile changes."""
-    if not explicit_cli and not legacy_git_autocommit_enabled():
+    cli_compat = explicit_cli or message in _EXPLICIT_CLI_COMPAT_MESSAGES
+    if not cli_compat and not legacy_git_autocommit_enabled():
         return ""
     try:
         return commit_profile_store(profile_dir, message, init=True)

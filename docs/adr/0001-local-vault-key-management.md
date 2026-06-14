@@ -217,10 +217,18 @@ Implemented contract layer:
   - `VaultStoreMode`
   - `PlatformKeychainProvider`
   - `UnlockSession`
+  - `UnlockSessionManager`
   - `KeyManager`
   - `CryptoProvider`
   - `VaultStore`
   - `assert_vault_store_safe_for_production()`
+
+Implemented session management:
+
+- `src/sayane/vault/session.py`
+  - `InMemoryUnlockSessionManager`
+
+`InMemoryUnlockSessionManager` delegates key release to a `PlatformKeychainProvider`, tracks session metadata, enforces session existence, rejects expired sessions, checks scopes, and closes sessions through the keychain. It is currently used by `VaultRuntime`.
 
 Implemented test-only infrastructure:
 
@@ -255,6 +263,8 @@ Implemented guarded runtime construction:
 
 The runtime factory is intentionally fail-closed. Production and development Local Vault backends are not implemented yet, so `open_vault_runtime()` without `mode="test"` raises an error. Test-only components are available only through explicit `mode="test"` or `build_test_vault_runtime()` calls.
 
+`VaultRuntime` now owns an `UnlockSessionManager`, so runtime callers can open, require, and close scoped sessions without directly sharing UI unlock state with external tools.
+
 The current Vault adapters cover:
 
 - Candidate records as `DataClass.CANDIDATE`
@@ -281,6 +291,7 @@ Required CI checks:
 - run storage security policy tests;
 - run MCP context exposure tests;
 - run Local Vault contract tests;
+- run unlock session manager tests;
 - run test-only keychain / crypto / vault store tests;
 - run Vault-backed Candidate / ReviewDecision / Lineage adapter tests;
 - run Vault runtime factory tests;
@@ -301,6 +312,7 @@ pytest tests/test_storage_security_policy.py
 pytest tests/test_storage_write_policy.py
 pytest tests/test_review_decision_store.py
 pytest tests/test_vault_contracts.py
+pytest tests/test_unlock_session_manager.py
 pytest tests/test_vault_test_store.py
 pytest tests/test_vault_test_crypto.py
 pytest tests/test_vault_candidate_adapter.py
@@ -316,7 +328,6 @@ Future CI targets, once production Local Vault modules exist:
 ```bash
 pytest tests/test_vault_key_manager.py
 pytest tests/test_platform_keychain_provider.py
-pytest tests/test_unlock_session.py
 pytest tests/test_local_vault_persistence.py
 pytest tests/test_sqlite_vault_store.py
 ```
@@ -334,6 +345,7 @@ Benefits:
 - MCP, Bridge, UI, and CLI can share a common vault without sharing all permissions.
 - Candidate / ReviewDecision / Lineage now have a clear migration seam from FileSystem local working stores to Local Vault repositories.
 - Vault runtime construction now has a fail-closed seam that prevents test-only components from becoming production defaults.
+- Unlock session management now has a runtime seam that separates keychain unlock, scoped session validation, and repository access.
 
 Costs:
 
@@ -359,7 +371,7 @@ This ADR does not define:
 - Implement production `PlatformKeychainProvider` backends.
 - Implement production `KeyManager` and `CryptoProvider` backends.
 - Define SQLite schema for keyring and encrypted records.
-- Add unlock session manager with idle and absolute timeout.
+- Add idle and absolute timeout policy presets for runtime unlock sessions.
 - Define Deep Private / Layer 3 classification in a separate ADR or specification.
 - Add production local vault security tests.
 - Ensure MCP Context Exposure Policy works only after scoped vault access.
@@ -373,4 +385,4 @@ This ADR preserves the meaning of local-first without weakening it into plain lo
 
 The key semantic boundary is that local vault access, UI unlock, and external tool access are different acts. Unlocking the UI must not imply that MCP, Bridge, or any extension can read the same context.
 
-The current implementation status should be read as bounded evidence, not proof of production security. The test-only vault components make the intended boundaries executable for CI, but they do not provide production cryptographic assurance. The guarded runtime factory adds an additional fail-closed boundary by making test-only vault runtime explicit rather than implicit.
+The current implementation status should be read as bounded evidence, not proof of production security. The test-only vault components make the intended boundaries executable for CI, but they do not provide production cryptographic assurance. The guarded runtime factory adds an additional fail-closed boundary by making test-only vault runtime explicit rather than implicit. The session manager adds another boundary by requiring scoped sessions at runtime instead of treating unlock as a global process state.

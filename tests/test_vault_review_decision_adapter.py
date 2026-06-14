@@ -6,7 +6,11 @@ import pytest
 
 from sayane.core.review_decision import ReviewDecision
 from sayane.storage.vault_review_decisions import VaultReviewDecisionStore
-from sayane.vault.contracts import DataClass, VaultStoreError, assert_vault_store_safe_for_production
+from sayane.vault.contracts import (
+    DataClass,
+    VaultStoreError,
+    assert_vault_store_safe_for_production,
+)
 from sayane.vault.test_crypto import TestOnlyCryptoProvider
 from sayane.vault.test_store import CryptoBackedInMemoryTestVaultStore, TestOnlyKeychainProvider
 

@@ -12,6 +12,7 @@ from sayane.core.models import SayaneProfile
 from sayane.storage.base import StorageBackendError, StorageBundle
 from sayane.storage.config import StorageConfig, load_storage_config, save_storage_config
 from sayane.storage.factory import open_storage, set_storage_backend
+from sayane.storage.git_integration import legacy_git_autocommit_enabled
 from sayane.storage.registry import (
     get_backend_factory,
     list_backends,
@@ -103,7 +104,7 @@ def test_load_storage_config_defaults(tmp_path: Path) -> None:
     config = load_storage_config(tmp_path)
     assert config.backend == "filesystem"
     assert config.profile_id == "default"
-    assert config.uses_git_auto_commit is True
+    assert config.uses_git_auto_commit is False
 
 
 def test_save_and_load_storage_config(tmp_path: Path) -> None:
@@ -111,6 +112,7 @@ def test_save_and_load_storage_config(tmp_path: Path) -> None:
     loaded = load_storage_config(tmp_path)
     assert loaded.backend == "filesystem"
     assert loaded.profile_id == "work"
+    assert loaded.uses_git_auto_commit is False
 
 
 def test_filesystem_backend_open_storage(tmp_path: Path, monkeypatch) -> None:
@@ -127,7 +129,14 @@ def test_filesystem_backend_open_storage(tmp_path: Path, monkeypatch) -> None:
     assert bundle.backend == "filesystem"
     assert bundle.profile.profile_dir == profile_dir.resolve()
     assert bundle.context.context_dir == profile_dir.resolve() / "context"
-    assert bundle.uses_git_auto_commit is True
+    assert bundle.uses_git_auto_commit is False
+
+
+def test_legacy_git_auto_commit_requires_explicit_opt_in(monkeypatch) -> None:
+    monkeypatch.delenv("SAYANE_ENABLE_LEGACY_GIT_AUTOCOMMIT", raising=False)
+    assert legacy_git_autocommit_enabled() is False
+    monkeypatch.setenv("SAYANE_ENABLE_LEGACY_GIT_AUTOCOMMIT", "1")
+    assert legacy_git_autocommit_enabled() is True
 
 
 def test_mock_backend_registration_contract(tmp_path: Path) -> None:

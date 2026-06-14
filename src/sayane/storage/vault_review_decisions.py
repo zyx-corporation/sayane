@@ -41,7 +41,8 @@ class VaultReviewDecisionStore:
     def list(self, *, session: UnlockSession) -> list[ReviewDecision]:
         """List persisted ReviewDecision records for this profile."""
         decisions: list[ReviewDecision] = []
-        for record_id in self._vault.list_record_ids(DataClass.REVIEW_DECISION, session=session):
+        record_ids = self._vault.list_record_ids(DataClass.REVIEW_DECISION, session=session)
+        for record_id in record_ids:
             raw = self._vault.get(
                 data_class=DataClass.REVIEW_DECISION,
                 record_id=record_id,

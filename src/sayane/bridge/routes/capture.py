@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Callable
+from collections.abc import Callable
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException
 
@@ -27,11 +27,12 @@ def register_capture_routes(
     """Register capture and important-terms preflight endpoints."""
     router = APIRouter()
 
-    @router.post("/capture", response_model=CaptureResponse)
-    def post_capture(
-        body: CaptureRequest,
-        _: Annotated[None, Depends(require_bearer)],
-    ) -> CaptureResponse:
+    @router.post(
+        "/capture",
+        response_model=CaptureResponse,
+        dependencies=[Depends(require_bearer)],
+    )
+    def post_capture(body: CaptureRequest) -> CaptureResponse:
         try:
             return save_capture(cfg, body)
         except ValueError as exc:
@@ -40,10 +41,10 @@ def register_capture_routes(
     @router.post(
         "/preflight/important-terms",
         response_model=ImportantTermsPreflightResponse,
+        dependencies=[Depends(require_bearer)],
     )
     def post_preflight_important_terms(
         body: ImportantTermsPreflightRequest,
-        _: Annotated[None, Depends(require_bearer)],
     ) -> ImportantTermsPreflightResponse:
         try:
             payload = preview_important_terms_diff(

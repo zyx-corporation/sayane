@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
-from typing import Annotated, Callable
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException
@@ -21,11 +21,8 @@ def register_import_routes(
     """Register import endpoints."""
     router = APIRouter()
 
-    @router.post("/import")
-    def post_import(
-        body: dict,
-        _: Annotated[None, Depends(require_bearer)] = None,
-    ) -> dict:
+    @router.post("/import", dependencies=[Depends(require_bearer)])
+    def post_import(body: dict) -> dict:
         from sayane.bridge.service import resolve_profile_path
         from sayane.core.import_bundle import ImportMetadata, create_import_candidates, parse_bundle
         from sayane.core.loader import load_profile

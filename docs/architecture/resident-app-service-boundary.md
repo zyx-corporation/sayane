@@ -8,14 +8,18 @@ Initial service boundary is implemented.
 
 This is not yet a production resident daemon.
 
-It is a narrow application service seam that future CLI, Bridge, MCP, UI, and clipboard capture flows can share.
+It is a narrow application service seam that CLI, Bridge, MCP, UI, and clipboard capture flows can share.
 
 ## Files
 
 ```text
 src/sayane/app/capabilities.py
 src/sayane/app/service.py
+src/sayane/app/runtime.py
+src/sayane/cli/commands/app.py
 tests/test_resident_app_service.py
+tests/test_resident_app_cli.py
+tests/test_resident_runtime.py
 ```
 
 ## Boundary
@@ -24,7 +28,7 @@ The resident app service follows this shape:
 
 ```text
 future UI / clipboard capture / local service command
-  -> ResidentAppService
+  -> ResidentAppService / ResidentRuntime
     -> capability check
     -> existing capture/usecase path
     -> CandidateRepository
@@ -74,11 +78,47 @@ This preserves the Candidate review boundary.
 
 Clipboard capture must not directly mutate ProfileContextRepository or ProjectContextRepository.
 
+## Resident Runtime
+
+`ResidentRuntime` is a thin assembly boundary for app commands.
+
+```text
+build_resident_runtime()
+  -> BridgeConfig
+  -> ResidentAppService
+  -> local capability map
+```
+
+The runtime builder does not select direct SQLite adapters by itself.
+
+Persistent repository bundles must be injected explicitly when selected by a higher-level runtime policy.
+
+## Resident Serve Decision
+
+For the initial command wiring, `sayane app serve` is not an independent daemon.
+
+It is a delegation plan for the existing Bridge command:
+
+```text
+sayane app serve --host 127.0.0.1 --port 38741
+  -> sayane serve --host 127.0.0.1 --port 38741
+```
+
+This preserves existing Bridge behavior and avoids a second resident server path before runtime selection is stable.
+
+`app serve` is deliberately testable without starting a long-running server:
+
+```text
+sayane app serve --json
+```
+
+The command rejects non-localhost bind addresses.
+
 ## Repository Diagnostics
 
 `ResidentAppService.repository_counts()` requires `admin`.
 
-It returns only non-secret counts:
+It returns only non-sensitive counts:
 
 ```text
 profile_id
@@ -93,23 +133,21 @@ It must not expose candidate content, review reasons, plaintext vault data, or p
 
 The Phase 4 seam does not yet provide:
 
-- `sayane app serve`
 - daemon install/uninstall
 - OS service integration
 - persistent resident runtime selection
-- production local auth tokens
+- production local credential implementation
 - system tray UI
 - Bridge route rewiring
 - MCP runtime binding
 
 ## Next Step
 
-A later phase should add an explicit resident runtime builder and command wiring:
+A later phase should decide production resident runtime selection:
 
 ```text
-sayane app serve
-  -> resident runtime builder
-  -> repository bundle
+resident runtime policy
+  -> repository bundle selection
   -> capability issuer
   -> local UI/Bridge/MCP adapters
 ```

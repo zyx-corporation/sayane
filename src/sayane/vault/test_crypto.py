@@ -43,7 +43,7 @@ class TestOnlyKeyManager(KeyManager):
     ) -> KeyMaterial:
         _require_scope(session, f"{data_class.value}:key")
         if data_class in self.destroyed:
-            raise VaultStoreError(f"test DEK destroyed for data class: {data_class.value}")
+            raise VaultStoreError("missing keyring entry for encrypted record")
         entry = self.keyring.get(data_class)
         if entry is None:
             raw = self._derive_test_dek(data_class, version="v1")

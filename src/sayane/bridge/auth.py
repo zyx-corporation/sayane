@@ -1,9 +1,45 @@
 """Bridge bearer token management."""
 
+from __future__ import annotations
+
 import hashlib
 import secrets
+from typing import Annotated
+
+from fastapi import Header, HTTPException, status
 
 from sayane.bridge.config import BridgeConfig
+
+
+class BearerTokenAuth:
+    """FastAPI dependency object for Bridge bearer-token authentication.
+
+    This explicit dependency object is introduced for #178 so Bridge routes can
+    cross module boundaries without depending on a closure-local function inside
+    ``create_app``.
+
+    It intentionally preserves the existing error status and detail strings used
+    by the legacy ``require_bearer`` closure.
+    """
+
+    def __init__(self, config: BridgeConfig) -> None:
+        self.config = config
+
+    def __call__(
+        self,
+        authorization: Annotated[str | None, Header()] = None,
+    ) -> None:
+        if authorization is None or not authorization.startswith("Bearer "):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Missing or invalid Authorization header",
+            )
+        token = authorization.removeprefix("Bearer ").strip()
+        if not verify_token(self.config, token):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid bearer token",
+            )
 
 
 def load_or_create_token(config: BridgeConfig) -> tuple[str, bool]:

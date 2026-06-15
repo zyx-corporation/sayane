@@ -4,41 +4,44 @@ from __future__ import annotations
 
 import hashlib
 import secrets
+from collections.abc import Callable
 
 from fastapi import Header, HTTPException, status
 
 from sayane.bridge.config import BridgeConfig
 
 
+def _check_bearer(config: BridgeConfig, authorization: str | None) -> None:
+    if authorization is None or not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing or invalid Authorization header",
+        )
+    token = authorization.removeprefix("Bearer ").strip()
+    if not verify_token(config, token):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid bearer token",
+        )
+
+
+def create_bearer_dependency(config: BridgeConfig) -> Callable[..., None]:
+    """Return a FastAPI dependency bound to a Bridge config."""
+
+    def require_bearer(authorization: str | None = Header(default=None)) -> None:
+        _check_bearer(config, authorization)
+
+    return require_bearer
+
+
 class BearerTokenAuth:
-    """FastAPI dependency object for Bridge bearer-token authentication.
-
-    This explicit dependency object is introduced for #178 so Bridge routes can
-    cross module boundaries without depending on a closure-local function inside
-    ``create_app``.
-
-    It intentionally preserves the existing error status and detail strings used
-    by the legacy ``require_bearer`` closure.
-    """
+    """Compatibility wrapper; prefer create_bearer_dependency for FastAPI."""
 
     def __init__(self, config: BridgeConfig) -> None:
         self.config = config
 
-    def __call__(
-        self,
-        authorization: str | None = Header(default=None),
-    ) -> None:
-        if authorization is None or not authorization.startswith("Bearer "):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Missing or invalid Authorization header",
-            )
-        token = authorization.removeprefix("Bearer ").strip()
-        if not verify_token(self.config, token):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid bearer token",
-            )
+    def __call__(self, authorization: str | None = Header(default=None)) -> None:
+        _check_bearer(self.config, authorization)
 
 
 def load_or_create_token(config: BridgeConfig) -> tuple[str, bool]:

@@ -11,31 +11,31 @@ from sayane.storage.repositories import build_test_repository_bundle
 
 
 def test_capability_token_requires_declared_scope() -> None:
-    token = create_local_capability_token(["review"])
+    capability = create_local_capability_token(["review"])
 
-    assert token.has("review") is True
-    assert token.has("capture") is False
+    assert capability.has("review") is True
+    assert capability.has("capture") is False
     with pytest.raises(CapabilityError, match="capture"):
-        token.require("capture")
+        capability.require("capture")
 
 
 def test_admin_capability_implies_all_scopes() -> None:
-    token = create_local_capability_token(["admin"])
+    capability = create_local_capability_token(["admin"])
 
-    assert token.has("capture") is True
-    assert token.has("review") is True
-    assert token.has("mcp") is True
+    assert capability.has("capture") is True
+    assert capability.has("review") is True
+    assert capability.has("mcp") is True
 
 
 def test_resident_service_capture_requires_capture_capability(tmp_path) -> None:
     service = ResidentAppService()
-    token = create_local_capability_token(["review"])
+    capability = create_local_capability_token(["review"])
     config = BridgeConfig(home=tmp_path / "sayane")
 
     with pytest.raises(CapabilityError, match="capture"):
         service.capture_clipboard_as_candidate(
             "clipboard text",
-            token=token,
+            capability=capability,
             config=config,
         )
 
@@ -43,12 +43,12 @@ def test_resident_service_capture_requires_capture_capability(tmp_path) -> None:
 def test_resident_service_clipboard_capture_enters_candidate_repository(tmp_path) -> None:
     bundle = build_test_repository_bundle(profile_id="default")
     service = ResidentAppService(profile_id="default", repositories=bundle)
-    token = create_local_capability_token(["capture"])
+    capability = create_local_capability_token(["capture"])
     config = BridgeConfig(home=tmp_path / "sayane")
 
     candidate = service.capture_clipboard_as_candidate(
         "important_terms:\n  - \"Sayane\"",
-        token=token,
+        capability=capability,
         config=config,
     )
 
@@ -64,20 +64,20 @@ def test_resident_service_clipboard_capture_enters_candidate_repository(tmp_path
 def test_resident_service_repository_counts_require_admin(tmp_path) -> None:
     bundle = build_test_repository_bundle(profile_id="default")
     service = ResidentAppService(profile_id="default", repositories=bundle)
-    capture_token = create_local_capability_token(["capture"])
-    admin_token = create_local_capability_token(["admin"])
+    capture_capability = create_local_capability_token(["capture"])
+    admin_capability = create_local_capability_token(["admin"])
     config = BridgeConfig(home=tmp_path / "sayane")
 
     service.capture_clipboard_as_candidate(
         "clipboard text",
-        token=capture_token,
+        capability=capture_capability,
         config=config,
     )
 
     with pytest.raises(CapabilityError, match="admin"):
-        service.repository_counts(token=capture_token)
+        service.repository_counts(capability=capture_capability)
 
-    assert service.repository_counts(token=admin_token) == {
+    assert service.repository_counts(capability=admin_capability) == {
         "profile_id": "default",
         "candidate_count": 1,
         "review_decision_count": 0,
@@ -85,7 +85,7 @@ def test_resident_service_repository_counts_require_admin(tmp_path) -> None:
     }
 
 
-def test_resident_service_describe_does_not_expose_secret_state() -> None:
+def test_resident_service_describe_returns_public_shape() -> None:
     service = ResidentAppService(
         profile_id="default",
         repositories=build_test_repository_bundle(profile_id="default"),

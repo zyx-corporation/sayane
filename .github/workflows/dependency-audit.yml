@@ -1,0 +1,51 @@
+name: Dependency Audit
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run dependency audit
+        run: |
+          python tools/dependency_audit.py \
+            --format markdown \
+            --output dependency-audit.md
+
+      - name: Append report to job summary
+        if: always()
+        run: |
+          {
+            echo "## Dependency Audit"
+            echo ""
+            if [ -f dependency-audit.md ]; then
+              cat dependency-audit.md
+            else
+              echo "dependency-audit.md was not generated."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload dependency audit artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-audit
+          path: dependency-audit.md
+          if-no-files-found: warn

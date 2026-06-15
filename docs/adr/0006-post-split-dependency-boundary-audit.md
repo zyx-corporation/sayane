@@ -315,7 +315,7 @@ However, ADR 0006 records the extension boundary rule:
 The first implementation should prefer a lightweight script:
 
 ```text
-scripts/dependency_audit.py
+tools/dependency_audit.py
 ```
 
 The first version should use the Python standard library only unless a stronger need appears.
@@ -352,7 +352,7 @@ The initial CI behavior must be informational.
 Recommended behavior:
 
 ```bash
-python scripts/dependency_audit.py \
+python tools/dependency_audit.py \
   --format markdown \
   --output dependency-audit.md
 ```
@@ -430,7 +430,7 @@ Premature enforcement could block development before the boundary rules are vali
 
 ## Follow-up Tasks
 
-- Add `scripts/dependency_audit.py`.
+- Add `tools/dependency_audit.py`.
 - Add text and Markdown report output.
 - Add non-blocking CI artifact job.
 - Review several reports before enabling strict checks.

@@ -6,7 +6,7 @@ import hashlib
 import secrets
 from collections.abc import Callable
 
-from fastapi import Header, HTTPException, status
+from fastapi import HTTPException, Request, status
 
 from sayane.bridge.config import BridgeConfig
 
@@ -28,8 +28,8 @@ def _check_bearer(config: BridgeConfig, authorization: str | None) -> None:
 def create_bearer_dependency(config: BridgeConfig) -> Callable[..., None]:
     """Return a FastAPI dependency bound to a Bridge config."""
 
-    def require_bearer(authorization: str | None = Header(default=None)) -> None:
-        _check_bearer(config, authorization)
+    def require_bearer(request: Request) -> None:
+        _check_bearer(config, request.headers.get("authorization"))
 
     return require_bearer
 
@@ -40,8 +40,8 @@ class BearerTokenAuth:
     def __init__(self, config: BridgeConfig) -> None:
         self.config = config
 
-    def __call__(self, authorization: str | None = Header(default=None)) -> None:
-        _check_bearer(self.config, authorization)
+    def __call__(self, request: Request) -> None:
+        _check_bearer(self.config, request.headers.get("authorization"))
 
 
 def load_or_create_token(config: BridgeConfig) -> tuple[str, bool]:

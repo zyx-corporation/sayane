@@ -20,7 +20,15 @@ FUNCTION_WARN_LINES = 50
 CLASS_WARN_LINES = 200
 CYCLOMATIC_WARN = 10
 CYCLOMATIC_HIGH = 20
-GOD_FILE_NAMES = {"app.py", "main.py", "service.py", "manager.py", "utils.py", "common.py", "helper.py"}
+GOD_FILE_NAMES = {
+    "app.py",
+    "main.py",
+    "service.py",
+    "manager.py",
+    "utils.py",
+    "common.py",
+    "helper.py",
+}
 
 
 @dataclass(frozen=True)
@@ -60,7 +68,10 @@ def iter_python_files(roots: Iterable[Path]) -> Iterable[Path]:
         if not root.exists():
             continue
         for path in sorted(root.rglob("*.py")):
-            if any(part in {".git", ".venv", "venv", "__pycache__"} for part in path.parts):
+            if any(
+                part in {".git", ".venv", "venv", "__pycache__"}
+                for part in path.parts
+            ):
                 continue
             yield path
 
@@ -76,8 +87,17 @@ def node_start_line(node: ast.AST) -> int | None:
 def cyclomatic_complexity(node: ast.AST) -> int:
     """Approximate McCabe complexity without external dependencies."""
     score = 1
+    branch_nodes = (
+        ast.If,
+        ast.For,
+        ast.AsyncFor,
+        ast.While,
+        ast.ExceptHandler,
+        ast.With,
+        ast.AsyncWith,
+    )
     for child in ast.walk(node):
-        if isinstance(child, (ast.If, ast.For, ast.AsyncFor, ast.While, ast.ExceptHandler, ast.With, ast.AsyncWith)):
+        if isinstance(child, branch_nodes):
             score += 1
         elif isinstance(child, ast.BoolOp):
             score += max(0, len(child.values) - 1)
@@ -150,9 +170,24 @@ def rel(path: Path, root: Path) -> str:
 def render_report(reports: list[ModuleReport], root: Path) -> str:
     large_files = [r for r in reports if r.line_count >= FILE_WARN_LINES]
     god_files = [r for r in reports if r.is_god_file_name]
-    long_functions = [f for r in reports for f in r.functions if f.line_count >= FUNCTION_WARN_LINES]
-    long_classes = [c for r in reports for c in r.classes if c.line_count >= CLASS_WARN_LINES]
-    complex_functions = [f for r in reports for f in r.functions if f.complexity >= CYCLOMATIC_WARN]
+    long_functions = [
+        f
+        for r in reports
+        for f in r.functions
+        if f.line_count >= FUNCTION_WARN_LINES
+    ]
+    long_classes = [
+        c
+        for r in reports
+        for c in r.classes
+        if c.line_count >= CLASS_WARN_LINES
+    ]
+    complex_functions = [
+        f
+        for r in reports
+        for f in r.functions
+        if f.complexity >= CYCLOMATIC_WARN
+    ]
     parse_errors = [r for r in reports if r.parse_error]
 
     output: list[str] = []
@@ -192,7 +227,8 @@ def render_report(reports: list[ModuleReport], root: Path) -> str:
         for item in sorted(long_functions, key=lambda f: f.line_count, reverse=True):
             output.append(
                 f"- {rel(item.path, root)}::{item.name} "
-                f"L{item.start_line}-L{item.end_line} ({item.line_count} lines, CC={item.complexity})"
+                f"L{item.start_line}-L{item.end_line} "
+                f"({item.line_count} lines, CC={item.complexity})"
             )
         output.append("")
 
@@ -203,7 +239,8 @@ def render_report(reports: list[ModuleReport], root: Path) -> str:
             marker = "HIGH" if item.complexity >= CYCLOMATIC_HIGH else "WARN"
             output.append(
                 f"- {marker}: {rel(item.path, root)}::{item.name} "
-                f"L{item.start_line}-L{item.end_line} (CC={item.complexity}, {item.line_count} lines)"
+                f"L{item.start_line}-L{item.end_line} "
+                f"(CC={item.complexity}, {item.line_count} lines)"
             )
         output.append("")
 
@@ -228,7 +265,9 @@ def render_report(reports: list[ModuleReport], root: Path) -> str:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Generate an informational ADR 0004 complexity report.")
+    parser = argparse.ArgumentParser(
+        description="Generate an informational ADR 0004 complexity report."
+    )
     parser.add_argument(
         "paths",
         nargs="*",

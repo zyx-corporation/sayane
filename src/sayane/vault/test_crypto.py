@@ -140,8 +140,11 @@ class TestOnlyCryptoProvider(CryptoProvider):
         session: UnlockSession,
     ) -> bytes:
         entry = self.key_manager.keyring.get(record.data_class)
+        if entry is None:
+            self.key_manager.get_or_create_dek(record.data_class, session=session)
+            entry = self.key_manager.keyring.get(record.data_class)
         if entry is None or entry.key_id != record.key_id:
-            raise VaultStoreError("missing keyring entry for encrypted record")
+            raise VaultStoreError("missing matching test key for encrypted record")
         key = self.key_manager.unwrap_dek(entry, session=session)
         payload = _xor_with_digest(record.ciphertext, key.material)
         aad_digest = _aad_digest(record.aad)

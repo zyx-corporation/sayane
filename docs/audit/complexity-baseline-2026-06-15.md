@@ -18,16 +18,31 @@ Related issues:
 
 ## Baseline Method
 
-This first baseline is based on manual code review performed during the ADR 0004 audit. It does not yet include automated `radon` output.
+This first baseline is based on manual code review performed during the ADR 0004 audit.
+
+A dependency-free local reporting script has also been added:
+
+```text
+scripts/complexity_report.py
+```
+
+The script uses the Python standard library only and reports warning candidates for:
+
+- file length
+- god-file names
+- function length
+- class length
+- approximate cyclomatic complexity
+- parse errors
+
+It is not a CI gate.
 
 Future updates may add:
 
-- line-count report
-- function-length report
-- class-length report
-- cyclomatic complexity report
-- god-file name scan
+- stored report output
+- reviewed baseline exceptions
 - informational CI artifact
+- optional `radon` comparison
 
 ## ADR 0004 Warning Thresholds
 
@@ -156,12 +171,12 @@ Do not change:
 
 ## Next Baseline Update
 
-The next update should add automated measurement, preferably as a local script first.
+The next update should capture an actual generated report and review whether the script needs threshold tuning before any CI integration.
 
-Candidate next step:
+Example command:
 
 ```text
-scripts/complexity_report.py
+python scripts/complexity_report.py src tests
 ```
 
-The script should report warning candidates but should not fail CI until thresholds and baseline exceptions are reviewed.
+The script should continue to report warning candidates without failing CI until thresholds and baseline exceptions are reviewed.

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Callable
+from collections.abc import Callable
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query
 
@@ -21,11 +22,12 @@ def register_context_packet_routes(
     """Register compile and context-packet endpoints."""
     router = APIRouter()
 
-    @router.post("/compile", response_model=ContextPacketResponse)
-    def post_compile(
-        body: CompileRequest,
-        _: Annotated[None, Depends(require_bearer)],
-    ) -> ContextPacketResponse:
+    @router.post(
+        "/compile",
+        response_model=ContextPacketResponse,
+        dependencies=[Depends(require_bearer)],
+    )
+    def post_compile(body: CompileRequest) -> ContextPacketResponse:
         try:
             return compile_prompt(cfg, body)
         except FileNotFoundError as exc:
@@ -33,9 +35,12 @@ def register_context_packet_routes(
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    @router.get("/context-packet", response_model=ContextPacketResponse)
+    @router.get(
+        "/context-packet",
+        response_model=ContextPacketResponse,
+        dependencies=[Depends(require_bearer)],
+    )
     def get_context_packet(
-        _: Annotated[None, Depends(require_bearer)],
         target: Annotated[str, Query()],
         profile_id: Annotated[str, Query(alias="profile")] = "default",
         instruction: Annotated[str | None, Query()] = None,

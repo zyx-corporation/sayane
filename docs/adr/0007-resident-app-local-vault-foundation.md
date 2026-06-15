@@ -77,13 +77,14 @@ They may initiate operations, display state, or call usecases, but durable state
 
 ## Repository Contracts
 
-The first repository contracts should cover at least:
+The first repository contracts cover:
 
 - CandidateRepository
 - ReviewDecisionRepository
 - LineageRepository
 - ProfileContextRepository
 - ProjectContextRepository
+- RepositoryBundle
 
 The exact Python module layout may evolve, but the intended ownership is:
 
@@ -131,7 +132,7 @@ Those belong to presentation, route, or UI layers.
 
 A specific early goal is to make `load_review_decisions()` persistent.
 
-The current behavior must not allow MCP compiled context to observe a different review-decision state from the one used by CLI or Bridge.
+The behavior must not allow MCP compiled context to observe a different review-decision state from the one used by CLI or Bridge.
 
 The intended flow is:
 
@@ -154,10 +155,10 @@ The first persistent backend may be SQLite.
 
 However, SQLite should enter through an adapter boundary, not directly through CLI, Bridge, or MCP modules.
 
-The initial SQLite MVP should include:
+The initial SQLite MVP includes:
 
-- schema migration skeleton
-- repository implementation for candidates and review decisions
+- SQLite-backed Local Vault schema/runtime
+- repository implementation for candidates and review decisions through Vault stores
 - tests proving persistence across process-like reloads
 - no commercial-only encrypted backend dependency
 - clear future path for keyring / encrypted-record design
@@ -311,6 +312,51 @@ ADR 0007 also does not require all persistence to be implemented in one step.
 - Add local capability model stubs.
 - Prepare clipboard capture as Candidate input.
 
+## Implementation Progress
+
+### Completed: Phase 1
+
+Implemented in:
+
+```text
+src/sayane/storage/repositories.py
+tests/test_repository_contracts.py
+docs/architecture/repository-boundary.md
+```
+
+Phase 1 adds repository contracts, explicit test-only in-memory providers, a test repository bundle, and compatibility tests proving that existing vault stores satisfy the repository contracts.
+
+### Completed: Phase 2
+
+Implemented in:
+
+```text
+src/sayane/core/review_decision.py
+tests/test_review_decision_repository_seam.py
+```
+
+Phase 2 routes `save_decision()`, `list_decisions()`, `load_review_decisions()`, and `get_decisions_for_candidate()` through a configurable `ReviewDecisionRepository` seam while preserving the legacy in-memory fallback.
+
+This lets MCP compiled context read repository-backed review decisions without moving the exposure policy out of `mcp_context.py`.
+
+### Completed: Phase 3 MVP path
+
+Implemented and documented in:
+
+```text
+src/sayane/vault/sqlite_runtime.py
+tests/test_sqlite_vault_store.py
+docs/architecture/sqlite-repository-mvp.md
+```
+
+Phase 3 uses the existing SQLite-backed Local Vault runtime. Tests prove repository reload, review decision persistence through SQLite-backed vault stores, `save_decision()` write-through via the repository seam, and MCP compiled context consumption of SQLite-backed review decisions.
+
+### Remaining: Phase 4
+
+Resident service preparation is not yet implemented.
+
+The next phase should define the service/usecase boundary for resident app runtime wiring, local capability scopes, and clipboard capture as Candidate input.
+
 ## Test Policy
 
 Initial tests should prove:
@@ -359,7 +405,7 @@ ADR 0007 adds repository contracts, persistent review decision direction, reside
 
 ### Unresolved
 
-The exact repository module layout, SQLite schema, migration strategy, and final resident command name remain unresolved.
+The exact resident service command name, local capability implementation, clipboard-capture wiring, and production runtime selection remain unresolved.
 
 Encrypted local storage is acknowledged but not specified here.
 
@@ -371,4 +417,4 @@ A second risk is treating SQLite as the meaning source and forgetting that the h
 
 ### Update Policy
 
-ADR 0007 should be revised after Phase 1 repository contract tests are implemented and after the first persistent `load_review_decisions()` path is working.
+ADR 0007 should be revised again after Phase 4 resident service preparation is implemented.

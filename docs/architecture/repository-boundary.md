@@ -20,13 +20,13 @@ The repository boundary provides a shared contract for durable application state
 
 ```text
 entrypoints
-  -> usecases
+  -> usecases / resident app service
     -> repository contracts
       -> repository implementations
         -> storage backend / vault / sqlite
 ```
 
-Entrypoints may call usecases.
+Entrypoints may call usecases or the resident app service boundary.
 
 Usecases may depend on repository contracts.
 
@@ -132,6 +132,40 @@ SQLite must remain below the repository/vault adapter boundary.
 
 CLI, Bridge, MCP, and domain code must not import direct SQLite adapters.
 
+## Resident App Service Boundary
+
+Phase 4 adds an initial resident app service seam.
+
+The boundary is documented in:
+
+```text
+docs/architecture/resident-app-service-boundary.md
+```
+
+The initial implementation is:
+
+```text
+src/sayane/app/capabilities.py
+src/sayane/app/service.py
+```
+
+Clipboard capture follows this path:
+
+```text
+explicit clipboard text
+  -> ResidentAppService.capture_clipboard_as_candidate()
+  -> capture capability check
+  -> create_from_capture()
+  -> CandidateUpdate(status="pending")
+  -> CandidateRepository.save(candidate)
+```
+
+This keeps clipboard capture inside the Candidate review boundary.
+
+It does not write directly to profile or project context.
+
+The capability model is intentionally small and local-only. It exists to keep the future resident daemon from becoming an unscoped privileged process.
+
 ## Do Not Do This
 
 Avoid direct dependencies such as:
@@ -142,6 +176,8 @@ mcp -> sqlite_adapter
 cli -> sqlite_adapter
 domain -> repository implementation
 repository contracts -> bridge routes
+resident service -> direct sqlite3
+clipboard capture -> profile context direct write
 ```
 
 Avoid treating SQLite as the meaning source.

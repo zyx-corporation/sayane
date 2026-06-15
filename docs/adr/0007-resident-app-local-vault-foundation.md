@@ -351,11 +351,20 @@ docs/architecture/sqlite-repository-mvp.md
 
 Phase 3 uses the existing SQLite-backed Local Vault runtime. Tests prove repository reload, review decision persistence through SQLite-backed vault stores, `save_decision()` write-through via the repository seam, and MCP compiled context consumption of SQLite-backed review decisions.
 
-### Remaining: Phase 4
+### Completed: Phase 4 service seam
 
-Resident service preparation is not yet implemented.
+Implemented and documented in:
 
-The next phase should define the service/usecase boundary for resident app runtime wiring, local capability scopes, and clipboard capture as Candidate input.
+```text
+src/sayane/app/capabilities.py
+src/sayane/app/service.py
+tests/test_resident_app_service.py
+docs/architecture/resident-app-service-boundary.md
+```
+
+Phase 4 adds a resident app service boundary, local capability model, repository diagnostics, and clipboard capture as Candidate input.
+
+The service seam prepares future resident runtime wiring without adding a production daemon command yet.
 
 ## Test Policy
 
@@ -381,6 +390,8 @@ mcp -> sqlite_adapter
 cli -> sqlite_adapter
 domain -> repository implementation
 repository contracts -> bridge_routes
+resident service -> direct sqlite3
+clipboard capture -> profile context direct write
 ```
 
 Repository contracts may be imported by usecases.
@@ -405,7 +416,7 @@ ADR 0007 adds repository contracts, persistent review decision direction, reside
 
 ### Unresolved
 
-The exact resident service command name, local capability implementation, clipboard-capture wiring, and production runtime selection remain unresolved.
+The exact resident service command name, production capability implementation, resident runtime builder, and CLI/Bridge/MCP runtime wiring remain unresolved.
 
 Encrypted local storage is acknowledged but not specified here.
 
@@ -415,6 +426,8 @@ The main risk is creating a repository abstraction that is too broad before real
 
 A second risk is treating SQLite as the meaning source and forgetting that the human-readable local vault remains Sayane's context substrate.
 
+A third risk is letting the resident service become a privileged shortcut around Candidate review.
+
 ### Update Policy
 
-ADR 0007 should be revised again after Phase 4 resident service preparation is implemented.
+ADR 0007 should be revised again when a resident runtime command is wired to the service seam.

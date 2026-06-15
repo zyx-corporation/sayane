@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Callable
+from collections.abc import Callable
 
 from fastapi import APIRouter, Depends, FastAPI, Query
 
@@ -19,13 +19,12 @@ def register_context_export_routes(
     """Register context export endpoints."""
     router = APIRouter()
 
-    @router.get("/export")
+    @router.get("/export", dependencies=[Depends(require_bearer)])
     def get_context_export(
         format: str = Query(default="markdown"),
         scope: str = Query(default="identity,interaction"),
         target: str = Query(default="generic"),
         profile_id: str = Query(default="default"),
-        _: Annotated[None, Depends(require_bearer)] = None,
     ) -> dict:
         from sayane.bridge.service import resolve_profile_path
         from sayane.core.export import export_markdown, export_prompt, export_yaml

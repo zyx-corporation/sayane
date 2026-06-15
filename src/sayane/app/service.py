@@ -24,7 +24,7 @@ class ResidentAppService:
     repositories: RepositoryBundle | None = None
 
     def describe(self) -> dict[str, Any]:
-        """Return non-secret resident app runtime capabilities."""
+        """Return non-sensitive resident app runtime capabilities."""
         return {
             "profile_id": self.profile_id,
             "has_repositories": self.repositories is not None,
@@ -37,7 +37,7 @@ class ResidentAppService:
         self,
         text: str,
         *,
-        token: CapabilityToken,
+        capability: CapabilityToken,
         config: BridgeConfig | None = None,
         locale: str | None = None,
         repository_kwargs: dict[str, Any] | None = None,
@@ -47,7 +47,7 @@ class ResidentAppService:
         Clipboard capture remains a Candidate flow. It does not write directly
         to profile or project context.
         """
-        token.require("capture")
+        capability.require("capture")
         from sayane.storage.candidates import create_from_capture
 
         cfg = config or BridgeConfig()
@@ -68,9 +68,14 @@ class ResidentAppService:
             self.repositories.candidates.save(candidate, **(repository_kwargs or {}))
         return candidate
 
-    def repository_counts(self, *, token: CapabilityToken, **kwargs: Any) -> dict[str, int | str]:
-        """Return non-secret repository counts for diagnostics."""
-        token.require("admin")
+    def repository_counts(
+        self,
+        *,
+        capability: CapabilityToken,
+        **kwargs: Any,
+    ) -> dict[str, int | str]:
+        """Return non-sensitive repository counts for diagnostics."""
+        capability.require("admin")
         if self.repositories is None:
             return {
                 "profile_id": self.profile_id,

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Callable
+from collections.abc import Callable
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException
 
@@ -28,27 +28,24 @@ def register_candidate_routes(
     """Register candidate lifecycle endpoints."""
     router = APIRouter()
 
-    @router.get("/candidates")
-    def get_candidates(
-        _: Annotated[None, Depends(require_bearer)],
-    ) -> list[dict]:
+    @router.get("/candidates", dependencies=[Depends(require_bearer)])
+    def get_candidates() -> list[dict]:
         return candidate_api.list_candidates(cfg)
 
-    @router.get("/candidates/{candidate_id}")
-    def get_candidate(
-        candidate_id: str,
-        _: Annotated[None, Depends(require_bearer)],
-    ) -> dict:
+    @router.get("/candidates/{candidate_id}", dependencies=[Depends(require_bearer)])
+    def get_candidate(candidate_id: str) -> dict:
         try:
             return candidate_api.get_candidate(cfg, candidate_id)
         except FileNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
 
-    @router.post("/candidates/{candidate_id}/evaluate")
+    @router.post(
+        "/candidates/{candidate_id}/evaluate",
+        dependencies=[Depends(require_bearer)],
+    )
     def post_candidate_evaluate(
         candidate_id: str,
         body: EvaluateCandidateRequest,
-        _: Annotated[None, Depends(require_bearer)],
     ) -> dict:
         try:
             return candidate_api.post_evaluate(cfg, candidate_id, level=body.level)
@@ -60,11 +57,13 @@ def register_candidate_routes(
                 detail=exc.to_payload(),
             ) from exc
 
-    @router.post("/candidates/{candidate_id}/approve")
+    @router.post(
+        "/candidates/{candidate_id}/approve",
+        dependencies=[Depends(require_bearer)],
+    )
     def post_candidate_approve(
         candidate_id: str,
         body: ApproveCandidateRequest,
-        _: Annotated[None, Depends(require_bearer)],
     ) -> dict:
         try:
             explicit = (
@@ -89,11 +88,13 @@ def register_candidate_routes(
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    @router.post("/candidates/{candidate_id}/reject")
+    @router.post(
+        "/candidates/{candidate_id}/reject",
+        dependencies=[Depends(require_bearer)],
+    )
     def post_candidate_reject(
         candidate_id: str,
         body: RejectCandidateRequest,
-        _: Annotated[None, Depends(require_bearer)],
     ) -> dict:
         try:
             return candidate_api.post_reject(cfg, candidate_id, reason=body.reason)
@@ -105,11 +106,13 @@ def register_candidate_routes(
                 detail=exc.to_payload(),
             ) from exc
 
-    @router.post("/candidates/{candidate_id}/revise")
+    @router.post(
+        "/candidates/{candidate_id}/revise",
+        dependencies=[Depends(require_bearer)],
+    )
     def post_candidate_revise(
         candidate_id: str,
         body: ReviseCandidateRequest,
-        _: Annotated[None, Depends(require_bearer)],
     ) -> dict:
         try:
             return candidate_api.post_revise(
@@ -122,11 +125,8 @@ def register_candidate_routes(
         except FileNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
 
-    @router.get("/candidates/{candidate_id}/diff")
-    def get_candidate_diff(
-        candidate_id: str,
-        _: Annotated[None, Depends(require_bearer)],
-    ) -> dict:
+    @router.get("/candidates/{candidate_id}/diff", dependencies=[Depends(require_bearer)])
+    def get_candidate_diff(candidate_id: str) -> dict:
         try:
             load_candidate(cfg, candidate_id)
             return candidate_api.get_diff(cfg, candidate_id)

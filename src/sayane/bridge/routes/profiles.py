@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Callable
+from collections.abc import Callable
 
 from fastapi import APIRouter, Depends, FastAPI
 
@@ -21,10 +21,12 @@ def register_profile_routes(
     """Register profile endpoints."""
     router = APIRouter()
 
-    @router.get("/profiles", response_model=list[ProfileSummary])
-    def get_profiles(
-        _: Annotated[None, Depends(require_bearer)],
-    ) -> list[ProfileSummary]:
+    @router.get(
+        "/profiles",
+        response_model=list[ProfileSummary],
+        dependencies=[Depends(require_bearer)],
+    )
+    def get_profiles() -> list[ProfileSummary]:
         return list_profiles(cfg)
 
     app.include_router(router)

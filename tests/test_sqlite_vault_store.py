@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sqlite3
 from datetime import UTC, datetime
+from typing import Any
 
 import pytest
 
@@ -16,12 +17,32 @@ from sayane.core.review_decision import (
     save_decision,
     set_review_decision_repository,
 )
-from sayane.vault.contracts import DataClass, VaultStoreError, VaultStoreMode
+from sayane.vault.contracts import DataClass, UnlockSession, VaultStoreError, VaultStoreMode
 from sayane.vault.sqlite_runtime import build_sqlite_test_vault_runtime
 from sayane.vault.sqlite_schema import inspect_sqlite_tables, validate_sqlite_vault_schema
 from sayane.vault.sqlite_store import SQLiteVaultStore
 from sayane.vault.test_crypto import TestOnlyCryptoProvider, TestOnlyKeyManager
 from sayane.vault.test_store import TestOnlyKeychainProvider
+
+
+class SessionBoundReviewDecisionRepository:
+    """Bind a VaultReviewDecisionStore to one UnlockSession for seam tests."""
+
+    def __init__(self, repository, session: UnlockSession) -> None:
+        self._repository = repository
+        self._session = session
+
+    def append(self, decision: ReviewDecision, **kwargs: Any) -> str:
+        _ = kwargs
+        return self._repository.append(decision, session=self._session)
+
+    def list(self, **kwargs: Any) -> list[ReviewDecision]:
+        _ = kwargs
+        return self._repository.list(session=self._session)
+
+    def get(self, record_id: str, **kwargs: Any) -> ReviewDecision | None:
+        _ = kwargs
+        return self._repository.get(record_id, session=self._session)
 
 
 def _store(tmp_path):
@@ -271,6 +292,10 @@ def test_sqlite_repository_review_decisions_feed_mcp_context(tmp_path) -> None:
         profile_id=profile_id,
     )
     session = _runtime_session(runtime, "sqlite-mcp")
+    repository = SessionBoundReviewDecisionRepository(
+        runtime.repositories.review_decisions,
+        session,
+    )
     decision = ReviewDecision(
         candidate_id="c-sqlite-mcp",
         decision="approve",
@@ -279,8 +304,8 @@ def test_sqlite_repository_review_decisions_feed_mcp_context(tmp_path) -> None:
         original_section="project.context",
     )
 
-    runtime.repositories.review_decisions.append(decision, session=session)
-    set_review_decision_repository(profile_id, runtime.repositories.review_decisions)
+    repository.append(decision)
+    set_review_decision_repository(profile_id, repository)
 
     compiled = build_compiled_context(
         profile_id=profile_id,
@@ -304,7 +329,11 @@ def test_save_decision_can_write_through_sqlite_repository_seam(tmp_path) -> Non
         profile_id=profile_id,
     )
     session = _runtime_session(runtime, "sqlite-save-seam")
-    set_review_decision_repository(profile_id, runtime.repositories.review_decisions)
+    repository = SessionBoundReviewDecisionRepository(
+        runtime.repositories.review_decisions,
+        session,
+    )
+    set_review_decision_repository(profile_id, repository)
     decision = ReviewDecision(
         candidate_id="c-sqlite-save-seam",
         decision="approve",

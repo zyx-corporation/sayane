@@ -163,7 +163,9 @@ def find_facade_warnings(modules: list[ModuleInfo]) -> list[str]:
 def find_aliases(modules: list[ModuleInfo]) -> list[str]:
     occurrences: list[str] = []
     for module in modules:
-        for line_no, line in enumerate(module.path.read_text(encoding="utf-8").splitlines(), start=1):
+        for line_no, line in enumerate(
+            module.path.read_text(encoding="utf-8").splitlines(), start=1
+        ):
             for alias in COMPAT_ALIASES:
                 if alias in line:
                     occurrences.append(f"{alias}: {module.rel_path}:{line_no}")

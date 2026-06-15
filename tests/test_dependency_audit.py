@@ -108,9 +108,9 @@ def test_main_exits_zero_with_warnings(tmp_path: Path) -> None:
     path = root / "src" / "sayane" / "domain" / "candidate_policy.py"
     write_file(path, "from sayane.bridge import candidate_presenter\n")
     output = root / "dependency-audit.md"
-    exit_code = dependency_audit.main([
-        "--root", str(root), "--format", "markdown", "--output", str(output)
-    ])
+    exit_code = dependency_audit.main(
+        ["--root", str(root), "--format", "markdown", "--output", str(output)]
+    )
     assert exit_code == 0
     assert output.exists()
     assert "Layer warnings" in output.read_text(encoding="utf-8")

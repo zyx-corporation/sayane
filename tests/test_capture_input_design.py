@@ -91,7 +91,11 @@ def test_selection_capture_sets_capture_source_and_raw() -> None:
 
 def test_broken_yaml_parse_failed_not_major_projects() -> None:
     meta = CaptureMetadata(user_selected=True, capture_source="selection")
-    proposal = build_proposal_from_content(BROKEN_YAML, profile=_profile_with_persona_fields(), capture_meta=meta)
+    proposal = build_proposal_from_content(
+        BROKEN_YAML,
+        profile=_profile_with_persona_fields(),
+        capture_meta=meta,
+    )
     assert proposal.section == "review_required"
     assert proposal.operation == "parse_failed"
     assert proposal.section != "major_projects"
@@ -209,7 +213,7 @@ def test_clipboard_fragment_preserves_exact_lines_in_raw_capture() -> None:
     assert candidate.proposal.section == "important_terms"
     assert candidate.raw_capture == fragment
     assert "柏崎刈羽原子力発電所" in (candidate.raw_capture or "")
-    assert "ZAI統合アーキテクチャ" in (candidate.raw_capture or "")
+    assert "Awai Commons" in (candidate.raw_capture or "")
     assert "preferred_name" not in (candidate.raw_capture or "")
 
 

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from pathlib import Path
-from typing import Annotated
 
 from fastapi import Depends, FastAPI
 from fastapi.testclient import TestClient
@@ -18,10 +17,8 @@ def _auth(token: str) -> dict[str, str]:
 def _register_protected_route(app: FastAPI, require_bearer: Callable[..., None]) -> None:
     """Simulate route registration from a module outside create_app()."""
 
-    @app.get("/protected")
-    def protected(
-        _: Annotated[None, Depends(require_bearer)] = None,
-    ) -> dict[str, bool]:
+    @app.get("/protected", dependencies=[Depends(require_bearer)])
+    def protected() -> dict[str, bool]:
         return {"ok": True}
 
 

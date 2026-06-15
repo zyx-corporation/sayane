@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import secrets
-from typing import Annotated
 
 from fastapi import Header, HTTPException, status
 
@@ -27,7 +26,7 @@ class BearerTokenAuth:
 
     def __call__(
         self,
-        authorization: Annotated[str | None, Header()] = None,
+        authorization: str | None = Header(default=None),
     ) -> None:
         if authorization is None or not authorization.startswith("Bearer "):
             raise HTTPException(

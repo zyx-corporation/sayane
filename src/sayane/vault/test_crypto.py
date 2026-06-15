@@ -33,6 +33,7 @@ class TestOnlyKeyManager(KeyManager):
 
     keychain: TestOnlyKeychainProvider = field(default_factory=TestOnlyKeychainProvider)
     keyring: dict[DataClass, KeyringEntry] = field(default_factory=dict)
+    destroyed: set[DataClass] = field(default_factory=set)
 
     def get_or_create_dek(
         self,
@@ -41,6 +42,8 @@ class TestOnlyKeyManager(KeyManager):
         session: UnlockSession,
     ) -> KeyMaterial:
         _require_scope(session, f"{data_class.value}:key")
+        if data_class in self.destroyed:
+            raise VaultStoreError(f"test DEK destroyed for data class: {data_class.value}")
         entry = self.keyring.get(data_class)
         if entry is None:
             raw = self._derive_test_dek(data_class, version="v1")
@@ -91,10 +94,12 @@ class TestOnlyKeyManager(KeyManager):
             status=entry.status,
         )
         self.keyring[data_class] = entry
+        self.destroyed.discard(data_class)
         return entry
 
     def destroy_dek(self, data_class: DataClass) -> None:
         self.keyring.pop(data_class, None)
+        self.destroyed.add(data_class)
 
     def _derive_test_dek(self, data_class: DataClass, *, version: str) -> bytes:
         return hashlib.sha256(f"sayane-test-dek:{data_class.value}:{version}".encode()).digest()

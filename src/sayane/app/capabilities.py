@@ -9,7 +9,18 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-ResidentCapability = Literal["ui", "capture", "review", "export", "mcp", "bridge", "admin"]
+ResidentCapability = Literal[
+    "ui",
+    "capture",
+    "review",
+    "export",
+    "mcp",
+    "bridge",
+    "admin",
+]
+ResidentCapabilityScopes = (
+    list[ResidentCapability] | tuple[ResidentCapability, ...] | set[ResidentCapability]
+)
 
 
 class CapabilityError(PermissionError):
@@ -34,7 +45,7 @@ class CapabilityToken:
 
 
 def create_local_capability_token(
-    scopes: list[ResidentCapability] | tuple[ResidentCapability, ...] | set[ResidentCapability],
+    scopes: ResidentCapabilityScopes,
     *,
     subject: str = "local_user",
 ) -> CapabilityToken:

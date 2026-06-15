@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from sayane.bridge.candidate_presenter import candidate_summary, source_excerpt
+from sayane.bridge.candidate_presenter import (
+    candidate_summary,
+    capture_preview_text,
+    source_excerpt,
+)
 from sayane.bridge.config import BridgeConfig
 from sayane.domain.candidate_policy import CandidateOperationError, UNSAFE_APPROVE_CATEGORIES
 from sayane.evaluators.service import diff_candidate
@@ -22,6 +26,7 @@ from sayane.usecases.candidate_revision import revise_candidate_for_api
 
 # Backward-compatible aliases for older internal/private imports.
 _source_excerpt = source_excerpt
+_capture_preview_text = capture_preview_text
 _candidate_summary = candidate_summary
 
 

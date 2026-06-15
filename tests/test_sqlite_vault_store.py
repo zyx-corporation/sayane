@@ -8,7 +8,14 @@ from datetime import UTC, datetime
 import pytest
 
 from sayane.core.candidate import CandidateProposal, CandidateSource, CandidateUpdate
-from sayane.core.review_decision import ReviewDecision
+from sayane.core.mcp_context import build_compiled_context
+from sayane.core.review_decision import (
+    ReviewDecision,
+    clear_decisions,
+    load_review_decisions,
+    save_decision,
+    set_review_decision_repository,
+)
 from sayane.vault.contracts import DataClass, VaultStoreError, VaultStoreMode
 from sayane.vault.sqlite_runtime import build_sqlite_test_vault_runtime
 from sayane.vault.sqlite_schema import inspect_sqlite_tables, validate_sqlite_vault_schema
@@ -53,6 +60,23 @@ def _candidate(candidate_id: str = "c-sqlite") -> CandidateUpdate:
             section="knowledge.concepts",
             add=["sqlite candidate content"],
         ),
+    )
+
+
+def _runtime_session(runtime, purpose: str):
+    return runtime.keychain.unlock(
+        purpose,
+        [
+            "candidate:write",
+            "candidate:read",
+            "candidate:key",
+            "review_decision:write",
+            "review_decision:read",
+            "review_decision:key",
+            "lineage:write",
+            "lineage:read",
+            "lineage:key",
+        ],
     )
 
 
@@ -172,20 +196,7 @@ def test_sqlite_test_runtime_repository_bundle_round_trip(tmp_path) -> None:
         path=tmp_path / "vault.sqlite",
         profile_id="default",
     )
-    session = runtime.keychain.unlock(
-        "sqlite-runtime-bundle-test",
-        [
-            "candidate:write",
-            "candidate:read",
-            "candidate:key",
-            "review_decision:write",
-            "review_decision:read",
-            "review_decision:key",
-            "lineage:write",
-            "lineage:read",
-            "lineage:key",
-        ],
-    )
+    session = _runtime_session(runtime, "sqlite-runtime-bundle-test")
 
     candidate_id = runtime.repositories.candidates.save(_candidate(), session=session)
     decision_id = runtime.repositories.review_decisions.append(
@@ -214,3 +225,98 @@ def test_sqlite_test_runtime_repository_bundle_round_trip(tmp_path) -> None:
         "review_decision_count": 1,
         "lineage_count": 1,
     }
+
+
+def test_sqlite_test_runtime_reloads_repository_records(tmp_path) -> None:
+    path = tmp_path / "vault.sqlite"
+    first = build_sqlite_test_vault_runtime(path=path, profile_id="default")
+    first_session = _runtime_session(first, "sqlite-runtime-first")
+
+    candidate = _candidate("c-sqlite-reload")
+    decision = ReviewDecision(
+        candidate_id=candidate.id,
+        decision="approve",
+        reason="Accepted before reload.",
+        applied_value="Persistent review decision.",
+        original_section="project.context",
+    )
+    lineage_payload = {"candidate_id": candidate.id, "operation": "candidate_approved"}
+
+    first.repositories.candidates.save(candidate, session=first_session)
+    first.repositories.review_decisions.append(decision, session=first_session)
+    lineage_id = first.repositories.lineage.append(
+        "candidate_approved",
+        lineage_payload,
+        session=first_session,
+    )
+
+    second = build_sqlite_test_vault_runtime(path=path, profile_id="default")
+    second_session = _runtime_session(second, "sqlite-runtime-second")
+
+    assert second.repositories.candidates.load(candidate.id, session=second_session) == candidate
+    assert second.repositories.review_decisions.get(
+        decision.lineage_event_id,
+        session=second_session,
+    ) == decision
+    assert second.repositories.lineage.get(lineage_id, session=second_session)["candidate_id"] == (
+        candidate.id
+    )
+
+
+def test_sqlite_repository_review_decisions_feed_mcp_context(tmp_path) -> None:
+    profile_id = "sqlite-mcp"
+    clear_decisions(profile_id)
+    runtime = build_sqlite_test_vault_runtime(
+        path=tmp_path / "vault.sqlite",
+        profile_id=profile_id,
+    )
+    session = _runtime_session(runtime, "sqlite-mcp")
+    decision = ReviewDecision(
+        candidate_id="c-sqlite-mcp",
+        decision="approve",
+        reason="Accepted through SQLite repository.",
+        applied_value="SQLite-backed context for MCP.",
+        original_section="project.context",
+    )
+
+    runtime.repositories.review_decisions.append(decision, session=session)
+    set_review_decision_repository(profile_id, runtime.repositories.review_decisions)
+
+    compiled = build_compiled_context(
+        profile_id=profile_id,
+        mode="full",
+        scoped_decisions=load_review_decisions(profile_id, project_id="project-a"),
+    )
+
+    assert compiled["included_approved_candidates"][0]["candidate_id"] == "c-sqlite-mcp"
+    assert compiled["included_approved_candidates"][0]["content"] == (
+        "SQLite-backed context for MCP."
+    )
+
+    clear_decisions(profile_id)
+
+
+def test_save_decision_can_write_through_sqlite_repository_seam(tmp_path) -> None:
+    profile_id = "sqlite-save-seam"
+    clear_decisions(profile_id)
+    runtime = build_sqlite_test_vault_runtime(
+        path=tmp_path / "vault.sqlite",
+        profile_id=profile_id,
+    )
+    session = _runtime_session(runtime, "sqlite-save-seam")
+    set_review_decision_repository(profile_id, runtime.repositories.review_decisions)
+    decision = ReviewDecision(
+        candidate_id="c-sqlite-save-seam",
+        decision="approve",
+        reason="Accepted through save_decision seam.",
+    )
+
+    save_decision(profile_id, decision)
+
+    assert runtime.repositories.review_decisions.get(
+        decision.lineage_event_id,
+        session=session,
+    ) == decision
+    assert load_review_decisions(profile_id) == [decision]
+
+    clear_decisions(profile_id)

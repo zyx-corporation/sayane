@@ -12,7 +12,7 @@ from typing import Any
 
 from sayane.app.capabilities import CapabilityToken
 from sayane.bridge.config import BridgeConfig
-from sayane.core.candidate import CaptureMetadata, CandidateUpdate
+from sayane.core.candidate import CandidateUpdate, CaptureMetadata
 from sayane.storage.repositories import RepositoryBundle
 
 

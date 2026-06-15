@@ -7,6 +7,7 @@ from typing import Callable
 
 import typer
 
+from sayane.cli.commands.app import register_app_commands
 from sayane.cli.commands.candidate import register_candidate
 from sayane.cli.commands.capture import register_capture
 from sayane.cli.commands.core import register_core_commands
@@ -34,6 +35,7 @@ def register_builtin_commands(
     """
     register_profile(app, load_profile_fn)
     register_core_commands(app, load_profile_fn, init_template)
+    register_app_commands(app)
     register_capture(app)
     register_export(app, load_profile_fn)
     register_import_bundle(app, load_profile_fn)

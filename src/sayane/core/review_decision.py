@@ -12,8 +12,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 from uuid import uuid4
+
+if TYPE_CHECKING:
+    from sayane.storage.repositories import ReviewDecisionRepository
 
 ReviewDecisionType = Literal["approve", "reject", "modify", "defer", "scoped_accept"]
 
@@ -48,13 +51,49 @@ class ReviewDecision:
     reuse_policy: dict[str, Any] | None = None
 
 
-# --- Review decision store (in-memory for CLI; Bridge uses candidate storage) ---
+# --- Review decision store ---
+#
+# ADR 0007 Phase 2 keeps the legacy process-local fallback while allowing
+# callers to bind an explicit ReviewDecisionRepository per profile. This lets
+# MCP compiled context read repository-backed review facts without making the
+# exposure guard depend on a concrete storage backend.
 
 _decisions: dict[str, list[ReviewDecision]] = {}
+_decision_repositories: dict[str, ReviewDecisionRepository] = {}
+
+
+def set_review_decision_repository(
+    profile_id: str,
+    repository: ReviewDecisionRepository,
+) -> None:
+    """Bind a ReviewDecisionRepository for one profile.
+
+    This is an explicit runtime seam for tests, resident app services, and
+    future persistent backends. It avoids making in-memory decisions the only
+    state source once a shared repository exists.
+    """
+    _decision_repositories[profile_id] = repository
+
+
+def get_review_decision_repository(
+    profile_id: str = "default",
+) -> ReviewDecisionRepository | None:
+    """Return the configured review decision repository for a profile, if any."""
+    return _decision_repositories.get(profile_id)
+
+
+def clear_review_decision_repository(profile_id: str = "default") -> None:
+    """Remove a configured review decision repository for one profile."""
+    _decision_repositories.pop(profile_id, None)
 
 
 def save_decision(profile_id: str, decision: ReviewDecision) -> None:
     """Persist a review decision."""
+    repository = get_review_decision_repository(profile_id)
+    if repository is not None:
+        repository.append(decision)
+        return
+
     if profile_id not in _decisions:
         _decisions[profile_id] = []
     _decisions[profile_id].append(decision)
@@ -62,6 +101,9 @@ def save_decision(profile_id: str, decision: ReviewDecision) -> None:
 
 def list_decisions(profile_id: str = "default") -> list[ReviewDecision]:
     """List all review decisions for a profile."""
+    repository = get_review_decision_repository(profile_id)
+    if repository is not None:
+        return list(repository.list())
     return list(_decisions.get(profile_id, []))
 
 
@@ -77,20 +119,20 @@ def load_review_decisions(
 
     Returns all decisions; callers must apply exposure policy.
     """
-    decisions = list(_decisions.get(profile_id, []))
-    # Future: filter by project_id when project-scoped lineage is implemented
+    # Future: filter by project_id when project-scoped lineage is implemented.
     _ = project_id
-    return list(decisions)
+    return list_decisions(profile_id)
 
 
 def clear_decisions(profile_id: str = "default") -> None:
     """Clear all decisions for a profile (test helper)."""
     _decisions.pop(profile_id, None)
+    clear_review_decision_repository(profile_id)
 
 
 def get_decisions_for_candidate(candidate_id: str, profile_id: str = "default") -> list[ReviewDecision]:
     """Get decisions affecting a specific candidate."""
-    return [d for d in _decisions.get(profile_id, []) if d.candidate_id == candidate_id]
+    return [d for d in list_decisions(profile_id) if d.candidate_id == candidate_id]
 
 
 # --- Overlap group resolution ---

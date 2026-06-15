@@ -59,10 +59,7 @@ def ensure_can_evaluate(candidate: CandidateUpdate, candidate_id: str) -> None:
     if candidate.status in {"approved", "rejected"}:
         raise CandidateOperationError(
             error="invalid_candidate_transition",
-            message=(
-                f"This candidate is already {candidate.status} "
-                "and cannot be evaluated."
-            ),
+            message=(f"This candidate is already {candidate.status} and cannot be evaluated."),
             candidate_id=candidate_id,
             status=candidate.status,
             rde_category=candidate_rde_category(candidate),
@@ -73,10 +70,7 @@ def ensure_can_reject(candidate: CandidateUpdate, candidate_id: str) -> None:
     if candidate.status in {"approved", "rejected"}:
         raise CandidateOperationError(
             error="invalid_candidate_transition",
-            message=(
-                f"This candidate is already {candidate.status} "
-                "and cannot be rejected."
-            ),
+            message=(f"This candidate is already {candidate.status} and cannot be rejected."),
             candidate_id=candidate_id,
             status=candidate.status,
             rde_category=candidate_rde_category(candidate),

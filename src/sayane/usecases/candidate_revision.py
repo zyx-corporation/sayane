@@ -26,11 +26,7 @@ def revise_candidate_for_api(
     original = load_candidate(config, candidate_id)
     proposal = build_proposal_from_content(
         edited_text,
-        section=(
-            normalize_proposal_section(target_section)
-            if target_section
-            else None
-        ),
+        section=(normalize_proposal_section(target_section) if target_section else None),
     )
     revised = CandidateUpdate(
         id=uuid4().hex,
@@ -53,9 +49,7 @@ def revise_candidate_for_api(
         generator_id="sayane.candidate_revision",
     )
     save_candidate(config, revised)
-    source_kind = (
-        original.capture_meta.capture_source if original.capture_meta else None
-    )
+    source_kind = original.capture_meta.capture_source if original.capture_meta else None
     meta: dict[str, Any] = {
         "source_candidate_id": candidate_id,
         "revised_candidate_id": revised.id,

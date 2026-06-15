@@ -19,7 +19,9 @@ def _register_protected_route(app: FastAPI, require_bearer: Callable[..., None])
     """Simulate route registration from a module outside create_app()."""
 
     @app.get("/protected")
-    def protected(_: Annotated[None, Depends(require_bearer)]) -> dict[str, bool]:
+    def protected(
+        _: Annotated[None, Depends(require_bearer)] = None,
+    ) -> dict[str, bool]:
         return {"ok": True}
 
 

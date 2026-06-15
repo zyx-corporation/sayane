@@ -11,7 +11,7 @@ app state store.
 
 from __future__ import annotations
 
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from typing import Any, Protocol, runtime_checkable
 
 from sayane.core.candidate import CandidateUpdate
@@ -94,6 +94,30 @@ class ProjectContextRepository(Protocol):
         **kwargs: Any,
     ) -> None:
         """Persist one project context payload by project and key."""
+
+
+@runtime_checkable
+class RepositoryBundle(Protocol):
+    """Grouped repositories for one profile/application state scope."""
+
+    profile_id: str
+    candidates: CandidateRepository
+    review_decisions: ReviewDecisionRepository
+    lineage: LineageRepository
+    profile_context: ProfileContextRepository | None
+    project_context: ProjectContextRepository | None
+
+
+@dataclass(frozen=True)
+class TestOnlyInMemoryRepositoryBundle:
+    """Grouped test-only repositories for ADR 0007 contract tests."""
+
+    profile_id: str
+    candidates: CandidateRepository
+    review_decisions: ReviewDecisionRepository
+    lineage: LineageRepository
+    profile_context: ProfileContextRepository | None = None
+    project_context: ProjectContextRepository | None = None
 
 
 class TestOnlyInMemoryCandidateRepository:
@@ -207,6 +231,22 @@ class TestOnlyInMemoryProjectContextRepository:
     ) -> None:
         _ = kwargs
         self._contexts[(project_id, key)] = dict(payload)
+
+
+def build_test_repository_bundle(profile_id: str = "default") -> TestOnlyInMemoryRepositoryBundle:
+    """Build a grouped test-only repository bundle.
+
+    This helper is intentionally explicit: production code should construct a
+    real vault- or SQLite-backed bundle instead of silently defaulting to memory.
+    """
+    return TestOnlyInMemoryRepositoryBundle(
+        profile_id=profile_id,
+        candidates=TestOnlyInMemoryCandidateRepository(),
+        review_decisions=TestOnlyInMemoryReviewDecisionRepository(),
+        lineage=TestOnlyInMemoryLineageRepository(),
+        profile_context=TestOnlyInMemoryProfileContextRepository(),
+        project_context=TestOnlyInMemoryProjectContextRepository(),
+    )
 
 
 def review_decision_to_payload(decision: ReviewDecision) -> dict[str, Any]:

@@ -11,12 +11,14 @@ from sayane.storage.repositories import (
     LineageRepository,
     ProfileContextRepository,
     ProjectContextRepository,
+    RepositoryBundle,
     ReviewDecisionRepository,
     TestOnlyInMemoryCandidateRepository,
     TestOnlyInMemoryLineageRepository,
     TestOnlyInMemoryProfileContextRepository,
     TestOnlyInMemoryProjectContextRepository,
     TestOnlyInMemoryReviewDecisionRepository,
+    build_test_repository_bundle,
     review_decision_to_payload,
 )
 from sayane.storage.vault_bundle import build_vault_repository_bundle
@@ -91,6 +93,40 @@ def test_in_memory_project_context_repository_contract() -> None:
     repo.save_context("project-a", "handoff", {"status": "active"})
     assert repo.load_context("project-a", "handoff") == {"status": "active"}
     assert repo.load_context("project-b", "handoff") is None
+
+
+def test_test_repository_bundle_groups_all_phase1_contracts() -> None:
+    bundle = build_test_repository_bundle(profile_id="default")
+
+    assert isinstance(bundle, RepositoryBundle)
+    assert isinstance(bundle.candidates, CandidateRepository)
+    assert isinstance(bundle.review_decisions, ReviewDecisionRepository)
+    assert isinstance(bundle.lineage, LineageRepository)
+    assert isinstance(bundle.profile_context, ProfileContextRepository)
+    assert isinstance(bundle.project_context, ProjectContextRepository)
+
+    candidate = _candidate()
+    decision = _decision(candidate.id)
+    lineage_id = bundle.lineage.append(
+        "candidate_reviewed",
+        {"candidate_id": candidate.id},
+    )
+
+    assert bundle.candidates.save(candidate) == candidate.id
+    assert bundle.candidates.load(candidate.id) == candidate
+    assert bundle.review_decisions.append(decision) == decision.lineage_event_id
+    assert bundle.review_decisions.get(decision.lineage_event_id) == decision
+    assert bundle.lineage.get(lineage_id)["candidate_id"] == candidate.id
+
+    assert bundle.profile_context is not None
+    bundle.profile_context.save_context("profile", {"name": "default"})
+    assert bundle.profile_context.load_context("profile") == {"name": "default"}
+
+    assert bundle.project_context is not None
+    bundle.project_context.save_context("project-a", "handoff", {"status": "active"})
+    assert bundle.project_context.load_context("project-a", "handoff") == {
+        "status": "active",
+    }
 
 
 def test_review_decision_payload_is_json_like() -> None:

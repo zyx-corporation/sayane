@@ -59,7 +59,7 @@ These providers are useful for contract tests and future usecase tests.
 
 They must not become the production resident app state store.
 
-Production code should use a real vault-backed or future SQLite-backed repository bundle.
+Production code should use a real vault-backed or SQLite-backed repository bundle.
 
 ## Existing Vault Stores
 
@@ -74,11 +74,26 @@ Phase 1 does not replace them.
 
 Instead, tests verify that they satisfy the new repository contracts.
 
-## Review Decision Persistence Direction
+## Review Decision Persistence
 
-The next phase should route `load_review_decisions()` through a repository-backed path.
+Phase 2 routes review decisions through an explicit repository seam.
 
-The important constraint is:
+The relevant APIs are:
+
+```text
+set_review_decision_repository(profile_id, repository)
+get_review_decision_repository(profile_id)
+clear_review_decision_repository(profile_id)
+save_decision(profile_id, decision)
+list_decisions(profile_id)
+load_review_decisions(profile_id, project_id=None)
+```
+
+When a repository is bound for a profile, `save_decision()`, `list_decisions()`, and `load_review_decisions()` use that repository.
+
+When no repository is bound, they preserve the legacy process-local fallback.
+
+The important constraint remains:
 
 ```text
 persistence supplies review facts
@@ -86,6 +101,36 @@ MCP exposure guard decides exposure
 ```
 
 Repository persistence must not bypass or duplicate the MCP exposure guard.
+
+## SQLite MVP
+
+Phase 3 uses the existing SQLite-backed Local Vault runtime.
+
+The boundary is:
+
+```text
+review decision seam / usecases
+  -> ReviewDecisionRepository
+    -> VaultReviewDecisionStore
+      -> SQLiteVaultStore
+```
+
+The SQLite MVP is documented in:
+
+```text
+docs/architecture/sqlite-repository-mvp.md
+```
+
+Current tests verify that:
+
+- SQLite-backed repository records reload through a new runtime over the same file.
+- SQLite-backed ReviewDecisionRepository can feed `load_review_decisions()`.
+- MCP compiled context can consume SQLite-backed review decisions.
+- `save_decision()` can write through the SQLite repository seam.
+
+SQLite must remain below the repository/vault adapter boundary.
+
+CLI, Bridge, MCP, and domain code must not import direct SQLite adapters.
 
 ## Do Not Do This
 

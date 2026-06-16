@@ -77,7 +77,11 @@ def _coerce_repository_backend(
         return ResidentRepositoryBackend(value)
     except ValueError as exc:
         supported = ", ".join(backend.value for backend in ResidentRepositoryBackend)
-        raise ValueError(f"Unsupported resident repository backend: {value!r}. Supported: {supported}") from exc
+        message = (
+            f"Unsupported resident repository backend: {value!r}. "
+            f"Supported: {supported}"
+        )
+        raise ValueError(message) from exc
 
 
 def select_resident_repositories(
@@ -109,7 +113,8 @@ def select_resident_repositories(
             backend=backend,
             storage_boundary="none",
             notes=(
-                "legacy process-local fallback only; not a production durable resident state store",
+                "legacy process-local fallback only; not a production durable "
+                "resident state store",
             ),
         )
 
@@ -120,7 +125,10 @@ def select_resident_repositories(
             backend=backend,
             repositories=repositories,
             storage_boundary="repository_bundle",
-            notes=("caller supplied RepositoryBundle; storage implementation remains hidden",),
+            notes=(
+                "caller supplied RepositoryBundle; "
+                "storage implementation remains hidden",
+            ),
         )
 
     if backend is ResidentRepositoryBackend.SQLITE_TEST_LOCAL_VAULT:
@@ -133,19 +141,25 @@ def select_resident_repositories(
 
         from sayane.vault.sqlite_runtime import build_sqlite_test_vault_runtime
 
-        vault_runtime = build_sqlite_test_vault_runtime(path=vault_path, profile_id=profile_id)
+        vault_runtime = build_sqlite_test_vault_runtime(
+            path=vault_path,
+            profile_id=profile_id,
+        )
         return ResidentRepositorySelection(
             backend=backend,
             repositories=cast(RepositoryBundle, vault_runtime.repositories),
             storage_boundary="sqlite_test_local_vault",
             vault_runtime=vault_runtime,
             notes=(
-                "explicit test-only SQLite Local Vault runtime; not production auth or keychain",
+                "explicit test-only SQLite Local Vault runtime; "
+                "not production auth or keychain",
             ),
         )
 
     if backend is ResidentRepositoryBackend.FUTURE_PRO_BACKEND:
-        raise NotImplementedError("future_pro_backend is reserved behind the RepositoryBundle seam")
+        raise NotImplementedError(
+            "future_pro_backend is reserved behind the RepositoryBundle seam",
+        )
 
     raise AssertionError(f"unhandled resident repository backend: {backend}")
 
@@ -174,7 +188,11 @@ def build_resident_runtime(
         vault_path=vault_path,
         allow_test_vault=allow_test_vault,
     )
-    bridge_config = BridgeConfig(host=host, port=port, home=home or BridgeConfig().home)
+    bridge_config = BridgeConfig(
+        host=host,
+        port=port,
+        home=home or BridgeConfig().home,
+    )
     service = ResidentAppService(
         profile_id=profile_id,
         repositories=repository_selection.repositories,

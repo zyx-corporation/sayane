@@ -99,7 +99,10 @@ def test_resident_app_review_queue_json_empty_default(isolated_home: Path) -> No
 
 
 def test_resident_app_mcp_preview_json_empty_default(isolated_home: Path) -> None:
-    result = runner.invoke(app, ["app", "mcp-preview", "--mode", "full", "--json"])
+    result = runner.invoke(
+        app,
+        ["app", "mcp-preview", "--mode", "full", "--json"],
+    )
 
     assert result.exit_code == 0
     payload = json.loads(result.stdout)

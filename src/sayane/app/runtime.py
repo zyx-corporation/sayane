@@ -198,10 +198,10 @@ def build_resident_runtime(
         repositories=repository_selection.repositories,
     )
     capabilities = {
-        "capture": create_local_capability_token(["capture"]),
-        "ui": create_local_capability_token(["ui"]),
-        "mcp": create_local_capability_token(["mcp"]),
-        "admin": create_local_capability_token(["admin"]),
+        "capture": create_local_capability_token(["capture"], surface="capture"),
+        "ui": create_local_capability_token(["ui"], surface="ui"),
+        "mcp": create_local_capability_token(["mcp"], surface="mcp"),
+        "admin": create_local_capability_token(["admin"], surface="admin"),
     }
     return ResidentRuntime(
         service=service,

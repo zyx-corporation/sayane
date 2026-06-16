@@ -8,7 +8,7 @@ entrypoints do not construct repository backends directly.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 from typing import Any, cast
 
@@ -18,7 +18,7 @@ from sayane.bridge.config import BridgeConfig
 from sayane.storage.repositories import RepositoryBundle
 
 
-class ResidentRepositoryBackend(str, Enum):
+class ResidentRepositoryBackend(StrEnum):
     """Supported resident repository backend selection modes."""
 
     LEGACY_PROCESS_LOCAL = "legacy_process_local"

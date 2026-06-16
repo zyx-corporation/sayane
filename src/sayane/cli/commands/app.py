@@ -25,7 +25,9 @@ def _read_clipboard_input(text: str | None, file: Path | None) -> str:
         return text.strip()
     if not sys.stdin.isatty():
         return sys.stdin.read().strip()
-    raise typer.BadParameter("Provide clipboard content via --text, --file, or stdin pipe.")
+    raise typer.BadParameter(
+        "Provide clipboard content via --text, --file, or stdin pipe.",
+    )
 
 
 def _ensure_local_host(host: str) -> None:
@@ -131,7 +133,9 @@ def register_app_commands(app: typer.Typer) -> None:
             locale=locale,
         )
         if json_out:
-            typer.echo(json.dumps(candidate.model_dump(mode="json"), ensure_ascii=False, indent=2))
+            typer.echo(
+                json.dumps(candidate.model_dump(mode="json"), ensure_ascii=False, indent=2),
+            )
             return
         typer.echo(f"id: {candidate.id}")
         typer.echo(f"status: {candidate.status}")

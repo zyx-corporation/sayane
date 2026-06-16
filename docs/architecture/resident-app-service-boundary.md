@@ -1,6 +1,6 @@
 # Resident App Service Boundary
 
-This document records ADR 0007 Phase 4 resident service preparation and #181 resident UI skeleton work.
+This document records ADR 0007 Phase 4 resident service preparation, #181 resident UI skeleton work, and #183 capability issuer hardening.
 
 ## Status
 
@@ -22,6 +22,7 @@ tests/test_resident_app_service.py
 tests/test_resident_app_cli.py
 tests/test_resident_runtime.py
 tests/test_resident_ui_skeleton.py
+tests/test_resident_capability_issuer.py
 ```
 
 ## Boundary
@@ -60,7 +61,36 @@ admin
 
 `admin` implies all capabilities.
 
-The current token is intentionally simple and local-only. It is a boundary model, not the final security implementation.
+The current capability implementation is intentionally local-only. It is a boundary model, not the final production security implementation.
+
+## Capability Issuer Boundary
+
+`CapabilityIssuer` adds explicit issuance metadata before a production auth system exists.
+
+```text
+CapabilityIssuer.issue()
+  -> CapabilityToken
+    -> subject
+    -> issuer
+    -> purpose
+    -> scopes
+    -> issued_at
+    -> expires_at
+```
+
+Capability checks fail when a token is expired.
+
+Capture, UI, MCP, Bridge, and admin scopes remain separable.
+
+`admin` remains an explicit all-capability override.
+
+The issuer boundary is not:
+
+- OS keychain integration
+- OAuth
+- external authentication
+- network authentication
+- durable credential storage
 
 ## Clipboard Capture
 

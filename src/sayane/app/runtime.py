@@ -199,6 +199,8 @@ def build_resident_runtime(
     )
     capabilities = {
         "capture": create_local_capability_token(["capture"]),
+        "ui": create_local_capability_token(["ui"]),
+        "mcp": create_local_capability_token(["mcp"]),
         "admin": create_local_capability_token(["admin"]),
     }
     return ResidentRuntime(

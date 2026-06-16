@@ -34,7 +34,7 @@ def test_resident_runtime_describes_service_and_bridge_config(tmp_path) -> None:
         "lineage_repository": False,
         "bridge_host": "127.0.0.1",
         "bridge_port": 39000,
-        "capabilities": ["admin", "capture"],
+        "capabilities": ["admin", "capture", "mcp", "ui"],
         "repository_backend": "legacy_process_local",
         "storage_boundary": "none",
         "repository_selection": {
@@ -72,6 +72,10 @@ def test_resident_runtime_capabilities_are_separate() -> None:
 
     assert runtime.capabilities["capture"].has("capture") is True
     assert runtime.capabilities["capture"].has("admin") is False
+    assert runtime.capabilities["ui"].has("ui") is True
+    assert runtime.capabilities["ui"].has("mcp") is False
+    assert runtime.capabilities["mcp"].has("mcp") is True
+    assert runtime.capabilities["mcp"].has("ui") is False
     assert runtime.capabilities["admin"].has("capture") is True
     assert runtime.capabilities["admin"].has("review") is True
 

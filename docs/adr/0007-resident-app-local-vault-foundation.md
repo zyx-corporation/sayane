@@ -49,6 +49,7 @@ The initial implementation should remain conservative:
 5. avoid introducing commercial-only dependencies into OSS Sayane
 6. keep exposure policy centralized in the MCP exposure guard
 7. keep review decisions durable enough to be reused across CLI, Bridge, MCP, and future resident UI
+8. centralize resident repository backend selection behind the runtime boundary
 
 ## Architectural Boundary
 
@@ -56,7 +57,7 @@ The resident app foundation introduces a new responsibility boundary.
 
 ```text
 entrypoints
-  -> usecases
+  -> usecases / resident runtime
     -> repositories / domain / core
       -> storage backend / filesystem / sqlite adapter
 ```
@@ -95,6 +96,7 @@ src/sayane/storage/     -> backend-neutral storage contracts and adapters
 src/sayane/vault/       -> local vault and filesystem concerns
 src/sayane/bridge/      -> transport and presentation boundary
 src/sayane/mcp/         -> MCP exposure boundary
+src/sayane/app/         -> resident service/runtime/usecase boundary
 ```
 
 If a repository contract becomes too transport-aware, it should be moved or split.
@@ -196,6 +198,36 @@ It may provide local capabilities for:
 
 It must not bypass Candidate review boundaries.
 
+## Resident Runtime Selection
+
+Runtime selection is now an explicit resident app boundary.
+
+```text
+CLI / UI / Bridge / MCP
+  -> ResidentRuntime / ResidentAppService
+  -> RepositoryBundle
+  -> storage implementation
+```
+
+CLI, UI, Bridge, and MCP must not construct SQLite Local Vault or future backend implementations directly.
+
+The runtime selection vocabulary is:
+
+```text
+legacy_process_local
+injected_repository_bundle
+sqlite_test_local_vault
+future_pro_backend
+```
+
+`legacy_process_local` preserves compatibility, but is not production durable resident state.
+
+`injected_repository_bundle` is the stable production-facing seam.
+
+`sqlite_test_local_vault` is an explicit test-only persistence seam and requires `allow_test_vault=True`.
+
+`future_pro_backend` is reserved until a reviewed backend can produce a `RepositoryBundle` without leaking commercial/pro concerns into the OSS entrypoints.
+
 ## Capability and Local Token Direction
 
 A resident app requires local capability boundaries.
@@ -258,9 +290,9 @@ ADR 0007 does not decide:
 - encrypted SQLite schema
 - commercial licensing behavior
 - full sync/merge policy for Obsidian vaults
-- cloud synchronization
-- mobile support
 - automatic browser page capture restoration
+- production resident daemon lifecycle
+- production authentication or token persistence
 
 ADR 0007 also does not require all persistence to be implemented in one step.
 
@@ -274,6 +306,7 @@ ADR 0007 also does not require all persistence to be implemented in one step.
 - future resident app work has a stable boundary
 - clipboard capture can replace noisy page capture without weakening review semantics
 - sayane-pro can extend storage without owning the OSS contract
+- resident runtime selection is auditable before daemonization
 
 ### Negative
 
@@ -282,6 +315,7 @@ ADR 0007 also does not require all persistence to be implemented in one step.
 - requires migration design before persistence is fully useful
 - risks over-abstracting if contracts are created too broadly
 - requires careful tests to avoid fake in-memory behavior being mistaken for production behavior
+- requires future dependency audits to prevent entrypoints from bypassing runtime selection
 
 ## Implementation Plan
 
@@ -311,6 +345,21 @@ ADR 0007 also does not require all persistence to be implemented in one step.
 - Ensure CLI and Bridge can share repository-backed state.
 - Add local capability model stubs.
 - Prepare clipboard capture as Candidate input.
+
+### Phase 5: Resident command, UI, and capability preparation
+
+- Add initial resident command wiring.
+- Keep `sayane app serve` as a delegation plan to existing Bridge command.
+- Add resident review queue and MCP preview skeleton.
+- Add capability issuer metadata and expiry semantics.
+
+### Phase 6: Runtime selection boundary
+
+- Centralize repository backend selection in `sayane.app.runtime`.
+- Keep direct SQLite/runtime imports out of CLI and presentation entrypoints.
+- Add explicit backend metadata to resident diagnostics.
+- Guard test-only SQLite Local Vault selection.
+- Reserve future pro backend selection behind `RepositoryBundle`.
 
 ## Implementation Progress
 
@@ -366,6 +415,36 @@ Phase 4 adds a resident app service boundary, local capability model, repository
 
 The service seam prepares future resident runtime wiring without adding a production daemon command yet.
 
+### Completed: Phase 5 resident command/UI/capability preparation
+
+Implemented and documented in:
+
+```text
+src/sayane/app/runtime.py
+src/sayane/app/ui.py
+src/sayane/cli/commands/app.py
+tests/test_resident_runtime.py
+tests/test_resident_ui_skeleton.py
+tests/test_resident_capability_issuer.py
+docs/architecture/resident-app-service-boundary.md
+```
+
+Phase 5 adds initial resident runtime command wiring, `sayane app serve` delegation, resident UI review queue/MCP preview skeleton, and capability issuer hardening.
+
+### Completed: Phase 6 runtime selection boundary
+
+Implemented and documented in:
+
+```text
+src/sayane/app/runtime.py
+src/sayane/app/__init__.py
+src/sayane/cli/commands/app.py
+tests/test_resident_runtime.py
+docs/architecture/resident-runtime-selection.md
+```
+
+Phase 6 centralizes resident repository selection behind the runtime boundary. It keeps the default compatibility path visible as `legacy_process_local`, supports explicit injected repository bundles, guards test-only SQLite Local Vault selection, and reserves future pro backend selection behind the `RepositoryBundle` seam.
+
 ## Test Policy
 
 Initial tests should prove:
@@ -377,6 +456,8 @@ Initial tests should prove:
 - in-memory providers are limited to tests or explicit dev fixtures
 - Bridge routes do not directly own approval policy
 - clipboard capture proposals still enter as Candidates
+- resident runtime selection exposes non-sensitive backend metadata
+- CLI does not directly import SQLite Local Vault runtime builders
 
 ## Dependency Audit Interaction
 
@@ -388,6 +469,8 @@ Potential future warnings:
 bridge_routes -> sqlite_adapter
 mcp -> sqlite_adapter
 cli -> sqlite_adapter
+cli -> sqlite_runtime
+future_ui -> sqlite_runtime
 domain -> repository implementation
 repository contracts -> bridge_routes
 resident service -> direct sqlite3
@@ -410,13 +493,15 @@ The main architectural concern shifts from post-split dependency visibility to r
 
 CLI, Bridge, MCP, and future UI stop being independent process-local islands and begin converging on shared repository-backed state.
 
+The resident runtime builder transforms from a thin command assembly helper into a narrow repository selection boundary.
+
 ### Added
 
-ADR 0007 adds repository contracts, persistent review decision direction, resident app service boundary, local capability direction, and clipboard-capture alignment.
+ADR 0007 adds repository contracts, persistent review decision direction, resident app service boundary, local capability direction, clipboard-capture alignment, resident UI skeletons, capability issuer metadata, and explicit runtime backend selection.
 
 ### Unresolved
 
-The exact resident service command name, production capability implementation, resident runtime builder, and CLI/Bridge/MCP runtime wiring remain unresolved.
+The production daemon lifecycle, OS/service integration, production capability implementation, durable token persistence, Bridge/MCP runtime rebinding, and future pro backend implementation remain unresolved.
 
 Encrypted local storage is acknowledged but not specified here.
 
@@ -428,6 +513,8 @@ A second risk is treating SQLite as the meaning source and forgetting that the h
 
 A third risk is letting the resident service become a privileged shortcut around Candidate review.
 
+A fourth risk is mistaking `sqlite_test_local_vault` for a production resident backend. It is only an explicit persistence seam test path.
+
 ### Update Policy
 
-ADR 0007 should be revised again when a resident runtime command is wired to the service seam.
+ADR 0007 should be revised again when a real resident daemon lifecycle, production credential model, or Bridge/MCP runtime binding is implemented.

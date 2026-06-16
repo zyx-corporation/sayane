@@ -42,7 +42,8 @@ def test_resident_runtime_describes_service_and_bridge_config(tmp_path) -> None:
             "has_repositories": False,
             "storage_boundary": "none",
             "notes": [
-                "legacy process-local fallback only; not a production durable resident state store",
+                "legacy process-local fallback only; not a production durable "
+                "resident state store",
             ],
         },
     }
@@ -56,7 +57,10 @@ def test_resident_runtime_accepts_explicit_repository_bundle(tmp_path) -> None:
     )
 
     assert runtime.service.repositories is bundle
-    assert runtime.repository_selection.backend is ResidentRepositoryBackend.INJECTED_REPOSITORY_BUNDLE
+    assert (
+        runtime.repository_selection.backend
+        is ResidentRepositoryBackend.INJECTED_REPOSITORY_BUNDLE
+    )
     assert runtime.describe()["has_repositories"] is True
     assert runtime.describe()["candidate_repository"] is True
     assert runtime.describe()["repository_backend"] == "injected_repository_bundle"
@@ -118,7 +122,10 @@ def test_sqlite_test_local_vault_selects_repository_bundle(tmp_path) -> None:
     )
 
     assert runtime.service.repositories is not None
-    assert runtime.repository_selection.backend is ResidentRepositoryBackend.SQLITE_TEST_LOCAL_VAULT
+    assert (
+        runtime.repository_selection.backend
+        is ResidentRepositoryBackend.SQLITE_TEST_LOCAL_VAULT
+    )
     assert runtime.describe()["has_repositories"] is True
     assert runtime.describe()["repository_backend"] == "sqlite_test_local_vault"
     assert runtime.describe()["storage_boundary"] == "sqlite_test_local_vault"
@@ -126,7 +133,9 @@ def test_sqlite_test_local_vault_selects_repository_bundle(tmp_path) -> None:
 
 def test_future_pro_backend_is_reserved() -> None:
     with pytest.raises(NotImplementedError, match="reserved"):
-        build_resident_runtime(repository_backend=ResidentRepositoryBackend.FUTURE_PRO_BACKEND)
+        build_resident_runtime(
+            repository_backend=ResidentRepositoryBackend.FUTURE_PRO_BACKEND,
+        )
 
 
 def test_cli_does_not_import_sqlite_runtime_directly() -> None:

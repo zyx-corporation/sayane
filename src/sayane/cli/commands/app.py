@@ -6,11 +6,11 @@ import json
 import shlex
 import sys
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import typer
 
-from sayane.app import build_resident_runtime
+from sayane.app import build_mcp_preview, build_resident_runtime, build_review_queue
 from sayane.bridge.config import BridgeConfig
 
 
@@ -47,6 +47,35 @@ def _serve_plan(host: str, port: int) -> dict[str, object]:
         "capabilities": sorted(runtime.capabilities),
         "repository_backend": runtime.repository_selection.backend.value,
         "storage_boundary": runtime.repository_selection.storage_boundary,
+    }
+
+
+def _empty_review_queue_payload(runtime_profile_id: str) -> dict[str, Any]:
+    return {
+        "profile_id": runtime_profile_id,
+        "kind": "resident_review_queue",
+        "is_review_surface": True,
+        "is_mcp_context": False,
+        "items": [],
+        "repository_available": False,
+    }
+
+
+def _empty_mcp_preview_payload(runtime_profile_id: str, *, mode: str) -> dict[str, Any]:
+    return {
+        "profile_id": runtime_profile_id,
+        "mode": mode,
+        "is_derived_context": True,
+        "is_canonical_profile": False,
+        "included_approved_candidates": [],
+        "blocked_candidates": [],
+        "repository_available": False,
+        "preview": {
+            "kind": "resident_mcp_preview",
+            "is_preview": True,
+            "is_derived_context": True,
+            "is_canonical_profile": False,
+        },
     }
 
 
@@ -108,6 +137,52 @@ def register_app_commands(app: typer.Typer) -> None:
         typer.echo(f"status: {candidate.status}")
         typer.echo(f"source: {candidate.source.type}")
         typer.echo(f"section: {candidate.proposal.section}")
+
+    @app_group.command("review-queue")
+    def review_queue(
+        json_out: Annotated[bool, typer.Option("--json", help="Emit JSON output.")] = False,
+    ) -> None:
+        """Show the resident review queue preview."""
+        runtime = build_resident_runtime()
+        if runtime.service.repositories is None:
+            payload = _empty_review_queue_payload(runtime.service.profile_id)
+        else:
+            payload = build_review_queue(
+                runtime.service.repositories,
+                capability=runtime.capabilities["ui"],
+            )
+            payload["repository_available"] = True
+        if json_out:
+            typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+            return
+        typer.echo(f"kind: {payload['kind']}")
+        typer.echo(f"profile_id: {payload['profile_id']}")
+        typer.echo(f"items: {len(payload['items'])}")
+        typer.echo(f"repository_available: {payload['repository_available']}")
+
+    @app_group.command("mcp-preview")
+    def mcp_preview(
+        mode: Annotated[str, typer.Option("--mode")] = "full",
+        json_out: Annotated[bool, typer.Option("--json", help="Emit JSON output.")] = False,
+    ) -> None:
+        """Show a derived resident MCP preview payload."""
+        runtime = build_resident_runtime()
+        if runtime.service.repositories is None:
+            payload = _empty_mcp_preview_payload(runtime.service.profile_id, mode=mode)
+        else:
+            payload = build_mcp_preview(
+                runtime.service.repositories,
+                capability=runtime.capabilities["mcp"],
+                mode=mode,
+            )
+            payload["repository_available"] = True
+        if json_out:
+            typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+            return
+        typer.echo(f"kind: {payload['preview']['kind']}")
+        typer.echo(f"profile_id: {payload['profile_id']}")
+        typer.echo(f"mode: {payload['mode']}")
+        typer.echo(f"repository_available: {payload['repository_available']}")
 
     @app_group.command("serve")
     def serve(

@@ -2,8 +2,11 @@
 
 from sayane.app.capabilities import (
     CapabilityIssuer,
+    CapabilityIssuerPolicy,
     CapabilityToken,
+    create_capability_issuer_for_surface,
     create_local_capability_token,
+    create_surface_capability_tokens,
 )
 from sayane.app.runtime import (
     ResidentRepositoryBackend,
@@ -17,6 +20,7 @@ from sayane.app.ui import build_mcp_preview, build_review_queue
 
 __all__ = [
     "CapabilityIssuer",
+    "CapabilityIssuerPolicy",
     "CapabilityToken",
     "ResidentAppService",
     "ResidentRepositoryBackend",
@@ -25,6 +29,8 @@ __all__ = [
     "build_mcp_preview",
     "build_resident_runtime",
     "build_review_queue",
+    "create_capability_issuer_for_surface",
     "create_local_capability_token",
+    "create_surface_capability_tokens",
     "select_resident_repositories",
 ]

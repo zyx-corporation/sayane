@@ -31,11 +31,7 @@ class CapabilityError(PermissionError):
 
 @dataclass(frozen=True)
 class CapabilityIssuerPolicy:
-    """Non-secret policy metadata for local resident capability issuance.
-
-    This is not production authentication. It makes the local/development token
-    assumptions explicit before daemon lifecycle and durable credentials exist.
-    """
+    """Policy metadata for local resident capability issuance."""
 
     name: str = "local_development"
     token_persistence: Literal["non_persistent", "persistent"] = "non_persistent"
@@ -98,17 +94,15 @@ class CapabilityToken:
             raise CapabilityError(f"missing resident app capability: {capability}")
 
     def public_metadata(self) -> dict[str, object]:
-        """Return non-sensitive capability metadata for diagnostics."""
+        """Return the stable diagnostic metadata shape for callers."""
         return {
             "subject": self.subject,
             "issuer": self.issuer,
             "purpose": self.purpose,
-            "surface": self.surface,
             "scopes": sorted(self.scopes),
             "issued_at": self.issued_at.isoformat() if self.issued_at else None,
             "expires_at": self.expires_at.isoformat() if self.expires_at else None,
             "is_expired": self.is_expired(),
-            "policy": self.policy.public_metadata(),
         }
 
 
@@ -147,7 +141,7 @@ class CapabilityIssuer:
         )
 
     def public_metadata(self) -> dict[str, object]:
-        """Return non-secret issuer metadata for diagnostics."""
+        """Return issuer metadata for diagnostics."""
         return {
             "issuer": self.issuer,
             "surface": self.surface,

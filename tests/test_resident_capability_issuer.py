@@ -14,7 +14,7 @@ from sayane.app.capabilities import (
 
 
 def test_capability_issuer_adds_metadata_and_expiry() -> None:
-    issued_at = datetime(2026, 1, 1, tzinfo=UTC)
+    issued_at = datetime.now(UTC)
     issuer = CapabilityIssuer(issuer="resident-test", default_ttl_seconds=60)
 
     token = issuer.issue(
@@ -29,6 +29,7 @@ def test_capability_issuer_adds_metadata_and_expiry() -> None:
     assert token.purpose == "clipboard_capture"
     assert token.issued_at == issued_at
     assert token.expires_at == issued_at + timedelta(seconds=60)
+    assert token.is_expired(now=issued_at) is False
     assert token.has("capture") is True
 
 

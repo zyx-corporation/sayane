@@ -5,6 +5,53 @@ All notable changes to the Sayane Community Edition (OSS) are documented in this
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
+
+## [1.0.6] - 2026-06-17 Resident Foundation
+
+### Summary
+
+Sayane v1.0.6 closes the front-loaded resident app and Local Vault foundation work for ADR 0007. It establishes shared repository boundaries, SQLite-backed Local Vault MVP persistence, resident runtime selection, read-only resident preview CLI surfaces, and local capability policy seams without introducing a production daemon or production authentication.
+
+### Added
+
+- Repository contracts and test providers for Candidate, ReviewDecision, Lineage, profile context, project context, and RepositoryBundle.
+- ReviewDecision repository seam for `save_decision()`, `list_decisions()`, `load_review_decisions()`, and `get_decisions_for_candidate()`.
+- SQLite-backed Local Vault MVP path for Candidate, ReviewDecision, and Lineage persistence tests.
+- Resident app service boundary and runtime builder.
+- Clipboard capture through `sayane app capture-clipboard` as pending Candidate input.
+- `sayane app serve` delegation plan to the existing Bridge server path.
+- Resident review queue and MCP preview skeletons.
+- Read-only CLI preview commands:
+  - `sayane app review-queue --json`
+  - `sayane app mcp-preview --json`
+- Resident runtime repository backend selection policy:
+  - `legacy_process_local`
+  - `injected_repository_bundle`
+  - `sqlite_test_local_vault`
+  - `future_pro_backend`
+- Capability issuer metadata, expiry checks, surface-scoped local token issuance, and local capability policy metadata.
+- Architecture docs for repository boundary, SQLite MVP, resident runtime selection, resident review queue CLI, and resident capability policy.
+
+### Changed
+
+- Resident runtime diagnostics now expose non-sensitive repository backend and storage boundary metadata.
+- Runtime-issued capabilities are separated for capture, UI, MCP, and admin surfaces.
+- Default resident runtime remains compatibility-first and does not silently promote test storage into production state.
+
+### Security
+
+- Capability issuer policy now makes token persistence, unlock-session binding, network auth, signing, and production-readiness assumptions explicit.
+- Persistent resident capability tokens remain unsupported by default.
+- `sqlite_test_local_vault` remains explicitly test-only and requires opt-in.
+
+### Non-goals retained
+
+- No production resident daemon lifecycle.
+- No OS keychain integration.
+- No durable token persistence.
+- No network authentication.
+- No pro backend implementation.
+
 ## [1.0.0] - 2026-06-05 Context Acceptance
 
 ### Summary
@@ -96,7 +143,8 @@ Sayane v1.0.0 is the first stable architecture release for local-first LLM conte
 
 See [git history](https://github.com/zyx-corporation/sayane/commits/main) and release tags prior to v0.5.9.
 
-[Unreleased]: https://github.com/zyx-corporation/sayane/compare/v1.0.3...HEAD
+[Unreleased]: https://github.com/zyx-corporation/sayane/compare/v1.0.6...HEAD
+[1.0.6]: https://github.com/zyx-corporation/sayane/compare/v1.0.3...v1.0.6
 [1.0.3]: https://github.com/zyx-corporation/sayane/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/zyx-corporation/sayane/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/zyx-corporation/sayane/compare/v1.0.0...v1.0.1

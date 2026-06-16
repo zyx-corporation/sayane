@@ -1,4 +1,4 @@
-"""Tests for resident app CLI command wiring (#180/#182)."""
+"""Tests for resident app CLI command wiring (#180/#182/#185)."""
 
 from __future__ import annotations
 
@@ -35,7 +35,18 @@ def test_resident_app_status_json(isolated_home: Path) -> None:
         "lineage_repository": False,
         "bridge_host": "127.0.0.1",
         "bridge_port": 38741,
-        "capabilities": ["admin", "capture"],
+        "capabilities": ["admin", "capture", "mcp", "ui"],
+        "repository_backend": "legacy_process_local",
+        "storage_boundary": "none",
+        "repository_selection": {
+            "backend": "legacy_process_local",
+            "has_repositories": False,
+            "storage_boundary": "none",
+            "notes": [
+                "legacy process-local fallback only; not a production durable "
+                "resident state store",
+            ],
+        },
     }
 
 
@@ -72,6 +83,43 @@ def test_resident_app_capture_clipboard_rejects_empty_input(isolated_home: Path)
     assert "empty" in (result.stdout + result.stderr + str(result.exception)).lower()
 
 
+def test_resident_app_review_queue_json_empty_default(isolated_home: Path) -> None:
+    result = runner.invoke(app, ["app", "review-queue", "--json"])
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload == {
+        "profile_id": "default",
+        "kind": "resident_review_queue",
+        "is_review_surface": True,
+        "is_mcp_context": False,
+        "items": [],
+        "repository_available": False,
+    }
+
+
+def test_resident_app_mcp_preview_json_empty_default(isolated_home: Path) -> None:
+    result = runner.invoke(app, ["app", "mcp-preview", "--mode", "full", "--json"])
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload == {
+        "profile_id": "default",
+        "mode": "full",
+        "is_derived_context": True,
+        "is_canonical_profile": False,
+        "included_approved_candidates": [],
+        "blocked_candidates": [],
+        "repository_available": False,
+        "preview": {
+            "kind": "resident_mcp_preview",
+            "is_preview": True,
+            "is_derived_context": True,
+            "is_canonical_profile": False,
+        },
+    }
+
+
 def test_resident_app_serve_json_delegates_to_existing_bridge_command(
     isolated_home: Path,
 ) -> None:
@@ -89,7 +137,9 @@ def test_resident_app_serve_json_delegates_to_existing_bridge_command(
         "bridge_host": "127.0.0.1",
         "bridge_port": 39000,
         "profile_id": "default",
-        "capabilities": ["admin", "capture"],
+        "capabilities": ["admin", "capture", "mcp", "ui"],
+        "repository_backend": "legacy_process_local",
+        "storage_boundary": "none",
     }
 
 

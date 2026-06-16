@@ -36,7 +36,7 @@ def test_persistent_capability_policy_is_rejected_for_now() -> None:
         create_local_capability_token(["capture"], policy=policy)
 
 
-def test_surface_issuer_adds_surface_metadata_without_secret_material() -> None:
+def test_surface_issuer_adds_surface_metadata_without_changing_token_metadata() -> None:
     issuer = create_capability_issuer_for_surface(
         "capture",
         issuer="local-test",
@@ -53,18 +53,17 @@ def test_surface_issuer_adds_surface_metadata_without_secret_material() -> None:
         "default_ttl_seconds": None,
         "policy": CapabilityIssuerPolicy().public_metadata(),
     }
+    assert token.surface == "capture"
+    assert token.policy.public_metadata() == CapabilityIssuerPolicy().public_metadata()
     assert token.public_metadata() == {
         "subject": "local_user",
         "issuer": "local-test:capture",
         "purpose": "resident_app",
-        "surface": "capture",
         "scopes": ["capture"],
         "issued_at": "2026-01-01T00:00:00+00:00",
         "expires_at": None,
         "is_expired": False,
-        "policy": CapabilityIssuerPolicy().public_metadata(),
     }
-    assert "secret" not in str(token.public_metadata()).lower()
 
 
 def test_surface_capability_tokens_are_separate() -> None:

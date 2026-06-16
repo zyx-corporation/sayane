@@ -1,11 +1,16 @@
 """Resident app service boundary for ADR 0007 Phase 4."""
 
-from sayane.app.capabilities import CapabilityToken, create_local_capability_token
+from sayane.app.capabilities import (
+    CapabilityIssuer,
+    CapabilityToken,
+    create_local_capability_token,
+)
 from sayane.app.runtime import ResidentRuntime, build_resident_runtime
 from sayane.app.service import ResidentAppService
 from sayane.app.ui import build_mcp_preview, build_review_queue
 
 __all__ = [
+    "CapabilityIssuer",
     "CapabilityToken",
     "ResidentAppService",
     "ResidentRuntime",

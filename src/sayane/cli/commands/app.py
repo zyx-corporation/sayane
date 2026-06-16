@@ -45,6 +45,8 @@ def _serve_plan(host: str, port: int) -> dict[str, object]:
         "bridge_port": runtime.bridge_config.port,
         "profile_id": runtime.service.profile_id,
         "capabilities": sorted(runtime.capabilities),
+        "repository_backend": runtime.repository_selection.backend.value,
+        "storage_boundary": runtime.repository_selection.storage_boundary,
     }
 
 
@@ -71,6 +73,8 @@ def register_app_commands(app: typer.Typer) -> None:
         typer.echo(f"candidate_repository: {payload['candidate_repository']}")
         typer.echo(f"review_decision_repository: {payload['review_decision_repository']}")
         typer.echo(f"lineage_repository: {payload['lineage_repository']}")
+        typer.echo(f"repository_backend: {payload['repository_backend']}")
+        typer.echo(f"storage_boundary: {payload['storage_boundary']}")
         typer.echo(f"bridge_host: {payload['bridge_host']}")
         typer.echo(f"bridge_port: {payload['bridge_port']}")
         typer.echo(f"capabilities: {', '.join(payload['capabilities'])}")

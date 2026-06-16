@@ -1,6 +1,6 @@
 # Resident App Service Boundary
 
-This document records ADR 0007 Phase 4 resident service preparation.
+This document records ADR 0007 Phase 4 resident service preparation and #181 resident UI skeleton work.
 
 ## Status
 
@@ -16,10 +16,12 @@ It is a narrow application service seam that CLI, Bridge, MCP, UI, and clipboard
 src/sayane/app/capabilities.py
 src/sayane/app/service.py
 src/sayane/app/runtime.py
+src/sayane/app/ui.py
 src/sayane/cli/commands/app.py
 tests/test_resident_app_service.py
 tests/test_resident_app_cli.py
 tests/test_resident_runtime.py
+tests/test_resident_ui_skeleton.py
 ```
 
 ## Boundary
@@ -28,10 +30,10 @@ The resident app service follows this shape:
 
 ```text
 future UI / clipboard capture / local service command
-  -> ResidentAppService / ResidentRuntime
+  -> ResidentAppService / ResidentRuntime / app UI usecases
     -> capability check
     -> existing capture/usecase path
-    -> CandidateRepository
+    -> CandidateRepository / ReviewDecisionRepository
 ```
 
 The service must not:
@@ -93,6 +95,34 @@ The runtime builder does not select direct SQLite adapters by itself.
 
 Persistent repository bundles must be injected explicitly when selected by a higher-level runtime policy.
 
+## Resident UI Skeleton
+
+The minimal resident UI skeleton is implemented as app-layer usecases, not as a final GUI.
+
+```text
+build_review_queue()
+  -> ui capability
+  -> CandidateRepository.list()
+  -> ReviewDecisionRepository.list()
+  -> resident_review_queue payload
+```
+
+The review queue is a review surface. It is not an MCP context export path.
+
+```text
+build_mcp_preview()
+  -> mcp capability
+  -> ReviewDecisionRepository.list()
+  -> build_compiled_context()
+  -> resident_mcp_preview payload
+```
+
+The MCP preview is explicitly marked as derived context and not canonical profile state.
+
+Pending Candidates without decisions are added to `blocked_candidates` with `pending_candidate` exposure.
+
+Rejected Candidates remain blocked by the MCP exposure guard.
+
 ## Resident Serve Decision
 
 For the initial command wiring, `sayane app serve` is not an independent daemon.
@@ -137,6 +167,7 @@ The Phase 4 seam does not yet provide:
 - OS service integration
 - persistent resident runtime selection
 - production local credential implementation
+- final GUI framework
 - system tray UI
 - Bridge route rewiring
 - MCP runtime binding

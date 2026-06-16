@@ -1,6 +1,6 @@
 # Resident App Service Boundary
 
-This document records ADR 0007 Phase 4 resident service preparation, #181 resident UI skeleton work, and #183 capability issuer hardening.
+This document records ADR 0007 Phase 4 resident service preparation, #181 resident UI skeleton work, #183 capability issuer hardening, and #184 resident runtime selection.
 
 ## Status
 
@@ -23,6 +23,7 @@ tests/test_resident_app_cli.py
 tests/test_resident_runtime.py
 tests/test_resident_ui_skeleton.py
 tests/test_resident_capability_issuer.py
+docs/architecture/resident-runtime-selection.md
 ```
 
 ## Boundary
@@ -112,18 +113,42 @@ Clipboard capture must not directly mutate ProfileContextRepository or ProjectCo
 
 ## Resident Runtime
 
-`ResidentRuntime` is a thin assembly boundary for app commands.
+`ResidentRuntime` is a thin assembly and repository-selection boundary for app commands.
 
 ```text
 build_resident_runtime()
+  -> select_resident_repositories()
   -> BridgeConfig
   -> ResidentAppService
   -> local capability map
 ```
 
-The runtime builder does not select direct SQLite adapters by itself.
+Repository backend selection is centralized in `sayane.app.runtime`.
 
-Persistent repository bundles must be injected explicitly when selected by a higher-level runtime policy.
+Entry points such as CLI, future UI, Bridge, and MCP should not import concrete SQLite or future backend builders directly. They should consume `ResidentRuntime`, `ResidentAppService`, or app-layer usecases.
+
+The current supported backend modes are:
+
+```text
+legacy_process_local
+injected_repository_bundle
+sqlite_test_local_vault
+future_pro_backend
+```
+
+`legacy_process_local` is the compatibility default and is explicitly not a production durable resident state store.
+
+`injected_repository_bundle` is the production-facing seam: future backend implementations should produce a `RepositoryBundle` before reaching app services.
+
+`sqlite_test_local_vault` is guarded by `allow_test_vault=True` and exists only to test the SQLite Local Vault persistence seam.
+
+`future_pro_backend` is reserved and intentionally unimplemented.
+
+See also:
+
+```text
+docs/architecture/resident-runtime-selection.md
+```
 
 ## Resident UI Skeleton
 
@@ -174,6 +199,13 @@ sayane app serve --json
 
 The command rejects non-localhost bind addresses.
 
+The JSON plan now exposes non-sensitive runtime selection metadata:
+
+```text
+repository_backend
+storage_boundary
+```
+
 ## Repository Diagnostics
 
 `ResidentAppService.repository_counts()` requires `admin`.
@@ -191,26 +223,27 @@ It must not expose candidate content, review reasons, plaintext vault data, or p
 
 ## Current Non-goals
 
-The Phase 4 seam does not yet provide:
+The current seam does not yet provide:
 
 - daemon install/uninstall
 - OS service integration
-- persistent resident runtime selection
 - production local credential implementation
 - final GUI framework
 - system tray UI
 - Bridge route rewiring
 - MCP runtime binding
+- pro backend implementation
+- durable token persistence
 
 ## Next Step
 
-A later phase should decide production resident runtime selection:
+Later phases should decide real resident daemon lifecycle and production capability hardening:
 
 ```text
-resident runtime policy
-  -> repository bundle selection
-  -> capability issuer
-  -> local UI/Bridge/MCP adapters
+resident daemon lifecycle
+  -> OS/service integration
+  -> production capability issuer
+  -> Bridge/MCP/UI runtime binding
 ```
 
-The resident runtime should reuse repository/usecase boundaries rather than creating independent in-memory stores.
+The resident runtime should continue reusing repository/usecase boundaries rather than creating independent in-memory stores.

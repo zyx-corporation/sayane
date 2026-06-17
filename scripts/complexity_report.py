@@ -10,9 +10,9 @@ from __future__ import annotations
 
 import argparse
 import ast
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable
 
 FILE_WARN_LINES = 300
 FILE_HIGH_LINES = 500

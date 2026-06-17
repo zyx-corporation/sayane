@@ -6,6 +6,55 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.0.9] - 2026-06-17 Resident Daemon Runtime Layout Preview
+
+### Summary
+
+Sayane v1.0.9 packages the resident daemon runtime layout preview track. It adds a plan-only runtime directory layout contract, exposes the layout through a read-only CLI preview, and fixes CLI version reporting so it follows installed package metadata.
+
+### Added
+
+- Resident daemon runtime directory layout contract.
+- Planned runtime directories:
+  - `pid`
+  - `lock`
+  - `socket`
+  - `log`
+  - `tmp`
+  - `state`
+- Runtime-root path validation for layout child paths.
+- Read-only daemon runtime layout CLI command:
+  - `sayane app daemon-runtime-layout --json`
+- Optional runtime root override:
+  - `sayane app daemon-runtime-layout --runtime-root /path/to/runtime --json`
+- Architecture docs for runtime layout contract and runtime layout CLI preview.
+
+### Changed
+
+- `sayane --version` now reads installed package metadata instead of stale source constants.
+- Package tests now assert version metadata consistency.
+
+### Security
+
+- Runtime layout preview does not create directories.
+- Runtime layout preview does not write PID, lock, socket, log, temp, or state files.
+- Runtime layout preview does not acquire locks.
+- Runtime layout preview does not control processes.
+- Path escape attempts are rejected by the app-layer runtime layout model.
+
+### CI
+
+- GitHub Actions run #116 completed successfully on `main` after the runtime layout CLI preview work.
+
+### Non-goals retained
+
+- No production resident daemon process control.
+- No OS service integration.
+- No PID file writes.
+- No lock acquisition.
+- No socket creation.
+- No stale runtime file cleanup.
+
 ## [1.0.8] - 2026-06-17 Resident Daemon Identity Preview
 
 ### Summary
@@ -217,7 +266,8 @@ Sayane v1.0.0 is the first stable architecture release for local-first LLM conte
 
 See [git history](https://github.com/zyx-corporation/sayane/commits/main) and release tags prior to v0.5.9.
 
-[Unreleased]: https://github.com/zyx-corporation/sayane/compare/v1.0.8...HEAD
+[Unreleased]: https://github.com/zyx-corporation/sayane/compare/v1.0.9...HEAD
+[1.0.9]: https://github.com/zyx-corporation/sayane/compare/v1.0.8...v1.0.9
 [1.0.8]: https://github.com/zyx-corporation/sayane/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/zyx-corporation/sayane/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/zyx-corporation/sayane/compare/v1.0.3...v1.0.6

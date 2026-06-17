@@ -19,6 +19,10 @@ from sayane.app.daemon_lifecycle import (
     is_local_bind_host,
     validate_local_bind_host,
 )
+from sayane.app.daemon_runtime_layout import (
+    ResidentDaemonRuntimeLayout,
+    validate_runtime_child_path,
+)
 from sayane.app.runtime import (
     ResidentRepositoryBackend,
     ResidentRepositorySelection,
@@ -37,6 +41,7 @@ __all__ = [
     "ResidentDaemonIdentity",
     "ResidentDaemonLifecycle",
     "ResidentDaemonMode",
+    "ResidentDaemonRuntimeLayout",
     "ResidentDaemonState",
     "ResidentRepositoryBackend",
     "ResidentRepositorySelection",
@@ -50,5 +55,6 @@ __all__ = [
     "is_local_bind_host",
     "select_resident_repositories",
     "validate_local_bind_host",
+    "validate_runtime_child_path",
     "validate_runtime_local_path",
 ]

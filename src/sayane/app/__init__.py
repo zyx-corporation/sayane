@@ -23,6 +23,13 @@ from sayane.app.daemon_runtime_layout import (
     ResidentDaemonRuntimeLayout,
     validate_runtime_child_path,
 )
+from sayane.app.daemon_stale_artifacts import (
+    ResidentDaemonArtifactDiagnostic,
+    ResidentDaemonArtifactKind,
+    ResidentDaemonArtifactStatus,
+    ResidentDaemonStaleArtifactReport,
+    build_stale_artifact_report,
+)
 from sayane.app.runtime import (
     ResidentRepositoryBackend,
     ResidentRepositorySelection,
@@ -38,10 +45,14 @@ __all__ = [
     "CapabilityIssuerPolicy",
     "CapabilityToken",
     "ResidentAppService",
+    "ResidentDaemonArtifactDiagnostic",
+    "ResidentDaemonArtifactKind",
+    "ResidentDaemonArtifactStatus",
     "ResidentDaemonIdentity",
     "ResidentDaemonLifecycle",
     "ResidentDaemonMode",
     "ResidentDaemonRuntimeLayout",
+    "ResidentDaemonStaleArtifactReport",
     "ResidentDaemonState",
     "ResidentRepositoryBackend",
     "ResidentRepositorySelection",
@@ -49,6 +60,7 @@ __all__ = [
     "build_mcp_preview",
     "build_resident_runtime",
     "build_review_queue",
+    "build_stale_artifact_report",
     "create_capability_issuer_for_surface",
     "create_local_capability_token",
     "create_surface_capability_tokens",

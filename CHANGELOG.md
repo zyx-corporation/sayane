@@ -6,6 +6,39 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.0.8] - 2026-06-17 Resident Daemon Identity Preview
+
+### Summary
+
+Sayane v1.0.8 packages the resident daemon identity preview track. It adds a plan-only process identity contract and a read-only identity CLI preview for planned PID, lock, and socket paths without writing files, acquiring locks, creating sockets, or controlling a daemon process.
+
+### Added
+
+- Resident daemon process identity contract.
+- Planned PID, lock, and socket paths.
+- Runtime-local path validation for daemon identity paths.
+- Read-only daemon identity CLI command:
+  - `sayane app daemon-identity --json`
+- Optional runtime directory override:
+  - `sayane app daemon-identity --runtime-dir /path/to/runtime --json`
+- Architecture docs for daemon identity contract and identity CLI preview.
+
+### Security
+
+- Identity preview does not write PID files.
+- Identity preview does not acquire locks.
+- Identity preview does not create sockets.
+- Identity preview does not control processes.
+- Path escape attempts are rejected by the app-layer identity model.
+
+### Non-goals retained
+
+- No production resident daemon process registry.
+- No PID file writes.
+- No lock acquisition.
+- No stale lock cleanup.
+- No OS service integration.
+
 ## [1.0.7] - 2026-06-17 Resident Daemon Lifecycle Preview
 
 ### Summary
@@ -184,7 +217,8 @@ Sayane v1.0.0 is the first stable architecture release for local-first LLM conte
 
 See [git history](https://github.com/zyx-corporation/sayane/commits/main) and release tags prior to v0.5.9.
 
-[Unreleased]: https://github.com/zyx-corporation/sayane/compare/v1.0.7...HEAD
+[Unreleased]: https://github.com/zyx-corporation/sayane/compare/v1.0.8...HEAD
+[1.0.8]: https://github.com/zyx-corporation/sayane/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/zyx-corporation/sayane/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/zyx-corporation/sayane/compare/v1.0.3...v1.0.6
 [1.0.3]: https://github.com/zyx-corporation/sayane/compare/v1.0.2...v1.0.3

@@ -75,10 +75,7 @@ def _coerce_repository_backend(value: ResidentRepositoryBackend | str) -> Reside
         return ResidentRepositoryBackend(value)
     except ValueError as exc:
         supported = ", ".join(backend.value for backend in ResidentRepositoryBackend)
-        message = (
-            f"Unsupported resident repository backend: {value!r}. "
-            f"Supported: {supported}"
-        )
+        message = f"Unsupported resident repository backend: {value!r}. Supported: {supported}"
         raise ValueError(message) from exc
 
 
@@ -111,8 +108,7 @@ def select_resident_repositories(
             backend=backend,
             storage_boundary="none",
             notes=(
-                "legacy process-local fallback only; not a production durable "
-                "resident state store",
+                "legacy process-local fallback only; not a production durable resident state store",
             ),
         )
 
@@ -123,10 +119,7 @@ def select_resident_repositories(
             backend=backend,
             repositories=repositories,
             storage_boundary="repository_bundle",
-            notes=(
-                "caller supplied RepositoryBundle; "
-                "storage implementation remains hidden",
-            ),
+            notes=("caller supplied RepositoryBundle; storage implementation remains hidden",),
         )
 
     if backend is ResidentRepositoryBackend.SQLITE_TEST_LOCAL_VAULT:
@@ -149,8 +142,7 @@ def select_resident_repositories(
             storage_boundary="sqlite_test_local_vault",
             vault_runtime=vault_runtime,
             notes=(
-                "explicit test-only SQLite Local Vault runtime; "
-                "not production auth or keychain",
+                "explicit test-only SQLite Local Vault runtime; not production auth or keychain",
             ),
         )
 

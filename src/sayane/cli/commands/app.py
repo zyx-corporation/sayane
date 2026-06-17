@@ -23,6 +23,9 @@ from sayane.cli.commands.app_daemon_plans import register_daemon_plan_commands
 from sayane.cli.commands.app_daemon_runtime_layout import (
     register_daemon_runtime_layout_command,
 )
+from sayane.cli.commands.app_daemon_stale_artifacts import (
+    register_daemon_stale_artifact_command,
+)
 
 
 def _read_clipboard_input(text: str | None, file: Path | None) -> str:
@@ -266,6 +269,7 @@ def register_app_commands(app: typer.Typer) -> None:
 
     register_daemon_identity_command(app_group)
     register_daemon_runtime_layout_command(app_group)
+    register_daemon_stale_artifact_command(app_group)
     register_daemon_plan_commands(app_group)
 
     @app_group.command("serve")

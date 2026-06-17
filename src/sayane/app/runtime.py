@@ -68,9 +68,7 @@ class ResidentRuntime:
         return payload
 
 
-def _coerce_repository_backend(
-    value: ResidentRepositoryBackend | str,
-) -> ResidentRepositoryBackend:
+def _coerce_repository_backend(value: ResidentRepositoryBackend | str) -> ResidentRepositoryBackend:
     if isinstance(value, ResidentRepositoryBackend):
         return value
     try:

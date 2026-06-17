@@ -87,7 +87,7 @@ class ResidentDaemonLifecycle:
         next_state: ResidentDaemonState | str,
         *,
         note: str | None = None,
-    ) -> "ResidentDaemonLifecycle":
+    ) -> ResidentDaemonLifecycle:
         """Return a new lifecycle contract after a valid transition."""
         target = ResidentDaemonState(next_state)
         if not self.can_transition_to(target):

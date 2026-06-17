@@ -7,10 +7,11 @@ classification metadata for future operator review.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from sayane.app.daemon_identity import ResidentDaemonIdentity
 from sayane.app.daemon_runtime_layout import ResidentDaemonRuntimeLayout
@@ -108,7 +109,14 @@ def _path_type_flags(path: Path) -> tuple[bool, bool, bool, bool]:
     return exists, path.is_file(), path.is_dir(), path.is_socket()
 
 
-def _status_for(expected_type: str, *, exists: bool, is_file: bool, is_dir: bool, is_socket: bool) -> ResidentDaemonArtifactStatus:
+def _status_for(
+    expected_type: str,
+    *,
+    exists: bool,
+    is_file: bool,
+    is_dir: bool,
+    is_socket: bool,
+) -> ResidentDaemonArtifactStatus:
     if not exists:
         return ResidentDaemonArtifactStatus.MISSING
     if expected_type == "file" and not is_file:
@@ -120,7 +128,12 @@ def _status_for(expected_type: str, *, exists: bool, is_file: bool, is_dir: bool
     return ResidentDaemonArtifactStatus.PRESENT_REVIEW_REQUIRED
 
 
-def _diagnostic(kind: ResidentDaemonArtifactKind, path: Path, *, expected_type: str) -> ResidentDaemonArtifactDiagnostic:
+def _diagnostic(
+    kind: ResidentDaemonArtifactKind,
+    path: Path,
+    *,
+    expected_type: str,
+) -> ResidentDaemonArtifactDiagnostic:
     exists, is_file, is_dir, is_socket = _path_type_flags(path)
     status = _status_for(
         expected_type,

@@ -6,6 +6,56 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.0.11] - 2026-06-17 Resident Daemon PID File Diagnostic Preview
+
+### Summary
+
+Sayane v1.0.11 packages the resident daemon PID file diagnostic preview track. It adds a read-only PID file parse diagnostic for the planned resident daemon PID artifact without proving daemon liveness, probing processes, controlling processes, or mutating filesystem state.
+
+### Added
+
+- Read-only PID file diagnostic model for the planned resident daemon PID artifact.
+- PID file diagnostic CLI command:
+  - `sayane app daemon-pid-diagnostic --json`
+- Optional PID file diagnostic runtime root override:
+  - `sayane app daemon-pid-diagnostic --runtime-root /path/to/runtime --json`
+- Architecture docs for PID file diagnostics.
+- Release notes for v1.0.11 Resident Daemon PID File Diagnostic Preview.
+
+### PID parse statuses
+
+- `missing`
+- `unreadable`
+- `empty`
+- `invalid`
+- `parsed`
+
+`parsed` means only that PID file content was parsed as a positive integer string. It is not daemon liveness proof and does not prove that a process is Sayane.
+
+### Security
+
+- PID file diagnostics do not create, delete, repair, or rewrite PID files.
+- PID file diagnostics do not probe process liveness.
+- PID file diagnostics do not send signals.
+- PID file diagnostics do not control processes.
+- PID file diagnostics do not acquire locks.
+- PID file diagnostics do not create sockets or runtime directories.
+- The diagnostic payload keeps `proves_liveness`, `probes_process`, `controls_process`, and `mutates_filesystem` false.
+
+### CI
+
+- GitHub Actions run #627 completed successfully on `main` after the PID file diagnostic preview work.
+
+### Non-goals retained
+
+- No production resident daemon process control.
+- No OS service integration.
+- No PID file writes.
+- No lock acquisition.
+- No socket creation.
+- No process liveness probing.
+- No stale artifact deletion or repair.
+
 ## [1.0.10] - 2026-06-17 Resident Daemon Cleanup Decision Preview
 
 ### Summary
@@ -315,7 +365,8 @@ Sayane v1.0.0 is the first stable architecture release for local-first LLM conte
 
 See [git history](https://github.com/zyx-corporation/sayane/commits/main) and release tags prior to v0.5.9.
 
-[Unreleased]: https://github.com/zyx-corporation/sayane/compare/v1.0.10...HEAD
+[Unreleased]: https://github.com/zyx-corporation/sayane/compare/v1.0.11...HEAD
+[1.0.11]: https://github.com/zyx-corporation/sayane/compare/v1.0.10...v1.0.11
 [1.0.10]: https://github.com/zyx-corporation/sayane/compare/v1.0.9...v1.0.10
 [1.0.9]: https://github.com/zyx-corporation/sayane/compare/v1.0.8...v1.0.9
 [1.0.8]: https://github.com/zyx-corporation/sayane/compare/v1.0.7...v1.0.8

@@ -57,7 +57,7 @@ Non-local bind addresses such as `0.0.0.0` are rejected by the lifecycle contrac
 
 ## Current command relationship
 
-`sumane app serve` remains a delegation plan to the existing Bridge command until a real daemon server is implemented.
+`sayane app serve` remains a delegation plan to the existing Bridge command until a real daemon server is implemented.
 
 ```text
 sayane app serve --host 127.0.0.1 --port 38741

@@ -18,6 +18,7 @@ from sayane.app import (
     build_review_queue,
 )
 from sayane.bridge.config import BridgeConfig
+from sayane.cli.commands.app_daemon_identity import register_daemon_identity_command
 from sayane.cli.commands.app_daemon_plans import register_daemon_plan_commands
 
 
@@ -260,6 +261,7 @@ def register_app_commands(app: typer.Typer) -> None:
         typer.echo(f"bridge_command: {payload['bridge_command_text']}")
         typer.echo(f"daemon_process_started: {payload['daemon_process_started']}")
 
+    register_daemon_identity_command(app_group)
     register_daemon_plan_commands(app_group)
 
     @app_group.command("serve")

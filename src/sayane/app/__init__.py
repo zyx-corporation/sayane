@@ -8,6 +8,13 @@ from sayane.app.capabilities import (
     create_local_capability_token,
     create_surface_capability_tokens,
 )
+from sayane.app.daemon_cleanup_decisions import (
+    ResidentDaemonCleanupDecision,
+    ResidentDaemonCleanupDecisionReport,
+    ResidentDaemonCleanupRecommendation,
+    build_cleanup_decision,
+    build_cleanup_decision_report,
+)
 from sayane.app.daemon_identity import (
     ResidentDaemonIdentity,
     validate_runtime_local_path,
@@ -48,6 +55,9 @@ __all__ = [
     "ResidentDaemonArtifactDiagnostic",
     "ResidentDaemonArtifactKind",
     "ResidentDaemonArtifactStatus",
+    "ResidentDaemonCleanupDecision",
+    "ResidentDaemonCleanupDecisionReport",
+    "ResidentDaemonCleanupRecommendation",
     "ResidentDaemonIdentity",
     "ResidentDaemonLifecycle",
     "ResidentDaemonMode",
@@ -57,6 +67,8 @@ __all__ = [
     "ResidentRepositoryBackend",
     "ResidentRepositorySelection",
     "ResidentRuntime",
+    "build_cleanup_decision",
+    "build_cleanup_decision_report",
     "build_mcp_preview",
     "build_resident_runtime",
     "build_review_queue",

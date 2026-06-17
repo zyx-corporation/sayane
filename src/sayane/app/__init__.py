@@ -26,6 +26,12 @@ from sayane.app.daemon_lifecycle import (
     is_local_bind_host,
     validate_local_bind_host,
 )
+from sayane.app.daemon_liveness_diagnostics import (
+    ResidentDaemonLivenessDiagnostic,
+    ResidentDaemonLivenessStatus,
+    build_liveness_diagnostic,
+    build_liveness_diagnostic_from_pid_file_diagnostic,
+)
 from sayane.app.daemon_pid_diagnostics import (
     ResidentDaemonPidFileDiagnostic,
     ResidentDaemonPidParseStatus,
@@ -65,6 +71,8 @@ __all__ = [
     "ResidentDaemonCleanupRecommendation",
     "ResidentDaemonIdentity",
     "ResidentDaemonLifecycle",
+    "ResidentDaemonLivenessDiagnostic",
+    "ResidentDaemonLivenessStatus",
     "ResidentDaemonMode",
     "ResidentDaemonPidFileDiagnostic",
     "ResidentDaemonPidParseStatus",
@@ -76,6 +84,8 @@ __all__ = [
     "ResidentRuntime",
     "build_cleanup_decision",
     "build_cleanup_decision_report",
+    "build_liveness_diagnostic",
+    "build_liveness_diagnostic_from_pid_file_diagnostic",
     "build_mcp_preview",
     "build_pid_file_diagnostic",
     "build_resident_runtime",

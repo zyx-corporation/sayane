@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+from importlib import metadata
 from pathlib import Path
 from typing import Annotated
 
 import typer
 
-import sayane
 from sayane.cli.commands.all import register_builtin_commands
 from sayane.cli.help_cmd import register_help
 from sayane.cli.i18n import t
@@ -41,9 +41,16 @@ lineage:
 """
 
 
+def _package_version() -> str:
+    try:
+        return metadata.version("sayane")
+    except metadata.PackageNotFoundError:
+        return "0+unknown"
+
+
 def _version_callback(value: bool) -> None:
     if value:
-        typer.echo(f"sayane {sayane.__version__}")
+        typer.echo(f"sayane {_package_version()}")
         raise typer.Exit()
 
 

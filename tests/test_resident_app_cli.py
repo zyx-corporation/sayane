@@ -1,4 +1,4 @@
-"""Tests for resident app CLI command wiring (#180/#182/#185)."""
+"""Tests for resident app CLI command wiring (#180/#182/#185/#188)."""
 
 from __future__ import annotations
 
@@ -121,6 +121,65 @@ def test_resident_app_mcp_preview_json_empty_default(isolated_home: Path) -> Non
             "is_canonical_profile": False,
         },
     }
+
+
+def test_resident_app_daemon_status_json(isolated_home: Path) -> None:
+    result = runner.invoke(app, ["app", "daemon-status", "--json"])
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload == {
+        "state": "stopped",
+        "mode": "bridge_delegation",
+        "host": "127.0.0.1",
+        "port": 38741,
+        "runtime_backend": "legacy_process_local",
+        "unlock_session_binding": "unbound",
+        "capability_policy": "local_development",
+        "is_local_bind": True,
+        "notes": [],
+        "is_running_daemon": False,
+        "kind": "resident_daemon_lifecycle_status",
+    }
+
+
+def test_resident_app_daemon_plan_json(isolated_home: Path) -> None:
+    result = runner.invoke(
+        app,
+        ["app", "daemon-plan", "--host", "localhost", "--port", "39000", "--json"],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload == {
+        "state": "stopped",
+        "mode": "bridge_delegation",
+        "host": "localhost",
+        "port": 39000,
+        "runtime_backend": "legacy_process_local",
+        "unlock_session_binding": "unbound",
+        "capability_policy": "local_development",
+        "is_local_bind": True,
+        "notes": [],
+        "is_running_daemon": False,
+        "kind": "resident_daemon_lifecycle_plan",
+        "plan_only": True,
+        "daemon_process_started": False,
+        "resident_server_implemented": False,
+        "current_serve_path": "delegate_to_sayane_serve",
+        "bridge_command": ["sayane", "serve", "--host", "localhost", "--port", "39000"],
+        "bridge_command_text": "sayane serve --host localhost --port 39000",
+    }
+
+
+def test_resident_app_daemon_commands_reject_non_localhost(isolated_home: Path) -> None:
+    status = runner.invoke(app, ["app", "daemon-status", "--host", "0.0.0.0"])
+    plan = runner.invoke(app, ["app", "daemon-plan", "--host", "0.0.0.0"])
+
+    assert status.exit_code != 0
+    assert plan.exit_code != 0
+    assert "localhost" in (status.stdout + status.stderr + str(status.exception)).lower()
+    assert "localhost" in (plan.stdout + plan.stderr + str(plan.exception)).lower()
 
 
 def test_resident_app_serve_json_delegates_to_existing_bridge_command(

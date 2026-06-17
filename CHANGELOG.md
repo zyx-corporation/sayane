@@ -6,6 +6,47 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.0.7] - 2026-06-17 Resident Daemon Lifecycle Preview
+
+### Summary
+
+Sayane v1.0.7 packages the resident daemon lifecycle preview track. It adds a lifecycle contract model, read-only daemon lifecycle CLI diagnostics, and plan-only daemon operation commands without starting a resident daemon or introducing production credentials.
+
+### Added
+
+- Resident daemon lifecycle contract model with explicit states:
+  - `stopped`
+  - `starting`
+  - `running`
+  - `stopping`
+  - `failed`
+- Resident daemon ownership modes:
+  - `bridge_delegation`
+  - `resident_server_reserved`
+- Localhost-only bind validation for future resident daemon surfaces.
+- Read-only lifecycle CLI commands:
+  - `sayane app daemon-status --json`
+  - `sayane app daemon-plan --json`
+- Plan-only daemon operation CLI commands:
+  - `sayane app daemon-start-plan --json`
+  - `sayane app daemon-stop-plan --json`
+  - `sayane app daemon-restart-plan --json`
+- Architecture docs for lifecycle contract, lifecycle CLI, and operation plan commands.
+
+### Security
+
+- Daemon preview commands do not start, stop, restart, or expose a process.
+- Local bind policy rejects non-localhost addresses.
+- Bridge delegation remains the active serving path.
+
+### Non-goals retained
+
+- No production resident daemon.
+- No OS service integration.
+- No durable credentials.
+- No vault unlock-session binding.
+- No network-exposed resident API.
+
 ## [1.0.6] - 2026-06-17 Resident Foundation
 
 ### Summary
@@ -143,7 +184,8 @@ Sayane v1.0.0 is the first stable architecture release for local-first LLM conte
 
 See [git history](https://github.com/zyx-corporation/sayane/commits/main) and release tags prior to v0.5.9.
 
-[Unreleased]: https://github.com/zyx-corporation/sayane/compare/v1.0.6...HEAD
+[Unreleased]: https://github.com/zyx-corporation/sayane/compare/v1.0.7...HEAD
+[1.0.7]: https://github.com/zyx-corporation/sayane/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/zyx-corporation/sayane/compare/v1.0.3...v1.0.6
 [1.0.3]: https://github.com/zyx-corporation/sayane/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/zyx-corporation/sayane/compare/v1.0.1...v1.0.2

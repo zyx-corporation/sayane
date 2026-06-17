@@ -8,6 +8,10 @@ from sayane.app.capabilities import (
     create_local_capability_token,
     create_surface_capability_tokens,
 )
+from sayane.app.daemon_identity import (
+    ResidentDaemonIdentity,
+    validate_runtime_local_path,
+)
 from sayane.app.daemon_lifecycle import (
     ResidentDaemonLifecycle,
     ResidentDaemonMode,
@@ -30,6 +34,7 @@ __all__ = [
     "CapabilityIssuerPolicy",
     "CapabilityToken",
     "ResidentAppService",
+    "ResidentDaemonIdentity",
     "ResidentDaemonLifecycle",
     "ResidentDaemonMode",
     "ResidentDaemonState",
@@ -45,4 +50,5 @@ __all__ = [
     "is_local_bind_host",
     "select_resident_repositories",
     "validate_local_bind_host",
+    "validate_runtime_local_path",
 ]

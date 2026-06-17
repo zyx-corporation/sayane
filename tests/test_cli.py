@@ -1,9 +1,9 @@
 import json
+from importlib import metadata
 from pathlib import Path
 
 from typer.testing import CliRunner
 
-import sayane
 from sayane.cli.main import app
 
 runner = CliRunner()
@@ -12,7 +12,7 @@ runner = CliRunner()
 def test_version_flag() -> None:
     result = runner.invoke(app, ["--version"])
     assert result.exit_code == 0
-    assert result.stdout.strip() == f"sayane {sayane.__version__}"
+    assert result.stdout.strip() == f"sayane {metadata.version('sayane')}"
 
 
 def test_compile_chatgpt_from_example_profile(

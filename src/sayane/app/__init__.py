@@ -8,6 +8,13 @@ from sayane.app.capabilities import (
     create_local_capability_token,
     create_surface_capability_tokens,
 )
+from sayane.app.daemon_lifecycle import (
+    ResidentDaemonLifecycle,
+    ResidentDaemonMode,
+    ResidentDaemonState,
+    is_local_bind_host,
+    validate_local_bind_host,
+)
 from sayane.app.runtime import (
     ResidentRepositoryBackend,
     ResidentRepositorySelection,
@@ -23,6 +30,9 @@ __all__ = [
     "CapabilityIssuerPolicy",
     "CapabilityToken",
     "ResidentAppService",
+    "ResidentDaemonLifecycle",
+    "ResidentDaemonMode",
+    "ResidentDaemonState",
     "ResidentRepositoryBackend",
     "ResidentRepositorySelection",
     "ResidentRuntime",
@@ -32,5 +42,7 @@ __all__ = [
     "create_capability_issuer_for_surface",
     "create_local_capability_token",
     "create_surface_capability_tokens",
+    "is_local_bind_host",
     "select_resident_repositories",
+    "validate_local_bind_host",
 ]

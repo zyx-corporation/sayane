@@ -22,6 +22,9 @@ from sayane.cli.commands.app_daemon_cleanup_decisions import (
     register_daemon_cleanup_decision_command,
 )
 from sayane.cli.commands.app_daemon_identity import register_daemon_identity_command
+from sayane.cli.commands.app_daemon_liveness_diagnostics import (
+    register_daemon_liveness_diagnostic_command,
+)
 from sayane.cli.commands.app_daemon_pid_diagnostics import (
     register_daemon_pid_diagnostic_command,
 )
@@ -278,6 +281,7 @@ def register_app_commands(app: typer.Typer) -> None:
     register_daemon_stale_artifact_command(app_group)
     register_daemon_cleanup_decision_command(app_group)
     register_daemon_pid_diagnostic_command(app_group)
+    register_daemon_liveness_diagnostic_command(app_group)
     register_daemon_plan_commands(app_group)
 
     @app_group.command("serve")

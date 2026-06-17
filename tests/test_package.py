@@ -1,3 +1,5 @@
+from importlib import metadata
+
 import sayane
 from sayane import (
     adapters,
@@ -11,8 +13,8 @@ from sayane import (
 )
 
 
-def test_version() -> None:
-    assert sayane.__version__ == "1.0.4"
+def test_version_matches_package_metadata() -> None:
+    assert sayane.__version__ == metadata.version("sayane")
 
 
 def test_subpackages_importable() -> None:

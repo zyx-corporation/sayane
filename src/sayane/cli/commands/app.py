@@ -10,7 +10,13 @@ from typing import Annotated, Any
 
 import typer
 
-from sayane.app import build_mcp_preview, build_resident_runtime, build_review_queue
+from sayane.app import (
+    ResidentDaemonLifecycle,
+    ResidentDaemonMode,
+    build_mcp_preview,
+    build_resident_runtime,
+    build_review_queue,
+)
 from sayane.bridge.config import BridgeConfig
 
 
@@ -50,6 +56,39 @@ def _serve_plan(host: str, port: int) -> dict[str, object]:
         "repository_backend": runtime.repository_selection.backend.value,
         "storage_boundary": runtime.repository_selection.storage_boundary,
     }
+
+
+def _daemon_lifecycle(host: str, port: int) -> ResidentDaemonLifecycle:
+    try:
+        return ResidentDaemonLifecycle(host=host, port=port)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+
+def _daemon_status_payload(host: str, port: int) -> dict[str, Any]:
+    lifecycle = _daemon_lifecycle(host, port)
+    payload = lifecycle.public_metadata()
+    payload["kind"] = "resident_daemon_lifecycle_status"
+    return payload
+
+
+def _daemon_plan_payload(host: str, port: int) -> dict[str, Any]:
+    lifecycle = _daemon_lifecycle(host, port)
+    bridge_command = ["sayane", "serve", "--host", host, "--port", str(port)]
+    payload = lifecycle.public_metadata()
+    payload.update(
+        {
+            "kind": "resident_daemon_lifecycle_plan",
+            "mode": ResidentDaemonMode.BRIDGE_DELEGATION.value,
+            "plan_only": True,
+            "daemon_process_started": False,
+            "resident_server_implemented": False,
+            "current_serve_path": "delegate_to_sayane_serve",
+            "bridge_command": bridge_command,
+            "bridge_command_text": " ".join(shlex.quote(part) for part in bridge_command),
+        },
+    )
+    return payload
 
 
 def _empty_review_queue_payload(runtime_profile_id: str) -> dict[str, Any]:
@@ -187,6 +226,38 @@ def register_app_commands(app: typer.Typer) -> None:
         typer.echo(f"profile_id: {payload['profile_id']}")
         typer.echo(f"mode: {payload['mode']}")
         typer.echo(f"repository_available: {payload['repository_available']}")
+
+    @app_group.command("daemon-status")
+    def daemon_status(
+        host: Annotated[str, typer.Option("--host")] = "127.0.0.1",
+        port: Annotated[int, typer.Option("--port")] = 38741,
+        json_out: Annotated[bool, typer.Option("--json", help="Emit JSON output.")] = False,
+    ) -> None:
+        """Show resident daemon lifecycle status without starting a daemon."""
+        payload = _daemon_status_payload(host, port)
+        if json_out:
+            typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+            return
+        typer.echo(f"kind: {payload['kind']}")
+        typer.echo(f"state: {payload['state']}")
+        typer.echo(f"mode: {payload['mode']}")
+        typer.echo(f"is_running_daemon: {payload['is_running_daemon']}")
+
+    @app_group.command("daemon-plan")
+    def daemon_plan(
+        host: Annotated[str, typer.Option("--host")] = "127.0.0.1",
+        port: Annotated[int, typer.Option("--port")] = 38741,
+        json_out: Annotated[bool, typer.Option("--json", help="Emit JSON output.")] = False,
+    ) -> None:
+        """Show resident daemon lifecycle plan without starting a daemon."""
+        payload = _daemon_plan_payload(host, port)
+        if json_out:
+            typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+            return
+        typer.echo(f"kind: {payload['kind']}")
+        typer.echo(f"current_serve_path: {payload['current_serve_path']}")
+        typer.echo(f"bridge_command: {payload['bridge_command_text']}")
+        typer.echo(f"daemon_process_started: {payload['daemon_process_started']}")
 
     @app_group.command("serve")
     def serve(

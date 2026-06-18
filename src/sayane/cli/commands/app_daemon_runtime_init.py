@@ -33,6 +33,13 @@ def register_daemon_runtime_init_command(app_group: typer.Typer) -> None:
             str | None,
             typer.Option("--operation-id", help="Operator-visible runtime init operation id."),
         ] = None,
+        confirm_operation_id: Annotated[
+            str | None,
+            typer.Option(
+                "--confirm-operation-id",
+                help="Repeat the operation id to confirm metadata-writing apply.",
+            ),
+        ] = None,
         include_event_record: Annotated[
             bool,
             typer.Option(
@@ -64,6 +71,7 @@ def register_daemon_runtime_init_command(app_group: typer.Typer) -> None:
                     plan,
                     include_event_record=include_event_record,
                     write_metadata=write_metadata,
+                    confirm_operation_id=confirm_operation_id,
                 )
             except ValueError as exc:
                 raise typer.BadParameter(str(exc)) from exc
@@ -85,6 +93,7 @@ def register_daemon_runtime_init_command(app_group: typer.Typer) -> None:
         typer.echo(
             f"explicit_operator_intent_required: {payload['explicit_operator_intent_required']}"
         )
+        typer.echo(f"confirmation_matched: {payload.get('confirmation_matched', False)}")
         if "created_paths" in payload:
             typer.echo(f"created_paths: {len(payload['created_paths'])}")
         typer.echo(f"metadata_written: {payload.get('metadata_written', False)}")

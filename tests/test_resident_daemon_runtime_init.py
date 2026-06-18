@@ -63,10 +63,35 @@ def test_runtime_init_apply_can_write_metadata_placeholder(tmp_path: Path) -> No
     payload = apply_runtime_init(
         build_runtime_init_plan(runtime_root, operation_id="op-meta-1"),
         write_metadata=True,
+        confirm_operation_id="op-meta-1",
     )
 
     metadata_path = runtime_root / "state" / "runtime-init.json"
     assert payload["metadata_written"] is True
+    assert payload["confirmation_matched"] is True
     assert payload["metadata_path"] == str(metadata_path)
     assert metadata_path.is_file()
     assert payload["metadata"]["operation_id"] == "op-meta-1"
+
+
+def test_runtime_init_apply_metadata_requires_matching_confirmation(tmp_path: Path) -> None:
+    runtime_root = tmp_path / "runtime"
+    plan = build_runtime_init_plan(runtime_root, operation_id="op-meta-2")
+
+    try:
+        apply_runtime_init(plan, write_metadata=True)
+    except ValueError as exc:
+        assert "confirm_operation_id" in str(exc)
+    else:
+        raise AssertionError("expected write_metadata confirmation failure")
+
+    try:
+        apply_runtime_init(
+            plan,
+            write_metadata=True,
+            confirm_operation_id="wrong-op",
+        )
+    except ValueError as exc:
+        assert "must match" in str(exc)
+    else:
+        raise AssertionError("expected mismatched confirmation failure")

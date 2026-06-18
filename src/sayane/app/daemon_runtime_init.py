@@ -166,10 +166,17 @@ def apply_runtime_init(
     *,
     include_event_record: bool = False,
     write_metadata: bool = False,
+    confirm_operation_id: str | None = None,
 ) -> dict[str, Any]:
     """Apply a runtime initialization plan."""
     if plan.review_required:
         msg = "runtime init plan requires manual review before apply"
+        raise ValueError(msg)
+    if write_metadata and confirm_operation_id is None:
+        msg = "write_metadata requires explicit confirm_operation_id"
+        raise ValueError(msg)
+    if confirm_operation_id is not None and confirm_operation_id != plan.operation_id:
+        msg = "confirm_operation_id must match the plan operation_id"
         raise ValueError(msg)
 
     created_paths: list[str] = []
@@ -193,6 +200,10 @@ def apply_runtime_init(
                 "No rollback performed; directories created explicitly under runtime_root."
             ),
             "write_metadata_requested": write_metadata,
+            "confirm_operation_id": confirm_operation_id,
+            "confirmation_matched": confirm_operation_id == plan.operation_id
+            if confirm_operation_id is not None
+            else False,
         },
     )
     if write_metadata:

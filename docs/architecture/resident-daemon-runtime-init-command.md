@@ -56,6 +56,7 @@ This command does not:
 - integrate with OS services
 
 Metadata placeholder writes are allowed only with explicit `--write-metadata` during apply.
+Metadata placeholder writes also require matching `--confirm-operation-id <operation-id>`.
 
 ## Failure boundary
 
@@ -87,3 +88,5 @@ When requested with `--write-metadata`, apply payloads also include:
 - `metadata_written`
 - `metadata_path`
 - `metadata`
+- `confirm_operation_id`
+- `confirmation_matched`

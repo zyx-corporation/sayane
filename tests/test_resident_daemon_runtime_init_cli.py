@@ -91,6 +91,8 @@ def test_daemon_runtime_init_apply_can_write_metadata(tmp_path: Path) -> None:
             str(runtime_root),
             "--operation-id",
             "cli-meta-1",
+            "--confirm-operation-id",
+            "cli-meta-1",
             "--apply",
             "--write-metadata",
             "--json",
@@ -100,8 +102,32 @@ def test_daemon_runtime_init_apply_can_write_metadata(tmp_path: Path) -> None:
     assert result.exit_code == 0
     payload = json.loads(result.stdout)
     assert payload["metadata_written"] is True
+    assert payload["confirmation_matched"] is True
     assert payload["metadata"]["operation_id"] == "cli-meta-1"
     assert (runtime_root / "state" / "runtime-init.json").is_file()
+
+
+def test_daemon_runtime_init_apply_rejects_metadata_without_confirmation(
+    tmp_path: Path,
+) -> None:
+    runtime_root = tmp_path / "runtime"
+    result = runner.invoke(
+        app,
+        [
+            "app",
+            "daemon-runtime-init",
+            "--runtime-root",
+            str(runtime_root),
+            "--operation-id",
+            "cli-meta-2",
+            "--apply",
+            "--write-metadata",
+        ],
+    )
+
+    assert result.exit_code != 0
+    combined = result.stdout + (result.stderr or "")
+    assert "confirm_operation_id" in combined
 
 
 def test_daemon_runtime_init_apply_rejects_conflicting_paths(tmp_path: Path) -> None:

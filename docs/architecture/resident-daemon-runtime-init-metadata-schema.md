@@ -27,6 +27,7 @@ The current implementation may write this metadata only when both are true:
 
 - `--apply`
 - `--write-metadata`
+- `--confirm-operation-id <operation-id>` matches the plan operation id
 
 Dry-run preview does not write metadata.
 

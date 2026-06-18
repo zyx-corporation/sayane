@@ -210,7 +210,11 @@ def test_build_preflight_event_record_uses_all_keys_when_report_is_pass() -> Non
 def test_build_runtime_init_event_record_for_preview(tmp_path: Path) -> None:
     plan = build_runtime_init_plan(tmp_path / "run", operation_id="init-preview-1")
 
-    payload = build_runtime_init_event_record(plan).public_metadata()
+    payload = build_runtime_init_event_record(
+        plan,
+        write_metadata=False,
+        confirmation_matched=False,
+    ).public_metadata()
 
     assert payload["operation_id"] == "init-preview-1"
     assert payload["category"] == "preview"
@@ -218,6 +222,7 @@ def test_build_runtime_init_event_record_for_preview(tmp_path: Path) -> None:
     assert payload["result"] == "planned"
     assert payload["mutates_filesystem"] is False
     assert payload["consent"] == "operator_apply_required"
+    assert "write_metadata_requested:false" in payload["evidence"]
 
 
 def test_build_runtime_init_event_record_for_apply(tmp_path: Path) -> None:
@@ -227,10 +232,16 @@ def test_build_runtime_init_event_record_for_apply(tmp_path: Path) -> None:
         plan,
         applied=True,
         created_paths=(str(tmp_path / "run"),),
+        write_metadata=True,
+        confirm_operation_id="init-apply-1",
+        confirmation_matched=True,
     ).public_metadata()
 
     assert payload["operation_id"] == "init-apply-1"
     assert payload["category"] == "apply"
     assert payload["result"] == "succeeded"
     assert payload["mutates_filesystem"] is True
-    assert payload["consent"] == "required"
+    assert payload["consent"] == "operator_apply_and_confirm_required"
+    assert "write_metadata_requested:true" in payload["evidence"]
+    assert "confirm_operation_id:init-apply-1" in payload["evidence"]
+    assert "confirmation_matched:true" in payload["evidence"]

@@ -146,6 +146,9 @@ def build_runtime_init_event_record(
     applied: bool = False,
     created_paths: tuple[str, ...] = (),
     failure_mode: str | None = None,
+    write_metadata: bool = False,
+    confirm_operation_id: str | None = None,
+    confirmation_matched: bool = False,
 ) -> ResidentDaemonEventRecord:
     """Build a runtime-init event record from preview/apply state."""
     manual_review_items = tuple(
@@ -163,18 +166,31 @@ def build_runtime_init_event_record(
         for item in plan.items
         if item.status is ResidentDaemonRuntimeInitStatus.NO_ACTION
     )
+    consent_items = tuple(
+        item
+        for item in (
+            f"write_metadata_requested:{str(write_metadata).lower()}",
+            (
+                f"confirm_operation_id:{confirm_operation_id}"
+                if confirm_operation_id is not None
+                else None
+            ),
+            f"confirmation_matched:{str(confirmation_matched).lower()}",
+        )
+        if item is not None
+    )
 
     if manual_review_items:
         result = ResidentDaemonEventResult.REQUIRES_REVIEW
-        evidence = manual_review_items
+        evidence = manual_review_items + consent_items
         message = "Runtime init requires manual review before apply."
     elif applied:
         result = ResidentDaemonEventResult.SUCCEEDED
-        evidence = created_paths or no_action_items or create_items
+        evidence = (created_paths or no_action_items or create_items) + consent_items
         message = f"Runtime init apply completed under {plan.runtime_root}."
     else:
         result = ResidentDaemonEventResult.PLANNED
-        evidence = create_items or no_action_items
+        evidence = (create_items or no_action_items) + consent_items
         message = f"Runtime init preview prepared for {plan.runtime_root}."
 
     if failure_mode:
@@ -191,7 +207,11 @@ def build_runtime_init_event_record(
         result=result,
         runtime_root=plan.runtime_root,
         evidence=evidence,
-        consent="required" if applied else "operator_apply_required",
+        consent=(
+            "operator_apply_and_confirm_required"
+            if write_metadata
+            else ("required" if applied else "operator_apply_required")
+        ),
         message=message,
         mutates_filesystem=applied,
     )

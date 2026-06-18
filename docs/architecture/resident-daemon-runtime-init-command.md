@@ -82,6 +82,7 @@ When requested with `--include-event-record`, preview/apply payloads also includ
 
 - `preview` category for dry-run
 - `apply` category for explicit apply
+- consent evidence for metadata write confirmation state
 
 When requested with `--write-metadata`, apply payloads also include:
 

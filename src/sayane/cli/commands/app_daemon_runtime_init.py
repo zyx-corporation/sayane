@@ -80,7 +80,12 @@ def register_daemon_runtime_init_command(app_group: typer.Typer) -> None:
             payload["preview_only"] = True
             payload["mutates_filesystem"] = False
             if include_event_record:
-                payload["event_record"] = build_runtime_init_event_record(plan).public_metadata()
+                payload["event_record"] = build_runtime_init_event_record(
+                    plan,
+                    write_metadata=write_metadata,
+                    confirm_operation_id=confirm_operation_id,
+                    confirmation_matched=False,
+                ).public_metadata()
 
         if json_out:
             typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))

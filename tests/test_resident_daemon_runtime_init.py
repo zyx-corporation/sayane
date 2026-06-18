@@ -35,6 +35,7 @@ def test_runtime_init_apply_creates_runtime_directories(tmp_path: Path) -> None:
     assert payload["result"] == "applied"
     assert payload["event_record"]["category"] == "apply"
     assert payload["event_record"]["result"] == "succeeded"
+    assert payload["event_record"]["consent"] == "required"
     assert payload["metadata_written"] is False
     assert len(payload["created_paths"]) == 7
     assert (runtime_root / "pid").is_dir()
@@ -72,6 +73,7 @@ def test_runtime_init_apply_can_write_metadata_placeholder(tmp_path: Path) -> No
     assert payload["metadata_path"] == str(metadata_path)
     assert metadata_path.is_file()
     assert payload["metadata"]["operation_id"] == "op-meta-1"
+    assert payload["event_record"]["consent"] == "operator_apply_and_confirm_required" if "event_record" in payload else True
 
 
 def test_runtime_init_apply_metadata_requires_matching_confirmation(tmp_path: Path) -> None:

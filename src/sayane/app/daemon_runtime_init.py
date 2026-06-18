@@ -229,5 +229,8 @@ def apply_runtime_init(
             plan,
             applied=True,
             created_paths=tuple(payload["mutations_performed"]),
+            write_metadata=write_metadata,
+            confirm_operation_id=confirm_operation_id,
+            confirmation_matched=payload["confirmation_matched"],
         ).public_metadata()
     return payload

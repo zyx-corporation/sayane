@@ -15,6 +15,11 @@ from sayane.app.daemon_cleanup_decisions import (
     build_cleanup_decision,
     build_cleanup_decision_report,
 )
+from sayane.app.daemon_event_records import (
+    ResidentDaemonEventCategory,
+    ResidentDaemonEventRecord,
+    ResidentDaemonEventResult,
+)
 from sayane.app.daemon_identity import (
     ResidentDaemonIdentity,
     validate_runtime_local_path,
@@ -69,6 +74,9 @@ __all__ = [
     "ResidentDaemonCleanupDecision",
     "ResidentDaemonCleanupDecisionReport",
     "ResidentDaemonCleanupRecommendation",
+    "ResidentDaemonEventCategory",
+    "ResidentDaemonEventRecord",
+    "ResidentDaemonEventResult",
     "ResidentDaemonIdentity",
     "ResidentDaemonLifecycle",
     "ResidentDaemonLivenessDiagnostic",

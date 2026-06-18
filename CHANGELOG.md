@@ -6,7 +6,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-### Planned for v1.0.13 Resident Daemon Preflight Schema Preview
+## [1.0.13] - 2026-06-18 Resident Daemon Preflight Schema Preview
+
+### Summary
+
+Sayane v1.0.13 packages schema-only resident daemon implementation support on top of the v1.0.12 policy gate. It adds a machine-readable preflight checklist, a derived preview event record shape, and a schema-only state machine while preserving the non-mutating safety boundary.
+
+### Added
 
 - Schema-only resident daemon event record support for future preview/apply/process/IPC/service audit shapes.
 - Resident daemon implementation gate preflight checklist:
@@ -34,6 +40,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - No OS service integration.
 - No persistent IPC credentials.
 - No network-exposed resident API.
+
+### CI
+
+The following release-prep follow-up runs completed successfully during this workstream:
+
+- CI #669 on `1e48291184fb44a8b7d51e4bce6f778afaa666c1`
+- Dependency Audit #194 on `1e48291184fb44a8b7d51e4bce6f778afaa666c1`
 
 ## [1.0.12] - 2026-06-18 Resident Daemon Policy Gate
 
@@ -480,7 +493,8 @@ Sayane v1.0.0 is the first stable architecture release for local-first LLM conte
 
 See [git history](https://github.com/zyx-corporation/sayane/commits/main) and release tags prior to v0.5.9.
 
-[Unreleased]: https://github.com/zyx-corporation/sayane/compare/v1.0.12...HEAD
+[Unreleased]: https://github.com/zyx-corporation/sayane/compare/v1.0.13...HEAD
+[1.0.13]: https://github.com/zyx-corporation/sayane/compare/v1.0.12...v1.0.13
 [1.0.12]: https://github.com/zyx-corporation/sayane/compare/v1.0.11...v1.0.12
 [1.0.11]: https://github.com/zyx-corporation/sayane/compare/v1.0.10...v1.0.11
 [1.0.10]: https://github.com/zyx-corporation/sayane/compare/v1.0.9...v1.0.10

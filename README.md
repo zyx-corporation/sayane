@@ -32,7 +32,9 @@ Sayane separates your context from any single vendor memory or chat service. It 
 
 ## Current status
 
-Community Edition **v1.0.12** is available on PyPI and supports the core local-first workflow.
+Community Edition in this repository is now **v1.0.13** and supports the core local-first workflow.
+
+The latest published PyPI package may remain **v1.0.12** until the `v1.0.13` release is published.
 
 | Interface | Status | Primary use |
 |-----------|--------|-------------|

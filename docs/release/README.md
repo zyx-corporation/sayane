@@ -2,9 +2,9 @@
 
 This directory contains release notes, release closures, and draft release-prep documents for Sayane.
 
-## Current draft
+## Current release-prep set
 
-- [v1.0.13 Resident Daemon Preflight Schema Preview](v1.0.13-resident-daemon-preflight-schema-preview.md) — draft release prep
+- [v1.0.13 Resident Daemon Preflight Schema Preview](v1.0.13-resident-daemon-preflight-schema-preview.md) — release note draft aligned to version bump
 - [v1.0.13 Release Prep Checklist](v1.0.13-release-prep-checklist.md) — operator checklist
 - [v1.0.13 Release Prep Issue Body](v1.0.13-release-prep-issue-body.md) — short reusable issue text
 - [v1.0.13 Operator Handoff Note](v1.0.13-operator-handoff-note.md) — ready-to-use operator handoff

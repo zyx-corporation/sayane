@@ -75,8 +75,33 @@ def test_daemon_runtime_init_apply_creates_directories(tmp_path: Path) -> None:
     assert payload["result"] == "applied"
     assert payload["event_record"]["category"] == "apply"
     assert payload["event_record"]["result"] == "succeeded"
+    assert payload["metadata_written"] is False
     assert len(payload["created_paths"]) == 7
     assert (runtime_root / "state").is_dir()
+
+
+def test_daemon_runtime_init_apply_can_write_metadata(tmp_path: Path) -> None:
+    runtime_root = tmp_path / "runtime"
+    result = runner.invoke(
+        app,
+        [
+            "app",
+            "daemon-runtime-init",
+            "--runtime-root",
+            str(runtime_root),
+            "--operation-id",
+            "cli-meta-1",
+            "--apply",
+            "--write-metadata",
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["metadata_written"] is True
+    assert payload["metadata"]["operation_id"] == "cli-meta-1"
+    assert (runtime_root / "state" / "runtime-init.json").is_file()
 
 
 def test_daemon_runtime_init_apply_rejects_conflicting_paths(tmp_path: Path) -> None:

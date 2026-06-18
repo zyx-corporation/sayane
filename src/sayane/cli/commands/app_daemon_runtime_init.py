@@ -8,7 +8,11 @@ from typing import Annotated
 
 import typer
 
-from sayane.app import apply_runtime_init, build_runtime_init_plan
+from sayane.app import (
+    apply_runtime_init,
+    build_runtime_init_event_record,
+    build_runtime_init_plan,
+)
 from sayane.bridge.config import BridgeConfig
 
 
@@ -36,6 +40,13 @@ def register_daemon_runtime_init_command(app_group: typer.Typer) -> None:
                 help="Include a derived resident daemon event record in the payload.",
             ),
         ] = False,
+        write_metadata: Annotated[
+            bool,
+            typer.Option(
+                "--write-metadata",
+                help="Write initialization metadata placeholder into state/runtime-init.json.",
+            ),
+        ] = False,
         apply: Annotated[
             bool,
             typer.Option("--apply", help="Create the missing runtime directories."),
@@ -49,7 +60,11 @@ def register_daemon_runtime_init_command(app_group: typer.Typer) -> None:
         )
         if apply:
             try:
-                payload = apply_runtime_init(plan, include_event_record=include_event_record)
+                payload = apply_runtime_init(
+                    plan,
+                    include_event_record=include_event_record,
+                    write_metadata=write_metadata,
+                )
             except ValueError as exc:
                 raise typer.BadParameter(str(exc)) from exc
         else:
@@ -57,8 +72,6 @@ def register_daemon_runtime_init_command(app_group: typer.Typer) -> None:
             payload["preview_only"] = True
             payload["mutates_filesystem"] = False
             if include_event_record:
-                from sayane.app import build_runtime_init_event_record
-
                 payload["event_record"] = build_runtime_init_event_record(plan).public_metadata()
 
         if json_out:
@@ -74,5 +87,6 @@ def register_daemon_runtime_init_command(app_group: typer.Typer) -> None:
         )
         if "created_paths" in payload:
             typer.echo(f"created_paths: {len(payload['created_paths'])}")
+        typer.echo(f"metadata_written: {payload.get('metadata_written', False)}")
         if "event_record" in payload:
             typer.echo(f"event_record.kind: {payload['event_record']['kind']}")

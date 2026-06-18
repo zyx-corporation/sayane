@@ -62,6 +62,10 @@ from sayane.app.daemon_runtime_layout import (
     ResidentDaemonRuntimeLayout,
     validate_runtime_child_path,
 )
+from sayane.app.daemon_runtime_metadata import (
+    ResidentDaemonRuntimeInitMetadata,
+    build_runtime_init_metadata,
+)
 from sayane.app.daemon_stale_artifacts import (
     ResidentDaemonArtifactDiagnostic,
     ResidentDaemonArtifactKind,
@@ -114,6 +118,7 @@ __all__ = [
     "ResidentDaemonRuntimeInitItem",
     "ResidentDaemonRuntimeInitPlan",
     "ResidentDaemonRuntimeInitStatus",
+    "ResidentDaemonRuntimeInitMetadata",
     "ResidentDaemonStateMachine",
     "ResidentDaemonStateMachineState",
     "ResidentDaemonStateMachineTransition",
@@ -134,6 +139,7 @@ __all__ = [
     "build_resident_runtime",
     "build_resident_daemon_state_machine",
     "build_runtime_init_plan",
+    "build_runtime_init_metadata",
     "build_review_queue",
     "build_stale_artifact_report",
     "create_capability_issuer_for_surface",

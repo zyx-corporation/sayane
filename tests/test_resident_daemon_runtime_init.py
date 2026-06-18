@@ -35,6 +35,7 @@ def test_runtime_init_apply_creates_runtime_directories(tmp_path: Path) -> None:
     assert payload["result"] == "applied"
     assert payload["event_record"]["category"] == "apply"
     assert payload["event_record"]["result"] == "succeeded"
+    assert payload["metadata_written"] is False
     assert len(payload["created_paths"]) == 7
     assert (runtime_root / "pid").is_dir()
     assert (runtime_root / "lock").is_dir()
@@ -55,3 +56,17 @@ def test_runtime_init_plan_requires_manual_review_for_conflicting_file(tmp_path:
     pid_item = next(item for item in plan.items if item.path_role == "pid_dir")
     assert pid_item.status is ResidentDaemonRuntimeInitStatus.MANUAL_REVIEW_REQUIRED
     assert str(runtime_root / "pid") in plan.public_metadata()["proposed_state"]["manual_review_paths"]
+
+
+def test_runtime_init_apply_can_write_metadata_placeholder(tmp_path: Path) -> None:
+    runtime_root = tmp_path / "runtime"
+    payload = apply_runtime_init(
+        build_runtime_init_plan(runtime_root, operation_id="op-meta-1"),
+        write_metadata=True,
+    )
+
+    metadata_path = runtime_root / "state" / "runtime-init.json"
+    assert payload["metadata_written"] is True
+    assert payload["metadata_path"] == str(metadata_path)
+    assert metadata_path.is_file()
+    assert payload["metadata"]["operation_id"] == "op-meta-1"

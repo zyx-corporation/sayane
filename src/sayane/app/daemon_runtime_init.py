@@ -14,6 +14,7 @@ from typing import Any
 from uuid import uuid4
 
 from sayane.app.daemon_runtime_layout import ResidentDaemonRuntimeLayout
+from sayane.app.daemon_runtime_metadata import build_runtime_init_metadata
 
 
 class ResidentDaemonRuntimeInitStatus(StrEnum):
@@ -51,6 +52,7 @@ class ResidentDaemonRuntimeInitPlan:
     operation_id: str
     creator_surface: str = "daemon-runtime-init"
     explicit_operator_intent_required: bool = True
+    metadata_filename: str = "runtime-init.json"
 
     @property
     def review_required(self) -> bool:
@@ -60,6 +62,7 @@ class ResidentDaemonRuntimeInitPlan:
         )
 
     def public_metadata(self) -> dict[str, Any]:
+        metadata_path = self.runtime_root / "state" / self.metadata_filename
         return {
             "kind": "resident_daemon_runtime_init_plan",
             "operation_id": self.operation_id,
@@ -69,6 +72,7 @@ class ResidentDaemonRuntimeInitPlan:
             "explicit_operator_intent_required": self.explicit_operator_intent_required,
             "items": [item.public_metadata() for item in self.items],
             "target_paths": [str(item.path) for item in self.items],
+            "metadata_path": str(metadata_path),
             "prior_state": [item.public_metadata() for item in self.items],
             "proposed_state": {
                 "create_paths": [
@@ -86,6 +90,11 @@ class ResidentDaemonRuntimeInitPlan:
                     for item in self.items
                     if item.status is ResidentDaemonRuntimeInitStatus.MANUAL_REVIEW_REQUIRED
                 ],
+                "metadata_placeholder": build_runtime_init_metadata(
+                    runtime_root=self.runtime_root,
+                    operation_id=self.operation_id,
+                    creator_surface=self.creator_surface,
+                ).public_metadata(),
             },
             "creates_directories": True,
             "writes_files": False,
@@ -156,6 +165,7 @@ def apply_runtime_init(
     plan: ResidentDaemonRuntimeInitPlan,
     *,
     include_event_record: bool = False,
+    write_metadata: bool = False,
 ) -> dict[str, Any]:
     """Apply a runtime initialization plan."""
     if plan.review_required:
@@ -169,6 +179,7 @@ def apply_runtime_init(
             created_paths.append(str(item.path))
 
     payload = plan.public_metadata()
+    metadata_path = plan.runtime_root / "state" / plan.metadata_filename
     payload.update(
         {
             "kind": "resident_daemon_runtime_init_apply",
@@ -181,14 +192,31 @@ def apply_runtime_init(
             "recovery_note": (
                 "No rollback performed; directories created explicitly under runtime_root."
             ),
+            "write_metadata_requested": write_metadata,
         },
     )
+    if write_metadata:
+        metadata_payload = build_runtime_init_metadata(
+            runtime_root=plan.runtime_root,
+            operation_id=plan.operation_id,
+            creator_surface=plan.creator_surface,
+        ).public_metadata()
+        metadata_path.write_text(
+            __import__("json").dumps(metadata_payload, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        payload["metadata_written"] = True
+        payload["metadata_path"] = str(metadata_path)
+        payload["metadata"] = metadata_payload
+        payload["mutations_performed"] = [*created_paths, str(metadata_path)]
+    else:
+        payload["metadata_written"] = False
     if include_event_record:
         from sayane.app.daemon_event_records import build_runtime_init_event_record
 
         payload["event_record"] = build_runtime_init_event_record(
             plan,
             applied=True,
-            created_paths=tuple(created_paths),
+            created_paths=tuple(payload["mutations_performed"]),
         ).public_metadata()
     return payload

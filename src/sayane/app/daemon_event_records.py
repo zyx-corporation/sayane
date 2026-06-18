@@ -185,9 +185,7 @@ def build_runtime_init_event_record(
     return ResidentDaemonEventRecord(
         operation_id=plan.operation_id,
         category=(
-            ResidentDaemonEventCategory.APPLY
-            if applied
-            else ResidentDaemonEventCategory.PREVIEW
+            ResidentDaemonEventCategory.APPLY if applied else ResidentDaemonEventCategory.PREVIEW
         ),
         surface=plan.creator_surface,
         result=result,

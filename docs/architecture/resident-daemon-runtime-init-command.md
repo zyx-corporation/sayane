@@ -55,6 +55,8 @@ This command does not:
 - delete stale artifacts
 - integrate with OS services
 
+Metadata placeholder writes are allowed only with explicit `--write-metadata` during apply.
+
 ## Failure boundary
 
 Apply fails closed when a target path already exists as a non-directory or symlink.
@@ -79,3 +81,9 @@ When requested with `--include-event-record`, preview/apply payloads also includ
 
 - `preview` category for dry-run
 - `apply` category for explicit apply
+
+When requested with `--write-metadata`, apply payloads also include:
+
+- `metadata_written`
+- `metadata_path`
+- `metadata`

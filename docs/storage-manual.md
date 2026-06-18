@@ -2,7 +2,9 @@
 
 Phase 5 で提供される、Profile Store のファイルシステム運用・Obsidian vault 連携・Git 履歴化の利用者向けマニュアルである。
 
-**SQLite 実装までは Git 連携が既定動作**である。Profile Store を変更する操作（`init`、`storage import` / `index`、`candidate approve` など）のあと、プロファイルディレクトリで Git リポジトリを自動初期化し、変更があればコミットする。手動の `storage commit` も利用できる。
+> 現行方針: Storage の主経路は **local Markdown / filesystem-first** である。Obsidian / Git 連携は既存ワークフローとの互換導線として残るが、新規セットアップの primary path ではない。
+
+既存実装では Git 連携や Obsidian 補助コマンドも利用できる。必要に応じて既存運用との互換のため使えるが、ロードマップ上は将来の Local Vault 境界を優先している。
 
 ## 1. 概要
 
@@ -150,9 +152,9 @@ sayane storage index
 
 `context_index` 更新後、変更があれば **Git へ自動コミット**される。
 
-## 7. Git 連携
+## 7. Git 連携（互換運用）
 
-### 7.1 既定動作（SQLite 実装まで）
+### 7.1 既存実装の動作
 
 | 操作 | Git 動作 |
 |------|---------|
@@ -181,6 +183,7 @@ sayane storage commit -m "sayane: initial context" --init
 
 - vault ルートへの直接 export はしない（`--subdir` 必須の安全側）
 - 双方向同期・競合解決は未実装
-- 暗号化 SQLite ストア・移行 CLI・ライセンスは **Commercial Edition**（Phase 6、sayane-pro 側マニュアル）。Community 版は FileSystem + Git を継続
+- 暗号化 SQLite ストア・移行 CLI・ライセンスは **Commercial Edition**（Phase 6、sayane-pro 側マニュアル）
+- Local Vault / 保存時暗号化方針が固まるまで、Obsidian / Git 連携は互換導線として扱う
 
 関連: [はじめに](getting-started.md)、[実装ロードマップ](roadmap.md)

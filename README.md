@@ -32,16 +32,16 @@ Sayane separates your context from any single vendor memory or chat service. It 
 
 ## Current status
 
-Community Edition **v1.0.5** is available on PyPI and supports the core local-first workflow.
+Community Edition **v1.0.12** is available on PyPI and supports the core local-first workflow.
 
 | Interface | Status | Primary use |
 |-----------|--------|-------------|
 | CLI | Available | init / compile / candidate / storage |
 | Local Bridge | Available | `sayane serve` + local HTTP API |
 | MCP Server | Available | Cursor / Claude Desktop integration |
-| Chrome Extension | Available | capture / context insert / candidate actions |
+| Chrome Extension | Frozen / deprecated | legacy capture / context insert / candidate actions during migration |
 | RDE/Candidate evaluation | Available | evaluate / approve / reject / lineage |
-| Storage | Available | Markdown / Obsidian / Git-oriented workflows |
+| Storage | Available | local Markdown / filesystem-first workflows, with Obsidian/Git kept as legacy compatibility paths |
 
 ## Try it in 5 minutes
 
@@ -49,7 +49,7 @@ Install the CLI first. See [docs/install.md](docs/install.md) for detailed insta
 
 ```bash
 # PyPI (macOS / Linux / Windows with Python 3.11+)
-pip install sayane==1.0.5
+pip install "sayane==1.0.12"
 ```
 
 ```bash
@@ -75,6 +75,11 @@ This verifies:
 - local profile store initialization,
 - target-specific prompt compilation from one profile,
 - the basic flow: Profile → Prompt IR → Adapter output.
+
+Notes:
+
+- The Chrome Extension remains available for existing users, but it is frozen / deprecated and no longer the primary entry point.
+- The recommended stable integration surfaces are the CLI, Local Bridge, and MCP Server.
 
 ## Core workflow
 

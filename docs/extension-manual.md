@@ -1,5 +1,7 @@
 # Chrome Extension マニュアル
 
+> 現行方針: Chrome Extension は **freeze / deprecated** である。既存利用者向けの互換導線として維持するが、新機能の主対象ではない。新規導入では CLI / MCP Server / Local Bridge を優先する。
+
 Phase 3 の Sayane Chrome Extension は **補助 UI** ではあるが、**人間↔Sayane の実行境界**として LLM チャットと同格に重要である。判断・保存・merge の本体は Core / Bridge 側だが、入出力の意味を UI が伝えられなければパイプラインは成立しない。
 
 **UI の基本コンセプト**（実行要素としての位置づけ、busy / unavailable、カーソル）: [ui-design-principles.md](ui-design-principles.md)
@@ -116,7 +118,7 @@ Profile ドロップダウンは `/profiles` から取得。Candidate 一覧は 
 3. `sayane serve` 常駐 + Extension Options で token 設定
 4. popup → **Insert context (Open WebUI)**
 
-zsh で CLI を使う場合: `pip install sayane==1.0.5`（`==` はクォート推奨）。
+zsh で CLI を使う場合: `pip install "sayane==1.0.12"`（`==` はクォート推奨）。
 
 | 症状 | 対処 |
 |------|------|

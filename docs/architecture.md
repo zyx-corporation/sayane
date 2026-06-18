@@ -111,7 +111,7 @@ Sayaneはlocal-firstを基本とする。
 
 ユーザーの人格的文脈は、外部SaaSではなくローカルのProfile Storeに保持する。
 
-Phase 5 以降、Obsidian vault との import/export（`sayane storage`）、**Git による履歴化（Profile 変更時の自動コミット、Commercial Edition の暗号化 SQLite 有効化まで既定）**、環境変数 `SAYANE_OBSIDIAN_VAULT` による既定 vault 指定が利用できる。
+Community Edition では local filesystem を基本とし、`sayane storage` による Obsidian import/export や Git 連携も利用できる。ただし現行方針では、これらは Local Vault 完了まで **互換導線 / 非 primary path** として扱う。
 
 ### 5.1 エディション別ストレージ
 
@@ -133,4 +133,4 @@ Commercial Edition は Phase 6 以降（sayane-pro 側で管理）。`filesystem
 - encrypted profile store（**Commercial Edition コア**）
 - semantic lineage system連携
 
-**実装済み（Phase 0〜5）**: CLI、Local Bridge、MCP Server、Chrome Extension、RDE/Candidate 評価、Storage/Obsidian/Git。
+**実装済み（Phase 0〜5）**: CLI、Local Bridge、MCP Server、Chrome Extension（freeze / deprecated）、RDE/Candidate 評価、Storage/Obsidian/Git（互換導線）。

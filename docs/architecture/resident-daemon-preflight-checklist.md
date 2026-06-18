@@ -12,6 +12,12 @@ The checklist is exposed through a read-only command:
 sayane app daemon-preflight --json
 ```
 
+To include the derived schema-only preview event record:
+
+```bash
+sayane app daemon-preflight --json --include-event-record
+```
+
 The command does not mutate filesystem state, probe processes, control processes, expose IPC, or integrate with OS services.
 
 ## Purpose
@@ -74,6 +80,19 @@ docs/architecture/resident-daemon-implementation-readiness-gate.md
 It does not replace explicit gate acceptance.
 
 A future implementation issue still needs an explicit acceptance record before actual resident daemon implementation begins.
+
+## Relationship to event records
+
+The preflight checklist can now be converted into a schema-only preview event record.
+
+This builder remains preview-only:
+
+- no event persistence
+- no audit log writes
+- no filesystem mutation
+- no process control
+- no IPC exposure
+- no OS service integration
 
 ## RDE Delta-M Review
 

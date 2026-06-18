@@ -38,3 +38,34 @@ def test_daemon_preflight_text_output_is_non_mutating_summary() -> None:
     assert "controls_process: False" in result.stdout
     assert "exposes_ipc: False" in result.stdout
     assert "integrates_os_service: False" in result.stdout
+
+
+def test_daemon_preflight_json_can_include_schema_only_event_record() -> None:
+    result = runner.invoke(
+        app,
+        ["app", "daemon-preflight", "--json", "--include-event-record"],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["kind"] == "resident_daemon_preflight_report"
+    assert payload["event_record"]["kind"] == "resident_daemon_event_record"
+    assert payload["event_record"]["category"] == "preview"
+    assert payload["event_record"]["surface"] == "daemon-preflight"
+    assert payload["event_record"]["result"] == "requires_review"
+    assert payload["event_record"]["persisted"] is False
+    assert payload["event_record"]["mutates_filesystem"] is False
+    assert payload["event_record"]["controls_process"] is False
+    assert payload["event_record"]["exposes_ipc"] is False
+    assert payload["event_record"]["integrates_os_service"] is False
+
+
+def test_daemon_preflight_text_can_include_event_record_summary() -> None:
+    result = runner.invoke(
+        app,
+        ["app", "daemon-preflight", "--include-event-record"],
+    )
+
+    assert result.exit_code == 0
+    assert "event_record.kind: resident_daemon_event_record" in result.stdout
+    assert "event_record.result: requires_review" in result.stdout

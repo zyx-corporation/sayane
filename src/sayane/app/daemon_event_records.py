@@ -12,6 +12,11 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
+from sayane.app.daemon_preflight import (
+    ResidentDaemonPreflightReport,
+    ResidentDaemonPreflightStatus,
+)
+
 
 class ResidentDaemonEventCategory(StrEnum):
     """Resident daemon event categories."""
@@ -86,3 +91,46 @@ class ResidentDaemonEventRecord:
             "integrates_os_service": self.integrates_os_service,
             "persisted": False,
         }
+
+
+def _map_preflight_status_to_event_result(
+    status: ResidentDaemonPreflightStatus,
+) -> ResidentDaemonEventResult:
+    if status is ResidentDaemonPreflightStatus.PASS:
+        return ResidentDaemonEventResult.SUCCEEDED
+    if status is ResidentDaemonPreflightStatus.REVIEW_REQUIRED:
+        return ResidentDaemonEventResult.REQUIRES_REVIEW
+    if status is ResidentDaemonPreflightStatus.BLOCKED:
+        return ResidentDaemonEventResult.FAILED
+    return ResidentDaemonEventResult.ABORTED
+
+
+def build_preflight_event_record(
+    report: ResidentDaemonPreflightReport,
+    *,
+    operation_id: str = "daemon-preflight",
+    surface: str = "daemon-preflight",
+    runtime_root: Path | None = None,
+) -> ResidentDaemonEventRecord:
+    """Build a schema-only preview event record from a preflight report."""
+    attention_items = tuple(
+        f"{item.key}:{item.status.value}"
+        for item in report.items
+        if item.status is not ResidentDaemonPreflightStatus.PASS
+    )
+    if not attention_items:
+        attention_items = tuple(item.key for item in report.items)
+
+    return ResidentDaemonEventRecord(
+        operation_id=operation_id,
+        category=ResidentDaemonEventCategory.PREVIEW,
+        surface=surface,
+        result=_map_preflight_status_to_event_result(report.status),
+        runtime_root=runtime_root,
+        evidence=attention_items,
+        consent="not_required_for_preview",
+        message=(
+            "Schema-only implementation gate preflight preview: "
+            f"status={report.status.value}, target_scope={report.target_scope}"
+        ),
+    )

@@ -19,6 +19,7 @@ from sayane.app.daemon_event_records import (
     ResidentDaemonEventCategory,
     ResidentDaemonEventRecord,
     ResidentDaemonEventResult,
+    build_preflight_event_record,
 )
 from sayane.app.daemon_identity import (
     ResidentDaemonIdentity,
@@ -60,6 +61,12 @@ from sayane.app.daemon_stale_artifacts import (
     ResidentDaemonStaleArtifactReport,
     build_stale_artifact_report,
 )
+from sayane.app.daemon_state_machine import (
+    ResidentDaemonStateMachine,
+    ResidentDaemonStateMachineState,
+    ResidentDaemonStateMachineTransition,
+    build_resident_daemon_state_machine,
+)
 from sayane.app.runtime import (
     ResidentRepositoryBackend,
     ResidentRepositorySelection,
@@ -96,6 +103,9 @@ __all__ = [
     "ResidentDaemonPreflightReport",
     "ResidentDaemonPreflightStatus",
     "ResidentDaemonRuntimeLayout",
+    "ResidentDaemonStateMachine",
+    "ResidentDaemonStateMachineState",
+    "ResidentDaemonStateMachineTransition",
     "ResidentDaemonStaleArtifactReport",
     "ResidentDaemonState",
     "ResidentRepositoryBackend",
@@ -108,7 +118,9 @@ __all__ = [
     "build_liveness_diagnostic_from_pid_file_diagnostic",
     "build_mcp_preview",
     "build_pid_file_diagnostic",
+    "build_preflight_event_record",
     "build_resident_runtime",
+    "build_resident_daemon_state_machine",
     "build_review_queue",
     "build_stale_artifact_report",
     "create_capability_issuer_for_surface",

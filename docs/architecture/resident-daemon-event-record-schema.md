@@ -99,6 +99,8 @@ Preview commands may use this schema in the future to describe what they observe
 
 A preview event must remain non-mutating.
 
+The resident daemon preflight checklist now has a schema-only helper that converts a preflight report into a preview event record. This does not persist anything and does not turn the preflight checklist into an apply command.
+
 ## Relationship to future operation commands
 
 Future operation commands may use this schema as the base for local audit records, but must still define their own authorization, evidence, revalidation, and persistence behavior.
@@ -114,6 +116,8 @@ No process behavior, IPC behavior, or filesystem mutation is introduced.
 ### Supplemented
 
 Future operation auditability now has a concrete event shape.
+
+The implementation gate preflight preview can now be represented through the same event record schema without introducing persistence.
 
 ### Deviation Risks
 

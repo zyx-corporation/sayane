@@ -10,6 +10,11 @@ from sayane.app import (
     ResidentDaemonEventCategory,
     ResidentDaemonEventRecord,
     ResidentDaemonEventResult,
+    ResidentDaemonPreflightCategory,
+    ResidentDaemonPreflightItem,
+    ResidentDaemonPreflightReport,
+    ResidentDaemonPreflightStatus,
+    build_preflight_event_record,
 )
 
 
@@ -121,3 +126,80 @@ def test_future_process_ipc_and_service_flags_are_explicit() -> None:
     assert process_record.public_metadata()["persisted"] is False
     assert ipc_record.public_metadata()["persisted"] is False
     assert service_record.public_metadata()["persisted"] is False
+
+
+def test_build_preflight_event_record_maps_review_required_report() -> None:
+    report = ResidentDaemonPreflightReport(
+        items=(
+            ResidentDaemonPreflightItem(
+                key="ipc_authentication_future_work",
+                category=ResidentDaemonPreflightCategory.IPC,
+                status=ResidentDaemonPreflightStatus.REVIEW_REQUIRED,
+                summary="future work",
+            ),
+            ResidentDaemonPreflightItem(
+                key="audit_event_schema_available",
+                category=ResidentDaemonPreflightCategory.RELEASE,
+                status=ResidentDaemonPreflightStatus.PASS,
+                summary="available",
+            ),
+        ),
+    )
+
+    record = build_preflight_event_record(report)
+    payload = record.public_metadata()
+
+    assert record.category is ResidentDaemonEventCategory.PREVIEW
+    assert record.result is ResidentDaemonEventResult.REQUIRES_REVIEW
+    assert payload["surface"] == "daemon-preflight"
+    assert payload["evidence"] == ["ipc_authentication_future_work:review_required"]
+    assert payload["mutates_filesystem"] is False
+    assert payload["controls_process"] is False
+    assert payload["exposes_ipc"] is False
+    assert payload["integrates_os_service"] is False
+    assert payload["persisted"] is False
+
+
+def test_build_preflight_event_record_maps_blocked_report_to_failed() -> None:
+    report = ResidentDaemonPreflightReport(
+        items=(
+            ResidentDaemonPreflightItem(
+                key="process_control_blocked",
+                category=ResidentDaemonPreflightCategory.PROCESS,
+                status=ResidentDaemonPreflightStatus.BLOCKED,
+                summary="blocked",
+            ),
+        ),
+    )
+
+    record = build_preflight_event_record(report, operation_id="preflight-001")
+
+    assert record.operation_id == "preflight-001"
+    assert record.result is ResidentDaemonEventResult.FAILED
+
+
+def test_build_preflight_event_record_uses_all_keys_when_report_is_pass() -> None:
+    report = ResidentDaemonPreflightReport(
+        items=(
+            ResidentDaemonPreflightItem(
+                key="evidence_ladder_documented",
+                category=ResidentDaemonPreflightCategory.EVIDENCE,
+                status=ResidentDaemonPreflightStatus.PASS,
+                summary="documented",
+            ),
+            ResidentDaemonPreflightItem(
+                key="mutation_boundary_documented",
+                category=ResidentDaemonPreflightCategory.MUTATION,
+                status=ResidentDaemonPreflightStatus.PASS,
+                summary="documented",
+            ),
+        ),
+    )
+
+    payload = build_preflight_event_record(report).public_metadata()
+
+    assert payload["result"] == "succeeded"
+    assert payload["evidence"] == [
+        "evidence_ladder_documented",
+        "mutation_boundary_documented",
+    ]

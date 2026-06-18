@@ -6,6 +6,35 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Planned for v1.0.13 Resident Daemon Preflight Schema Preview
+
+- Schema-only resident daemon event record support for future preview/apply/process/IPC/service audit shapes.
+- Resident daemon implementation gate preflight checklist:
+  - `sayane app daemon-preflight --json`
+  - `sayane app daemon-preflight --json --include-event-record`
+- Schema-only helper for deriving a preview event record from a preflight report.
+- Schema-only resident daemon state machine covering future states and transition edges.
+- Additional architecture docs for:
+  - resident daemon event record schema
+  - resident daemon preflight checklist
+  - resident daemon state machine schema
+
+### Safety boundary retained
+
+- No production resident daemon runtime.
+- No daemon process start, stop, restart, signal sending, or supervision.
+- No process probing.
+- No PID file writes.
+- No lock acquisition, release, or stealing.
+- No socket creation.
+- No IPC endpoint exposure.
+- No runtime directory creation.
+- No stale artifact deletion.
+- No artifact repair.
+- No OS service integration.
+- No persistent IPC credentials.
+- No network-exposed resident API.
+
 ## [1.0.12] - 2026-06-18 Resident Daemon Policy Gate
 
 ### Summary

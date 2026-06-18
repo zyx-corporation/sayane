@@ -14,7 +14,9 @@ from sayane.app import (
     ResidentDaemonPreflightItem,
     ResidentDaemonPreflightReport,
     ResidentDaemonPreflightStatus,
+    build_runtime_init_plan,
     build_preflight_event_record,
+    build_runtime_init_event_record,
 )
 
 
@@ -203,3 +205,32 @@ def test_build_preflight_event_record_uses_all_keys_when_report_is_pass() -> Non
         "evidence_ladder_documented",
         "mutation_boundary_documented",
     ]
+
+
+def test_build_runtime_init_event_record_for_preview(tmp_path: Path) -> None:
+    plan = build_runtime_init_plan(tmp_path / "run", operation_id="init-preview-1")
+
+    payload = build_runtime_init_event_record(plan).public_metadata()
+
+    assert payload["operation_id"] == "init-preview-1"
+    assert payload["category"] == "preview"
+    assert payload["surface"] == "daemon-runtime-init"
+    assert payload["result"] == "planned"
+    assert payload["mutates_filesystem"] is False
+    assert payload["consent"] == "operator_apply_required"
+
+
+def test_build_runtime_init_event_record_for_apply(tmp_path: Path) -> None:
+    plan = build_runtime_init_plan(tmp_path / "run", operation_id="init-apply-1")
+
+    payload = build_runtime_init_event_record(
+        plan,
+        applied=True,
+        created_paths=(str(tmp_path / "run"),),
+    ).public_metadata()
+
+    assert payload["operation_id"] == "init-apply-1"
+    assert payload["category"] == "apply"
+    assert payload["result"] == "succeeded"
+    assert payload["mutates_filesystem"] is True
+    assert payload["consent"] == "required"

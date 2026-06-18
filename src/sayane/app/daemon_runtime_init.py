@@ -152,7 +152,11 @@ def build_runtime_init_plan(
     )
 
 
-def apply_runtime_init(plan: ResidentDaemonRuntimeInitPlan) -> dict[str, Any]:
+def apply_runtime_init(
+    plan: ResidentDaemonRuntimeInitPlan,
+    *,
+    include_event_record: bool = False,
+) -> dict[str, Any]:
     """Apply a runtime initialization plan."""
     if plan.review_required:
         msg = "runtime init plan requires manual review before apply"
@@ -179,4 +183,12 @@ def apply_runtime_init(plan: ResidentDaemonRuntimeInitPlan) -> dict[str, Any]:
             ),
         },
     )
+    if include_event_record:
+        from sayane.app.daemon_event_records import build_runtime_init_event_record
+
+        payload["event_record"] = build_runtime_init_event_record(
+            plan,
+            applied=True,
+            created_paths=tuple(created_paths),
+        ).public_metadata()
     return payload

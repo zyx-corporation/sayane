@@ -16,6 +16,10 @@ from sayane.app.daemon_preflight import (
     ResidentDaemonPreflightReport,
     ResidentDaemonPreflightStatus,
 )
+from sayane.app.daemon_runtime_init import (
+    ResidentDaemonRuntimeInitPlan,
+    ResidentDaemonRuntimeInitStatus,
+)
 
 
 class ResidentDaemonEventCategory(StrEnum):
@@ -133,4 +137,63 @@ def build_preflight_event_record(
             "Schema-only implementation gate preflight preview: "
             f"status={report.status.value}, target_scope={report.target_scope}"
         ),
+    )
+
+
+def build_runtime_init_event_record(
+    plan: ResidentDaemonRuntimeInitPlan,
+    *,
+    applied: bool = False,
+    created_paths: tuple[str, ...] = (),
+    failure_mode: str | None = None,
+) -> ResidentDaemonEventRecord:
+    """Build a runtime-init event record from preview/apply state."""
+    manual_review_items = tuple(
+        f"{item.path_role}:{item.status.value}"
+        for item in plan.items
+        if item.status is ResidentDaemonRuntimeInitStatus.MANUAL_REVIEW_REQUIRED
+    )
+    create_items = tuple(
+        f"{item.path_role}:{item.status.value}"
+        for item in plan.items
+        if item.status is ResidentDaemonRuntimeInitStatus.CREATE
+    )
+    no_action_items = tuple(
+        f"{item.path_role}:{item.status.value}"
+        for item in plan.items
+        if item.status is ResidentDaemonRuntimeInitStatus.NO_ACTION
+    )
+
+    if manual_review_items:
+        result = ResidentDaemonEventResult.REQUIRES_REVIEW
+        evidence = manual_review_items
+        message = "Runtime init requires manual review before apply."
+    elif applied:
+        result = ResidentDaemonEventResult.SUCCEEDED
+        evidence = created_paths or no_action_items or create_items
+        message = f"Runtime init apply completed under {plan.runtime_root}."
+    else:
+        result = ResidentDaemonEventResult.PLANNED
+        evidence = create_items or no_action_items
+        message = f"Runtime init preview prepared for {plan.runtime_root}."
+
+    if failure_mode:
+        result = ResidentDaemonEventResult.FAILED
+        evidence = evidence + (f"failure_mode:{failure_mode}",)
+        message = f"Runtime init apply failed: {failure_mode}"
+
+    return ResidentDaemonEventRecord(
+        operation_id=plan.operation_id,
+        category=(
+            ResidentDaemonEventCategory.APPLY
+            if applied
+            else ResidentDaemonEventCategory.PREVIEW
+        ),
+        surface=plan.creator_surface,
+        result=result,
+        runtime_root=plan.runtime_root,
+        evidence=evidence,
+        consent="required" if applied else "operator_apply_required",
+        message=message,
+        mutates_filesystem=applied,
     )

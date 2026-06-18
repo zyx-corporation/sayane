@@ -29,6 +29,27 @@ def test_daemon_runtime_init_json_preview_does_not_create_directories(tmp_path: 
     assert runtime_root.exists() is False
 
 
+def test_daemon_runtime_init_preview_can_include_event_record(tmp_path: Path) -> None:
+    runtime_root = tmp_path / "runtime"
+    result = runner.invoke(
+        app,
+        [
+            "app",
+            "daemon-runtime-init",
+            "--runtime-root",
+            str(runtime_root),
+            "--include-event-record",
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["event_record"]["kind"] == "resident_daemon_event_record"
+    assert payload["event_record"]["category"] == "preview"
+    assert payload["event_record"]["surface"] == "daemon-runtime-init"
+
+
 def test_daemon_runtime_init_apply_creates_directories(tmp_path: Path) -> None:
     runtime_root = tmp_path / "runtime"
     result = runner.invoke(
@@ -40,6 +61,7 @@ def test_daemon_runtime_init_apply_creates_directories(tmp_path: Path) -> None:
             str(runtime_root),
             "--operation-id",
             "cli-op-1",
+            "--include-event-record",
             "--apply",
             "--json",
         ],
@@ -51,6 +73,8 @@ def test_daemon_runtime_init_apply_creates_directories(tmp_path: Path) -> None:
     assert payload["operation_id"] == "cli-op-1"
     assert payload["applied"] is True
     assert payload["result"] == "applied"
+    assert payload["event_record"]["category"] == "apply"
+    assert payload["event_record"]["result"] == "succeeded"
     assert len(payload["created_paths"]) == 7
     assert (runtime_root / "state").is_dir()
 

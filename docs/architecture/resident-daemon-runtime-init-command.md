@@ -73,3 +73,9 @@ Current preview/apply payloads include:
 - `operator_confirmation_signal`
 - `mutations_performed`
 - `result`
+
+When requested with `--include-event-record`, preview/apply payloads also include a derived
+`resident_daemon_event_record` using:
+
+- `preview` category for dry-run
+- `apply` category for explicit apply

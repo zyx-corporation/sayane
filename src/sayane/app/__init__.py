@@ -20,6 +20,7 @@ from sayane.app.daemon_event_records import (
     ResidentDaemonEventRecord,
     ResidentDaemonEventResult,
     build_preflight_event_record,
+    build_runtime_init_event_record,
 )
 from sayane.app.daemon_identity import (
     ResidentDaemonIdentity,
@@ -129,6 +130,7 @@ __all__ = [
     "build_mcp_preview",
     "build_pid_file_diagnostic",
     "build_preflight_event_record",
+    "build_runtime_init_event_record",
     "build_resident_runtime",
     "build_resident_daemon_state_machine",
     "build_runtime_init_plan",

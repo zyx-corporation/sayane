@@ -29,6 +29,13 @@ def register_daemon_runtime_init_command(app_group: typer.Typer) -> None:
             str | None,
             typer.Option("--operation-id", help="Operator-visible runtime init operation id."),
         ] = None,
+        include_event_record: Annotated[
+            bool,
+            typer.Option(
+                "--include-event-record",
+                help="Include a derived resident daemon event record in the payload.",
+            ),
+        ] = False,
         apply: Annotated[
             bool,
             typer.Option("--apply", help="Create the missing runtime directories."),
@@ -42,13 +49,17 @@ def register_daemon_runtime_init_command(app_group: typer.Typer) -> None:
         )
         if apply:
             try:
-                payload = apply_runtime_init(plan)
+                payload = apply_runtime_init(plan, include_event_record=include_event_record)
             except ValueError as exc:
                 raise typer.BadParameter(str(exc)) from exc
         else:
             payload = plan.public_metadata()
             payload["preview_only"] = True
             payload["mutates_filesystem"] = False
+            if include_event_record:
+                from sayane.app import build_runtime_init_event_record
+
+                payload["event_record"] = build_runtime_init_event_record(plan).public_metadata()
 
         if json_out:
             typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
@@ -63,3 +74,5 @@ def register_daemon_runtime_init_command(app_group: typer.Typer) -> None:
         )
         if "created_paths" in payload:
             typer.echo(f"created_paths: {len(payload['created_paths'])}")
+        if "event_record" in payload:
+            typer.echo(f"event_record.kind: {payload['event_record']['kind']}")

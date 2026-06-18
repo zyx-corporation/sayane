@@ -23,13 +23,18 @@ def test_runtime_init_plan_is_preview_only_when_root_missing(tmp_path: Path) -> 
 
 def test_runtime_init_apply_creates_runtime_directories(tmp_path: Path) -> None:
     runtime_root = tmp_path / "runtime"
-    payload = apply_runtime_init(build_runtime_init_plan(runtime_root, operation_id="op-123"))
+    payload = apply_runtime_init(
+        build_runtime_init_plan(runtime_root, operation_id="op-123"),
+        include_event_record=True,
+    )
 
     assert payload["kind"] == "resident_daemon_runtime_init_apply"
     assert payload["operation_id"] == "op-123"
     assert payload["applied"] is True
     assert payload["mutates_filesystem"] is True
     assert payload["result"] == "applied"
+    assert payload["event_record"]["category"] == "apply"
+    assert payload["event_record"]["result"] == "succeeded"
     assert len(payload["created_paths"]) == 7
     assert (runtime_root / "pid").is_dir()
     assert (runtime_root / "lock").is_dir()

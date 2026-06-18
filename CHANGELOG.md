@@ -6,6 +6,92 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.0.12] - 2026-06-18 Resident Daemon Policy Gate
+
+### Summary
+
+Sayane v1.0.12 packages the Resident Daemon Policy Gate work. It adds the architecture and governance policies required before actual resident daemon implementation may begin, while preserving the existing preview-only, non-mutating safety boundary.
+
+### Added
+
+- Resident daemon roadmap snapshot for the v1.0.12 policy gate:
+  - `docs/architecture/resident-daemon-roadmap-snapshot-v1.0.12.md`
+- Release notes for v1.0.12 Resident Daemon Policy Gate.
+- Liveness diagnostic preview command:
+  - `sayane app daemon-liveness-diagnostic --json`
+- Optional liveness diagnostic runtime root override:
+  - `sayane app daemon-liveness-diagnostic --runtime-root /path/to/runtime --json`
+- Architecture policy documents for:
+  - process liveness proof
+  - liveness diagnostics
+  - process existence verification
+  - process identity verification
+  - readiness and API readiness
+  - mutation authorization
+  - cleanup apply commands
+  - artifact repair
+  - lock ownership
+  - socket lifecycle
+  - runtime initialization
+  - local IPC authentication
+  - operator runbook and consent
+  - process control
+  - OS service integration
+  - implementation readiness gate
+
+### Policy gate
+
+The resident daemon evidence ladder is now documented as:
+
+```text
+PID parse validity
+-> process existence
+-> process identity
+-> daemon readiness
+-> API readiness
+```
+
+The mutation and operation ladder is now documented as:
+
+```text
+diagnostic evidence
+-> decision preview
+-> operator authorization
+-> mutation or control command
+-> audit record
+```
+
+Actual resident daemon implementation remains future work until a future implementation issue explicitly accepts the readiness gate.
+
+### CI
+
+The following operator-reported GitHub Actions runs completed successfully during this workstream:
+
+- #163 `docs(app): add resident daemon liveness diagnostic preview`
+- #641 `docs(app): add resident daemon readiness policy`
+- #643 `docs(app): add resident daemon cleanup apply policy`
+- #171 `docs(app): add resident daemon socket lifecycle policy`
+- #174 `docs(app): add resident daemon operator consent policy`
+- #177 `docs(app): add resident daemon implementation readiness gate`
+
+CI for the v1.0.12 release-prep commit must be recorded separately before closing the release-prep issue.
+
+### Non-goals retained
+
+- No production resident daemon runtime.
+- No daemon process start, stop, restart, signal sending, or supervision.
+- No process probing.
+- No PID file writes.
+- No lock acquisition, release, or stealing.
+- No socket creation.
+- No IPC endpoint exposure.
+- No runtime directory creation.
+- No stale artifact deletion.
+- No artifact repair.
+- No OS service integration.
+- No persistent IPC credentials.
+- No network-exposed resident API.
+
 ## [1.0.11] - 2026-06-17 Resident Daemon PID File Diagnostic Preview
 
 ### Summary
@@ -365,7 +451,8 @@ Sayane v1.0.0 is the first stable architecture release for local-first LLM conte
 
 See [git history](https://github.com/zyx-corporation/sayane/commits/main) and release tags prior to v0.5.9.
 
-[Unreleased]: https://github.com/zyx-corporation/sayane/compare/v1.0.11...HEAD
+[Unreleased]: https://github.com/zyx-corporation/sayane/compare/v1.0.12...HEAD
+[1.0.12]: https://github.com/zyx-corporation/sayane/compare/v1.0.11...v1.0.12
 [1.0.11]: https://github.com/zyx-corporation/sayane/compare/v1.0.10...v1.0.11
 [1.0.10]: https://github.com/zyx-corporation/sayane/compare/v1.0.9...v1.0.10
 [1.0.9]: https://github.com/zyx-corporation/sayane/compare/v1.0.8...v1.0.9

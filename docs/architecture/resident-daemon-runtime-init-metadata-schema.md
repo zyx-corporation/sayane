@@ -17,9 +17,12 @@ schema_version
 runtime_root
 operation_id
 creator_surface
+plan_fingerprint
 write_metadata_requested
 confirm_operation_id
+confirm_plan_fingerprint
 confirmation_matched
+fingerprint_matched
 created_at
 disclaimer
 ```

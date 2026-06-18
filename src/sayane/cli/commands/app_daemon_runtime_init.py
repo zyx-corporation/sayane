@@ -92,7 +92,10 @@ def register_daemon_runtime_init_command(app_group: typer.Typer) -> None:
                     plan,
                     write_metadata=write_metadata,
                     confirm_operation_id=confirm_operation_id,
+                    plan_fingerprint=plan.plan_fingerprint(),
+                    confirm_plan_fingerprint=confirm_plan_fingerprint,
                     confirmation_matched=False,
+                    fingerprint_matched=False,
                 ).public_metadata()
 
         if json_out:

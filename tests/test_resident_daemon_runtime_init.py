@@ -76,9 +76,12 @@ def test_runtime_init_apply_can_write_metadata_placeholder(tmp_path: Path) -> No
     assert payload["metadata_path"] == str(metadata_path)
     assert metadata_path.is_file()
     assert payload["metadata"]["operation_id"] == "op-meta-1"
+    assert payload["metadata"]["plan_fingerprint"] == plan.plan_fingerprint()
     assert payload["metadata"]["confirm_operation_id"] == "op-meta-1"
+    assert payload["metadata"]["confirm_plan_fingerprint"] == plan.plan_fingerprint()
     assert payload["metadata"]["confirmation_matched"] is True
     assert payload["fingerprint_matched"] is True
+    assert payload["metadata"]["fingerprint_matched"] is True
 
 
 def test_runtime_init_apply_metadata_requires_matching_confirmation(tmp_path: Path) -> None:

@@ -148,7 +148,10 @@ def build_runtime_init_event_record(
     failure_mode: str | None = None,
     write_metadata: bool = False,
     confirm_operation_id: str | None = None,
+    plan_fingerprint: str | None = None,
+    confirm_plan_fingerprint: str | None = None,
     confirmation_matched: bool = False,
+    fingerprint_matched: bool = False,
 ) -> ResidentDaemonEventRecord:
     """Build a runtime-init event record from preview/apply state."""
     manual_review_items = tuple(
@@ -175,7 +178,14 @@ def build_runtime_init_event_record(
                 if confirm_operation_id is not None
                 else None
             ),
+            f"plan_fingerprint:{plan_fingerprint}" if plan_fingerprint is not None else None,
+            (
+                f"confirm_plan_fingerprint:{confirm_plan_fingerprint}"
+                if confirm_plan_fingerprint is not None
+                else None
+            ),
             f"confirmation_matched:{str(confirmation_matched).lower()}",
+            f"fingerprint_matched:{str(fingerprint_matched).lower()}",
         )
         if item is not None
     )

@@ -107,9 +107,12 @@ class ResidentDaemonRuntimeInitPlan:
                     runtime_root=self.runtime_root,
                     operation_id=self.operation_id,
                     creator_surface=self.creator_surface,
+                    plan_fingerprint=self.plan_fingerprint(),
                     write_metadata_requested=False,
                     confirm_operation_id=None,
+                    confirm_plan_fingerprint=None,
                     confirmation_matched=False,
+                    fingerprint_matched=False,
                 ).public_metadata(),
             },
             "creates_directories": True,
@@ -239,9 +242,12 @@ def apply_runtime_init(
             runtime_root=plan.runtime_root,
             operation_id=plan.operation_id,
             creator_surface=plan.creator_surface,
+            plan_fingerprint=plan.plan_fingerprint(),
             write_metadata_requested=True,
             confirm_operation_id=confirm_operation_id,
+            confirm_plan_fingerprint=confirm_plan_fingerprint,
             confirmation_matched=payload["confirmation_matched"],
+            fingerprint_matched=payload["fingerprint_matched"],
         ).public_metadata()
         metadata_path.write_text(
             __import__("json").dumps(metadata_payload, ensure_ascii=False, indent=2) + "\n",
@@ -262,6 +268,9 @@ def apply_runtime_init(
             created_paths=tuple(payload["mutations_performed"]),
             write_metadata=write_metadata,
             confirm_operation_id=confirm_operation_id,
+            plan_fingerprint=plan.plan_fingerprint(),
+            confirm_plan_fingerprint=confirm_plan_fingerprint,
             confirmation_matched=payload["confirmation_matched"],
+            fingerprint_matched=payload["fingerprint_matched"],
         ).public_metadata()
     return payload

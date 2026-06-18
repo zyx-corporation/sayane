@@ -114,11 +114,18 @@ def test_daemon_runtime_init_apply_can_write_metadata(tmp_path: Path) -> None:
     assert payload["metadata_written"] is True
     assert payload["confirmation_matched"] is True
     assert payload["metadata"]["operation_id"] == "cli-meta-1"
+    assert payload["metadata"]["plan_fingerprint"] == preview_payload["plan_fingerprint"]
     assert payload["metadata"]["confirm_operation_id"] == "cli-meta-1"
+    assert payload["metadata"]["confirm_plan_fingerprint"] == preview_payload["plan_fingerprint"]
     assert payload["metadata"]["confirmation_matched"] is True
+    assert payload["metadata"]["fingerprint_matched"] is True
     assert payload["fingerprint_matched"] is True
     assert payload["event_record"]["consent"] == "operator_apply_and_confirm_required"
     assert "confirm_operation_id:cli-meta-1" in payload["event_record"]["evidence"]
+    assert (
+        f"plan_fingerprint:{preview_payload['plan_fingerprint']}"
+        in payload["event_record"]["evidence"]
+    )
     assert (runtime_root / "state" / "runtime-init.json").is_file()
 
 

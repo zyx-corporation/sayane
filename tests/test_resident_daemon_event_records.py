@@ -213,7 +213,9 @@ def test_build_runtime_init_event_record_for_preview(tmp_path: Path) -> None:
     payload = build_runtime_init_event_record(
         plan,
         write_metadata=False,
+        plan_fingerprint=plan.plan_fingerprint(),
         confirmation_matched=False,
+        fingerprint_matched=False,
     ).public_metadata()
 
     assert payload["operation_id"] == "init-preview-1"
@@ -222,6 +224,7 @@ def test_build_runtime_init_event_record_for_preview(tmp_path: Path) -> None:
     assert payload["result"] == "planned"
     assert payload["mutates_filesystem"] is False
     assert payload["consent"] == "operator_apply_required"
+    assert f"plan_fingerprint:{plan.plan_fingerprint()}" in payload["evidence"]
     assert "write_metadata_requested:false" in payload["evidence"]
 
 
@@ -234,7 +237,10 @@ def test_build_runtime_init_event_record_for_apply(tmp_path: Path) -> None:
         created_paths=(str(tmp_path / "run"),),
         write_metadata=True,
         confirm_operation_id="init-apply-1",
+        plan_fingerprint=plan.plan_fingerprint(),
+        confirm_plan_fingerprint=plan.plan_fingerprint(),
         confirmation_matched=True,
+        fingerprint_matched=True,
     ).public_metadata()
 
     assert payload["operation_id"] == "init-apply-1"
@@ -244,4 +250,7 @@ def test_build_runtime_init_event_record_for_apply(tmp_path: Path) -> None:
     assert payload["consent"] == "operator_apply_and_confirm_required"
     assert "write_metadata_requested:true" in payload["evidence"]
     assert "confirm_operation_id:init-apply-1" in payload["evidence"]
+    assert f"plan_fingerprint:{plan.plan_fingerprint()}" in payload["evidence"]
+    assert f"confirm_plan_fingerprint:{plan.plan_fingerprint()}" in payload["evidence"]
     assert "confirmation_matched:true" in payload["evidence"]
+    assert "fingerprint_matched:true" in payload["evidence"]

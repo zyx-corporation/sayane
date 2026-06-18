@@ -22,6 +22,7 @@ def test_daemon_runtime_init_json_preview_does_not_create_directories(tmp_path: 
     assert result.exit_code == 0
     payload = json.loads(result.stdout)
     assert payload["kind"] == "resident_daemon_runtime_init_plan"
+    assert payload["operation_id"].startswith("runtime-init-")
     assert payload["preview_only"] is True
     assert payload["mutates_filesystem"] is False
     assert payload["review_required"] is False
@@ -37,6 +38,8 @@ def test_daemon_runtime_init_apply_creates_directories(tmp_path: Path) -> None:
             "daemon-runtime-init",
             "--runtime-root",
             str(runtime_root),
+            "--operation-id",
+            "cli-op-1",
             "--apply",
             "--json",
         ],
@@ -45,7 +48,9 @@ def test_daemon_runtime_init_apply_creates_directories(tmp_path: Path) -> None:
     assert result.exit_code == 0
     payload = json.loads(result.stdout)
     assert payload["kind"] == "resident_daemon_runtime_init_apply"
+    assert payload["operation_id"] == "cli-op-1"
     assert payload["applied"] is True
+    assert payload["result"] == "applied"
     assert len(payload["created_paths"]) == 7
     assert (runtime_root / "state").is_dir()
 

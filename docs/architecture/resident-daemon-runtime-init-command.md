@@ -23,6 +23,12 @@ Apply:
 sayane app daemon-runtime-init --apply --json
 ```
 
+Explicit operation id:
+
+```bash
+sayane app daemon-runtime-init --operation-id init-001 --apply --json
+```
+
 ## Current scope
 
 This command may create only:
@@ -54,3 +60,16 @@ This command does not:
 Apply fails closed when a target path already exists as a non-directory or symlink.
 
 Preview remains non-mutating and reports `manual_review_required` when apply would be unsafe.
+
+## Audit-ready payload
+
+Current preview/apply payloads include:
+
+- `operation_id`
+- `creator_surface`
+- `target_paths`
+- `prior_state`
+- `proposed_state`
+- `operator_confirmation_signal`
+- `mutations_performed`
+- `result`

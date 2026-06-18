@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
 from sayane.app.daemon_runtime_layout import ResidentDaemonRuntimeLayout
 
@@ -47,6 +48,8 @@ class ResidentDaemonRuntimeInitPlan:
 
     runtime_root: Path
     items: tuple[ResidentDaemonRuntimeInitItem, ...]
+    operation_id: str
+    creator_surface: str = "daemon-runtime-init"
     explicit_operator_intent_required: bool = True
 
     @property
@@ -59,16 +62,38 @@ class ResidentDaemonRuntimeInitPlan:
     def public_metadata(self) -> dict[str, Any]:
         return {
             "kind": "resident_daemon_runtime_init_plan",
+            "operation_id": self.operation_id,
+            "creator_surface": self.creator_surface,
             "runtime_root": str(self.runtime_root),
             "review_required": self.review_required,
             "explicit_operator_intent_required": self.explicit_operator_intent_required,
             "items": [item.public_metadata() for item in self.items],
+            "target_paths": [str(item.path) for item in self.items],
+            "prior_state": [item.public_metadata() for item in self.items],
+            "proposed_state": {
+                "create_paths": [
+                    str(item.path)
+                    for item in self.items
+                    if item.status is ResidentDaemonRuntimeInitStatus.CREATE
+                ],
+                "no_action_paths": [
+                    str(item.path)
+                    for item in self.items
+                    if item.status is ResidentDaemonRuntimeInitStatus.NO_ACTION
+                ],
+                "manual_review_paths": [
+                    str(item.path)
+                    for item in self.items
+                    if item.status is ResidentDaemonRuntimeInitStatus.MANUAL_REVIEW_REQUIRED
+                ],
+            },
             "creates_directories": True,
             "writes_files": False,
             "writes_pid_file": False,
             "creates_socket": False,
             "acquires_lock": False,
             "starts_daemon": False,
+            "operator_confirmation_signal": "--apply",
         }
 
 
@@ -102,7 +127,12 @@ def _classify_directory_target(path: Path, *, path_role: str) -> ResidentDaemonR
     )
 
 
-def build_runtime_init_plan(runtime_root: Path) -> ResidentDaemonRuntimeInitPlan:
+def build_runtime_init_plan(
+    runtime_root: Path,
+    *,
+    operation_id: str | None = None,
+    creator_surface: str = "daemon-runtime-init",
+) -> ResidentDaemonRuntimeInitPlan:
     """Build an explicit runtime initialization plan."""
     layout = ResidentDaemonRuntimeLayout(runtime_root=runtime_root)
     items = (
@@ -114,7 +144,12 @@ def build_runtime_init_plan(runtime_root: Path) -> ResidentDaemonRuntimeInitPlan
         _classify_directory_target(layout.temp_dir, path_role="temp_dir"),
         _classify_directory_target(layout.state_dir, path_role="state_dir"),
     )
-    return ResidentDaemonRuntimeInitPlan(runtime_root=runtime_root, items=items)
+    return ResidentDaemonRuntimeInitPlan(
+        runtime_root=runtime_root,
+        items=items,
+        operation_id=operation_id or f"runtime-init-{uuid4().hex[:12]}",
+        creator_surface=creator_surface,
+    )
 
 
 def apply_runtime_init(plan: ResidentDaemonRuntimeInitPlan) -> dict[str, Any]:
@@ -135,7 +170,13 @@ def apply_runtime_init(plan: ResidentDaemonRuntimeInitPlan) -> dict[str, Any]:
             "kind": "resident_daemon_runtime_init_apply",
             "applied": True,
             "created_paths": created_paths,
+            "mutations_performed": created_paths,
             "mutates_filesystem": True,
+            "result": "applied" if created_paths else "no_action",
+            "failure_mode": None,
+            "recovery_note": (
+                "No rollback performed; directories created explicitly under runtime_root."
+            ),
         },
     )
     return payload

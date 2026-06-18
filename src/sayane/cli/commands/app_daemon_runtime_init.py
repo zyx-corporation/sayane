@@ -25,6 +25,10 @@ def register_daemon_runtime_init_command(app_group: typer.Typer) -> None:
             Path | None,
             typer.Option("--runtime-root", help="Override resident runtime root."),
         ] = None,
+        operation_id: Annotated[
+            str | None,
+            typer.Option("--operation-id", help="Operator-visible runtime init operation id."),
+        ] = None,
         apply: Annotated[
             bool,
             typer.Option("--apply", help="Create the missing runtime directories."),
@@ -32,7 +36,10 @@ def register_daemon_runtime_init_command(app_group: typer.Typer) -> None:
         json_out: Annotated[bool, typer.Option("--json", help="Emit JSON output.")] = False,
     ) -> None:
         """Preview or apply minimal resident runtime directory creation."""
-        plan = build_runtime_init_plan(runtime_root or _default_runtime_root())
+        plan = build_runtime_init_plan(
+            runtime_root or _default_runtime_root(),
+            operation_id=operation_id,
+        )
         if apply:
             try:
                 payload = apply_runtime_init(plan)
@@ -48,6 +55,7 @@ def register_daemon_runtime_init_command(app_group: typer.Typer) -> None:
             return
 
         typer.echo(f"kind: {payload['kind']}")
+        typer.echo(f"operation_id: {payload['operation_id']}")
         typer.echo(f"runtime_root: {payload['runtime_root']}")
         typer.echo(f"review_required: {payload['review_required']}")
         typer.echo(

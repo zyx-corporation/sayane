@@ -42,6 +42,13 @@ from sayane.app.daemon_pid_diagnostics import (
     ResidentDaemonPidParseStatus,
     build_pid_file_diagnostic,
 )
+from sayane.app.daemon_preflight import (
+    ResidentDaemonPreflightCategory,
+    ResidentDaemonPreflightItem,
+    ResidentDaemonPreflightReport,
+    ResidentDaemonPreflightStatus,
+    build_implementation_gate_preflight_report,
+)
 from sayane.app.daemon_runtime_layout import (
     ResidentDaemonRuntimeLayout,
     validate_runtime_child_path,
@@ -84,6 +91,10 @@ __all__ = [
     "ResidentDaemonMode",
     "ResidentDaemonPidFileDiagnostic",
     "ResidentDaemonPidParseStatus",
+    "ResidentDaemonPreflightCategory",
+    "ResidentDaemonPreflightItem",
+    "ResidentDaemonPreflightReport",
+    "ResidentDaemonPreflightStatus",
     "ResidentDaemonRuntimeLayout",
     "ResidentDaemonStaleArtifactReport",
     "ResidentDaemonState",
@@ -92,6 +103,7 @@ __all__ = [
     "ResidentRuntime",
     "build_cleanup_decision",
     "build_cleanup_decision_report",
+    "build_implementation_gate_preflight_report",
     "build_liveness_diagnostic",
     "build_liveness_diagnostic_from_pid_file_diagnostic",
     "build_mcp_preview",

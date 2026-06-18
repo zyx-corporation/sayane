@@ -40,6 +40,13 @@ def register_daemon_runtime_init_command(app_group: typer.Typer) -> None:
                 help="Repeat the operation id to confirm metadata-writing apply.",
             ),
         ] = None,
+        confirm_plan_fingerprint: Annotated[
+            str | None,
+            typer.Option(
+                "--confirm-plan-fingerprint",
+                help="Repeat the preview plan fingerprint to confirm metadata-writing apply.",
+            ),
+        ] = None,
         include_event_record: Annotated[
             bool,
             typer.Option(
@@ -72,6 +79,7 @@ def register_daemon_runtime_init_command(app_group: typer.Typer) -> None:
                     include_event_record=include_event_record,
                     write_metadata=write_metadata,
                     confirm_operation_id=confirm_operation_id,
+                    confirm_plan_fingerprint=confirm_plan_fingerprint,
                 )
             except ValueError as exc:
                 raise typer.BadParameter(str(exc)) from exc
@@ -93,12 +101,14 @@ def register_daemon_runtime_init_command(app_group: typer.Typer) -> None:
 
         typer.echo(f"kind: {payload['kind']}")
         typer.echo(f"operation_id: {payload['operation_id']}")
+        typer.echo(f"plan_fingerprint: {payload['plan_fingerprint']}")
         typer.echo(f"runtime_root: {payload['runtime_root']}")
         typer.echo(f"review_required: {payload['review_required']}")
         typer.echo(
             f"explicit_operator_intent_required: {payload['explicit_operator_intent_required']}"
         )
         typer.echo(f"confirmation_matched: {payload.get('confirmation_matched', False)}")
+        typer.echo(f"fingerprint_matched: {payload.get('fingerprint_matched', False)}")
         if "created_paths" in payload:
             typer.echo(f"created_paths: {len(payload['created_paths'])}")
         typer.echo(f"metadata_written: {payload.get('metadata_written', False)}")

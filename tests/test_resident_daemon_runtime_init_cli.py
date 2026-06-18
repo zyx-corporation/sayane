@@ -23,6 +23,7 @@ def test_daemon_runtime_init_json_preview_does_not_create_directories(tmp_path: 
     payload = json.loads(result.stdout)
     assert payload["kind"] == "resident_daemon_runtime_init_plan"
     assert payload["operation_id"].startswith("runtime-init-")
+    assert len(payload["plan_fingerprint"]) == 16
     assert payload["preview_only"] is True
     assert payload["mutates_filesystem"] is False
     assert payload["review_required"] is False
@@ -83,6 +84,11 @@ def test_daemon_runtime_init_apply_creates_directories(tmp_path: Path) -> None:
 
 def test_daemon_runtime_init_apply_can_write_metadata(tmp_path: Path) -> None:
     runtime_root = tmp_path / "runtime"
+    preview = runner.invoke(
+        app,
+        ["app", "daemon-runtime-init", "--runtime-root", str(runtime_root), "--json"],
+    )
+    preview_payload = json.loads(preview.stdout)
     result = runner.invoke(
         app,
         [
@@ -94,6 +100,8 @@ def test_daemon_runtime_init_apply_can_write_metadata(tmp_path: Path) -> None:
             "cli-meta-1",
             "--confirm-operation-id",
             "cli-meta-1",
+            "--confirm-plan-fingerprint",
+            preview_payload["plan_fingerprint"],
             "--apply",
             "--write-metadata",
             "--include-event-record",
@@ -108,6 +116,7 @@ def test_daemon_runtime_init_apply_can_write_metadata(tmp_path: Path) -> None:
     assert payload["metadata"]["operation_id"] == "cli-meta-1"
     assert payload["metadata"]["confirm_operation_id"] == "cli-meta-1"
     assert payload["metadata"]["confirmation_matched"] is True
+    assert payload["fingerprint_matched"] is True
     assert payload["event_record"]["consent"] == "operator_apply_and_confirm_required"
     assert "confirm_operation_id:cli-meta-1" in payload["event_record"]["evidence"]
     assert (runtime_root / "state" / "runtime-init.json").is_file()

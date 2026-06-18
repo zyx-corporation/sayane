@@ -17,6 +17,7 @@ def test_runtime_init_plan_is_preview_only_when_root_missing(tmp_path: Path) -> 
 
     assert plan.review_required is False
     assert plan.operation_id.startswith("runtime-init-")
+    assert len(plan.plan_fingerprint()) == 16
     assert all(item.status is ResidentDaemonRuntimeInitStatus.CREATE for item in plan.items)
     assert runtime_root.exists() is False
 
@@ -61,10 +62,12 @@ def test_runtime_init_plan_requires_manual_review_for_conflicting_file(tmp_path:
 
 def test_runtime_init_apply_can_write_metadata_placeholder(tmp_path: Path) -> None:
     runtime_root = tmp_path / "runtime"
+    plan = build_runtime_init_plan(runtime_root, operation_id="op-meta-1")
     payload = apply_runtime_init(
-        build_runtime_init_plan(runtime_root, operation_id="op-meta-1"),
+        plan,
         write_metadata=True,
         confirm_operation_id="op-meta-1",
+        confirm_plan_fingerprint=plan.plan_fingerprint(),
     )
 
     metadata_path = runtime_root / "state" / "runtime-init.json"
@@ -75,6 +78,7 @@ def test_runtime_init_apply_can_write_metadata_placeholder(tmp_path: Path) -> No
     assert payload["metadata"]["operation_id"] == "op-meta-1"
     assert payload["metadata"]["confirm_operation_id"] == "op-meta-1"
     assert payload["metadata"]["confirmation_matched"] is True
+    assert payload["fingerprint_matched"] is True
 
 
 def test_runtime_init_apply_metadata_requires_matching_confirmation(tmp_path: Path) -> None:
@@ -93,8 +97,21 @@ def test_runtime_init_apply_metadata_requires_matching_confirmation(tmp_path: Pa
             plan,
             write_metadata=True,
             confirm_operation_id="wrong-op",
+            confirm_plan_fingerprint=plan.plan_fingerprint(),
         )
     except ValueError as exc:
         assert "must match" in str(exc)
     else:
         raise AssertionError("expected mismatched confirmation failure")
+
+    try:
+        apply_runtime_init(
+            plan,
+            write_metadata=True,
+            confirm_operation_id="op-meta-2",
+            confirm_plan_fingerprint="wrong-fingerprint",
+        )
+    except ValueError as exc:
+        assert "fingerprint" in str(exc)
+    else:
+        raise AssertionError("expected mismatched fingerprint failure")

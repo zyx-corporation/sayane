@@ -57,6 +57,7 @@ This command does not:
 
 Metadata placeholder writes are allowed only with explicit `--write-metadata` during apply.
 Metadata placeholder writes also require matching `--confirm-operation-id <operation-id>`.
+Metadata placeholder writes also require matching `--confirm-plan-fingerprint <fingerprint>`.
 
 ## Failure boundary
 
@@ -69,6 +70,7 @@ Preview remains non-mutating and reports `manual_review_required` when apply wou
 Current preview/apply payloads include:
 
 - `operation_id`
+- `plan_fingerprint`
 - `creator_surface`
 - `target_paths`
 - `prior_state`
@@ -90,4 +92,6 @@ When requested with `--write-metadata`, apply payloads also include:
 - `metadata_path`
 - `metadata`
 - `confirm_operation_id`
+- `confirm_plan_fingerprint`
 - `confirmation_matched`
+- `fingerprint_matched`

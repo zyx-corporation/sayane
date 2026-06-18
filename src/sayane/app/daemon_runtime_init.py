@@ -7,6 +7,8 @@ subdirectories. It does not write PID files, metadata, sockets, or locks.
 
 from __future__ import annotations
 
+import hashlib
+import json
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
@@ -61,11 +63,22 @@ class ResidentDaemonRuntimeInitPlan:
             for item in self.items
         )
 
+    def plan_fingerprint(self) -> str:
+        basis = {
+            "creator_surface": self.creator_surface,
+            "runtime_root": str(self.runtime_root),
+            "items": [item.public_metadata() for item in self.items],
+            "metadata_filename": self.metadata_filename,
+        }
+        encoded = json.dumps(basis, ensure_ascii=False, sort_keys=True).encode("utf-8")
+        return hashlib.sha256(encoded).hexdigest()[:16]
+
     def public_metadata(self) -> dict[str, Any]:
         metadata_path = self.runtime_root / "state" / self.metadata_filename
         return {
             "kind": "resident_daemon_runtime_init_plan",
             "operation_id": self.operation_id,
+            "plan_fingerprint": self.plan_fingerprint(),
             "creator_surface": self.creator_surface,
             "runtime_root": str(self.runtime_root),
             "review_required": self.review_required,
@@ -170,6 +183,7 @@ def apply_runtime_init(
     include_event_record: bool = False,
     write_metadata: bool = False,
     confirm_operation_id: str | None = None,
+    confirm_plan_fingerprint: str | None = None,
 ) -> dict[str, Any]:
     """Apply a runtime initialization plan."""
     if plan.review_required:
@@ -180,6 +194,12 @@ def apply_runtime_init(
         raise ValueError(msg)
     if confirm_operation_id is not None and confirm_operation_id != plan.operation_id:
         msg = "confirm_operation_id must match the plan operation_id"
+        raise ValueError(msg)
+    if confirm_plan_fingerprint is not None and confirm_plan_fingerprint != plan.plan_fingerprint():
+        msg = "confirm_plan_fingerprint must match the plan fingerprint"
+        raise ValueError(msg)
+    if write_metadata and confirm_plan_fingerprint is None:
+        msg = "write_metadata requires explicit confirm_plan_fingerprint"
         raise ValueError(msg)
 
     created_paths: list[str] = []
@@ -194,6 +214,7 @@ def apply_runtime_init(
         {
             "kind": "resident_daemon_runtime_init_apply",
             "applied": True,
+            "plan_fingerprint": plan.plan_fingerprint(),
             "created_paths": created_paths,
             "mutations_performed": created_paths,
             "mutates_filesystem": True,
@@ -204,8 +225,12 @@ def apply_runtime_init(
             ),
             "write_metadata_requested": write_metadata,
             "confirm_operation_id": confirm_operation_id,
+            "confirm_plan_fingerprint": confirm_plan_fingerprint,
             "confirmation_matched": confirm_operation_id == plan.operation_id
             if confirm_operation_id is not None
+            else False,
+            "fingerprint_matched": confirm_plan_fingerprint == plan.plan_fingerprint()
+            if confirm_plan_fingerprint is not None
             else False,
         },
     )

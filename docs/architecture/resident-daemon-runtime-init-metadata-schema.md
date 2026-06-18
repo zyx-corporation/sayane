@@ -17,6 +17,9 @@ schema_version
 runtime_root
 operation_id
 creator_surface
+write_metadata_requested
+confirm_operation_id
+confirmation_matched
 created_at
 disclaimer
 ```

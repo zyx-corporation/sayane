@@ -94,6 +94,9 @@ class ResidentDaemonRuntimeInitPlan:
                     runtime_root=self.runtime_root,
                     operation_id=self.operation_id,
                     creator_surface=self.creator_surface,
+                    write_metadata_requested=False,
+                    confirm_operation_id=None,
+                    confirmation_matched=False,
                 ).public_metadata(),
             },
             "creates_directories": True,
@@ -211,6 +214,9 @@ def apply_runtime_init(
             runtime_root=plan.runtime_root,
             operation_id=plan.operation_id,
             creator_surface=plan.creator_surface,
+            write_metadata_requested=True,
+            confirm_operation_id=confirm_operation_id,
+            confirmation_matched=payload["confirmation_matched"],
         ).public_metadata()
         metadata_path.write_text(
             __import__("json").dumps(metadata_payload, ensure_ascii=False, indent=2) + "\n",

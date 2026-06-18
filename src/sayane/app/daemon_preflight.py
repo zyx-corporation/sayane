@@ -131,8 +131,7 @@ def build_implementation_gate_preflight_report() -> ResidentDaemonPreflightRepor
                 category=ResidentDaemonPreflightCategory.IPC,
                 status=ResidentDaemonPreflightStatus.REVIEW_REQUIRED,
                 summary=(
-                    "Local IPC authentication is policy-only; "
-                    "implementation remains future work."
+                    "Local IPC authentication is policy-only; implementation remains future work."
                 ),
                 evidence=("docs/architecture/resident-daemon-local-ipc-authentication-policy.md",),
             ),

@@ -135,9 +135,7 @@ def build_resident_daemon_state_machine() -> ResidentDaemonStateMachine:
                 to_state=ResidentDaemonStateMachineState.STOPPED,
                 trigger="shutdown_complete",
                 summary="A future confirmed shutdown would move stopping to stopped.",
-                evidence=(
-                    "docs/architecture/resident-daemon-process-liveness-proof-policy.md",
-                ),
+                evidence=("docs/architecture/resident-daemon-process-liveness-proof-policy.md",),
             ),
             ResidentDaemonStateMachineTransition(
                 key="startup_fails",
@@ -145,9 +143,7 @@ def build_resident_daemon_state_machine() -> ResidentDaemonStateMachine:
                 to_state=ResidentDaemonStateMachineState.FAILED,
                 trigger="startup_failure_detected",
                 summary="A future startup failure would move starting to failed.",
-                evidence=(
-                    "docs/architecture/resident-daemon-implementation-readiness-gate.md",
-                ),
+                evidence=("docs/architecture/resident-daemon-implementation-readiness-gate.md",),
             ),
             ResidentDaemonStateMachineTransition(
                 key="runtime_fails",
@@ -155,9 +151,7 @@ def build_resident_daemon_state_machine() -> ResidentDaemonStateMachine:
                 to_state=ResidentDaemonStateMachineState.FAILED,
                 trigger="runtime_failure_detected",
                 summary="A future runtime failure would move running to failed.",
-                evidence=(
-                    "docs/architecture/resident-daemon-process-liveness-proof-policy.md",
-                ),
+                evidence=("docs/architecture/resident-daemon-process-liveness-proof-policy.md",),
             ),
             ResidentDaemonStateMachineTransition(
                 key="recover_after_failure",
@@ -166,9 +160,7 @@ def build_resident_daemon_state_machine() -> ResidentDaemonStateMachine:
                 trigger="operator_reset_after_review",
                 summary="A future reviewed recovery would return failed to stopped.",
                 requires_operator_consent=True,
-                evidence=(
-                    "docs/architecture/resident-daemon-mutation-authorization-policy.md",
-                ),
+                evidence=("docs/architecture/resident-daemon-mutation-authorization-policy.md",),
             ),
         ),
     )

@@ -34,7 +34,7 @@ Sayane separates your context from any single vendor memory or chat service. It 
 
 Community Edition in this repository is now **v1.0.13** and supports the core local-first workflow.
 
-The latest published PyPI package may remain **v1.0.12** until the `v1.0.13` release is published.
+Community Edition **v1.0.13** is now published on PyPI.
 
 | Interface | Status | Primary use |
 |-----------|--------|-------------|
@@ -51,7 +51,7 @@ Install the CLI first. See [docs/install.md](docs/install.md) for detailed insta
 
 ```bash
 # PyPI (macOS / Linux / Windows with Python 3.11+)
-pip install "sayane==1.0.12"
+pip install "sayane==1.0.13"
 ```
 
 ```bash

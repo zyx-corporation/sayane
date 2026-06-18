@@ -39,7 +39,7 @@ curl -fsSL https://raw.githubusercontent.com/zyx-corporation/sayane/main/scripts
 特定バージョン（タグ）:
 
 ```bash
-SAYANE_REF=v1.0.12 curl -fsSL .../install.sh | bash
+SAYANE_REF=v1.0.13 curl -fsSL .../install.sh | bash
 ```
 
 `~/.local/bin` が PATH に無い場合、シェルプロファイルに追加:
@@ -138,7 +138,7 @@ scoop install sayane
 
 | 方式 | 用途 |
 |------|------|
-| PyPI `pip install sayane` | **利用可能**（現行 docs 基準: v1.0.12） |
+| PyPI `pip install sayane` | **利用可能**（現行 docs 基準: v1.0.13） |
 
 ---
 
@@ -172,26 +172,26 @@ sayane serve                   # Bridge（MCP 以外のローカル連携や leg
 
 ## PyPI
 
-**公開済み:** https://pypi.org/project/sayane/ （現行 docs 基準: v1.0.12）
+**公開済み:** https://pypi.org/project/sayane/ （現行 docs 基準: v1.0.13）
 
 ```bash
 pip install sayane
 # または特定版（zsh ではクォート推奨）:
-pip install "sayane==1.0.12"
+pip install "sayane==1.0.13"
 ```
 
-> **zsh ユーザー:** `sayane==1.0.12` をクォートしないと `zsh: no matches found` になることがあります。
+> **zsh ユーザー:** `sayane==1.0.13` をクォートしないと `zsh: no matches found` になることがあります。
 
 PyPI には **CLI + Bridge + MCP** のみ含まれます。Chrome Extension は別途 [Extension マニュアル](extension-manual.md) を参照。なお Extension は現行方針では **freeze / deprecated** であり、主な導線は CLI / Bridge / MCP である。
 
-初回公開: **2026-05-30**。現行リポジトリ版は `1.0.12`。
+初回公開: **2026-05-30**。現行リポジトリ版は `1.0.13`。
 
 Maintainer 手順（再公開時）: 以下チェックリスト。
 
 Git タグから直接:
 
 ```bash
-pip install "sayane @ git+https://github.com/zyx-corporation/sayane.git@v1.0.12"
+pip install "sayane @ git+https://github.com/zyx-corporation/sayane.git@v1.0.13"
 ```
 
 公開履歴は [CHANGELOG](../CHANGELOG.md) を参照。

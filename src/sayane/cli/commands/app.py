@@ -33,6 +33,9 @@ from sayane.cli.commands.app_daemon_preflight import register_daemon_preflight_c
 from sayane.cli.commands.app_daemon_runtime_layout import (
     register_daemon_runtime_layout_command,
 )
+from sayane.cli.commands.app_daemon_runtime_init import (
+    register_daemon_runtime_init_command,
+)
 from sayane.cli.commands.app_daemon_stale_artifacts import (
     register_daemon_stale_artifact_command,
 )
@@ -279,6 +282,7 @@ def register_app_commands(app: typer.Typer) -> None:
 
     register_daemon_identity_command(app_group)
     register_daemon_runtime_layout_command(app_group)
+    register_daemon_runtime_init_command(app_group)
     register_daemon_stale_artifact_command(app_group)
     register_daemon_cleanup_decision_command(app_group)
     register_daemon_pid_diagnostic_command(app_group)

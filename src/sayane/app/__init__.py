@@ -50,6 +50,13 @@ from sayane.app.daemon_preflight import (
     ResidentDaemonPreflightStatus,
     build_implementation_gate_preflight_report,
 )
+from sayane.app.daemon_runtime_init import (
+    ResidentDaemonRuntimeInitItem,
+    ResidentDaemonRuntimeInitPlan,
+    ResidentDaemonRuntimeInitStatus,
+    apply_runtime_init,
+    build_runtime_init_plan,
+)
 from sayane.app.daemon_runtime_layout import (
     ResidentDaemonRuntimeLayout,
     validate_runtime_child_path,
@@ -103,6 +110,9 @@ __all__ = [
     "ResidentDaemonPreflightReport",
     "ResidentDaemonPreflightStatus",
     "ResidentDaemonRuntimeLayout",
+    "ResidentDaemonRuntimeInitItem",
+    "ResidentDaemonRuntimeInitPlan",
+    "ResidentDaemonRuntimeInitStatus",
     "ResidentDaemonStateMachine",
     "ResidentDaemonStateMachineState",
     "ResidentDaemonStateMachineTransition",
@@ -121,11 +131,13 @@ __all__ = [
     "build_preflight_event_record",
     "build_resident_runtime",
     "build_resident_daemon_state_machine",
+    "build_runtime_init_plan",
     "build_review_queue",
     "build_stale_artifact_report",
     "create_capability_issuer_for_surface",
     "create_local_capability_token",
     "create_surface_capability_tokens",
+    "apply_runtime_init",
     "is_local_bind_host",
     "select_resident_repositories",
     "validate_local_bind_host",

@@ -31,3 +31,22 @@ def test_daemon_operator_phase_status_json_uses_default_runtime_root(
     assert payload["runtime_root"] == str(isolated_home / ".sayane" / "run")
     assert payload["phase"] == "operator_packaging_and_supervision"
     assert payload["phase_readiness"] == "not_ready_for_phase_closure"
+
+
+def test_daemon_operator_phase_status_text_exposes_post_app_detail_surface(
+    isolated_home: Path,
+) -> None:
+    result = runner.invoke(app, ["app", "daemon-operator-phase-status"])
+
+    assert result.exit_code == 0
+    assert "kind: resident_daemon_operator_phase_status" in result.stdout
+    assert "phase_readiness: not_ready_for_phase_closure" in result.stdout
+    assert "startup_command: sayane serve --host 127.0.0.1 --port 38741" in result.stdout
+    assert "bootstrap_ui: http://127.0.0.1:38741/app/ui" in result.stdout
+    assert "blocking_reasons:" in result.stdout
+    assert "workstreams:" in result.stdout
+    assert "packaging_model_decision: baseline_contract_implemented" in result.stdout
+    assert "read_surfaces:" in result.stdout
+    assert "sayane app daemon-operator-phase-status --json" in result.stdout
+    assert "exit_criteria:" in result.stdout
+    assert "not_in_scope:" in result.stdout

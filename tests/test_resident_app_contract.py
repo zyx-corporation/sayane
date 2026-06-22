@@ -40,6 +40,10 @@ def test_app_contract_exposes_entrypoint_and_surfaces() -> None:
         for surface in payload["read_surfaces"]
     )
     assert any(
+        surface["path"] == "/app/operator-phase-status"
+        for surface in payload["read_surfaces"]
+    )
+    assert any(
         surface["path"] == "/app/screen-state/home"
         for surface in payload["read_surfaces"]
     )
@@ -80,6 +84,10 @@ def test_app_contract_exposes_entrypoint_and_surfaces() -> None:
         for surface in payload["read_surfaces"]
     )
     assert any(
+        surface["path"] == "/app/ui-state/operator-phase-status"
+        for surface in payload["read_surfaces"]
+    )
+    assert any(
         surface["path"] == "/app/ui-state/candidates/{id}/lineage"
         for surface in payload["read_surfaces"]
     )
@@ -101,6 +109,7 @@ def test_app_contract_exposes_entrypoint_and_surfaces() -> None:
     )
     assert "GET /app/overview" in payload["recommended_flow"]
     assert "GET /app/ui-state/home" in payload["recommended_flow"]
+    assert "GET /app/ui-state/operator-phase-status" in payload["recommended_flow"]
     assert "POST /app/ui-action/candidates/{id}/approve or /reject" in payload["recommended_flow"]
     assert "POST /app/ui-action/session/logout" in payload["recommended_flow"]
 

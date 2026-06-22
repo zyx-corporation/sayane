@@ -60,6 +60,11 @@ def build_app_contract() -> dict[str, Any]:
                 "purpose": "focused daemon diagnostics panel",
             },
             {
+                "path": "/app/operator-phase-status",
+                "payload_kind": "resident_daemon_operator_phase_status",
+                "purpose": "app-facing post-app operator packaging and supervision phase status read",
+            },
+            {
                 "path": "cli:sayane app daemon-operator-phase-status --json",
                 "payload_kind": "resident_daemon_operator_phase_status",
                 "purpose": "aggregated post-app operator packaging and supervision phase status read",
@@ -138,6 +143,11 @@ def build_app_contract() -> dict[str, Any]:
                 "path": "/app/ui-state/home",
                 "payload_kind": "resident_app_home_screen_state",
                 "purpose": "cookie-backed local UI home screen state",
+            },
+            {
+                "path": "/app/ui-state/operator-phase-status",
+                "payload_kind": "resident_daemon_operator_phase_status",
+                "purpose": "cookie-backed local UI operator phase status read",
             },
             {
                 "path": "/app/ui-state/candidates",
@@ -244,6 +254,7 @@ def build_app_contract() -> dict[str, Any]:
             "POST /app/candidates/{id}/approve or /reject",
             "GET /app/ui",
             "GET /app/ui-state/home",
+            "GET /app/ui-state/operator-phase-status",
             "GET /app/ui-state/candidates",
             "GET /app/ui-state/candidates/{id}",
             "GET /app/ui-state/candidates/{id}/diff",

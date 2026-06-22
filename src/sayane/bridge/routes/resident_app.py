@@ -80,6 +80,15 @@ def register_resident_app_routes(
             _daemon_overview_payload(host=cfg.host, port=cfg.port)
         )
 
+    def _operator_phase_status_payload() -> dict[str, object]:
+        from sayane.app import build_daemon_operator_phase_status
+
+        return build_daemon_operator_phase_status(
+            cfg.home / "run",
+            host=cfg.host,
+            port=cfg.port,
+        ).public_metadata()
+
     def _redirect_url(path: str, *, notice: str | None = None, error: str | None = None) -> str:
         query = urlencode({k: v for k, v in {"notice": notice, "error": error}.items() if v})
         return f"{path}?{query}" if query else path
@@ -221,6 +230,13 @@ def register_resident_app_routes(
         return build_home_screen_state(build_app_overview(runtime))
 
     @router.get(
+        "/app/operator-phase-status",
+        dependencies=[Depends(require_bearer)],
+    )
+    def get_app_operator_phase_status() -> dict[str, object]:
+        return _operator_phase_status_payload()
+
+    @router.get(
         "/app/ui",
         response_class=HTMLResponse,
     )
@@ -282,6 +298,12 @@ def register_resident_app_routes(
             port=cfg.port,
         )
         return build_home_screen_state(build_app_overview(runtime))
+
+    @router.get("/app/ui-state/operator-phase-status")
+    def get_app_ui_operator_phase_status(
+        _token: str = Depends(require_ui_session),
+    ) -> dict[str, object]:
+        return _operator_phase_status_payload()
 
     @router.get("/app/ui-state/candidates")
     def get_app_ui_candidate_queue_state(

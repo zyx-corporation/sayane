@@ -100,6 +100,7 @@ def test_app_overview_requires_auth(
 ) -> None:
     client, _, _ = bridge_env
     assert client.get("/app/overview").status_code == 401
+    assert client.get("/app/operator-phase-status").status_code == 401
     assert client.get("/app/screen-state/home").status_code == 401
 
 
@@ -111,6 +112,7 @@ def test_app_ui_requires_auth(
     assert client.get("/app/ui/candidates").status_code == 401
     assert client.get("/app/ui/daemon").status_code == 401
     assert client.get("/app/ui-state/home").status_code == 401
+    assert client.get("/app/ui-state/operator-phase-status").status_code == 401
     assert client.post("/app/ui-action/capture-clipboard", json={"content": "hello"}).status_code == 401
 
 
@@ -164,6 +166,19 @@ def test_app_overview_returns_aggregate_payload(
     assert payload["daemon_overview"]["kind"] == "resident_daemon_overview_preview"
 
 
+def test_app_operator_phase_status_returns_aggregate_payload(
+    bridge_env: tuple[TestClient, BridgeConfig, str],
+) -> None:
+    client, config, token = bridge_env
+    response = client.get("/app/operator-phase-status", headers=_auth(token))
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["kind"] == "resident_daemon_operator_phase_status"
+    assert payload["runtime_root"] == str(config.home / "run")
+    assert payload["phase_readiness"] == "not_ready_for_phase_closure"
+
+
 def test_app_home_screen_state_returns_framework_neutral_state(
     bridge_env: tuple[TestClient, BridgeConfig, str],
 ) -> None:
@@ -174,6 +189,20 @@ def test_app_home_screen_state_returns_framework_neutral_state(
     payload = response.json()
     assert payload["kind"] == "resident_app_home_screen_state"
     assert payload["quick_links"][0]["screen"] == "candidate_queue"
+
+
+def test_app_ui_operator_phase_state_returns_cookie_backed_payload(
+    bridge_env: tuple[TestClient, BridgeConfig, str],
+) -> None:
+    client, _, token = bridge_env
+    bootstrap = client.get("/app/ui", headers=_auth(token))
+    assert bootstrap.status_code == 200
+
+    response = client.get("/app/ui-state/operator-phase-status")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["kind"] == "resident_daemon_operator_phase_status"
+    assert payload["phase_readiness"] == "not_ready_for_phase_closure"
 
 
 def test_app_ui_returns_bootstrap_home_html(

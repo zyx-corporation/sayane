@@ -31,3 +31,18 @@ def test_daemon_recovery_consent_status_json_uses_default_runtime_root(
     assert payload["runtime_root"] == str(isolated_home / ".sayane" / "run")
     assert payload["consent_model"] == "explicit_cli_confirmation_for_mutation"
 
+
+def test_daemon_recovery_consent_status_text_exposes_post_app_detail_surface(
+    isolated_home: Path,
+) -> None:
+    result = runner.invoke(app, ["app", "daemon-recovery-consent-status"])
+
+    assert result.exit_code == 0
+    assert "phase_status: baseline_contract_implemented" in result.stdout
+    assert "non_mutating_diagnostics:" in result.stdout
+    assert "mutating_recovery_actions:" in result.stdout
+    assert "sayane app daemon-cleanup-apply --json" in result.stdout
+    assert "control_recovery_actions:" in result.stdout
+    assert "sayane app daemon-start --json" in result.stdout
+    assert "app_ui_guardrails:" in result.stdout
+    assert "recommended_recovery_flow:" in result.stdout

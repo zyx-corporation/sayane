@@ -10,6 +10,7 @@ import typer
 
 from sayane.app import build_daemon_supervision_status
 from sayane.bridge.config import BridgeConfig
+from sayane.cli.commands._text_sections import echo_list_section, echo_object_section
 
 
 def _default_runtime_root() -> Path:
@@ -40,4 +41,29 @@ def register_daemon_supervision_status_command(app_group: typer.Typer) -> None:
             return
         typer.echo(f"kind: {payload['kind']}")
         typer.echo(f"supervision_mode: {payload['supervision_mode']}")
+        typer.echo(f"phase_status: {payload['phase_status']}")
+        typer.echo(f"passive_visibility_status: {payload['passive_visibility']['status']}")
+        typer.echo(f"active_supervision_status: {payload['active_supervision']['status']}")
         typer.echo(f"background_surface_status: {payload['background_surfaces']['status']}")
+        echo_list_section(
+            "passive_visibility_surfaces",
+            payload["passive_visibility"].get("surfaces", []),
+        )
+        echo_list_section(
+            "active_supervision_actions",
+            payload["active_supervision"].get("allowed_actions", []),
+        )
+        echo_list_section(
+            "deferred_background_topics",
+            payload["background_surfaces"].get("deferred_topics", []),
+        )
+        echo_object_section(
+            "candidate_background_surfaces",
+            payload["background_surfaces"].get("candidate_surfaces", []),
+            lambda item: f"{item.get('surface')}: {item.get('status')}",
+        )
+        echo_list_section(
+            "decision_guardrails",
+            payload["background_surfaces"].get("decision_guardrails", []),
+        )
+        echo_list_section("recovery_entrypoints", payload.get("recovery_entrypoints", []))

@@ -10,6 +10,7 @@ import typer
 
 from sayane.app import build_daemon_recovery_consent_status
 from sayane.bridge.config import BridgeConfig
+from sayane.cli.commands._text_sections import echo_list_section, echo_object_section
 
 
 def _default_runtime_root() -> Path:
@@ -41,3 +42,20 @@ def register_daemon_recovery_consent_status_command(app_group: typer.Typer) -> N
         typer.echo(f"kind: {payload['kind']}")
         typer.echo(f"consent_model: {payload['consent_model']}")
         typer.echo(f"recovery_model: {payload['recovery_model']}")
+        typer.echo(f"phase_status: {payload['phase_status']}")
+        echo_list_section(
+            "non_mutating_diagnostics",
+            payload.get("non_mutating_diagnostics", []),
+        )
+        echo_object_section(
+            "mutating_recovery_actions",
+            payload.get("mutating_recovery_actions", []),
+            lambda item: f"{item.get('command')}: consent_required={item.get('consent_required')} [{item.get('scope')}]",
+        )
+        echo_object_section(
+            "control_recovery_actions",
+            payload.get("control_recovery_actions", []),
+            lambda item: f"{item.get('command')}: consent_required={item.get('consent_required')}",
+        )
+        echo_list_section("app_ui_guardrails", payload.get("app_ui_guardrails", []))
+        echo_list_section("recommended_recovery_flow", payload.get("recommended_recovery_flow", []))

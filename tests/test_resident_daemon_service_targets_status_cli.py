@@ -30,3 +30,18 @@ def test_daemon_service_targets_status_json(isolated_home: Path) -> None:
     assert payload["policy_gates"]["hybrid_packaging_gate"] == (
         "service_lifecycle_and_platform_policy_closure_required"
     )
+
+
+def test_daemon_service_targets_status_text_exposes_post_app_detail_surface(
+    isolated_home: Path,
+) -> None:
+    result = runner.invoke(app, ["app", "daemon-service-targets-status"])
+
+    assert result.exit_code == 0
+    assert "platform_policy_required: True" in result.stdout
+    assert "rollback_policy_required: True" in result.stdout
+    assert "hybrid_packaging_gate: service_lifecycle_and_platform_policy_closure_required" in result.stdout
+    assert "targets:" in result.stdout
+    assert "macos_launchagent:" in result.stdout
+    assert "linux_systemd_user:" in result.stdout
+    assert "windows_service:" in result.stdout

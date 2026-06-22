@@ -10,6 +10,7 @@ import typer
 
 from sayane.app import build_daemon_service_targets_status
 from sayane.bridge.config import BridgeConfig
+from sayane.cli.commands._text_sections import echo_object_section
 
 
 def _default_runtime_root() -> Path:
@@ -40,3 +41,14 @@ def register_daemon_service_targets_status_command(app_group: typer.Typer) -> No
         typer.echo(f"kind: {payload['kind']}")
         typer.echo(f"current_platform: {payload['current_platform']}")
         typer.echo(f"recommended_target: {payload['recommended_target']}")
+        typer.echo(f"platform_policy_required: {payload['policy_gates']['platform_policy_required']}")
+        typer.echo(f"rollback_policy_required: {payload['policy_gates']['rollback_policy_required']}")
+        typer.echo(f"hybrid_packaging_gate: {payload['policy_gates']['hybrid_packaging_gate']}")
+        echo_object_section(
+            "targets",
+            payload.get("targets", []),
+            lambda item: (
+                f"{item.get('target')}: {item.get('status')} "
+                f"[{item.get('service_manager')}; gate={item.get('packaging_gate_status')}]"
+            ),
+        )

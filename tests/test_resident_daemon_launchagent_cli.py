@@ -114,3 +114,30 @@ def test_daemon_launchagent_bootstrap_json_returns_error_payload(
 
     assert result.exit_code == 1
     assert json.loads(result.stdout)["failure_mode"] == "plist_missing"
+
+
+def test_daemon_launchagent_status_json(isolated_home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("sayane.app.daemon_launchagent.sys.platform", "darwin")
+
+    def _fake_build_launchagent_status(plan):
+        return {
+            "kind": "resident_daemon_launchagent_status",
+            "label": "com.sayane.resident.bridge",
+            "plist_path": str(plan.plist_path),
+            "plist_exists": True,
+            "loaded": False,
+            "loaded_status": "not_loaded",
+            "service_manager": "launchd",
+        }
+
+    monkeypatch.setattr(
+        "sayane.cli.commands.app_daemon_launchagent.build_launchagent_status",
+        _fake_build_launchagent_status,
+    )
+
+    result = runner.invoke(app, ["app", "daemon-launchagent-status", "--json"])
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["kind"] == "resident_daemon_launchagent_status"
+    assert payload["loaded_status"] == "not_loaded"

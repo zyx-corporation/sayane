@@ -85,6 +85,11 @@ def build_app_contract() -> dict[str, Any]:
                 "purpose": "macOS LaunchAgent preview for the current local daemon line",
             },
             {
+                "path": "cli:sayane app daemon-launchagent-status --json",
+                "payload_kind": "resident_daemon_launchagent_status",
+                "purpose": "macOS LaunchAgent status read for plist presence and current launchd loaded state",
+            },
+            {
                 "path": "cli:sayane app daemon-recovery-consent-status --json",
                 "payload_kind": "resident_daemon_recovery_consent_status",
                 "purpose": "operator-facing recovery and consent boundary read",
@@ -347,6 +352,10 @@ def build_app_contract() -> dict[str, Any]:
             {
                 "command": "sayane app daemon-launchagent-preview --json",
                 "purpose": "macOS LaunchAgent preview for writing a local service plist",
+            },
+            {
+                "command": "sayane app daemon-launchagent-status --json",
+                "purpose": "macOS LaunchAgent status read for explicit local service observation",
             },
             {
                 "command": "sayane app daemon-launchagent-bootstrap --json",

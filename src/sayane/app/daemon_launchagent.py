@@ -34,6 +34,47 @@ class ResidentDaemonLaunchAgentControlError(RuntimeError):
         self.payload = payload
 
 
+def build_launchagent_status(
+    plan: ResidentDaemonLaunchAgentPlan,
+) -> dict[str, Any]:
+    """Build a conservative macOS LaunchAgent status observation."""
+    plist_exists = plan.plist_path.is_file()
+    payload: dict[str, Any] = {
+        "kind": "resident_daemon_launchagent_status",
+        "operation_id": plan.operation_id,
+        "preview_hash": plan.preview_hash(),
+        "label": LAUNCHAGENT_LABEL,
+        "platform": "macos" if sys.platform == "darwin" else sys.platform,
+        "plist_path": str(plan.plist_path),
+        "plist_exists": plist_exists,
+        "service_manager": "launchd",
+        "loaded_status": "unsupported_platform" if sys.platform != "darwin" else "unknown",
+        "loaded": False,
+        "print_command": f"launchctl print gui/{os.getuid()}/{LAUNCHAGENT_LABEL}",
+    }
+    if sys.platform != "darwin":
+        return payload
+
+    command = ["launchctl", "print", f"gui/{os.getuid()}/{LAUNCHAGENT_LABEL}"]
+    completed = subprocess.run(
+        command,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    payload["command"] = command
+    payload["returncode"] = completed.returncode
+    payload["stdout"] = completed.stdout
+    payload["stderr"] = completed.stderr
+    if completed.returncode == 0:
+        payload["loaded_status"] = "loaded"
+        payload["loaded"] = True
+    else:
+        payload["loaded_status"] = "not_loaded"
+        payload["loaded"] = False
+    return payload
+
+
 @dataclass(frozen=True)
 class ResidentDaemonLaunchAgentPlan:
     """LaunchAgent preview/apply plan."""

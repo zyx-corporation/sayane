@@ -84,8 +84,10 @@ def test_app_daemon_overview_returns_preview_payload(
     assert payload["service_targets_status"]["kind"] == "resident_daemon_service_targets_status"
     if sys.platform == "darwin":
         assert payload["launchagent_preview"]["kind"] == "resident_daemon_launchagent_plan"
+        assert payload["launchagent_status"]["kind"] == "resident_daemon_launchagent_status"
     else:
         assert payload["launchagent_preview"] is None
+        assert payload["launchagent_status"] is None
     assert payload["is_preview"] is True
 
 

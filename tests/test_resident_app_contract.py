@@ -64,6 +64,10 @@ def test_app_contract_exposes_entrypoint_and_surfaces() -> None:
         for surface in payload["read_surfaces"]
     )
     assert any(
+        surface["path"] == "cli:sayane app daemon-launchagent-status --json"
+        for surface in payload["read_surfaces"]
+    )
+    assert any(
         surface["path"] == "cli:sayane app daemon-recovery-consent-status --json"
         for surface in payload["read_surfaces"]
     )
@@ -168,6 +172,10 @@ def test_app_contract_exposes_surface_roles_and_shared_semantics() -> None:
     )
     assert any(
         item["command"] == "sayane app daemon-launchagent-preview --json"
+        for item in payload["operator_cli_surfaces"]
+    )
+    assert any(
+        item["command"] == "sayane app daemon-launchagent-status --json"
         for item in payload["operator_cli_surfaces"]
     )
     assert any(

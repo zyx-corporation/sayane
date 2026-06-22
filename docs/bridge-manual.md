@@ -133,6 +133,7 @@ curl -s -H "$AUTH" \
 - cleanup / repair preview
 - service target status preview
 - macOS LaunchAgent preview（macOS のみ）
+- macOS LaunchAgent status observation（macOS のみ）
 - suggested next actions
 
 この payload は derived preview であり、process identity / daemon readiness / API readiness の

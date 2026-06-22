@@ -36,6 +36,8 @@ def test_app_overview_aggregates_runtime_review_mcp_and_daemon(tmp_path) -> None
     assert payload["service_targets_status"]["kind"] == "resident_daemon_service_targets_status"
     assert payload["supervision_status"]["kind"] == "resident_daemon_supervision_status"
     assert payload["recovery_consent_status"]["kind"] == "resident_daemon_recovery_consent_status"
+    if payload["summary"]["service_target_platform"] == "macos":
+        assert payload["daemon_overview"]["launchagent_status"]["kind"] == "resident_daemon_launchagent_status"
     assert payload["summary"]["packaging_model"] == "cli_first_local_bridge"
     assert payload["summary"]["control_plane_status"] == "cli_control_supported_local_mvp"
     assert payload["summary"]["service_target_platform"] in {"macos", "linux", "windows", "other"}

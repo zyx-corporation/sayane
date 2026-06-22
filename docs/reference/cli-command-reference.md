@@ -175,6 +175,7 @@ sayane app daemon-launchagent-apply \
   --confirm-operation-id launchagent-... \
   --confirm-preview-hash ... \
   --json
+sayane app daemon-launchagent-status --json
 
 # Explicitly bootstrap, bootout, or kickstart the reviewed macOS LaunchAgent
 sayane app daemon-launchagent-bootstrap --json

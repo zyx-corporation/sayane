@@ -10,7 +10,7 @@ from typing import Any
 from sayane.app.capabilities import CapabilityToken
 from sayane.app.daemon_cleanup_apply import build_cleanup_apply_preview
 from sayane.app.daemon_identity import ResidentDaemonIdentity
-from sayane.app.daemon_launchagent import build_launchagent_plan
+from sayane.app.daemon_launchagent import build_launchagent_plan, build_launchagent_status
 from sayane.app.daemon_liveness_diagnostics import build_liveness_diagnostic
 from sayane.app.daemon_packaging_status import build_daemon_packaging_status
 from sayane.app.daemon_process_control import build_daemon_status_report
@@ -158,6 +158,13 @@ def build_daemon_overview_preview(
         if sys.platform == "darwin"
         else None
     )
+    launchagent_status = (
+        build_launchagent_status(
+            build_launchagent_plan(runtime_root, host=host, port=port)
+        )
+        if sys.platform == "darwin"
+        else None
+    )
     return {
         "kind": "resident_daemon_overview_preview",
         "is_daemon_surface": True,
@@ -178,6 +185,7 @@ def build_daemon_overview_preview(
         "supervision_status": supervision_status,
         "recovery_consent_status": recovery_consent_status,
         "launchagent_preview": launchagent_preview,
+        "launchagent_status": launchagent_status,
         "next_actions": _build_daemon_next_actions(
             status=status_report.public_metadata(),
             runtime_init=runtime_init,
@@ -185,6 +193,7 @@ def build_daemon_overview_preview(
             repair_preview=repair_preview,
             service_targets_status=service_targets_status,
             launchagent_preview=launchagent_preview,
+            launchagent_status=launchagent_status,
         ),
     }
 
@@ -197,6 +206,7 @@ def _build_daemon_next_actions(
     repair_preview: dict[str, Any],
     service_targets_status: dict[str, Any],
     launchagent_preview: dict[str, Any] | None,
+    launchagent_status: dict[str, Any] | None,
 ) -> list[dict[str, str]]:
     actions: list[dict[str, str]] = []
     if not status["runtime_initialized"]:
@@ -256,11 +266,24 @@ def _build_daemon_next_actions(
                 "reason": "Review the LaunchAgent plist and explicit launchctl commands for the macOS local service line.",
             }
         )
+        actions.append(
+            {
+                "command": "sayane app daemon-launchagent-status --json",
+                "reason": "Observe whether the reviewed LaunchAgent plist exists and whether launchd currently reports the label as loaded.",
+            }
+        )
         if launchagent_preview and Path(launchagent_preview.get("plist_path", "")).is_file():
             actions.append(
                 {
                     "command": "sayane app daemon-launchagent-bootstrap --json",
                     "reason": "A reviewed LaunchAgent plist already exists and may be bootstrapped explicitly.",
+                }
+            )
+        if launchagent_status and launchagent_status.get("loaded") is True:
+            actions.append(
+                {
+                    "command": "sayane app daemon-launchagent-kickstart --json",
+                    "reason": "The LaunchAgent is already loaded and may be explicitly kickstarted when the service line needs a bounded restart.",
                 }
             )
     if status["is_running_daemon"]:

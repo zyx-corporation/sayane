@@ -85,6 +85,7 @@ from sayane.app.daemon_launchagent import (
     ResidentDaemonLaunchAgentPlan,
     apply_launchagent_plan,
     build_launchagent_plan,
+    build_launchagent_status,
     run_launchagent_command,
 )
 from sayane.app.daemon_packaging_status import (
@@ -265,6 +266,7 @@ __all__ = [
     "build_api_readiness_proof_from_status_report",
     "apply_launchagent_plan",
     "run_launchagent_command",
+    "build_launchagent_status",
     "build_app_candidate_detail",
     "build_app_candidate_diff",
     "build_app_candidate_queue",

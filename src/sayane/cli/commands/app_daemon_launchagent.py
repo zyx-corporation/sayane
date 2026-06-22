@@ -13,6 +13,7 @@ from sayane.app import (
     ResidentDaemonLaunchAgentControlError,
     apply_launchagent_plan,
     build_launchagent_plan,
+    build_launchagent_status,
     run_launchagent_command,
 )
 from sayane.bridge.config import BridgeConfig
@@ -83,6 +84,32 @@ def register_daemon_launchagent_commands(app_group: typer.Typer) -> None:
         typer.echo(f"kind: {payload['kind']}")
         typer.echo(f"plist_path: {payload['plist_path']}")
         typer.echo(f"result: {payload['result']}")
+
+    @app_group.command("daemon-launchagent-status")
+    def daemon_launchagent_status(
+        runtime_root: Annotated[
+            Path | None,
+            typer.Option("--runtime-root", help="Resident runtime root."),
+        ] = None,
+        host: Annotated[str, typer.Option("--host")] = "127.0.0.1",
+        port: Annotated[int, typer.Option("--port")] = 38741,
+        operation_id: Annotated[str | None, typer.Option("--operation-id")] = None,
+        json_out: Annotated[bool, typer.Option("--json", help="Emit JSON output.")] = False,
+    ) -> None:
+        payload = build_launchagent_status(
+            build_launchagent_plan(
+                runtime_root or _default_runtime_root(),
+                host=host,
+                port=port,
+                operation_id=operation_id,
+            )
+        )
+        if json_out:
+            typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+            return
+        typer.echo(f"kind: {payload['kind']}")
+        typer.echo(f"plist_path: {payload['plist_path']}")
+        typer.echo(f"loaded_status: {payload['loaded_status']}")
 
     @app_group.command("daemon-launchagent-bootstrap")
     def daemon_launchagent_bootstrap(

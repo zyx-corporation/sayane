@@ -26,6 +26,7 @@ sayane app daemon-supervision-status --json
 sayane app daemon-recovery-consent-status --json
 sayane app daemon-launchagent-preview --json
 sayane app daemon-launchagent-apply --json
+sayane app daemon-launchagent-status --json
 sayane app daemon-launchagent-bootstrap --json
 sayane app daemon-launchagent-bootout --json
 sayane app daemon-launchagent-kickstart --json
@@ -151,7 +152,7 @@ It keeps these points explicit:
 - Linux is tracked as a future `systemd --user` target
 - Windows is tracked as a future Windows Service target
 
-## daemon-launchagent-preview / daemon-launchagent-apply / daemon-launchagent-bootstrap / daemon-launchagent-bootout / daemon-launchagent-kickstart
+## daemon-launchagent-preview / daemon-launchagent-apply / daemon-launchagent-status / daemon-launchagent-bootstrap / daemon-launchagent-bootout / daemon-launchagent-kickstart
 
 These commands implement the first concrete macOS service-packaging slice.
 
@@ -166,6 +167,12 @@ These commands implement the first concrete macOS service-packaging slice.
 `daemon-launchagent-apply` writes the reviewed plist after matching operation id and preview hash.
 
 It does not silently call `launchctl bootstrap`; loading the service remains an explicit next step.
+
+`daemon-launchagent-status` is a read-only observation surface for:
+
+- current plist path
+- whether the reviewed plist currently exists
+- whether `launchctl print gui/.../com.sayane.resident.bridge` currently reports the label as loaded
 
 The three `launchctl` commands keep control explicit and local-only:
 

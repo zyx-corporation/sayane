@@ -12,6 +12,7 @@ from sayane.app import (
     ResidentDaemonLaunchAgentControlError,
     apply_launchagent_plan,
     build_launchagent_plan,
+    build_launchagent_status,
     run_launchagent_command,
 )
 
@@ -102,3 +103,27 @@ def test_launchagent_control_rejects_non_macos(
         run_launchagent_command(plan, action="kickstart")
 
     assert exc_info.value.payload["failure_mode"] == "platform_not_supported"
+
+
+def test_launchagent_status_reports_plist_presence_and_loaded_state(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+    monkeypatch.setattr("sayane.app.daemon_launchagent.sys.platform", "darwin")
+    plan = build_launchagent_plan(tmp_path / "run", sayane_home=tmp_path / "home")
+    plan.plist_path.parent.mkdir(parents=True, exist_ok=True)
+    plan.plist_path.write_text(plan.plist_xml(), encoding="utf-8")
+
+    def _fake_run(command, *, capture_output, text, check):
+        assert command[:2] == ["launchctl", "print"]
+        return subprocess.CompletedProcess(command, 0, stdout="state = running", stderr="")
+
+    monkeypatch.setattr("sayane.app.daemon_launchagent.subprocess.run", _fake_run)
+
+    payload = build_launchagent_status(plan)
+
+    assert payload["kind"] == "resident_daemon_launchagent_status"
+    assert payload["plist_exists"] is True
+    assert payload["loaded"] is True
+    assert payload["loaded_status"] == "loaded"

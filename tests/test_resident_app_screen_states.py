@@ -72,6 +72,7 @@ def test_build_daemon_panel_screen_state_exposes_cards_and_previews() -> None:
             "repair_preview": {"kind": "resident_daemon_repair_apply_preview"},
             "service_targets_status": {"kind": "resident_daemon_service_targets_status"},
             "launchagent_preview": {"kind": "resident_daemon_launchagent_plan"},
+            "launchagent_status": {"kind": "resident_daemon_launchagent_status"},
         }
     )
 
@@ -80,3 +81,4 @@ def test_build_daemon_panel_screen_state_exposes_cards_and_previews() -> None:
     assert payload["next_actions"][0]["command"] == "sayane app daemon-status --json"
     assert payload["service_targets_status"]["kind"] == "resident_daemon_service_targets_status"
     assert payload["launchagent_preview"]["kind"] == "resident_daemon_launchagent_plan"
+    assert payload["launchagent_status"]["kind"] == "resident_daemon_launchagent_status"

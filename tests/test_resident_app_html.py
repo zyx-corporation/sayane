@@ -78,6 +78,7 @@ def test_render_resident_app_home_includes_bootstrap_and_summary() -> None:
     assert "Repair Preview" in html
     assert "Service Targets" in html
     assert "LaunchAgent Preview" in html
+    assert "LaunchAgent Status" in html
     assert "Daemon Observation" in html
     assert "Quick Links" in html
     assert "Queue Summary" in html
@@ -171,12 +172,21 @@ def test_render_resident_app_daemon_panel_includes_service_targets_and_launchage
                     "bootstrap": "launchctl bootstrap gui/501 /tmp/com.sayane.resident.bridge.plist",
                 },
             },
+            "launchagent_status": {
+                "kind": "resident_daemon_launchagent_status",
+                "label": "com.sayane.resident.bridge",
+                "plist_path": "/tmp/com.sayane.resident.bridge.plist",
+                "plist_exists": True,
+                "loaded_status": "loaded",
+                "service_manager": "launchd",
+            },
             "next_actions": [],
         }
     )
 
     assert "Service Targets" in html
     assert "LaunchAgent Preview" in html
+    assert "LaunchAgent Status" in html
     assert "launchctl bootstrap" in html
     assert "com.sayane.resident.bridge" in html
 

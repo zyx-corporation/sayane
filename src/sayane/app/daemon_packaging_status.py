@@ -64,9 +64,9 @@ class ResidentDaemonPackagingStatus:
                 ],
             },
             "service_integration": {
-                "status": "macos_launchagent_preview_apply" if platform_family == "macos" else "contract_only",
+                "status": "macos_launchagent_preview_apply_control" if platform_family == "macos" else "contract_only",
                 "supported_targets": ["macos_launchagent"] if platform_family == "macos" else [],
-                "reason": "Common cross-platform service targets are defined; concrete preview/apply support currently exists for macOS LaunchAgent only.",
+                "reason": "Common cross-platform service targets are defined; concrete preview/apply plus explicit local launchctl control currently exists for macOS LaunchAgent only.",
             },
             "background_supervision": {
                 "status": "not_supported",

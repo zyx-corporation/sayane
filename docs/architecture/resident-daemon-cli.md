@@ -26,6 +26,9 @@ sayane app daemon-supervision-status --json
 sayane app daemon-recovery-consent-status --json
 sayane app daemon-launchagent-preview --json
 sayane app daemon-launchagent-apply --json
+sayane app daemon-launchagent-bootstrap --json
+sayane app daemon-launchagent-bootout --json
+sayane app daemon-launchagent-kickstart --json
 sayane app daemon-overview --json
 ```
 
@@ -128,13 +131,13 @@ It makes the current local-only commitment explicit:
 
 - primary entrypoint remains `sayane serve`
 - local daemon control remains CLI-first and bridge-delegated
-- OS service integration is not yet supported
+- cross-platform service targets are defined but only macOS LaunchAgent has concrete operator commands today
 - tray, menu-bar, and background supervision UX are not yet supported
 
 The current baseline is now more precise:
 
 - cross-platform service targets are recorded for macOS, Linux, and Windows
-- concrete preview/apply support currently exists for macOS LaunchAgent only
+- concrete preview/apply plus explicit local `launchctl` control currently exists for macOS LaunchAgent only
 - Linux and Windows remain contract-only targets for now
 
 ## daemon-service-targets-status
@@ -148,7 +151,7 @@ It keeps these points explicit:
 - Linux is tracked as a future `systemd --user` target
 - Windows is tracked as a future Windows Service target
 
-## daemon-launchagent-preview / daemon-launchagent-apply
+## daemon-launchagent-preview / daemon-launchagent-apply / daemon-launchagent-bootstrap / daemon-launchagent-bootout / daemon-launchagent-kickstart
 
 These commands implement the first concrete macOS service-packaging slice.
 
@@ -163,6 +166,14 @@ These commands implement the first concrete macOS service-packaging slice.
 `daemon-launchagent-apply` writes the reviewed plist after matching operation id and preview hash.
 
 It does not silently call `launchctl bootstrap`; loading the service remains an explicit next step.
+
+The three `launchctl` commands keep control explicit and local-only:
+
+- `daemon-launchagent-bootstrap` runs `launchctl bootstrap gui/$(id -u) ...`
+- `daemon-launchagent-bootout` runs `launchctl bootout gui/$(id -u) ...`
+- `daemon-launchagent-kickstart` runs `launchctl kickstart -k gui/$(id -u)/com.sayane.resident.bridge`
+
+They are separate from plist writing so the consent/review boundary remains clear.
 
 ## daemon-service-control-boundary
 
@@ -226,8 +237,7 @@ Non-local addresses such as `0.0.0.0` are rejected.
 
 This work still does not add:
 
-- OS service integration
-- systemd, launchd, or Windows Service support
+- Linux `systemd --user` or Windows Service implementation
 - durable credentials
 - vault unlock-session binding
 - a second HTTP server path

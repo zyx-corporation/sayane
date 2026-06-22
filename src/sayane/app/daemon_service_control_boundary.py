@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import shlex
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -21,6 +22,30 @@ class ResidentDaemonServiceControlBoundary:
         start_command = ["sayane", "app", "daemon-start", *base_parts]
         stop_command = ["sayane", "app", "daemon-stop", *base_parts]
         restart_command = ["sayane", "app", "daemon-restart", *base_parts]
+        launchagent_commands = [
+            {
+                "command": "sayane app daemon-launchagent-bootstrap --json",
+                "class": "service_control",
+                "platform": "macos",
+                "requires_existing_plist": True,
+                "app_ui_exposure": "not_exposed",
+            },
+            {
+                "command": "sayane app daemon-launchagent-bootout --json",
+                "class": "service_control",
+                "platform": "macos",
+                "requires_existing_plist": True,
+                "app_ui_exposure": "not_exposed",
+            },
+            {
+                "command": "sayane app daemon-launchagent-kickstart --json",
+                "class": "service_control",
+                "platform": "macos",
+                "requires_existing_plist": False,
+                "app_ui_exposure": "not_exposed",
+            },
+        ]
+        is_macos = sys.platform == "darwin"
         return {
             "kind": "resident_daemon_service_control_boundary",
             "boundary_version": "1",
@@ -55,8 +80,8 @@ class ResidentDaemonServiceControlBoundary:
                 ],
             },
             "service_plane": {
-                "status": "not_supported",
-                "allowed_commands": [],
+                "status": "macos_explicit_cli_only" if is_macos else "contract_only",
+                "allowed_commands": launchagent_commands if is_macos else [],
                 "deferred_commands": [
                     "daemon-service-install",
                     "daemon-service-enable",

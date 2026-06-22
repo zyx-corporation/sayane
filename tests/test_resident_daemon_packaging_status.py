@@ -19,7 +19,7 @@ def test_daemon_packaging_status_exposes_cli_first_local_boundary(tmp_path: Path
     assert payload["kind"] == "resident_daemon_packaging_status"
     assert payload["packaging_model"] == "cli_first_local_bridge"
     assert payload["supervision_model"] == "manual_cli_with_bridge_delegation"
-    assert payload["service_integration"]["status"] in {"contract_only", "macos_launchagent_preview_apply"}
+    assert payload["service_integration"]["status"] in {"contract_only", "macos_launchagent_preview_apply_control"}
     assert payload["background_supervision"]["status"] == "not_supported"
     assert payload["current_entrypoint"]["command"] == [
         "sayane",

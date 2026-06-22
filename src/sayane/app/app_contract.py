@@ -349,6 +349,18 @@ def build_app_contract() -> dict[str, Any]:
                 "purpose": "macOS LaunchAgent preview for writing a local service plist",
             },
             {
+                "command": "sayane app daemon-launchagent-bootstrap --json",
+                "purpose": "explicit local launchctl bootstrap after reviewed LaunchAgent plist write",
+            },
+            {
+                "command": "sayane app daemon-launchagent-bootout --json",
+                "purpose": "explicit local launchctl bootout for reviewed LaunchAgent rollback",
+            },
+            {
+                "command": "sayane app daemon-launchagent-kickstart --json",
+                "purpose": "explicit local launchctl kickstart for the reviewed resident LaunchAgent label",
+            },
+            {
                 "command": "sayane app daemon-recovery-consent-status --json",
                 "purpose": "current recovery flow and consent boundary status",
             },

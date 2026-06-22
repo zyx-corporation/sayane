@@ -10,8 +10,10 @@ import typer
 
 from sayane.app import (
     ResidentDaemonLaunchAgentApplyError,
+    ResidentDaemonLaunchAgentControlError,
     apply_launchagent_plan,
     build_launchagent_plan,
+    run_launchagent_command,
 )
 from sayane.bridge.config import BridgeConfig
 
@@ -80,4 +82,97 @@ def register_daemon_launchagent_commands(app_group: typer.Typer) -> None:
             return
         typer.echo(f"kind: {payload['kind']}")
         typer.echo(f"plist_path: {payload['plist_path']}")
+        typer.echo(f"result: {payload['result']}")
+
+    @app_group.command("daemon-launchagent-bootstrap")
+    def daemon_launchagent_bootstrap(
+        runtime_root: Annotated[
+            Path | None,
+            typer.Option("--runtime-root", help="Resident runtime root."),
+        ] = None,
+        host: Annotated[str, typer.Option("--host")] = "127.0.0.1",
+        port: Annotated[int, typer.Option("--port")] = 38741,
+        operation_id: Annotated[str | None, typer.Option("--operation-id")] = None,
+        json_out: Annotated[bool, typer.Option("--json", help="Emit JSON output.")] = False,
+    ) -> None:
+        plan = build_launchagent_plan(
+            runtime_root or _default_runtime_root(),
+            host=host,
+            port=port,
+            operation_id=operation_id,
+        )
+        try:
+            payload = run_launchagent_command(plan, action="bootstrap")
+        except ResidentDaemonLaunchAgentControlError as exc:
+            if json_out:
+                typer.echo(json.dumps(exc.payload, ensure_ascii=False, indent=2))
+                raise typer.Exit(1) from exc
+            raise typer.BadParameter(str(exc)) from exc
+        if json_out:
+            typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+            return
+        typer.echo(f"kind: {payload['kind']}")
+        typer.echo(f"action: {payload['action']}")
+        typer.echo(f"result: {payload['result']}")
+
+    @app_group.command("daemon-launchagent-bootout")
+    def daemon_launchagent_bootout(
+        runtime_root: Annotated[
+            Path | None,
+            typer.Option("--runtime-root", help="Resident runtime root."),
+        ] = None,
+        host: Annotated[str, typer.Option("--host")] = "127.0.0.1",
+        port: Annotated[int, typer.Option("--port")] = 38741,
+        operation_id: Annotated[str | None, typer.Option("--operation-id")] = None,
+        json_out: Annotated[bool, typer.Option("--json", help="Emit JSON output.")] = False,
+    ) -> None:
+        plan = build_launchagent_plan(
+            runtime_root or _default_runtime_root(),
+            host=host,
+            port=port,
+            operation_id=operation_id,
+        )
+        try:
+            payload = run_launchagent_command(plan, action="bootout")
+        except ResidentDaemonLaunchAgentControlError as exc:
+            if json_out:
+                typer.echo(json.dumps(exc.payload, ensure_ascii=False, indent=2))
+                raise typer.Exit(1) from exc
+            raise typer.BadParameter(str(exc)) from exc
+        if json_out:
+            typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+            return
+        typer.echo(f"kind: {payload['kind']}")
+        typer.echo(f"action: {payload['action']}")
+        typer.echo(f"result: {payload['result']}")
+
+    @app_group.command("daemon-launchagent-kickstart")
+    def daemon_launchagent_kickstart(
+        runtime_root: Annotated[
+            Path | None,
+            typer.Option("--runtime-root", help="Resident runtime root."),
+        ] = None,
+        host: Annotated[str, typer.Option("--host")] = "127.0.0.1",
+        port: Annotated[int, typer.Option("--port")] = 38741,
+        operation_id: Annotated[str | None, typer.Option("--operation-id")] = None,
+        json_out: Annotated[bool, typer.Option("--json", help="Emit JSON output.")] = False,
+    ) -> None:
+        plan = build_launchagent_plan(
+            runtime_root or _default_runtime_root(),
+            host=host,
+            port=port,
+            operation_id=operation_id,
+        )
+        try:
+            payload = run_launchagent_command(plan, action="kickstart")
+        except ResidentDaemonLaunchAgentControlError as exc:
+            if json_out:
+                typer.echo(json.dumps(exc.payload, ensure_ascii=False, indent=2))
+                raise typer.Exit(1) from exc
+            raise typer.BadParameter(str(exc)) from exc
+        if json_out:
+            typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+            return
+        typer.echo(f"kind: {payload['kind']}")
+        typer.echo(f"action: {payload['action']}")
         typer.echo(f"result: {payload['result']}")

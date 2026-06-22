@@ -28,7 +28,7 @@ class ResidentDaemonServiceTargetsStatus:
 
     def public_metadata(self) -> dict[str, Any]:
         current_platform = _platform_family()
-        macos_status = "supported_preview_apply" if current_platform == "macos" else "contract_only"
+        macos_status = "supported_preview_apply_control" if current_platform == "macos" else "contract_only"
         return {
             "kind": "resident_daemon_service_targets_status",
             "current_platform": current_platform,
@@ -42,6 +42,9 @@ class ResidentDaemonServiceTargetsStatus:
                     "commands": [
                         "sayane app daemon-launchagent-preview --json",
                         "sayane app daemon-launchagent-apply --json",
+                        "sayane app daemon-launchagent-bootstrap --json",
+                        "sayane app daemon-launchagent-bootout --json",
+                        "sayane app daemon-launchagent-kickstart --json",
                     ],
                 },
                 {

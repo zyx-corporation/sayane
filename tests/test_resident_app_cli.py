@@ -236,6 +236,44 @@ def test_resident_app_overview_command_is_registered(isolated_home: Path) -> Non
     assert json.loads(result.stdout)["kind"] == "resident_daemon_overview_preview"
 
 
+def test_resident_app_launchagent_control_commands_are_registered(
+    isolated_home: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def _fake_run_launchagent_command(plan, *, action):
+        return {
+            "kind": "resident_daemon_launchagent_control_receipt",
+            "operation_id": plan.operation_id,
+            "preview_hash": plan.preview_hash(),
+            "label": "com.sayane.resident.bridge",
+            "action": action,
+            "platform": "macos",
+            "plist_path": str(plan.plist_path),
+            "command": ["launchctl", action],
+            "result": "completed",
+            "applied": True,
+            "returncode": 0,
+            "stdout": "",
+            "stderr": "",
+        }
+
+    monkeypatch.setattr(
+        "sayane.cli.commands.app_daemon_launchagent.run_launchagent_command",
+        _fake_run_launchagent_command,
+    )
+
+    bootstrap = runner.invoke(app, ["app", "daemon-launchagent-bootstrap", "--json"])
+    bootout = runner.invoke(app, ["app", "daemon-launchagent-bootout", "--json"])
+    kickstart = runner.invoke(app, ["app", "daemon-launchagent-kickstart", "--json"])
+
+    assert bootstrap.exit_code == 0
+    assert bootout.exit_code == 0
+    assert kickstart.exit_code == 0
+    assert json.loads(bootstrap.stdout)["action"] == "bootstrap"
+    assert json.loads(bootout.stdout)["action"] == "bootout"
+    assert json.loads(kickstart.stdout)["action"] == "kickstart"
+
+
 def test_resident_app_aggregate_overview_command_is_registered(isolated_home: Path) -> None:
     result = runner.invoke(app, ["app", "overview", "--json"])
 

@@ -81,9 +81,11 @@ from sayane.app.daemon_liveness_diagnostics import (
 from sayane.app.daemon_launchagent import (
     LAUNCHAGENT_LABEL,
     ResidentDaemonLaunchAgentApplyError,
+    ResidentDaemonLaunchAgentControlError,
     ResidentDaemonLaunchAgentPlan,
     apply_launchagent_plan,
     build_launchagent_plan,
+    run_launchagent_command,
 )
 from sayane.app.daemon_packaging_status import (
     ResidentDaemonPackagingStatus,
@@ -213,6 +215,7 @@ __all__ = [
     "ResidentDaemonIdentityProofStatus",
     "ResidentDaemonLifecycle",
     "ResidentDaemonLaunchAgentApplyError",
+    "ResidentDaemonLaunchAgentControlError",
     "ResidentDaemonLaunchAgentPlan",
     "ResidentDaemonLivenessDiagnostic",
     "ResidentDaemonLivenessStatus",
@@ -261,6 +264,7 @@ __all__ = [
     "build_api_readiness_proof",
     "build_api_readiness_proof_from_status_report",
     "apply_launchagent_plan",
+    "run_launchagent_command",
     "build_app_candidate_detail",
     "build_app_candidate_diff",
     "build_app_candidate_queue",

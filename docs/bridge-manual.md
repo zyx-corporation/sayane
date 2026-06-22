@@ -152,6 +152,7 @@ curl -s -H "$AUTH" \
 - review queue preview
 - MCP preview
 - daemon overview preview
+- operator packaging / service target / supervision / recovery boundary previews
 
 #### `GET /app/contract`
 

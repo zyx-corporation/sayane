@@ -171,6 +171,18 @@ def test_app_contract_exposes_surface_roles_and_shared_semantics() -> None:
         for item in payload["operator_cli_surfaces"]
     )
     assert any(
+        item["command"] == "sayane app daemon-launchagent-bootstrap --json"
+        for item in payload["operator_cli_surfaces"]
+    )
+    assert any(
+        item["command"] == "sayane app daemon-launchagent-bootout --json"
+        for item in payload["operator_cli_surfaces"]
+    )
+    assert any(
+        item["command"] == "sayane app daemon-launchagent-kickstart --json"
+        for item in payload["operator_cli_surfaces"]
+    )
+    assert any(
         item["command"] == "sayane app daemon-recovery-consent-status --json"
         for item in payload["operator_cli_surfaces"]
     )

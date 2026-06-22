@@ -49,3 +49,68 @@ def test_daemon_launchagent_apply_json(isolated_home: Path) -> None:
 
     assert result.exit_code == 0
     assert json.loads(result.stdout)["kind"] == "resident_daemon_launchagent_receipt"
+
+
+def test_daemon_launchagent_bootstrap_json(isolated_home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("sayane.app.daemon_launchagent.sys.platform", "darwin")
+    plan = build_launchagent_plan(isolated_home / ".sayane" / "run", sayane_home=isolated_home / ".sayane")
+    plan.plist_path.parent.mkdir(parents=True, exist_ok=True)
+    plan.plist_path.write_text(plan.plist_xml(), encoding="utf-8")
+
+    def _fake_run_launchagent_command(plan, *, action):
+        return {
+            "kind": "resident_daemon_launchagent_control_receipt",
+            "operation_id": plan.operation_id,
+            "preview_hash": plan.preview_hash(),
+            "label": "com.sayane.resident.bridge",
+            "action": action,
+            "platform": "macos",
+            "plist_path": str(plan.plist_path),
+            "command": ["launchctl", action],
+            "result": "completed",
+            "applied": True,
+            "returncode": 0,
+            "stdout": "",
+            "stderr": "",
+        }
+
+    monkeypatch.setattr(
+        "sayane.cli.commands.app_daemon_launchagent.run_launchagent_command",
+        _fake_run_launchagent_command,
+    )
+
+    result = runner.invoke(app, ["app", "daemon-launchagent-bootstrap", "--json"])
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["kind"] == "resident_daemon_launchagent_control_receipt"
+    assert payload["action"] == "bootstrap"
+
+
+def test_daemon_launchagent_bootstrap_json_returns_error_payload(
+    isolated_home: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def _fake_control_error(plan, *, action):
+        from sayane.app import ResidentDaemonLaunchAgentControlError
+
+        raise ResidentDaemonLaunchAgentControlError(
+            "boom",
+            payload={
+                "kind": "resident_daemon_launchagent_control_receipt",
+                "action": action,
+                "result": "aborted",
+                "applied": False,
+                "failure_mode": "plist_missing",
+            },
+        )
+
+    monkeypatch.setattr(
+        "sayane.cli.commands.app_daemon_launchagent.run_launchagent_command",
+        _fake_control_error,
+    )
+
+    result = runner.invoke(app, ["app", "daemon-launchagent-bootstrap", "--json"])
+
+    assert result.exit_code == 1
+    assert json.loads(result.stdout)["failure_mode"] == "plist_missing"

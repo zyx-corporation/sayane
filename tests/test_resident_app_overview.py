@@ -90,8 +90,11 @@ def test_app_overview_exposes_ui_friendly_summary_with_repositories(tmp_path) ->
     assert payload["daemon_summary"]["next_action_count"] >= 1
     assert payload["summary"]["service_integration_status"] in {
         "contract_only",
-        "macos_launchagent_preview_apply",
+        "macos_launchagent_preview_apply_control",
     }
-    assert payload["service_control_boundary"]["service_plane"]["status"] == "not_supported"
+    assert payload["service_control_boundary"]["service_plane"]["status"] in {
+        "contract_only",
+        "macos_explicit_cli_only",
+    }
     assert payload["supervision_status"]["background_surfaces"]["status"] == "not_supported"
     assert payload["recovery_consent_status"]["mutating_recovery_actions"][0]["consent_required"] is True

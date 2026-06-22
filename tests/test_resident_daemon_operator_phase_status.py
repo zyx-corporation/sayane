@@ -27,6 +27,8 @@ def test_daemon_operator_phase_status_aggregates_post_app_workstreams(
     )
     assert payload["workstreams"][0]["name"] == "packaging_model_decision"
     assert payload["workstreams"][1]["name"] == "service_integration_line"
+    assert payload["workstreams"][1]["lifecycle_operations"][0]["operation"] == "install"
+    assert payload["workstreams"][1]["lifecycle_operations"][-1]["operation"] == "update"
     assert payload["workstreams"][2]["name"] == "supervision_ux_line"
     assert payload["workstreams"][3]["name"] == "recovery_and_consent_line"
     assert "sayane app daemon-operator-phase-status --json" in payload["read_surfaces"]

@@ -86,6 +86,10 @@ class ResidentDaemonOperatorPhaseStatus:
                         "deferred_commands",
                         [],
                     ),
+                    "lifecycle_operations": service_control["service_plane"].get(
+                        "lifecycle_operations",
+                        [],
+                    ),
                 },
                 {
                     "name": "supervision_ux_line",

@@ -46,6 +46,48 @@ class ResidentDaemonServiceControlBoundary:
             },
         ]
         is_macos = sys.platform == "darwin"
+        lifecycle_operations = [
+            {
+                "operation": "install",
+                "command": "daemon-service-install",
+                "status": "separate_plan_required",
+                "platform_scope": ["macos_launchagent", "linux_systemd_user", "windows_service"],
+                "rollback_required": True,
+                "policy_required": True,
+            },
+            {
+                "operation": "enable",
+                "command": "daemon-service-enable",
+                "status": "separate_plan_required",
+                "platform_scope": ["macos_launchagent", "linux_systemd_user", "windows_service"],
+                "rollback_required": True,
+                "policy_required": True,
+            },
+            {
+                "operation": "disable",
+                "command": "daemon-service-disable",
+                "status": "separate_plan_required",
+                "platform_scope": ["macos_launchagent", "linux_systemd_user", "windows_service"],
+                "rollback_required": True,
+                "policy_required": True,
+            },
+            {
+                "operation": "remove",
+                "command": "daemon-service-remove",
+                "status": "separate_plan_required",
+                "platform_scope": ["macos_launchagent", "linux_systemd_user", "windows_service"],
+                "rollback_required": True,
+                "policy_required": True,
+            },
+            {
+                "operation": "update",
+                "command": "daemon-service-update",
+                "status": "separate_plan_required",
+                "platform_scope": ["macos_launchagent", "linux_systemd_user", "windows_service"],
+                "rollback_required": True,
+                "policy_required": True,
+            },
+        ]
         return {
             "kind": "resident_daemon_service_control_boundary",
             "boundary_version": "1",
@@ -87,7 +129,9 @@ class ResidentDaemonServiceControlBoundary:
                     "daemon-service-enable",
                     "daemon-service-disable",
                     "daemon-service-remove",
+                    "daemon-service-update",
                 ],
+                "lifecycle_operations": lifecycle_operations,
                 "platform_targets": [
                     "macos_launchagent",
                     "linux_systemd_user",
@@ -95,6 +139,7 @@ class ResidentDaemonServiceControlBoundary:
                 ],
                 "rollback_required": True,
                 "platform_policy_required": True,
+                "update_strategy": "separate_plan_required",
             },
             "app_ui_policy": {
                 "allowed_reads": [
@@ -117,6 +162,7 @@ class ResidentDaemonServiceControlBoundary:
                 "apply commands require explicit operator consent",
                 "control commands remain local-only and CLI-first in the current MVP",
                 "service commands remain deferred until platform-specific rollback policy exists",
+                "service lifecycle install/enable/disable/remove/update expectations remain contract-only until the operator packaging/supervision phase closes",
             ],
         }
 

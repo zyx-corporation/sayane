@@ -29,5 +29,5 @@ def test_daemon_service_control_boundary_json_uses_default_runtime_root(
     payload = json.loads(result.stdout)
     assert payload["kind"] == "resident_daemon_service_control_boundary"
     assert payload["runtime_root"] == str(isolated_home / ".sayane" / "run")
-    assert payload["service_plane"]["status"] == "not_supported"
-
+    assert payload["service_plane"]["status"] in {"contract_only", "macos_explicit_cli_only"}
+    assert payload["service_plane"]["lifecycle_operations"][0]["operation"] == "install"

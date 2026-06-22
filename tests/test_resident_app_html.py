@@ -195,6 +195,23 @@ def test_render_resident_app_daemon_panel_includes_service_targets_and_launchage
                 "phase_status": "baseline_contracts_implemented_next_phase_open",
                 "phase_readiness": "not_ready_for_phase_closure",
                 "blocking_reasons": ["daemon-service-install", "tray_supervision"],
+                "current_supported_operator_path": {
+                    "startup_command_text": "sayane serve --host 127.0.0.1 --port 38741",
+                    "bootstrap_ui": "http://127.0.0.1:38741/app/ui",
+                    "local_only": True,
+                    "notes": ["current supported operator path remains local Python CLI plus Local Bridge"],
+                },
+                "workstreams": [
+                    {
+                        "name": "packaging_model_decision",
+                        "status": "baseline_contract_implemented",
+                        "current_state": "cli_first_local_bridge",
+                    }
+                ],
+                "recommended_implementation_order": ["packaging_model_decision", "operator_handoff_update"],
+                "read_surfaces": ["sayane app daemon-operator-phase-status --json"],
+                "exit_criteria": ["supported operator packaging model is explicit"],
+                "not_in_scope": ["direct profile patch UI"],
                 "phase_closure_checklist": [
                     {"item": "supported_packaging_model_finalized", "status": "in_progress"},
                 ],
@@ -244,6 +261,11 @@ def test_render_resident_app_daemon_panel_includes_service_targets_and_launchage
     assert "Operator Phase Status" in html
     assert "Phase Closure Checklist" in html
     assert "Blocking Reasons" in html
+    assert "Current Operator Path" in html
+    assert "Workstreams" in html
+    assert "Read Surfaces" in html
+    assert "sayane serve --host 127.0.0.1 --port 38741" in html
+    assert "sayane app daemon-operator-phase-status --json" in html
     assert "launchctl bootstrap" in html
     assert "com.sayane.resident.bridge" in html
 

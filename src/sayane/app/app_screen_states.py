@@ -133,6 +133,36 @@ def build_daemon_panel_screen_state(daemon_payload: dict[str, Any]) -> dict[str,
             "blocking_reasons": operator_phase_status.get("blocking_reasons", []),
             "checklist": operator_phase_status.get("phase_closure_checklist", []),
         },
+        "operator_phase_details": {
+            "current_supported_operator_path": {
+                "startup_command_text": operator_phase_status.get("current_supported_operator_path", {}).get(
+                    "startup_command_text"
+                ),
+                "bootstrap_ui": operator_phase_status.get("current_supported_operator_path", {}).get("bootstrap_ui"),
+                "local_only": operator_phase_status.get("current_supported_operator_path", {}).get("local_only"),
+                "notes": operator_phase_status.get("current_supported_operator_path", {}).get("notes", []),
+            },
+            "workstreams": [
+                {
+                    "name": item.get("name"),
+                    "status": item.get("status"),
+                    "detail": (
+                        item.get("current_state")
+                        or item.get("current_target")
+                        or item.get("background_status")
+                        or item.get("consent_model")
+                    ),
+                }
+                for item in operator_phase_status.get("workstreams", [])
+            ],
+            "recommended_implementation_order": operator_phase_status.get(
+                "recommended_implementation_order",
+                [],
+            ),
+            "read_surfaces": operator_phase_status.get("read_surfaces", []),
+            "exit_criteria": operator_phase_status.get("exit_criteria", []),
+            "not_in_scope": operator_phase_status.get("not_in_scope", []),
+        },
         "packaging_status": packaging_status,
         "service_control_boundary": service_control_boundary,
         "service_targets_status": service_targets_status,

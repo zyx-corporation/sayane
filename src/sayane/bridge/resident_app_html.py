@@ -98,6 +98,13 @@ BOOTSTRAP_COPY_LABELS: dict[str, str] = {
     "label.operator_phase_status": "Operator Phase Status",
     "label.phase_closure_checklist": "Phase Closure Checklist",
     "label.blocking_reasons": "Blocking Reasons",
+    "label.operator_path": "Current Operator Path",
+    "label.workstreams": "Workstreams",
+    "label.recommended_implementation_order": "Recommended Implementation Order",
+    "label.read_surfaces": "Read Surfaces",
+    "label.exit_criteria": "Exit Criteria",
+    "label.not_in_scope": "Not In Scope",
+    "label.notes": "Notes",
     "label.allowed_commands": "Allowed Commands",
     "label.deferred_commands": "Deferred Commands",
     "label.recommended_flow": "Recommended Flow",
@@ -245,6 +252,14 @@ BOOTSTRAP_COPY_FIELDS: dict[str, str] = {
     "field.added_count": "Added Count",
     "field.already_present_count": "Already Present Count",
     "field.list_operation": "List Operation",
+    "field.item": "Item",
+    "field.phase": "Phase",
+    "field.phase_status": "Phase Status",
+    "field.phase_readiness": "Phase Readiness",
+    "field.startup_command_text": "Startup Command",
+    "field.bootstrap_ui": "Bootstrap UI",
+    "field.local_only": "Local Only",
+    "field.detail": "Detail",
 }
 
 BOOTSTRAP_COPY_VALUES: dict[str, str] = {
@@ -299,6 +314,19 @@ BOOTSTRAP_COPY_VALUES: dict[str, str] = {
     "value.not_loaded": "not loaded",
     "value.unsupported_platform": "unsupported platform",
     "value.resident_daemon_launchagent_status": "resident daemon LaunchAgent status",
+    "value.packaging_model_decision": "packaging model decision",
+    "value.service_integration_line": "service integration line",
+    "value.supervision_ux_line": "supervision UX line",
+    "value.recovery_and_consent_line": "recovery and consent line",
+    "value.supported_packaging_model_finalized": "supported packaging model finalized",
+    "value.service_lifecycle_implementation_closed": "service lifecycle implementation closed",
+    "value.platform_policy_and_rollback_closed": "platform policy and rollback closed",
+    "value.background_supervision_direction_decided": "background supervision direction decided",
+    "value.recovery_and_consent_path_remains_explicit_under_next_model": "recovery and consent path remains explicit under next model",
+    "value.service_control_boundary_definition": "service control boundary definition",
+    "value.supervision_ux_decision": "supervision UX decision",
+    "value.consent_and_recovery_alignment": "consent and recovery alignment",
+    "value.operator_handoff_update": "operator handoff update",
 }
 
 DISPLAY_PHRASE_KEYS: dict[str, str] = {
@@ -472,6 +500,13 @@ BOOTSTRAP_COPY_JA_LABELS: dict[str, str] = {
     "label.operator_phase_status": "運用フェーズ状態",
     "label.phase_closure_checklist": "フェーズ完了チェックリスト",
     "label.blocking_reasons": "阻害要因",
+    "label.operator_path": "現在の運用経路",
+    "label.workstreams": "ワークストリーム",
+    "label.recommended_implementation_order": "推奨実装順",
+    "label.read_surfaces": "参照サーフェス",
+    "label.exit_criteria": "完了条件",
+    "label.not_in_scope": "対象外",
+    "label.notes": "補足",
     "label.allowed_commands": "許可コマンド",
     "label.deferred_commands": "保留コマンド",
     "label.recommended_flow": "推奨フロー",
@@ -619,6 +654,14 @@ BOOTSTRAP_COPY_JA_FIELDS: dict[str, str] = {
     "field.added_count": "追加数",
     "field.already_present_count": "既存数",
     "field.list_operation": "リスト操作",
+    "field.item": "項目",
+    "field.phase": "フェーズ",
+    "field.phase_status": "フェーズ状態",
+    "field.phase_readiness": "フェーズ完了準備",
+    "field.startup_command_text": "起動コマンド",
+    "field.bootstrap_ui": "Bootstrap UI",
+    "field.local_only": "ローカル限定",
+    "field.detail": "詳細",
 }
 
 BOOTSTRAP_COPY_JA_VALUES: dict[str, str] = {
@@ -673,6 +716,19 @@ BOOTSTRAP_COPY_JA_VALUES: dict[str, str] = {
     "value.not_loaded": "未読込",
     "value.unsupported_platform": "対象外プラットフォーム",
     "value.resident_daemon_launchagent_status": "Resident Daemon LaunchAgent 状態",
+    "value.packaging_model_decision": "パッケージング方針決定",
+    "value.service_integration_line": "サービス統合ライン",
+    "value.supervision_ux_line": "監視UXライン",
+    "value.recovery_and_consent_line": "復旧と同意ライン",
+    "value.supported_packaging_model_finalized": "対応パッケージング方針の確定",
+    "value.service_lifecycle_implementation_closed": "サービスライフサイクル実装の完了",
+    "value.platform_policy_and_rollback_closed": "プラットフォーム方針とロールバック方針の完了",
+    "value.background_supervision_direction_decided": "バックグラウンド監視方針の決定",
+    "value.recovery_and_consent_path_remains_explicit_under_next_model": "次モデルでも復旧と同意の経路が明示されること",
+    "value.service_control_boundary_definition": "サービス制御境界の定義",
+    "value.supervision_ux_decision": "監視UX方針の決定",
+    "value.consent_and_recovery_alignment": "同意と復旧の整合",
+    "value.operator_handoff_update": "オペレーターハンドオフ更新",
 }
 
 BOOTSTRAP_COPY_JA_FEEDBACK: dict[str, str] = {
@@ -972,6 +1028,13 @@ def _render_string_list(items: list[str], *, empty_label: str) -> str:
     return f"<ul>{rows}</ul>"
 
 
+def _render_text_list(locale: str, items: list[Any], *, empty_label: str) -> str:
+    if not items:
+        return f'<p class="muted">{escape(empty_label)}</p>'
+    rows = "".join(f"<li>{escape(_translate_display_token(item, locale))}</li>" for item in items)
+    return f"<ul>{rows}</ul>"
+
+
 def _render_runtime_init_preview(locale: str, payload: dict[str, Any]) -> str:
     items = payload.get("items", [])
     item_rows = "".join(
@@ -1126,6 +1189,17 @@ def _render_operator_phase_status(locale: str, payload: dict[str, Any] | None) -
         )
         for item in payload.get("phase_closure_checklist", [])
     ) or f'<tr><td colspan="2" class="muted">{escape(_copy("empty.metadata", locale))}</td></tr>'
+    workstream_rows = "".join(
+        (
+            "<tr>"
+            f"<td>{escape(_translate_display_token(item.get('name', ''), locale))}</td>"
+            f"<td>{escape(_translate_display_token(item.get('status', ''), locale))}</td>"
+            f"<td>{escape(_translate_display_token(item.get('current_state') or item.get('current_target') or item.get('background_status') or item.get('consent_model') or '—', locale))}</td>"
+            "</tr>"
+        )
+        for item in payload.get("workstreams", [])
+    ) or f'<tr><td colspan="3" class="muted">{escape(_copy("empty.metadata", locale))}</td></tr>'
+    operator_path = payload.get("current_supported_operator_path", {})
     return (
         _render_kv_panel(
             locale,
@@ -1143,6 +1217,48 @@ def _render_operator_phase_status(locale: str, payload: dict[str, Any] | None) -
         f'<th>{escape(_copy("table.status", locale))}</th>'
         '</tr></thead>'
         f"<tbody>{checklist_rows}</tbody></table>"
+        + f"<h3>{escape(_copy('label.operator_path', locale))}</h3>"
+        + _render_kv_panel(
+            locale,
+            operator_path,
+            keys=["startup_command_text", "bootstrap_ui", "local_only"],
+        )
+        + f"<h3>{escape(_copy('label.notes', locale))}</h3>"
+        + _render_text_list(
+            locale,
+            list(operator_path.get("notes", [])),
+            empty_label=_copy("empty.metadata", locale),
+        )
+        + f"<h3>{escape(_copy('label.workstreams', locale))}</h3>"
+        + '<table class="compact-table"><thead><tr>'
+        f'<th>{escape(_translate_display_key("section", locale))}</th>'
+        f'<th>{escape(_copy("table.status", locale))}</th>'
+        f'<th>{escape(_translate_display_key("detail", locale))}</th>'
+        '</tr></thead>'
+        f"<tbody>{workstream_rows}</tbody></table>"
+        + f"<h3>{escape(_copy('label.recommended_implementation_order', locale))}</h3>"
+        + _render_text_list(
+            locale,
+            list(payload.get("recommended_implementation_order", [])),
+            empty_label=_copy("empty.metadata", locale),
+        )
+        + f"<h3>{escape(_copy('label.read_surfaces', locale))}</h3>"
+        + _render_string_list(
+            list(payload.get("read_surfaces", [])),
+            empty_label=_copy("empty.metadata", locale),
+        )
+        + f"<h3>{escape(_copy('label.exit_criteria', locale))}</h3>"
+        + _render_text_list(
+            locale,
+            list(payload.get("exit_criteria", [])),
+            empty_label=_copy("empty.metadata", locale),
+        )
+        + f"<h3>{escape(_copy('label.not_in_scope', locale))}</h3>"
+        + _render_text_list(
+            locale,
+            list(payload.get("not_in_scope", [])),
+            empty_label=_copy("empty.metadata", locale),
+        )
     )
 
 
@@ -1255,6 +1371,13 @@ def _render_resident_app_shell_bootstrap(
             "operatorPhaseStatus": _copy("label.operator_phase_status", locale),
             "phaseClosureChecklist": _copy("label.phase_closure_checklist", locale),
             "blockingReasons": _copy("label.blocking_reasons", locale),
+            "operatorPath": _copy("label.operator_path", locale),
+            "workstreams": _copy("label.workstreams", locale),
+            "recommendedImplementationOrder": _copy("label.recommended_implementation_order", locale),
+            "readSurfaces": _copy("label.read_surfaces", locale),
+            "exitCriteria": _copy("label.exit_criteria", locale),
+            "notInScope": _copy("label.not_in_scope", locale),
+            "notes": _copy("label.notes", locale),
             "serviceTargets": _copy("label.service_targets", locale),
             "launchagentPreview": _copy("label.launchagent_preview", locale),
             "launchagentStatus": _copy("label.launchagent_status", locale),
@@ -1601,6 +1724,8 @@ def _render_resident_app_shell_bootstrap(
   }}
 
   function renderOperatorPhaseSummary(summary) {{
+    const operatorPath = summary?.current_supported_operator_path || {{}};
+    const workstreams = summary?.workstreams || [];
     return `
       <div class="panel">
         <h3>${{escapeHtml(strings.operatorPhaseStatus)}}</h3>
@@ -1613,6 +1738,24 @@ def _render_resident_app_shell_bootstrap(
         ${{renderTextList(summary?.blocking_reasons || [], strings.emptyPreview)}}
         <h4>${{escapeHtml(strings.phaseClosureChecklist)}}</h4>
         ${{renderChecklist(summary?.checklist || [], strings.emptyPreview)}}
+        <h4>${{escapeHtml(strings.operatorPath)}}</h4>
+        ${{renderKeyValuePanel({{
+          startup_command_text: operatorPath.startup_command_text,
+          bootstrap_ui: operatorPath.bootstrap_ui,
+          local_only: operatorPath.local_only,
+        }})}}
+        <h4>${{escapeHtml(strings.notes)}}</h4>
+        ${{renderTextList(operatorPath.notes || [], strings.emptyPreview)}}
+        <h4>${{escapeHtml(strings.workstreams)}}</h4>
+        ${{workstreams.length ? `<ul>${{workstreams.map((item) => `<li><strong>${{escapeDisplayHtml(item.name || "—")}}</strong>: ${{escapeDisplayHtml(item.status || "—")}}${{item.detail ? ` — ${{escapeDisplayHtml(item.detail)}}` : ""}}</li>`).join("")}}</ul>` : `<p class="muted">${{escapeHtml(strings.emptyPreview)}}</p>`}}
+        <h4>${{escapeHtml(strings.recommendedImplementationOrder)}}</h4>
+        ${{renderTextList(summary?.recommended_implementation_order || [], strings.emptyPreview)}}
+        <h4>${{escapeHtml(strings.readSurfaces)}}</h4>
+        ${{renderCommandList(summary?.read_surfaces || [], strings.emptyPreview)}}
+        <h4>${{escapeHtml(strings.exitCriteria)}}</h4>
+        ${{renderTextList(summary?.exit_criteria || [], strings.emptyPreview)}}
+        <h4>${{escapeHtml(strings.notInScope)}}</h4>
+        ${{renderTextList(summary?.not_in_scope || [], strings.emptyPreview)}}
       </div>`;
   }}
 
@@ -1946,6 +2089,7 @@ def _render_resident_app_shell_bootstrap(
     const serviceTargetSummary = daemon.service_target_summary || {{}};
     const launchagentSummary = daemon.launchagent_summary || {{}};
     const operatorPhaseSummary = daemon.operator_phase_summary || {{}};
+    const operatorPhaseDetails = daemon.operator_phase_details || {{}};
     const cleanupReport = cleanupPreview.decision_report || {{}};
     const cleanupDecisions = (cleanupReport.decisions || []).map((decision) => ({{
       artifact_kind: decision.artifact_kind,
@@ -2035,7 +2179,7 @@ def _render_resident_app_shell_bootstrap(
       <div class="shell-grid two-up">
         ${{operatorPanels.map((panel) => renderOperatorPanel(panel)).join("")}}
       </div>
-      ${{renderOperatorPhaseSummary(operatorPhaseSummary)}}
+      ${{renderOperatorPhaseSummary({{ ...operatorPhaseSummary, ...operatorPhaseDetails }})}}
       <div class="shell-grid two-up">
         <div class="panel">
           <h3>${{escapeHtml(strings.serviceTargets)}}</h3>

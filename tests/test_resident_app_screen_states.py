@@ -103,6 +103,23 @@ def test_build_daemon_panel_screen_state_exposes_cards_and_previews() -> None:
                 "phase_status": "baseline_contracts_implemented_next_phase_open",
                 "phase_readiness": "not_ready_for_phase_closure",
                 "blocking_reasons": ["daemon-service-install", "tray_supervision"],
+                "current_supported_operator_path": {
+                    "startup_command_text": "sayane serve --host 127.0.0.1 --port 38741",
+                    "bootstrap_ui": "http://127.0.0.1:38741/app/ui",
+                    "local_only": True,
+                    "notes": ["current supported operator path remains local Python CLI plus Local Bridge"],
+                },
+                "workstreams": [
+                    {
+                        "name": "packaging_model_decision",
+                        "status": "baseline_contract_implemented",
+                        "current_state": "cli_first_local_bridge",
+                    }
+                ],
+                "recommended_implementation_order": ["packaging_model_decision", "operator_handoff_update"],
+                "read_surfaces": ["sayane app daemon-operator-phase-status --json"],
+                "exit_criteria": ["supported operator packaging model is explicit"],
+                "not_in_scope": ["direct profile patch UI"],
                 "phase_closure_checklist": [
                     {"item": "supported_packaging_model_finalized", "status": "in_progress"},
                 ],
@@ -122,6 +139,9 @@ def test_build_daemon_panel_screen_state_exposes_cards_and_previews() -> None:
     assert payload["launchagent_summary"]["loaded_status"] == "loaded"
     assert payload["operator_phase_summary"]["phase_readiness"] == "not_ready_for_phase_closure"
     assert payload["operator_phase_summary"]["blocking_reasons"] == ["daemon-service-install", "tray_supervision"]
+    assert payload["operator_phase_details"]["current_supported_operator_path"]["local_only"] is True
+    assert payload["operator_phase_details"]["workstreams"][0]["detail"] == "cli_first_local_bridge"
+    assert payload["operator_phase_details"]["read_surfaces"] == ["sayane app daemon-operator-phase-status --json"]
     assert payload["service_targets_status"]["kind"] == "resident_daemon_service_targets_status"
     assert payload["operator_phase_status"]["phase"] == "operator_packaging_and_supervision"
     assert payload["launchagent_preview"]["kind"] == "resident_daemon_launchagent_plan"

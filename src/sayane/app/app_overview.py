@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from sayane.app.daemon_packaging_status import build_daemon_packaging_status
+from sayane.app.daemon_recovery_consent_status import build_daemon_recovery_consent_status
 from sayane.app.daemon_service_control_boundary import build_daemon_service_control_boundary
 from sayane.app.daemon_supervision_status import build_daemon_supervision_status
 from sayane.app.runtime import ResidentRuntime
@@ -76,6 +77,11 @@ def build_app_overview(runtime: ResidentRuntime) -> dict[str, Any]:
         host=runtime.bridge_config.host,
         port=runtime.bridge_config.port,
     ).public_metadata()
+    recovery_consent_status = build_daemon_recovery_consent_status(
+        runtime.bridge_config.home / "run",
+        host=runtime.bridge_config.host,
+        port=runtime.bridge_config.port,
+    ).public_metadata()
     review_summary = _build_review_summary(review_queue)
     mcp_summary = _build_mcp_summary(mcp_preview)
     daemon_summary = _build_daemon_summary(daemon_overview)
@@ -95,6 +101,7 @@ def build_app_overview(runtime: ResidentRuntime) -> dict[str, Any]:
             "service_integration_status": operator_packaging["service_integration"]["status"],
             "control_plane_status": service_control_boundary["control_plane"]["status"],
             "supervision_mode": supervision_status["supervision_mode"],
+            "consent_model": recovery_consent_status["consent_model"],
         },
         "review_summary": review_summary,
         "mcp_summary": mcp_summary,
@@ -102,6 +109,7 @@ def build_app_overview(runtime: ResidentRuntime) -> dict[str, Any]:
         "operator_packaging": operator_packaging,
         "service_control_boundary": service_control_boundary,
         "supervision_status": supervision_status,
+        "recovery_consent_status": recovery_consent_status,
         "review_queue": review_queue,
         "mcp_preview": mcp_preview,
         "daemon_overview": daemon_overview,

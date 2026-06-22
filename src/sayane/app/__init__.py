@@ -120,6 +120,10 @@ from sayane.app.daemon_readiness_proof import (
     build_readiness_proof,
     build_readiness_proof_from_status_report,
 )
+from sayane.app.daemon_recovery_consent_status import (
+    ResidentDaemonRecoveryConsentStatus,
+    build_daemon_recovery_consent_status,
+)
 from sayane.app.daemon_repair_apply import (
     ResidentDaemonRepairApplyError,
     ResidentDaemonRepairApplyTarget,
@@ -219,6 +223,7 @@ __all__ = [
     "ResidentDaemonReadinessProof",
     "ResidentDaemonReadinessProofStatus",
     "ResidentDaemonReadinessStatus",
+    "ResidentDaemonRecoveryConsentStatus",
     "ResidentDaemonRuntimeLayout",
     "ResidentDaemonRuntimeInitItem",
     "ResidentDaemonRuntimeInitApplyError",
@@ -266,6 +271,7 @@ __all__ = [
     "build_readiness_diagnostic_from_status_report",
     "build_readiness_proof",
     "build_readiness_proof_from_status_report",
+    "build_daemon_recovery_consent_status",
     "build_readiness_event_record",
     "build_daemon_status_report",
     "build_daemon_service_control_boundary",

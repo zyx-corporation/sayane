@@ -14,6 +14,7 @@ from sayane.app.daemon_packaging_status import build_daemon_packaging_status
 from sayane.app.daemon_process_control import build_daemon_status_report
 from sayane.app.daemon_readiness_diagnostics import build_readiness_diagnostic
 from sayane.app.daemon_repair_apply import build_repair_apply_preview
+from sayane.app.daemon_recovery_consent_status import build_daemon_recovery_consent_status
 from sayane.app.daemon_runtime_init import build_runtime_init_plan
 from sayane.app.daemon_service_control_boundary import build_daemon_service_control_boundary
 from sayane.app.daemon_supervision_status import build_daemon_supervision_status
@@ -139,6 +140,11 @@ def build_daemon_overview_preview(
         host=host,
         port=port,
     ).public_metadata()
+    recovery_consent_status = build_daemon_recovery_consent_status(
+        runtime_root,
+        host=host,
+        port=port,
+    ).public_metadata()
     return {
         "kind": "resident_daemon_overview_preview",
         "is_daemon_surface": True,
@@ -156,6 +162,7 @@ def build_daemon_overview_preview(
         "packaging_status": packaging_status,
         "service_control_boundary": service_control_boundary,
         "supervision_status": supervision_status,
+        "recovery_consent_status": recovery_consent_status,
         "next_actions": _build_daemon_next_actions(
             status=status_report.public_metadata(),
             runtime_init=runtime_init,

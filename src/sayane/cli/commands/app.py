@@ -59,6 +59,9 @@ from sayane.cli.commands.app_daemon_readiness_diagnostics import (
 from sayane.cli.commands.app_daemon_readiness_proof import (
     register_daemon_readiness_proof_command,
 )
+from sayane.cli.commands.app_daemon_recovery_consent_status import (
+    register_daemon_recovery_consent_status_command,
+)
 from sayane.cli.commands.app_daemon_runtime_layout import (
     register_daemon_runtime_layout_command,
 )
@@ -333,6 +336,7 @@ def register_app_commands(app: typer.Typer) -> None:
     register_daemon_packaging_status_command(app_group)
     register_daemon_service_control_boundary_command(app_group)
     register_daemon_supervision_status_command(app_group)
+    register_daemon_recovery_consent_status_command(app_group)
     register_daemon_identity_proof_command(app_group)
     register_daemon_overview_command(app_group)
     register_daemon_runtime_layout_command(app_group)

@@ -22,6 +22,7 @@ sayane app daemon-readiness-diagnostic --json
 sayane app daemon-packaging-status --json
 sayane app daemon-service-control-boundary --json
 sayane app daemon-supervision-status --json
+sayane app daemon-recovery-consent-status --json
 sayane app daemon-overview --json
 ```
 
@@ -148,6 +149,17 @@ It keeps these points explicit:
 - active supervision remains limited to explicit CLI control commands
 - tray, menu-bar, and background agent surfaces remain deferred
 - recovery stays CLI-first and evidence-oriented
+
+## daemon-recovery-consent-status
+
+`daemon-recovery-consent-status` exposes the current recovery path and consent boundary.
+
+It keeps all of the following explicit:
+
+- diagnostics and proof-oriented reads remain non-mutating
+- cleanup and repair recovery steps still require explicit operator confirmation
+- local app surfaces may explain recovery but must not bypass CLI consent checks
+- post-recovery validation remains status-first and readiness-aware
 
 ## daemon-overview
 

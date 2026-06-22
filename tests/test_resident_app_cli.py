@@ -281,3 +281,12 @@ def test_resident_app_daemon_supervision_status_command_is_registered(
 
     assert result.exit_code == 0
     assert json.loads(result.stdout)["kind"] == "resident_daemon_supervision_status"
+
+
+def test_resident_app_daemon_recovery_consent_status_command_is_registered(
+    isolated_home: Path,
+) -> None:
+    result = runner.invoke(app, ["app", "daemon-recovery-consent-status", "--json"])
+
+    assert result.exit_code == 0
+    assert json.loads(result.stdout)["kind"] == "resident_daemon_recovery_consent_status"

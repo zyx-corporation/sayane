@@ -162,6 +162,9 @@ sayane app daemon-service-control-boundary --json
 # Preview current supervision UX boundary for passive visibility and CLI recovery
 sayane app daemon-supervision-status --json
 
+# Preview current recovery flow and consent boundary
+sayane app daemon-recovery-consent-status --json
+
 # Preview conservative daemon identity-proof observations
 sayane app daemon-identity-proof --json
 

@@ -174,6 +174,9 @@ Recurring or scripted workflows may run preview commands, but apply/control/serv
 Passive supervision reads may be exposed in local app or CLI surfaces, but they must not silently
 upgrade into background control or OS service automation.
 
+Recovery guidance may also be exposed in local app or CLI surfaces, but confirmation-bearing cleanup,
+repair, and other mutating steps must remain explicit operator actions.
+
 ## Recovery notes
 
 Future mutating commands should include recovery guidance when possible.

@@ -27,6 +27,7 @@ def test_daemon_overview_preview_aggregates_status_and_next_actions(tmp_path: Pa
     assert payload["packaging_status"]["kind"] == "resident_daemon_packaging_status"
     assert payload["service_control_boundary"]["kind"] == "resident_daemon_service_control_boundary"
     assert payload["supervision_status"]["kind"] == "resident_daemon_supervision_status"
+    assert payload["recovery_consent_status"]["kind"] == "resident_daemon_recovery_consent_status"
     assert payload["next_actions"][0]["command"] == "sayane app daemon-runtime-init --json"
 
 

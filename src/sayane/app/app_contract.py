@@ -75,6 +75,11 @@ def build_app_contract() -> dict[str, Any]:
                 "purpose": "operator-facing supervision UX status read",
             },
             {
+                "path": "cli:sayane app daemon-recovery-consent-status --json",
+                "payload_kind": "resident_daemon_recovery_consent_status",
+                "purpose": "operator-facing recovery and consent boundary read",
+            },
+            {
                 "path": "/app/screen-state/daemon",
                 "payload_kind": "resident_app_daemon_panel_screen_state",
                 "purpose": "framework-neutral daemon panel state",
@@ -324,6 +329,10 @@ def build_app_contract() -> dict[str, Any]:
             {
                 "command": "sayane app daemon-supervision-status --json",
                 "purpose": "current passive/active supervision UX boundary status",
+            },
+            {
+                "command": "sayane app daemon-recovery-consent-status --json",
+                "purpose": "current recovery flow and consent boundary status",
             },
             {
                 "command": "sayane app daemon-proof-diagnostics --operation-class bridge_health --json",

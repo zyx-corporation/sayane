@@ -75,3 +75,14 @@ This directory contains release notes, release closures, and release-prep docume
 - [v1.1 Scoped Context Closure](v1.1-scoped-context-closure.md)
 - [v1.0.0 Context Acceptance](v1.0.0-context-acceptance.md)
 - [Phase 6-17 Release Closure](phase6-17-release-closure.md)
+
+## Current post-app operator line
+
+The current post-app completion line is not phase closure for OS service integration or background
+supervision. It is a handoff-ready read surface for the next operator-facing phase.
+
+Use these documents first:
+
+- [v1.0.14 Resident App Operator Handoff](v1.0.14-resident-app-operator-handoff.md) — current startup, diagnostics, troubleshooting, and read-surface guidance
+- [v1.0.15 Operator Packaging and Supervision Phase Plan](v1.0.15-operator-packaging-supervision-phase-plan.md) — current packaging / service / supervision / recovery phase baseline and remaining gates
+- [v1.0.15 Post-App Follow-on Roadmap](v1.0.15-post-app-follow-on-roadmap.md) — current recommended order after the app-completion line

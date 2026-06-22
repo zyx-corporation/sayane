@@ -65,6 +65,11 @@ def build_app_contract() -> dict[str, Any]:
                 "purpose": "operator-facing packaging and supervision boundary read",
             },
             {
+                "path": "cli:sayane app daemon-service-targets-status --json",
+                "payload_kind": "resident_daemon_service_targets_status",
+                "purpose": "cross-platform operator-facing service target status read",
+            },
+            {
                 "path": "cli:sayane app daemon-service-control-boundary --json",
                 "payload_kind": "resident_daemon_service_control_boundary",
                 "purpose": "operator-facing allowed control and deferred service boundary read",
@@ -73,6 +78,11 @@ def build_app_contract() -> dict[str, Any]:
                 "path": "cli:sayane app daemon-supervision-status --json",
                 "payload_kind": "resident_daemon_supervision_status",
                 "purpose": "operator-facing supervision UX status read",
+            },
+            {
+                "path": "cli:sayane app daemon-launchagent-preview --json",
+                "payload_kind": "resident_daemon_launchagent_plan",
+                "purpose": "macOS LaunchAgent preview for the current local daemon line",
             },
             {
                 "path": "cli:sayane app daemon-recovery-consent-status --json",
@@ -323,12 +333,20 @@ def build_app_contract() -> dict[str, Any]:
                 "purpose": "current packaging and supervision boundary status",
             },
             {
+                "command": "sayane app daemon-service-targets-status --json",
+                "purpose": "cross-platform service target status for macOS, Linux, and Windows",
+            },
+            {
                 "command": "sayane app daemon-service-control-boundary --json",
                 "purpose": "current allowed control and deferred service-command boundary",
             },
             {
                 "command": "sayane app daemon-supervision-status --json",
                 "purpose": "current passive/active supervision UX boundary status",
+            },
+            {
+                "command": "sayane app daemon-launchagent-preview --json",
+                "purpose": "macOS LaunchAgent preview for writing a local service plist",
             },
             {
                 "command": "sayane app daemon-recovery-consent-status --json",

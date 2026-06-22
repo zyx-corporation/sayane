@@ -7,6 +7,7 @@ from typing import Any
 from sayane.app.daemon_packaging_status import build_daemon_packaging_status
 from sayane.app.daemon_recovery_consent_status import build_daemon_recovery_consent_status
 from sayane.app.daemon_service_control_boundary import build_daemon_service_control_boundary
+from sayane.app.daemon_service_targets_status import build_daemon_service_targets_status
 from sayane.app.daemon_supervision_status import build_daemon_supervision_status
 from sayane.app.runtime import ResidentRuntime
 from sayane.app.ui import (
@@ -72,6 +73,11 @@ def build_app_overview(runtime: ResidentRuntime) -> dict[str, Any]:
         host=runtime.bridge_config.host,
         port=runtime.bridge_config.port,
     ).public_metadata()
+    service_targets_status = build_daemon_service_targets_status(
+        runtime.bridge_config.home / "run",
+        host=runtime.bridge_config.host,
+        port=runtime.bridge_config.port,
+    ).public_metadata()
     supervision_status = build_daemon_supervision_status(
         runtime.bridge_config.home / "run",
         host=runtime.bridge_config.host,
@@ -100,6 +106,7 @@ def build_app_overview(runtime: ResidentRuntime) -> dict[str, Any]:
             "packaging_model": operator_packaging["packaging_model"],
             "service_integration_status": operator_packaging["service_integration"]["status"],
             "control_plane_status": service_control_boundary["control_plane"]["status"],
+            "service_target_platform": service_targets_status["current_platform"],
             "supervision_mode": supervision_status["supervision_mode"],
             "consent_model": recovery_consent_status["consent_model"],
         },
@@ -108,6 +115,7 @@ def build_app_overview(runtime: ResidentRuntime) -> dict[str, Any]:
         "daemon_summary": daemon_summary,
         "operator_packaging": operator_packaging,
         "service_control_boundary": service_control_boundary,
+        "service_targets_status": service_targets_status,
         "supervision_status": supervision_status,
         "recovery_consent_status": recovery_consent_status,
         "review_queue": review_queue,

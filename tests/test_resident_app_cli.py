@@ -274,6 +274,15 @@ def test_resident_app_daemon_service_control_boundary_command_is_registered(
     assert json.loads(result.stdout)["kind"] == "resident_daemon_service_control_boundary"
 
 
+def test_resident_app_daemon_service_targets_status_command_is_registered(
+    isolated_home: Path,
+) -> None:
+    result = runner.invoke(app, ["app", "daemon-service-targets-status", "--json"])
+
+    assert result.exit_code == 0
+    assert json.loads(result.stdout)["kind"] == "resident_daemon_service_targets_status"
+
+
 def test_resident_app_daemon_supervision_status_command_is_registered(
     isolated_home: Path,
 ) -> None:
@@ -290,3 +299,12 @@ def test_resident_app_daemon_recovery_consent_status_command_is_registered(
 
     assert result.exit_code == 0
     assert json.loads(result.stdout)["kind"] == "resident_daemon_recovery_consent_status"
+
+
+def test_resident_app_daemon_launchagent_preview_command_is_registered(
+    isolated_home: Path,
+) -> None:
+    result = runner.invoke(app, ["app", "daemon-launchagent-preview", "--json"])
+
+    assert result.exit_code == 0
+    assert json.loads(result.stdout)["kind"] == "resident_daemon_launchagent_plan"

@@ -22,7 +22,7 @@ def test_daemon_service_control_boundary_exposes_allowed_control_and_deferred_se
     assert payload["control_plane"]["status"] == "cli_control_supported_local_mvp"
     assert payload["service_plane"]["status"] == "not_supported"
     assert "daemon-service-install" in payload["service_plane"]["deferred_commands"]
+    assert "macos_launchagent" in payload["service_plane"]["platform_targets"]
     allowed_commands = payload["control_plane"]["allowed_commands"]
     assert allowed_commands[0]["app_ui_exposure"] == "next_action_only"
     assert "daemon-start --host localhost --port 39000 --json" in allowed_commands[0]["command"]
-

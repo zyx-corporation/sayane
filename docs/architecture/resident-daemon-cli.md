@@ -20,9 +20,12 @@ sayane app daemon-repair-preview --json
 sayane app daemon-repair-apply --create runtime_root --json
 sayane app daemon-readiness-diagnostic --json
 sayane app daemon-packaging-status --json
+sayane app daemon-service-targets-status --json
 sayane app daemon-service-control-boundary --json
 sayane app daemon-supervision-status --json
 sayane app daemon-recovery-consent-status --json
+sayane app daemon-launchagent-preview --json
+sayane app daemon-launchagent-apply --json
 sayane app daemon-overview --json
 ```
 
@@ -127,6 +130,39 @@ It makes the current local-only commitment explicit:
 - local daemon control remains CLI-first and bridge-delegated
 - OS service integration is not yet supported
 - tray, menu-bar, and background supervision UX are not yet supported
+
+The current baseline is now more precise:
+
+- cross-platform service targets are recorded for macOS, Linux, and Windows
+- concrete preview/apply support currently exists for macOS LaunchAgent only
+- Linux and Windows remain contract-only targets for now
+
+## daemon-service-targets-status
+
+`daemon-service-targets-status` exposes the shared service-target matrix across macOS, Linux, and
+Windows.
+
+It keeps these points explicit:
+
+- macOS uses `launchd` / LaunchAgent as the first concrete packaging target
+- Linux is tracked as a future `systemd --user` target
+- Windows is tracked as a future Windows Service target
+
+## daemon-launchagent-preview / daemon-launchagent-apply
+
+These commands implement the first concrete macOS service-packaging slice.
+
+`daemon-launchagent-preview` builds a LaunchAgent plist preview, including:
+
+- plist path
+- label
+- program arguments
+- stdout/stderr log paths
+- suggested `launchctl` follow-up commands
+
+`daemon-launchagent-apply` writes the reviewed plist after matching operation id and preview hash.
+
+It does not silently call `launchctl bootstrap`; loading the service remains an explicit next step.
 
 ## daemon-service-control-boundary
 

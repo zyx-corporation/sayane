@@ -78,6 +78,13 @@ from sayane.app.daemon_liveness_diagnostics import (
     build_liveness_diagnostic,
     build_liveness_diagnostic_from_pid_file_diagnostic,
 )
+from sayane.app.daemon_launchagent import (
+    LAUNCHAGENT_LABEL,
+    ResidentDaemonLaunchAgentApplyError,
+    ResidentDaemonLaunchAgentPlan,
+    apply_launchagent_plan,
+    build_launchagent_plan,
+)
 from sayane.app.daemon_packaging_status import (
     ResidentDaemonPackagingStatus,
     build_daemon_packaging_status,
@@ -106,6 +113,10 @@ from sayane.app.daemon_process_control import (
 from sayane.app.daemon_service_control_boundary import (
     ResidentDaemonServiceControlBoundary,
     build_daemon_service_control_boundary,
+)
+from sayane.app.daemon_service_targets_status import (
+    ResidentDaemonServiceTargetsStatus,
+    build_daemon_service_targets_status,
 )
 from sayane.app.daemon_readiness_diagnostics import (
     ResidentDaemonApiReadinessStatus,
@@ -201,6 +212,8 @@ __all__ = [
     "ResidentDaemonIdentityProof",
     "ResidentDaemonIdentityProofStatus",
     "ResidentDaemonLifecycle",
+    "ResidentDaemonLaunchAgentApplyError",
+    "ResidentDaemonLaunchAgentPlan",
     "ResidentDaemonLivenessDiagnostic",
     "ResidentDaemonLivenessStatus",
     "ResidentDaemonMode",
@@ -232,6 +245,7 @@ __all__ = [
     "ResidentDaemonRuntimeInitMetadata",
     "ResidentDaemonRuntimeInitReceipt",
     "ResidentDaemonServiceControlBoundary",
+    "ResidentDaemonServiceTargetsStatus",
     "ResidentDaemonRepairApplyError",
     "ResidentDaemonRepairApplyTarget",
     "ResidentDaemonStateMachine",
@@ -243,8 +257,10 @@ __all__ = [
     "ResidentRepositoryBackend",
     "ResidentRepositorySelection",
     "ResidentRuntime",
+    "LAUNCHAGENT_LABEL",
     "build_api_readiness_proof",
     "build_api_readiness_proof_from_status_report",
+    "apply_launchagent_plan",
     "build_app_candidate_detail",
     "build_app_candidate_diff",
     "build_app_candidate_queue",
@@ -261,6 +277,7 @@ __all__ = [
     "build_implementation_gate_preflight_report",
     "build_liveness_diagnostic",
     "build_liveness_diagnostic_from_pid_file_diagnostic",
+    "build_launchagent_plan",
     "build_daemon_packaging_status",
     "build_mcp_preview",
     "build_home_screen_state",
@@ -275,6 +292,7 @@ __all__ = [
     "build_readiness_event_record",
     "build_daemon_status_report",
     "build_daemon_service_control_boundary",
+    "build_daemon_service_targets_status",
     "build_daemon_overview_preview",
     "build_pid_file_diagnostic",
     "build_preflight_event_record",

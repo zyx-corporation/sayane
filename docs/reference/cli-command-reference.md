@@ -156,6 +156,9 @@ sayane app daemon-readiness-diagnostic \
 # Preview current operator-facing packaging and supervision boundary
 sayane app daemon-packaging-status --json
 
+# Preview cross-platform service target status for macOS, Linux, and Windows
+sayane app daemon-service-targets-status --json
+
 # Preview current service/control boundary for allowed CLI control and deferred service commands
 sayane app daemon-service-control-boundary --json
 
@@ -164,6 +167,14 @@ sayane app daemon-supervision-status --json
 
 # Preview current recovery flow and consent boundary
 sayane app daemon-recovery-consent-status --json
+
+# Preview and write a macOS LaunchAgent plist for the resident daemon line
+sayane app daemon-launchagent-preview --json
+sayane app daemon-launchagent-apply \
+  --operation-id launchagent-... \
+  --confirm-operation-id launchagent-... \
+  --confirm-preview-hash ... \
+  --json
 
 # Preview conservative daemon identity-proof observations
 sayane app daemon-identity-proof --json

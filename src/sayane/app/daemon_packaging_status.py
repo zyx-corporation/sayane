@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import shlex
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -17,6 +18,15 @@ class ResidentDaemonPackagingStatus:
     port: int
 
     def public_metadata(self) -> dict[str, Any]:
+        platform_family = (
+            "macos"
+            if sys.platform == "darwin"
+            else "linux"
+            if sys.platform.startswith("linux")
+            else "windows"
+            if sys.platform.startswith("win")
+            else "other"
+        )
         serve_command = ["sayane", "serve", "--host", self.host, "--port", str(self.port)]
         start_command = [
             "sayane",
@@ -54,9 +64,9 @@ class ResidentDaemonPackagingStatus:
                 ],
             },
             "service_integration": {
-                "status": "not_supported",
-                "supported_targets": [],
-                "reason": "OS service integration remains a separate operator packaging phase.",
+                "status": "macos_launchagent_preview_apply" if platform_family == "macos" else "contract_only",
+                "supported_targets": ["macos_launchagent"] if platform_family == "macos" else [],
+                "reason": "Common cross-platform service targets are defined; concrete preview/apply support currently exists for macOS LaunchAgent only.",
             },
             "background_supervision": {
                 "status": "not_supported",

@@ -33,10 +33,12 @@ def test_app_overview_aggregates_runtime_review_mcp_and_daemon(tmp_path) -> None
     assert payload["daemon_summary"]["state"] == "stopped"
     assert payload["operator_packaging"]["kind"] == "resident_daemon_packaging_status"
     assert payload["service_control_boundary"]["kind"] == "resident_daemon_service_control_boundary"
+    assert payload["service_targets_status"]["kind"] == "resident_daemon_service_targets_status"
     assert payload["supervision_status"]["kind"] == "resident_daemon_supervision_status"
     assert payload["recovery_consent_status"]["kind"] == "resident_daemon_recovery_consent_status"
     assert payload["summary"]["packaging_model"] == "cli_first_local_bridge"
     assert payload["summary"]["control_plane_status"] == "cli_control_supported_local_mvp"
+    assert payload["summary"]["service_target_platform"] in {"macos", "linux", "windows", "other"}
     assert payload["summary"]["supervision_mode"] == "passive_local_observation_with_cli_recovery"
     assert payload["summary"]["consent_model"] == "explicit_cli_confirmation_for_mutation"
 
@@ -86,7 +88,10 @@ def test_app_overview_exposes_ui_friendly_summary_with_repositories(tmp_path) ->
     assert payload["mcp_summary"]["approved_context_count"] == 1
     assert payload["mcp_summary"]["top_approved_candidate_ids"] == ["c-approved-1"]
     assert payload["daemon_summary"]["next_action_count"] >= 1
-    assert payload["summary"]["service_integration_status"] == "not_supported"
+    assert payload["summary"]["service_integration_status"] in {
+        "contract_only",
+        "macos_launchagent_preview_apply",
+    }
     assert payload["service_control_boundary"]["service_plane"]["status"] == "not_supported"
     assert payload["supervision_status"]["background_surfaces"]["status"] == "not_supported"
     assert payload["recovery_consent_status"]["mutating_recovery_actions"][0]["consent_required"] is True

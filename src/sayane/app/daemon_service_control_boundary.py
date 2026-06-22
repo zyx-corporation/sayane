@@ -63,6 +63,11 @@ class ResidentDaemonServiceControlBoundary:
                     "daemon-service-disable",
                     "daemon-service-remove",
                 ],
+                "platform_targets": [
+                    "macos_launchagent",
+                    "linux_systemd_user",
+                    "windows_service",
+                ],
                 "rollback_required": True,
                 "platform_policy_required": True,
             },

@@ -48,11 +48,19 @@ def test_app_contract_exposes_entrypoint_and_surfaces() -> None:
         for surface in payload["read_surfaces"]
     )
     assert any(
+        surface["path"] == "cli:sayane app daemon-service-targets-status --json"
+        for surface in payload["read_surfaces"]
+    )
+    assert any(
         surface["path"] == "cli:sayane app daemon-service-control-boundary --json"
         for surface in payload["read_surfaces"]
     )
     assert any(
         surface["path"] == "cli:sayane app daemon-supervision-status --json"
+        for surface in payload["read_surfaces"]
+    )
+    assert any(
+        surface["path"] == "cli:sayane app daemon-launchagent-preview --json"
         for surface in payload["read_surfaces"]
     )
     assert any(
@@ -147,11 +155,19 @@ def test_app_contract_exposes_surface_roles_and_shared_semantics() -> None:
         for item in payload["operator_cli_surfaces"]
     )
     assert any(
+        item["command"] == "sayane app daemon-service-targets-status --json"
+        for item in payload["operator_cli_surfaces"]
+    )
+    assert any(
         item["command"] == "sayane app daemon-service-control-boundary --json"
         for item in payload["operator_cli_surfaces"]
     )
     assert any(
         item["command"] == "sayane app daemon-supervision-status --json"
+        for item in payload["operator_cli_surfaces"]
+    )
+    assert any(
+        item["command"] == "sayane app daemon-launchagent-preview --json"
         for item in payload["operator_cli_surfaces"]
     )
     assert any(

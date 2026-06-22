@@ -169,6 +169,17 @@ Recommended usage:
 - review diff panel -> `GET /app/candidates/{id}/diff`
 - daemon panel -> `GET /app/daemon-overview`
 
+The current post-app operator line is also readable through aligned CLI summaries:
+
+- `sayane app daemon-packaging-status`
+- `sayane app daemon-service-targets-status`
+- `sayane app daemon-service-control-boundary`
+- `sayane app daemon-supervision-status`
+- `sayane app daemon-recovery-consent-status`
+- `sayane app daemon-operator-phase-status`
+
+These remain read surfaces only and do not add service activation or background supervision control.
+
 ## Write surfaces
 
 Current app-facing writes are:
@@ -244,6 +255,22 @@ Suggested minimal screen mapping:
   - `liveness`
   - `readiness`
   - `next_actions`
+
+For framework-neutral daemon screen state or the current Bridge-hosted resident shell, also use:
+
+- `GET /app/screen-state/daemon`
+- `GET /app/ui-state/daemon`
+
+The current derived daemon state now includes:
+
+- `operator_panels`
+- `operator_phase_summary`
+- `operator_phase_details`
+- `service_target_summary`
+- `launchagent_summary`
+
+These fields keep post-app packaging / service / supervision / recovery review summary-first and
+implementation-neutral.
 
 ## Recommended interaction flow
 

@@ -116,6 +116,9 @@ The current bootstrap UI also adds lightweight presentation refinements:
 - the embedded local shell daemon view now renders summary cards, next actions, runtime-init /
   cleanup / repair preview metadata tables, and a retained raw observation panel instead of showing
   only a single JSON dump
+- the embedded local shell daemon view now also renders operator packaging / service /
+  supervision / recovery detail sections through `operator_panels`, `operator_phase_summary`,
+  `operator_phase_details`, `service_target_summary`, and `launchagent_summary`
 - the embedded local shell home view now renders localized summary-card labels plus quick links from
   `HomeScreenState.quick_links`, and the queue view now renders summary-first status/top-section
   panels instead of collapsing those aggregates into one raw object string
@@ -150,6 +153,9 @@ The app layer now also provides framework-neutral screen state builders for:
 The current Bridge HTML routes should reuse the same app-layer candidate queue/detail builders where possible, so HTML and JSON surfaces do not drift in status counts, top sections, or allowed-action summaries.
 
 This keeps the current HTML flow simple while preserving the underlying app-facing boundary.
+
+The same bootstrap/local-shell line is now also aligned with human-readable daemon CLI summaries for
+terminal-first post-app review. Those CLI summaries remain read surfaces only.
 
 ## Boundaries
 

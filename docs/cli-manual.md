@@ -45,12 +45,13 @@ sayane candidate --help          # グループ単位（Typer 標準）
 | `sayane compile` | 指定 LLM 向けにプロンプトをコンパイルする（JSON 出力） |
 | `sayane export` | Prompt IR とコンパイル結果を Markdown で出力する |
 | `sayane serve` | Local Bridge API を起動する（Phase 2） |
+| `sayane app …` | resident app / daemon local-shell 向け app-facing CLI 群 |
 | `sayane mcp serve` | MCP Server（stdio）起動（Phase 2.5） |
 | `sayane mcp list-profiles` など | MCP Tools と同等の CLI 操作 |
 | `sayane candidate …` | Candidate 評価・approve（Phase 4） |
 | `sayane storage …` | Obsidian import/export・index・Git commit（Phase 5） |
 
-Bridge HTTP API の詳細は [Bridge マニュアル](bridge-manual.md)。MCP Tools / Cursor 設定は [MCP マニュアル](mcp-manual.md)。Storage 詳細は [Storage マニュアル](storage-manual.md)。
+Bridge HTTP API の詳細は [Bridge マニュアル](bridge-manual.md)。resident app / daemon local-shell の app-facing contract と operator diagnostics は [Bridge マニュアル](bridge-manual.md) および [CLI コマンドリファレンス](reference/cli-command-reference.md) を参照。MCP Tools / Cursor 設定は [MCP マニュアル](mcp-manual.md)。Storage 詳細は [Storage マニュアル](storage-manual.md)。
 
 未実装（ロードマップ参照）: その他 CLI 拡張。文脈 capture は **`sayane capture`**（`--text` / `--file` / stdin）、Bridge `POST /capture`、または Extension から可能。`candidate evaluate` / `approve` は CLI から利用可（[評価マニュアル](evaluation-manual.md)）。
 

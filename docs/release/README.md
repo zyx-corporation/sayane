@@ -70,7 +70,7 @@ This directory contains release notes, release closures, and release-prep docume
 - [v1.0.15 Resident Daemon Proof Design Note](v1.0.15-resident-daemon-proof-design-note.md) — implementation-ready direction for the first daemon proof phase
 - [v1.0.15 Resident Daemon Proof Implementation Skeleton](v1.0.15-resident-daemon-proof-implementation-skeleton.md) — file-touch, acceptance, and test-plan skeleton for the daemon proof phase
 - [v1.0.15 Resident Daemon Proof Issue Breakdown](v1.0.15-resident-daemon-proof-issue-breakdown.md) — issue-sized split for identity/readiness/API proof work
-- [v1.0.15 Operator Packaging and Supervision Phase Plan](v1.0.15-operator-packaging-supervision-phase-plan.md) — separate future plan for OS service, packaging, and supervision UX decisions
+- [v1.0.15 Operator Packaging and Supervision Phase Plan](v1.0.15-operator-packaging-supervision-phase-plan.md) — now tracks the implemented packaging / service-control / supervision / recovery-consent contract baselines plus remaining OS service decisions
 - [v1.1.0 Release Note](v1.1.0-release-note.md)
 - [v1.1 Scoped Context Closure](v1.1-scoped-context-closure.md)
 - [v1.0.0 Context Acceptance](v1.0.0-context-acceptance.md)

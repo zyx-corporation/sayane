@@ -1504,6 +1504,56 @@ def _render_resident_app_shell_bootstrap(
     `).join("");
   }}
 
+  function renderCommandList(commands, emptyLabel) {{
+    if (!commands?.length) return `<ul><li class="muted">${{escapeHtml(emptyLabel || strings.emptyPreview)}}</li></ul>`;
+    return `<ul>${{commands.map((command) => `<li><code>${{escapeHtml(command)}}</code></li>`).join("")}}</ul>`;
+  }}
+
+  function renderTextList(items, emptyLabel) {{
+    if (!items?.length) return `<ul><li class="muted">${{escapeHtml(emptyLabel || strings.emptyPreview)}}</li></ul>`;
+    return `<ul>${{items.map((item) => `<li>${{escapeDisplayHtml(item)}}</li>`).join("")}}</ul>`;
+  }}
+
+  function operatorPanelTitle(panelKey) {{
+    if (panelKey === "packaging_status") return strings.packagingStatus;
+    if (panelKey === "service_control_boundary") return strings.serviceControlBoundary;
+    if (panelKey === "supervision_status") return strings.supervisionStatus;
+    if (panelKey === "recovery_consent_status") return strings.recoveryConsentStatus;
+    return localizeFieldKey(panelKey);
+  }}
+
+  function renderOperatorPanel(panel) {{
+    const metadata = {{
+      panel: panel?.panel,
+      status: panel?.status,
+    }};
+    const highlights = panel?.highlights || [];
+    const commands = panel?.commands || [];
+    const deferredCommands = panel?.deferred_commands || [];
+    const recommendedFlow = panel?.recommended_flow || [];
+    return `
+      <div class="panel">
+        <h3>${{escapeHtml(operatorPanelTitle(panel?.panel || panel?.title || ""))}}</h3>
+        ${{renderKeyValuePanel(metadata)}}
+        ${{highlights.length ? `
+          <h4>${{escapeHtml(strings.detailSummary)}}</h4>
+          ${{renderTextList(highlights, strings.emptyPreview)}}
+        ` : ""}}
+        ${{commands.length ? `
+          <h4>${{escapeHtml(strings.allowedCommands)}}</h4>
+          ${{renderCommandList(commands, strings.emptyPreview)}}
+        ` : ""}}
+        ${{deferredCommands.length ? `
+          <h4>${{escapeHtml(strings.deferredCommands)}}</h4>
+          ${{renderCommandList(deferredCommands, strings.emptyPreview)}}
+        ` : ""}}
+        ${{recommendedFlow.length ? `
+          <h4>${{escapeHtml(strings.recommendedFlow)}}</h4>
+          ${{renderTextList(recommendedFlow, strings.emptyPreview)}}
+        ` : ""}}
+      </div>`;
+  }}
+
   function currentScreenLabel() {{
     if (state.screen === "queue") return strings.screenQueue;
     if (state.screen === "detail") return strings.screenDetail;
@@ -1830,13 +1880,9 @@ def _render_resident_app_shell_bootstrap(
     const runtimeInit = daemon.runtime_init || {{}};
     const cleanupPreview = daemon.cleanup_preview || {{}};
     const repairPreview = daemon.repair_preview || {{}};
-    const packagingStatus = daemon.packaging_status || {{}};
-    const serviceControlBoundary = daemon.service_control_boundary || {{}};
-    const supervisionStatus = daemon.supervision_status || {{}};
-    const recoveryConsentStatus = daemon.recovery_consent_status || {{}};
-    const serviceTargetsStatus = daemon.service_targets_status || {{}};
-    const launchagentPreview = daemon.launchagent_preview || null;
-    const launchagentStatus = daemon.launchagent_status || null;
+    const operatorPanels = daemon.operator_panels || [];
+    const serviceTargetSummary = daemon.service_target_summary || {{}};
+    const launchagentSummary = daemon.launchagent_summary || {{}};
     const cleanupReport = cleanupPreview.decision_report || {{}};
     const cleanupDecisions = (cleanupReport.decisions || []).map((decision) => ({{
       artifact_kind: decision.artifact_kind,
@@ -1856,17 +1902,12 @@ def _render_resident_app_shell_bootstrap(
       path: item.path,
       reason: item.reason,
     }}));
-    const serviceTargetRows = (serviceTargetsStatus.targets || []).map((item) => ({{
+    const serviceTargetRows = (serviceTargetSummary.targets || []).map((item) => ({{
       target: item.target,
       platform: item.platform,
       service_manager: item.service_manager,
       status: item.status,
     }}));
-    const allowedControlCommands = (serviceControlBoundary.control_plane?.allowed_commands || []).map((item) => item.command);
-    const allowedServiceCommands = (serviceControlBoundary.service_plane?.allowed_commands || []).map((item) => item.command);
-    const deferredServiceCommands = serviceControlBoundary.service_plane?.deferred_commands || [];
-    const supervisionActions = supervisionStatus.active_supervision?.allowed_actions || [];
-    const recoveryFlow = recoveryConsentStatus.recommended_recovery_flow || [];
     root.innerHTML = `
       ${{shellHeader()}}
       ${{renderCardGrid((daemon.summary_cards || []).map((card) => ({{
@@ -1929,59 +1970,14 @@ def _render_resident_app_shell_bootstrap(
         </table></div>
       </div>
       <div class="shell-grid two-up">
-        <div class="panel">
-          <h3>${{escapeHtml(strings.packagingStatus)}}</h3>
-          ${{renderKeyValuePanel({{
-            kind: packagingStatus.kind,
-            packaging_model: packagingStatus.packaging_model,
-            supervision_model: packagingStatus.supervision_model,
-            phase_status: packagingStatus.phase_status,
-          }})}}
-        </div>
-        <div class="panel">
-          <h3>${{escapeHtml(strings.serviceControlBoundary)}}</h3>
-          ${{renderKeyValuePanel({{
-            kind: serviceControlBoundary.kind,
-            control_plane_status: serviceControlBoundary.control_plane?.status,
-            service_plane_status: serviceControlBoundary.service_plane?.status,
-          }})}}
-          <h4>${{escapeHtml(strings.allowedCommands)}}</h4>
-          <ul>${{[...allowedControlCommands, ...allowedServiceCommands].map((command) => `<li><code>${{escapeHtml(command)}}</code></li>`).join("") || `<li class="muted">${{escapeHtml(strings.emptyPreview)}}</li>`}}</ul>
-          <h4>${{escapeHtml(strings.deferredCommands)}}</h4>
-          <ul>${{deferredServiceCommands.map((command) => `<li><code>${{escapeHtml(command)}}</code></li>`).join("") || `<li class="muted">${{escapeHtml(strings.emptyPreview)}}</li>`}}</ul>
-        </div>
-      </div>
-      <div class="shell-grid two-up">
-        <div class="panel">
-          <h3>${{escapeHtml(strings.supervisionStatus)}}</h3>
-          ${{renderKeyValuePanel({{
-            kind: supervisionStatus.kind,
-            supervision_mode: supervisionStatus.supervision_mode,
-            phase_status: supervisionStatus.phase_status,
-            active_supervision_status: supervisionStatus.active_supervision?.status,
-          }})}}
-          <h4>${{escapeHtml(strings.allowedCommands)}}</h4>
-          <ul>${{supervisionActions.map((command) => `<li><code>${{escapeHtml(command)}}</code></li>`).join("") || `<li class="muted">${{escapeHtml(strings.emptyPreview)}}</li>`}}</ul>
-        </div>
-        <div class="panel">
-          <h3>${{escapeHtml(strings.recoveryConsentStatus)}}</h3>
-          ${{renderKeyValuePanel({{
-            kind: recoveryConsentStatus.kind,
-            consent_model: recoveryConsentStatus.consent_model,
-            recovery_model: recoveryConsentStatus.recovery_model,
-            phase_status: recoveryConsentStatus.phase_status,
-          }})}}
-          <h4>${{escapeHtml(strings.recommendedFlow)}}</h4>
-          <ul>${{recoveryFlow.map((item) => `<li>${{escapeHtml(item)}}</li>`).join("") || `<li class="muted">${{escapeHtml(strings.emptyPreview)}}</li>`}}</ul>
-        </div>
+        ${{operatorPanels.map((panel) => renderOperatorPanel(panel)).join("")}}
       </div>
       <div class="shell-grid two-up">
         <div class="panel">
           <h3>${{escapeHtml(strings.serviceTargets)}}</h3>
           ${{renderKeyValuePanel({{
-            kind: serviceTargetsStatus.kind,
-            current_platform: serviceTargetsStatus.current_platform,
-            recommended_target: serviceTargetsStatus.recommended_target,
+            current_platform: serviceTargetSummary.current_platform,
+            recommended_target: serviceTargetSummary.recommended_target,
           }})}}
           <div class="shell-table-wrap"><table class="compact-table">
             <thead><tr><th>${{escapeHtml(localizeTableLabel("target"))}}</th><th>Platform</th><th>Service Manager</th><th>${{escapeHtml(localizeTableLabel("status"))}}</th></tr></thead>
@@ -1990,25 +1986,19 @@ def _render_resident_app_shell_bootstrap(
         </div>
         <div class="panel">
           <h3>${{escapeHtml(strings.launchagentPreview)}}</h3>
-          ${{launchagentPreview ? renderKeyValuePanel({{
-            kind: launchagentPreview.kind,
-            operation_id: launchagentPreview.operation_id,
-            preview_hash: launchagentPreview.preview_hash,
-            label: launchagentPreview.label,
-            plist_path: launchagentPreview.plist_path,
+          ${{launchagentSummary.preview_available ? renderKeyValuePanel({{
+            preview_available: launchagentSummary.preview_available,
+            plist_path: launchagentSummary.plist_path,
           }}) : `<p class="muted">${{escapeHtml(strings.emptyPreview)}}</p>`}}
-          ${{launchagentPreview?.launchctl_commands ? `<ul>${{Object.entries(launchagentPreview.launchctl_commands).map(([name, command]) => `<li><strong>${{escapeHtml(name)}}</strong>: <code>${{escapeHtml(command)}}</code></li>`).join("")}}</ul>` : ""}}
+          ${{launchagentSummary.launchctl_commands ? `<ul>${{Object.entries(launchagentSummary.launchctl_commands).map(([name, command]) => `<li><strong>${{escapeHtml(name)}}</strong>: <code>${{escapeHtml(command)}}</code></li>`).join("")}}</ul>` : ""}}
         </div>
       </div>
       <div class="panel">
         <h3>${{escapeHtml(strings.launchagentStatus)}}</h3>
-        ${{launchagentStatus ? renderKeyValuePanel({{
-          kind: launchagentStatus.kind,
-          label: launchagentStatus.label,
-          plist_path: launchagentStatus.plist_path,
-          plist_exists: launchagentStatus.plist_exists,
-          loaded_status: launchagentStatus.loaded_status,
-          service_manager: launchagentStatus.service_manager,
+        ${{launchagentSummary.status_available ? renderKeyValuePanel({{
+          status_available: launchagentSummary.status_available,
+          plist_path: launchagentSummary.plist_path,
+          loaded_status: launchagentSummary.loaded_status,
         }}) : `<p class="muted">${{escapeHtml(strings.emptyPreview)}}</p>`}}
       </div>
       <div class="panel">

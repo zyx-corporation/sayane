@@ -84,6 +84,9 @@ def test_render_resident_app_home_includes_bootstrap_and_summary() -> None:
     assert "LaunchAgent Preview" in html
     assert "LaunchAgent Status" in html
     assert "Daemon Observation" in html
+    assert "operator_panels" in html
+    assert "service_target_summary" in html
+    assert "launchagent_summary" in html
     assert "Quick Links" in html
     assert "Queue Summary" in html
     assert "Current Screen" in html

@@ -202,6 +202,9 @@ macOS LaunchAgent preview も表示する。
 また、packaging / service-control / supervision / recovery-consent の各契約も
 structured panel として表示する。
 
+resident shell 側の daemon 表示は raw nested payload を直接前提にせず、`operator_panels` /
+`service_target_summary` / `launchagent_summary` を優先して描画する。
+
 bootstrap 後の resident app browser activity は dedicated local UI session cookie を使う。
 follow-up browser request に raw bearer を毎回与える前提ではない。
 

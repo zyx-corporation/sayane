@@ -79,6 +79,18 @@ Current preview/apply payloads include:
 - `mutations_performed`
 - `result`
 
+Apply payloads also include a schema-only `resident_daemon_runtime_init_receipt` with:
+
+- `operation_id`
+- `plan_fingerprint`
+- `created_paths`
+- `mutations_performed`
+- `metadata_written`
+- `confirm_operation_id`
+- `confirm_plan_fingerprint`
+- `failure_mode`
+- `recovery_note`
+
 When requested with `--include-event-record`, preview/apply payloads also include a derived
 `resident_daemon_event_record` using:
 
@@ -95,3 +107,15 @@ When requested with `--write-metadata`, apply payloads also include:
 - `confirm_plan_fingerprint`
 - `confirmation_matched`
 - `fingerprint_matched`
+
+The receipt is not persistent audit storage and must not be interpreted as daemon liveness,
+readiness, ownership, or process identity proof.
+
+When `--apply --json` is used and apply is refused or fails closed, the command returns the same
+apply-shaped payload with:
+
+- `applied: false`
+- `result: requires_review | aborted | failed`
+- `failure_mode`
+- optional `event_record`
+- `receipt`

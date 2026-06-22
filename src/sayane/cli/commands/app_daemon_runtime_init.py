@@ -9,6 +9,7 @@ from typing import Annotated
 import typer
 
 from sayane.app import (
+    ResidentDaemonRuntimeInitApplyError,
     apply_runtime_init,
     build_runtime_init_event_record,
     build_runtime_init_plan,
@@ -81,6 +82,11 @@ def register_daemon_runtime_init_command(app_group: typer.Typer) -> None:
                     confirm_operation_id=confirm_operation_id,
                     confirm_plan_fingerprint=confirm_plan_fingerprint,
                 )
+            except ResidentDaemonRuntimeInitApplyError as exc:
+                if json_out:
+                    typer.echo(json.dumps(exc.payload, ensure_ascii=False, indent=2))
+                    raise typer.Exit(1) from exc
+                raise typer.BadParameter(str(exc)) from exc
             except ValueError as exc:
                 raise typer.BadParameter(str(exc)) from exc
         else:
@@ -115,5 +121,7 @@ def register_daemon_runtime_init_command(app_group: typer.Typer) -> None:
         if "created_paths" in payload:
             typer.echo(f"created_paths: {len(payload['created_paths'])}")
         typer.echo(f"metadata_written: {payload.get('metadata_written', False)}")
+        if "receipt" in payload:
+            typer.echo(f"receipt.kind: {payload['receipt']['kind']}")
         if "event_record" in payload:
             typer.echo(f"event_record.kind: {payload['event_record']['kind']}")

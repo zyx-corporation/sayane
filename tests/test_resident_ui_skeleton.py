@@ -7,7 +7,11 @@ from datetime import UTC, datetime
 import pytest
 
 from sayane.app.capabilities import CapabilityError, create_local_capability_token
-from sayane.app.ui import build_mcp_preview, build_review_queue
+from sayane.app.ui import (
+    build_daemon_overview_preview,
+    build_mcp_preview,
+    build_review_queue,
+)
 from sayane.core.candidate import (
     CaptureMetadata,
     CandidateProposal,
@@ -118,3 +122,10 @@ def test_mcp_preview_marks_derived_context_and_blocks_pending_and_rejected() -> 
     assert blocked["c-pending"]["exposure_class"] == "pending_candidate"
     assert "rejected value" not in str(preview)
     assert "content for c-pending" not in str(preview)
+
+
+def test_daemon_overview_requires_ui_capability(tmp_path) -> None:
+    capability = create_local_capability_token(["mcp"])
+
+    with pytest.raises(CapabilityError, match="ui"):
+        build_daemon_overview_preview(tmp_path / "run", capability=capability)

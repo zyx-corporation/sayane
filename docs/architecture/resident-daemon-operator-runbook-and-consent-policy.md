@@ -66,7 +66,9 @@ daemon-stop
 daemon-restart
 ```
 
-These commands are future work.
+These commands now exist for the local-only MVP control line, but they still require separate
+process identity, readiness, failure recovery, and audit policy interpretation. They are not OS
+service integration.
 
 ### Service commands
 
@@ -82,7 +84,7 @@ daemon-service-enable
 daemon-service-disable
 ```
 
-These commands are future work.
+These commands remain future work.
 
 ## Preview/apply convention
 
@@ -168,6 +170,9 @@ Messages must not overclaim safety.
 Automation must not bypass operator consent for high-risk operations.
 
 Recurring or scripted workflows may run preview commands, but apply/control/service commands require explicit consent unless a separate future policy defines a safe delegated approval mechanism.
+
+Passive supervision reads may be exposed in local app or CLI surfaces, but they must not silently
+upgrade into background control or OS service automation.
 
 ## Recovery notes
 

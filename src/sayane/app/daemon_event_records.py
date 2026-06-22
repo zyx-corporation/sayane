@@ -140,10 +140,50 @@ def build_preflight_event_record(
     )
 
 
+def build_readiness_event_record(
+    *,
+    operation_id: str,
+    runtime_root: Path,
+    operation_class: str,
+    readiness_status: str,
+    api_readiness_status: str,
+    evidence_ceiling: str,
+    manual_review_required: bool,
+) -> ResidentDaemonEventRecord:
+    """Build a readiness diagnostic preview event record."""
+    evidence = (
+        f"operation_class:{operation_class}",
+        f"readiness_status:{readiness_status}",
+        f"api_readiness_status:{api_readiness_status}",
+        f"evidence_ceiling:{evidence_ceiling}",
+    )
+    result = (
+        ResidentDaemonEventResult.REQUIRES_REVIEW
+        if manual_review_required
+        else ResidentDaemonEventResult.PLANNED
+    )
+    message = (
+        "Resident daemon readiness preview requires manual review."
+        if manual_review_required
+        else "Resident daemon readiness preview remains non-verifying."
+    )
+    return ResidentDaemonEventRecord(
+        operation_id=operation_id,
+        category=ResidentDaemonEventCategory.PREVIEW,
+        surface="daemon-readiness-diagnostic",
+        result=result,
+        runtime_root=runtime_root,
+        evidence=evidence,
+        consent="not_required_for_preview",
+        message=message,
+    )
+
+
 def build_runtime_init_event_record(
     plan: ResidentDaemonRuntimeInitPlan,
     *,
     applied: bool = False,
+    attempted_apply: bool = False,
     created_paths: tuple[str, ...] = (),
     failure_mode: str | None = None,
     write_metadata: bool = False,
@@ -198,20 +238,28 @@ def build_runtime_init_event_record(
         result = ResidentDaemonEventResult.SUCCEEDED
         evidence = (created_paths or no_action_items or create_items) + consent_items
         message = f"Runtime init apply completed under {plan.runtime_root}."
+    elif attempted_apply:
+        result = ResidentDaemonEventResult.ABORTED
+        evidence = (create_items or no_action_items) + consent_items
+        message = f"Runtime init apply aborted for {plan.runtime_root}."
     else:
         result = ResidentDaemonEventResult.PLANNED
         evidence = (create_items or no_action_items) + consent_items
         message = f"Runtime init preview prepared for {plan.runtime_root}."
 
-    if failure_mode:
+    if failure_mode and not manual_review_items:
         result = ResidentDaemonEventResult.FAILED
         evidence = evidence + (f"failure_mode:{failure_mode}",)
         message = f"Runtime init apply failed: {failure_mode}"
+    elif failure_mode:
+        evidence = evidence + (f"failure_mode:{failure_mode}",)
 
     return ResidentDaemonEventRecord(
         operation_id=plan.operation_id,
         category=(
-            ResidentDaemonEventCategory.APPLY if applied else ResidentDaemonEventCategory.PREVIEW
+            ResidentDaemonEventCategory.APPLY
+            if applied or attempted_apply
+            else ResidentDaemonEventCategory.PREVIEW
         ),
         surface=plan.creator_surface,
         result=result,
@@ -220,8 +268,154 @@ def build_runtime_init_event_record(
         consent=(
             "operator_apply_and_confirm_required"
             if write_metadata
-            else ("required" if applied else "operator_apply_required")
+            else ("required" if applied or attempted_apply else "operator_apply_required")
         ),
+        message=message,
+        mutates_filesystem=applied,
+    )
+
+
+def build_process_control_event_record(
+    *,
+    operation_id: str,
+    operation: str,
+    runtime_root: Path,
+    result: str,
+    state_before: str,
+    state_after: str,
+    host: str,
+    port: int,
+    pid: int | None = None,
+    failure_mode: str | None = None,
+    manual_review_required: bool = False,
+    applied: bool = False,
+) -> ResidentDaemonEventRecord:
+    """Build a process-control event record from a control receipt."""
+    evidence = [
+        f"operation:{operation}",
+        f"state_before:{state_before}",
+        f"state_after:{state_after}",
+        f"host:{host}",
+        f"port:{port}",
+        f"applied:{str(applied).lower()}",
+    ]
+    if pid is not None:
+        evidence.append(f"pid:{pid}")
+    if failure_mode is not None:
+        evidence.append(f"failure_mode:{failure_mode}")
+
+    if manual_review_required:
+        event_result = ResidentDaemonEventResult.REQUIRES_REVIEW
+        message = f"Resident daemon {operation} requires manual review."
+    elif result in {"started", "stopped", "restarted"}:
+        event_result = ResidentDaemonEventResult.SUCCEEDED
+        message = f"Resident daemon {operation} completed."
+    elif result == "no_action":
+        event_result = ResidentDaemonEventResult.ABORTED
+        message = f"Resident daemon {operation} had no target process."
+    elif result == "aborted":
+        event_result = ResidentDaemonEventResult.ABORTED
+        message = f"Resident daemon {operation} was aborted."
+    else:
+        event_result = ResidentDaemonEventResult.FAILED
+        message = f"Resident daemon {operation} failed."
+
+    exposes_ipc = operation in {"start", "restart"} and applied
+    mutates_filesystem = operation in {"start", "stop", "restart"} and applied
+    return ResidentDaemonEventRecord(
+        operation_id=operation_id,
+        category=ResidentDaemonEventCategory.PROCESS,
+        surface=f"daemon-{operation}",
+        result=event_result,
+        runtime_root=runtime_root,
+        evidence=tuple(evidence),
+        consent="required",
+        message=message,
+        mutates_filesystem=mutates_filesystem,
+        controls_process=True,
+        exposes_ipc=exposes_ipc,
+    )
+
+
+def build_cleanup_apply_event_record(
+    *,
+    operation_id: str,
+    runtime_root: Path,
+    requested_targets: tuple[str, ...],
+    removed_paths: tuple[str, ...],
+    result: str,
+    failure_mode: str | None = None,
+    applied: bool = False,
+) -> ResidentDaemonEventRecord:
+    """Build a cleanup-apply event record."""
+    evidence = [*(f"requested_target:{target}" for target in requested_targets)]
+    evidence.extend(f"removed_path:{path}" for path in removed_paths)
+    if failure_mode is not None:
+        evidence.append(f"failure_mode:{failure_mode}")
+
+    if result == "applied":
+        event_result = ResidentDaemonEventResult.SUCCEEDED
+        message = "Resident daemon cleanup apply completed."
+    elif result == "requires_review":
+        event_result = ResidentDaemonEventResult.REQUIRES_REVIEW
+        message = "Resident daemon cleanup apply requires manual review."
+    elif result in {"aborted", "no_action"}:
+        event_result = ResidentDaemonEventResult.ABORTED
+        message = "Resident daemon cleanup apply had no effect."
+    else:
+        event_result = ResidentDaemonEventResult.FAILED
+        message = "Resident daemon cleanup apply failed."
+
+    return ResidentDaemonEventRecord(
+        operation_id=operation_id,
+        category=ResidentDaemonEventCategory.APPLY,
+        surface="daemon-cleanup-apply",
+        result=event_result,
+        runtime_root=runtime_root,
+        evidence=tuple(evidence),
+        consent="required",
+        message=message,
+        mutates_filesystem=applied,
+    )
+
+
+def build_repair_apply_event_record(
+    *,
+    operation_id: str,
+    runtime_root: Path,
+    requested_targets: tuple[str, ...],
+    created_paths: tuple[str, ...],
+    result: str,
+    failure_mode: str | None = None,
+    applied: bool = False,
+) -> ResidentDaemonEventRecord:
+    """Build a repair-apply event record."""
+    evidence = [*(f"requested_target:{target}" for target in requested_targets)]
+    evidence.extend(f"created_path:{path}" for path in created_paths)
+    if failure_mode is not None:
+        evidence.append(f"failure_mode:{failure_mode}")
+
+    if result == "applied":
+        event_result = ResidentDaemonEventResult.SUCCEEDED
+        message = "Resident daemon repair apply completed."
+    elif result == "requires_review":
+        event_result = ResidentDaemonEventResult.REQUIRES_REVIEW
+        message = "Resident daemon repair apply requires manual review."
+    elif result in {"aborted", "no_action"}:
+        event_result = ResidentDaemonEventResult.ABORTED
+        message = "Resident daemon repair apply had no effect."
+    else:
+        event_result = ResidentDaemonEventResult.FAILED
+        message = "Resident daemon repair apply failed."
+
+    return ResidentDaemonEventRecord(
+        operation_id=operation_id,
+        category=ResidentDaemonEventCategory.APPLY,
+        surface="daemon-repair-apply",
+        result=event_result,
+        runtime_root=runtime_root,
+        evidence=tuple(evidence),
+        consent="required",
         message=message,
         mutates_filesystem=applied,
     )

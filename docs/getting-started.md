@@ -137,6 +137,8 @@ Chrome Extension は既存利用者向けには利用可能だが、現行方針
 ```bash
 sayane serve
 # Bearer token: ~/.sayane/bridge.token
+# Dedicated local UI session artifact: ~/.sayane/bridge.ui-session.json
+# Resident app bootstrap: http://127.0.0.1:38741/app/ui
 ```
 
 ターミナル 2:
@@ -165,6 +167,7 @@ sayane compile --target chatgpt   # context 本文を Prompt IR に含める
 ```text
 ~/.sayane/
   bridge.token              # Bridge 認証（Phase 2）
+  bridge.ui-session.json    # resident app の dedicated local UI session artifact
   profiles/
     default/
       sayane.profile.yaml  # メイン Profile

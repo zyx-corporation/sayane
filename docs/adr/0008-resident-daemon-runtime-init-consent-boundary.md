@@ -110,9 +110,10 @@ Current accepted rule:
 
 --apply + --write-metadata
 + requires matching --confirm-operation-id <operation-id>
++ requires matching --confirm-plan-fingerprint <fingerprint>
 ```
 
-If the confirmation value does not match the plan `operation_id`, the command must fail closed.
+If either confirmation value does not match the previewed plan, the command must fail closed.
 
 ### 5. Audit shape must be visible before persistence grows
 
@@ -121,6 +122,7 @@ Runtime initialization preview/apply payloads must expose an audit-ready structu
 The accepted shape includes:
 
 - `operation_id`
+- `plan_fingerprint`
 - `creator_surface`
 - `target_paths`
 - `prior_state`
@@ -128,8 +130,13 @@ The accepted shape includes:
 - `operator_confirmation_signal`
 - `mutations_performed`
 - `result`
+- `receipt`
+- `failure_mode`
+- `recovery_note`
 - `confirm_operation_id`
+- `confirm_plan_fingerprint`
 - `confirmation_matched` when applicable
+- `fingerprint_matched` when applicable
 
 This is an audit-shaped payload, not yet an audit storage system.
 
@@ -140,7 +147,9 @@ This is an audit-shaped payload, not yet an audit storage system.
 - preview
 - apply
 
-These records remain schema-only and non-persistent unless a later ADR explicitly introduces persistent audit storage.
+`daemon-runtime-init --apply` may also derive a schema-only runtime-init receipt payload.
+
+These records and receipts remain schema-only and non-persistent unless a later ADR explicitly introduces persistent audit storage.
 
 ## Rationale
 
@@ -154,7 +163,7 @@ The boundary is intentionally asymmetric:
 
 That asymmetry is deliberate because metadata can create false authority even when no daemon exists.
 
-Requiring a matching `confirm_operation_id` makes the operator repeat the exact operation identity before the command writes a placeholder file that may later be read by other tools or humans.
+Requiring matching `confirm_operation_id` and `confirm_plan_fingerprint` makes the operator repeat both the exact operation identity and the reviewed plan basis before the command writes a placeholder file that may later be read by other tools or humans.
 
 Separating:
 

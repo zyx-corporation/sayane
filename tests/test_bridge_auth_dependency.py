@@ -6,7 +6,13 @@ from pathlib import Path
 from fastapi import Depends, FastAPI
 from fastapi.testclient import TestClient
 
-from sayane.bridge.auth import create_bearer_dependency, load_or_create_token
+from sayane.bridge.auth import (
+    clear_ui_session,
+    create_bearer_dependency,
+    issue_ui_session,
+    load_or_create_token,
+    verify_ui_session,
+)
 from sayane.bridge.config import BridgeConfig
 
 
@@ -61,3 +67,24 @@ def test_bearer_dependency_accepts_valid_token_across_registration_boundary(
 
     assert response.status_code == 200
     assert response.json() == {"ok": True}
+
+
+def test_dedicated_ui_session_verifies_and_replaces(tmp_path: Path) -> None:
+    config = BridgeConfig(home=tmp_path / "sayane")
+
+    first = issue_ui_session(config)
+    assert verify_ui_session(config, first) is True
+
+    second = issue_ui_session(config)
+    assert verify_ui_session(config, first) is False
+    assert verify_ui_session(config, second) is True
+
+
+def test_dedicated_ui_session_can_be_cleared(tmp_path: Path) -> None:
+    config = BridgeConfig(home=tmp_path / "sayane")
+
+    token = issue_ui_session(config)
+    assert verify_ui_session(config, token) is True
+
+    clear_ui_session(config)
+    assert verify_ui_session(config, token) is False

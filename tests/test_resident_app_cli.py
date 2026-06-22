@@ -128,19 +128,19 @@ def test_resident_app_daemon_status_json(isolated_home: Path) -> None:
 
     assert result.exit_code == 0
     payload = json.loads(result.stdout)
-    assert payload == {
-        "state": "stopped",
-        "mode": "bridge_delegation",
-        "host": "127.0.0.1",
-        "port": 38741,
-        "runtime_backend": "legacy_process_local",
-        "unlock_session_binding": "unbound",
-        "capability_policy": "local_development",
-        "is_local_bind": True,
-        "notes": [],
-        "is_running_daemon": False,
-        "kind": "resident_daemon_lifecycle_status",
-    }
+    assert payload["kind"] == "resident_daemon_lifecycle_status"
+    assert payload["state"] == "stopped"
+    assert payload["mode"] == "bridge_delegation"
+    assert payload["host"] == "127.0.0.1"
+    assert payload["port"] == 38741
+    assert payload["runtime_backend"] == "bridge_subprocess_local"
+    assert payload["unlock_session_binding"] == "unbound"
+    assert payload["capability_policy"] == "local_development"
+    assert payload["is_local_bind"] is True
+    assert payload["notes"] == []
+    assert payload["is_running_daemon"] is False
+    assert payload["pid"] is None
+    assert payload["pid_file_status"] == "missing"
 
 
 def test_resident_app_daemon_plan_json(isolated_home: Path) -> None:
@@ -210,3 +210,74 @@ def test_resident_app_serve_rejects_non_localhost(isolated_home: Path) -> None:
 
     assert result.exit_code != 0
     assert "localhost" in (result.stdout + result.stderr + str(result.exception)).lower()
+
+
+def test_resident_app_repair_commands_are_registered(isolated_home: Path) -> None:
+    preview = runner.invoke(app, ["app", "daemon-repair-preview", "--json"])
+    apply = runner.invoke(app, ["app", "daemon-repair-apply", "--json"])
+
+    assert preview.exit_code == 0
+    assert apply.exit_code == 0
+    assert json.loads(preview.stdout)["kind"] == "resident_daemon_repair_apply_preview"
+    assert json.loads(apply.stdout)["kind"] == "resident_daemon_repair_apply_receipt"
+
+
+def test_resident_app_readiness_command_is_registered(isolated_home: Path) -> None:
+    result = runner.invoke(app, ["app", "daemon-readiness-diagnostic", "--json"])
+
+    assert result.exit_code == 0
+    assert json.loads(result.stdout)["kind"] == "resident_daemon_readiness_diagnostic_preview"
+
+
+def test_resident_app_overview_command_is_registered(isolated_home: Path) -> None:
+    result = runner.invoke(app, ["app", "daemon-overview", "--json"])
+
+    assert result.exit_code == 0
+    assert json.loads(result.stdout)["kind"] == "resident_daemon_overview_preview"
+
+
+def test_resident_app_aggregate_overview_command_is_registered(isolated_home: Path) -> None:
+    result = runner.invoke(app, ["app", "overview", "--json"])
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["kind"] == "resident_app_overview"
+    assert payload["summary"]["repository_available"] is False
+    assert payload["review_queue"]["kind"] == "resident_review_queue"
+    assert payload["mcp_preview"]["preview"]["kind"] == "resident_mcp_preview"
+    assert payload["daemon_overview"]["kind"] == "resident_daemon_overview_preview"
+    assert payload["operator_packaging"]["kind"] == "resident_daemon_packaging_status"
+
+
+def test_resident_app_contract_command_is_registered(isolated_home: Path) -> None:
+    result = runner.invoke(app, ["app", "contract", "--json"])
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["kind"] == "resident_app_contract"
+    assert payload["preferred_entrypoint"] == "/app/overview"
+
+
+def test_resident_app_daemon_packaging_status_command_is_registered(isolated_home: Path) -> None:
+    result = runner.invoke(app, ["app", "daemon-packaging-status", "--json"])
+
+    assert result.exit_code == 0
+    assert json.loads(result.stdout)["kind"] == "resident_daemon_packaging_status"
+
+
+def test_resident_app_daemon_service_control_boundary_command_is_registered(
+    isolated_home: Path,
+) -> None:
+    result = runner.invoke(app, ["app", "daemon-service-control-boundary", "--json"])
+
+    assert result.exit_code == 0
+    assert json.loads(result.stdout)["kind"] == "resident_daemon_service_control_boundary"
+
+
+def test_resident_app_daemon_supervision_status_command_is_registered(
+    isolated_home: Path,
+) -> None:
+    result = runner.invoke(app, ["app", "daemon-supervision-status", "--json"])
+
+    assert result.exit_code == 0
+    assert json.loads(result.stdout)["kind"] == "resident_daemon_supervision_status"

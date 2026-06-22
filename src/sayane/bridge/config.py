@@ -13,10 +13,15 @@ class BridgeConfig:
     host: str = "127.0.0.1"
     port: int = 38741
     home: Path = field(default_factory=sayane_home)
+    ui_session_ttl_seconds: int = 12 * 60 * 60
 
     @property
     def token_file(self) -> Path:
         return self.home / "bridge.token"
+
+    @property
+    def ui_session_file(self) -> Path:
+        return self.home / "bridge.ui-session.json"
 
     @property
     def profiles_dir(self) -> Path:

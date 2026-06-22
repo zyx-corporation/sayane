@@ -25,6 +25,15 @@ ACCEPTANCE_L1_COVERAGE: dict[str, str] = {
     ),
     "BRG-reject": "tests.test_bridge_api::test_candidate_reject",
     "BRG-critical": "tests.test_bridge_api::test_candidate_critical_approve_requires_force",
+    "APP-UI-main": (
+        "tests.test_resident_app_regression::test_resident_app_gui_operator_path_capture_review_revise_approve"
+    ),
+    "APP-UI-reject": (
+        "tests.test_resident_app_regression::test_resident_app_gui_operator_path_rejects_candidate"
+    ),
+    "APP-UI-daemon": (
+        "tests.test_resident_app_regression::test_resident_app_gui_operator_path_daemon_panel"
+    ),
 }
 
 

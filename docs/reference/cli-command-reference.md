@@ -111,3 +111,116 @@ sayane transfer-report --format json -o report.json
 # Import a context bundle as reviewable candidates
 sayane import-bundle bundle.yml --profile examples/profiles/minimal.yaml
 ```
+
+## Resident Daemon
+
+```bash
+# Preview runtime initialization
+sayane app daemon-runtime-init --json
+
+# Initialize runtime directories
+sayane app daemon-runtime-init --apply --json
+
+# Start the local-only resident daemon MVP
+sayane app daemon-start --json
+sayane app daemon-start --include-event-record --json
+
+# Inspect current daemon status
+sayane app daemon-status --json
+
+# Stop or restart the daemon
+sayane app daemon-stop --json
+sayane app daemon-restart --json
+
+# Remove an explicitly reviewed stale runtime file
+sayane app daemon-cleanup-preview --json
+sayane app daemon-cleanup-apply \
+  --remove pid_file \
+  --confirm-operation-id cleanup-preview-... \
+  --confirm-preview-hash ... \
+  --json
+
+# Create an explicitly reviewed runtime directory target
+sayane app daemon-repair-preview --json
+sayane app daemon-repair-apply \
+  --create runtime_root \
+  --confirm-operation-id repair-preview-... \
+  --confirm-preview-hash ... \
+  --json
+
+# Preview conservative daemon/API readiness observations
+sayane app daemon-readiness-diagnostic \
+  --operation-class bridge_health \
+  --json
+
+# Preview current operator-facing packaging and supervision boundary
+sayane app daemon-packaging-status --json
+
+# Preview current service/control boundary for allowed CLI control and deferred service commands
+sayane app daemon-service-control-boundary --json
+
+# Preview current supervision UX boundary for passive visibility and CLI recovery
+sayane app daemon-supervision-status --json
+
+# Preview conservative daemon identity-proof observations
+sayane app daemon-identity-proof --json
+
+# Preview conservative daemon readiness-proof observations
+sayane app daemon-readiness-proof \
+  --operation-class bridge_health \
+  --json
+
+# Preview conservative daemon API-readiness-proof observations
+sayane app daemon-api-readiness-proof \
+  --operation-class bridge_health \
+  --json
+
+# Preview an aggregated daemon proof diagnostics snapshot
+sayane app daemon-proof-diagnostics \
+  --operation-class bridge_health \
+  --json
+
+# Preview a future-UI-oriented daemon overview payload
+sayane app daemon-overview --json
+
+# Preview an aggregate app overview payload
+sayane app overview --json
+
+# Show app-facing UI handoff contract metadata
+sayane app contract --json
+```
+
+## Bridge App Surfaces
+
+```bash
+# Read aggregate app-facing preview state
+curl -H "Authorization: Bearer $TOKEN" http://127.0.0.1:38741/app/overview
+
+# Read app-facing UI handoff contract metadata
+curl -H "Authorization: Bearer $TOKEN" http://127.0.0.1:38741/app/contract
+
+# Open the local HTML bootstrap UI
+curl -H "Authorization: Bearer $TOKEN" http://127.0.0.1:38741/app/ui
+
+# After bootstrap, browser-driven follow-up UI activity uses the dedicated local UI session
+# rather than resupplying the raw bearer on every request
+
+# Capture clipboard text into the resident candidate flow
+curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"content":"important_terms:\n  - \"Sayane\""}' \
+  http://127.0.0.1:38741/app/capture-clipboard
+
+# Read and act on app-facing review candidates
+curl -H "Authorization: Bearer $TOKEN" http://127.0.0.1:38741/app/candidates
+curl -H "Authorization: Bearer $TOKEN" http://127.0.0.1:38741/app/candidates/<id>
+curl -H "Authorization: Bearer $TOKEN" http://127.0.0.1:38741/app/candidates/<id>/diff
+curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"level":1}' http://127.0.0.1:38741/app/candidates/<id>/evaluate
+curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"edited_text":"Revised text","target_section":"knowledge.concepts"}' \
+  http://127.0.0.1:38741/app/candidates/<id>/revise
+curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"force_critical":false}' http://127.0.0.1:38741/app/candidates/<id>/approve
+curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"reason":"not needed"}' http://127.0.0.1:38741/app/candidates/<id>/reject
+```

@@ -14,8 +14,12 @@ from sayane.app import (
     ResidentDaemonPreflightItem,
     ResidentDaemonPreflightReport,
     ResidentDaemonPreflightStatus,
+    build_cleanup_apply_event_record,
+    build_repair_apply_event_record,
+    build_readiness_event_record,
     build_runtime_init_plan,
     build_preflight_event_record,
+    build_process_control_event_record,
     build_runtime_init_event_record,
 )
 
@@ -254,3 +258,114 @@ def test_build_runtime_init_event_record_for_apply(tmp_path: Path) -> None:
     assert f"confirm_plan_fingerprint:{plan.plan_fingerprint()}" in payload["evidence"]
     assert "confirmation_matched:true" in payload["evidence"]
     assert "fingerprint_matched:true" in payload["evidence"]
+
+
+def test_build_cleanup_apply_event_record_for_apply(tmp_path: Path) -> None:
+    payload = build_cleanup_apply_event_record(
+        operation_id="cleanup-apply-1",
+        runtime_root=tmp_path / "run",
+        requested_targets=("pid_file",),
+        removed_paths=(str(tmp_path / "run" / "sayane-resident.pid"),),
+        result="applied",
+        applied=True,
+    ).public_metadata()
+
+    assert payload["surface"] == "daemon-cleanup-apply"
+    assert payload["category"] == "apply"
+    assert payload["result"] == "succeeded"
+    assert payload["mutates_filesystem"] is True
+
+
+def test_build_repair_apply_event_record_for_apply(tmp_path: Path) -> None:
+    payload = build_repair_apply_event_record(
+        operation_id="repair-apply-1",
+        runtime_root=tmp_path / "run",
+        requested_targets=("log_dir",),
+        created_paths=(str(tmp_path / "run" / "logs"),),
+        result="applied",
+        applied=True,
+    ).public_metadata()
+
+    assert payload["surface"] == "daemon-repair-apply"
+    assert payload["category"] == "apply"
+    assert payload["result"] == "succeeded"
+    assert payload["mutates_filesystem"] is True
+
+
+def test_build_readiness_event_record_for_preview(tmp_path: Path) -> None:
+    payload = build_readiness_event_record(
+        operation_id="readiness-preview-1",
+        runtime_root=tmp_path / "run",
+        operation_class="diagnostics",
+        readiness_status="readiness_unverified",
+        api_readiness_status="api_readiness_unverified",
+        evidence_ceiling="unauthenticated_health_endpoint_only",
+        manual_review_required=False,
+    ).public_metadata()
+
+    assert payload["surface"] == "daemon-readiness-diagnostic"
+    assert payload["category"] == "preview"
+    assert payload["result"] == "planned"
+    assert payload["mutates_filesystem"] is False
+
+
+def test_build_process_control_event_record_for_started_daemon(tmp_path: Path) -> None:
+    payload = build_process_control_event_record(
+        operation_id="daemon-start-001",
+        operation="start",
+        runtime_root=tmp_path / "run",
+        result="started",
+        state_before="stopped",
+        state_after="running",
+        host="127.0.0.1",
+        port=38741,
+        pid=43210,
+        applied=True,
+    ).public_metadata()
+
+    assert payload["category"] == "process"
+    assert payload["surface"] == "daemon-start"
+    assert payload["result"] == "succeeded"
+    assert payload["controls_process"] is True
+    assert payload["exposes_ipc"] is True
+    assert "operation:start" in payload["evidence"]
+    assert "pid:43210" in payload["evidence"]
+
+
+def test_build_process_control_event_record_for_manual_review(tmp_path: Path) -> None:
+    payload = build_process_control_event_record(
+        operation_id="daemon-stop-001",
+        operation="stop",
+        runtime_root=tmp_path / "run",
+        result="requires_review",
+        state_before="failed",
+        state_after="failed",
+        host="127.0.0.1",
+        port=38741,
+        failure_mode="stale_pid_file",
+        manual_review_required=True,
+        applied=False,
+    ).public_metadata()
+
+    assert payload["category"] == "process"
+    assert payload["surface"] == "daemon-stop"
+    assert payload["result"] == "requires_review"
+    assert payload["controls_process"] is True
+    assert "failure_mode:stale_pid_file" in payload["evidence"]
+
+
+def test_build_cleanup_apply_event_record_for_success(tmp_path: Path) -> None:
+    payload = build_cleanup_apply_event_record(
+        operation_id="daemon-cleanup-001",
+        runtime_root=tmp_path / "run",
+        requested_targets=("pid_file",),
+        removed_paths=(str(tmp_path / "run" / "sayane-resident.pid"),),
+        result="applied",
+        applied=True,
+    ).public_metadata()
+
+    assert payload["category"] == "apply"
+    assert payload["surface"] == "daemon-cleanup-apply"
+    assert payload["result"] == "succeeded"
+    assert payload["mutates_filesystem"] is True
+    assert "requested_target:pid_file" in payload["evidence"]

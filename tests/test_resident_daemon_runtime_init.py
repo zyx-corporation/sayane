@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from sayane.app import (
+    ResidentDaemonRuntimeInitApplyError,
     ResidentDaemonRuntimeInitStatus,
     apply_runtime_init,
     build_runtime_init_plan,
@@ -37,6 +38,9 @@ def test_runtime_init_apply_creates_runtime_directories(tmp_path: Path) -> None:
     assert payload["event_record"]["category"] == "apply"
     assert payload["event_record"]["result"] == "succeeded"
     assert payload["event_record"]["consent"] == "required"
+    assert payload["receipt"]["kind"] == "resident_daemon_runtime_init_receipt"
+    assert payload["receipt"]["result"] == "applied"
+    assert payload["receipt"]["metadata_written"] is False
     assert payload["metadata_written"] is False
     assert len(payload["created_paths"]) == 7
     assert (runtime_root / "pid").is_dir()
@@ -73,6 +77,11 @@ def test_runtime_init_apply_can_write_metadata_placeholder(tmp_path: Path) -> No
     metadata_path = runtime_root / "state" / "runtime-init.json"
     assert payload["metadata_written"] is True
     assert payload["confirmation_matched"] is True
+    assert payload["receipt"]["plan_fingerprint"] == plan.plan_fingerprint()
+    assert payload["receipt"]["confirm_operation_id"] == "op-meta-1"
+    assert payload["receipt"]["confirm_plan_fingerprint"] == plan.plan_fingerprint()
+    assert payload["receipt"]["confirmation_matched"] is True
+    assert payload["receipt"]["fingerprint_matched"] is True
     assert payload["metadata_path"] == str(metadata_path)
     assert metadata_path.is_file()
     assert payload["metadata"]["operation_id"] == "op-meta-1"
@@ -90,8 +99,11 @@ def test_runtime_init_apply_metadata_requires_matching_confirmation(tmp_path: Pa
 
     try:
         apply_runtime_init(plan, write_metadata=True)
-    except ValueError as exc:
+    except ResidentDaemonRuntimeInitApplyError as exc:
         assert "confirm_operation_id" in str(exc)
+        assert exc.payload["result"] == "aborted"
+        assert exc.payload["failure_mode"] == "confirm_operation_id_missing"
+        assert exc.payload["receipt"]["applied"] is False
     else:
         raise AssertionError("expected write_metadata confirmation failure")
 
@@ -102,8 +114,9 @@ def test_runtime_init_apply_metadata_requires_matching_confirmation(tmp_path: Pa
             confirm_operation_id="wrong-op",
             confirm_plan_fingerprint=plan.plan_fingerprint(),
         )
-    except ValueError as exc:
+    except ResidentDaemonRuntimeInitApplyError as exc:
         assert "must match" in str(exc)
+        assert exc.payload["failure_mode"] == "confirm_operation_id_mismatch"
     else:
         raise AssertionError("expected mismatched confirmation failure")
 
@@ -114,7 +127,28 @@ def test_runtime_init_apply_metadata_requires_matching_confirmation(tmp_path: Pa
             confirm_operation_id="op-meta-2",
             confirm_plan_fingerprint="wrong-fingerprint",
         )
-    except ValueError as exc:
+    except ResidentDaemonRuntimeInitApplyError as exc:
         assert "fingerprint" in str(exc)
+        assert exc.payload["failure_mode"] == "confirm_plan_fingerprint_mismatch"
     else:
         raise AssertionError("expected mismatched fingerprint failure")
+
+
+def test_runtime_init_apply_review_required_returns_structured_failure(tmp_path: Path) -> None:
+    runtime_root = tmp_path / "runtime"
+    runtime_root.mkdir()
+    (runtime_root / "pid").write_text("conflict", encoding="utf-8")
+    plan = build_runtime_init_plan(runtime_root, operation_id="op-review-1")
+
+    try:
+        apply_runtime_init(plan, include_event_record=True)
+    except ResidentDaemonRuntimeInitApplyError as exc:
+        assert exc.payload["result"] == "requires_review"
+        assert exc.payload["failure_mode"] == "manual_review_required"
+        assert exc.payload["applied"] is False
+        assert exc.payload["event_record"]["category"] == "apply"
+        assert exc.payload["event_record"]["result"] == "requires_review"
+        assert exc.payload["receipt"]["applied"] is False
+        assert exc.payload["receipt"]["failure_mode"] == "manual_review_required"
+    else:
+        raise AssertionError("expected manual review failure")

@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import secrets
 from collections.abc import Callable
+from dataclasses import asdict, dataclass
+from datetime import UTC, datetime, timedelta
 
 from fastapi import HTTPException, Request, status
 
@@ -44,6 +47,16 @@ class BearerTokenAuth:
         _check_bearer(self.config, request.headers.get("authorization"))
 
 
+@dataclass
+class LocalUISession:
+    """Dedicated UI session artifact for browser-driven resident app activity."""
+
+    session_id: str
+    token_hash: str
+    issued_at: str
+    expires_at: str
+
+
 def load_or_create_token(config: BridgeConfig) -> tuple[str, bool]:
     """Load bearer token from disk, or create one. Returns (token, created)."""
     config.home.mkdir(parents=True, exist_ok=True)
@@ -68,6 +81,55 @@ def verify_token(config: BridgeConfig, presented: str) -> bool:
     if expected is None or not presented:
         return False
     return secrets.compare_digest(presented, expected)
+
+
+def issue_ui_session(config: BridgeConfig) -> str:
+    """Mint and persist a dedicated local UI session token."""
+    config.home.mkdir(parents=True, exist_ok=True)
+    token = secrets.token_urlsafe(32)
+    now = datetime.now(UTC)
+    expires_at = now + timedelta(seconds=config.ui_session_ttl_seconds)
+    artifact = LocalUISession(
+        session_id=secrets.token_hex(16),
+        token_hash=_hash_ui_session_token(token),
+        issued_at=now.isoformat(),
+        expires_at=expires_at.isoformat(),
+    )
+    config.ui_session_file.write_text(json.dumps(asdict(artifact), indent=2), encoding="utf-8")
+    config.ui_session_file.chmod(0o600)
+    return token
+
+
+def clear_ui_session(config: BridgeConfig) -> None:
+    """Invalidate the current dedicated local UI session artifact."""
+    config.ui_session_file.unlink(missing_ok=True)
+
+
+def verify_ui_session(config: BridgeConfig, presented: str) -> bool:
+    """Return whether the presented token matches the current dedicated local UI session."""
+    if not presented:
+        return False
+    artifact = load_ui_session(config)
+    if artifact is None:
+        return False
+    expires_at = datetime.fromisoformat(artifact.expires_at)
+    if expires_at <= datetime.now(UTC):
+        clear_ui_session(config)
+        return False
+    return secrets.compare_digest(_hash_ui_session_token(presented), artifact.token_hash)
+
+
+def load_ui_session(config: BridgeConfig) -> LocalUISession | None:
+    """Load the persisted dedicated local UI session artifact, if any."""
+    path = config.ui_session_file
+    if not path.exists():
+        return None
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    return LocalUISession(**payload)
+
+
+def _hash_ui_session_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
 def format_pairing_code(token: str) -> str:

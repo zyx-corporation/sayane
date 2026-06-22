@@ -14,6 +14,7 @@ from sayane.bridge.routes.context_packet import register_context_packet_routes
 from sayane.bridge.routes.import_bundle import register_import_routes
 from sayane.bridge.routes.lineage import register_lineage_routes
 from sayane.bridge.routes.profiles import register_profile_routes
+from sayane.bridge.routes.resident_app import register_resident_app_routes
 
 AuthDependency = Callable[..., None]
 
@@ -35,3 +36,4 @@ def register_bridge_routes(
     register_context_packet_routes(app, cfg, require_bearer)
     register_candidate_routes(app, cfg, require_bearer)
     register_lineage_routes(app, cfg, require_bearer)
+    register_resident_app_routes(app, cfg, require_bearer)

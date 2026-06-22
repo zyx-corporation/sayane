@@ -11,8 +11,11 @@ from typing import Annotated, Any
 import typer
 
 from sayane.app import (
+    build_app_contract,
     ResidentDaemonLifecycle,
     ResidentDaemonMode,
+    build_app_overview,
+    build_daemon_status_report,
     build_mcp_preview,
     build_resident_runtime,
     build_review_queue,
@@ -21,20 +24,52 @@ from sayane.bridge.config import BridgeConfig
 from sayane.cli.commands.app_daemon_cleanup_decisions import (
     register_daemon_cleanup_decision_command,
 )
+from sayane.cli.commands.app_daemon_cleanup_apply import (
+    register_daemon_cleanup_apply_command,
+)
+from sayane.cli.commands.app_daemon_api_readiness_proof import (
+    register_daemon_api_readiness_proof_command,
+)
+from sayane.cli.commands.app_daemon_repair_apply import (
+    register_daemon_repair_apply_command,
+)
+from sayane.cli.commands.app_daemon_control import register_daemon_control_commands
 from sayane.cli.commands.app_daemon_identity import register_daemon_identity_command
+from sayane.cli.commands.app_daemon_identity_proof import (
+    register_daemon_identity_proof_command,
+)
 from sayane.cli.commands.app_daemon_liveness_diagnostics import (
     register_daemon_liveness_diagnostic_command,
+)
+from sayane.cli.commands.app_daemon_overview import register_daemon_overview_command
+from sayane.cli.commands.app_daemon_packaging_status import (
+    register_daemon_packaging_status_command,
 )
 from sayane.cli.commands.app_daemon_pid_diagnostics import (
     register_daemon_pid_diagnostic_command,
 )
 from sayane.cli.commands.app_daemon_plans import register_daemon_plan_commands
 from sayane.cli.commands.app_daemon_preflight import register_daemon_preflight_command
+from sayane.cli.commands.app_daemon_proof_diagnostics import (
+    register_daemon_proof_diagnostics_command,
+)
+from sayane.cli.commands.app_daemon_readiness_diagnostics import (
+    register_daemon_readiness_diagnostic_command,
+)
+from sayane.cli.commands.app_daemon_readiness_proof import (
+    register_daemon_readiness_proof_command,
+)
 from sayane.cli.commands.app_daemon_runtime_layout import (
     register_daemon_runtime_layout_command,
 )
 from sayane.cli.commands.app_daemon_runtime_init import (
     register_daemon_runtime_init_command,
+)
+from sayane.cli.commands.app_daemon_service_control_boundary import (
+    register_daemon_service_control_boundary_command,
+)
+from sayane.cli.commands.app_daemon_supervision_status import (
+    register_daemon_supervision_status_command,
 )
 from sayane.cli.commands.app_daemon_stale_artifacts import (
     register_daemon_stale_artifact_command,
@@ -87,10 +122,7 @@ def _daemon_lifecycle(host: str, port: int) -> ResidentDaemonLifecycle:
 
 
 def _daemon_status_payload(host: str, port: int) -> dict[str, Any]:
-    lifecycle = _daemon_lifecycle(host, port)
-    payload = lifecycle.public_metadata()
-    payload["kind"] = "resident_daemon_lifecycle_status"
-    return payload
+    return build_daemon_status_report(BridgeConfig().home / "run", host=host, port=port).public_metadata()
 
 
 def _daemon_plan_payload(host: str, port: int) -> dict[str, Any]:
@@ -170,6 +202,39 @@ def register_app_commands(app: typer.Typer) -> None:
         typer.echo(f"bridge_port: {payload['bridge_port']}")
         typer.echo(f"capabilities: {', '.join(payload['capabilities'])}")
 
+    @app_group.command("overview")
+    def overview(
+        json_out: Annotated[bool, typer.Option("--json", help="Emit JSON output.")] = False,
+    ) -> None:
+        """Show an aggregate resident app overview payload."""
+        runtime = build_resident_runtime()
+        payload = build_app_overview(runtime)
+        if json_out:
+            typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+            return
+        typer.echo(f"kind: {payload['kind']}")
+        typer.echo(f"profile_id: {payload['profile_id']}")
+        typer.echo(f"review_items: {len(payload['review_queue']['items'])}")
+        typer.echo(f"daemon_state: {payload['daemon_overview']['status']['state']}")
+        typer.echo(
+            f"repository_available: {payload['review_queue']['repository_available']}"
+        )
+
+    @app_group.command("contract")
+    def contract(
+        json_out: Annotated[bool, typer.Option("--json", help="Emit JSON output.")] = False,
+    ) -> None:
+        """Show app-facing UI handoff contract metadata."""
+        payload = build_app_contract()
+        if json_out:
+            typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+            return
+        typer.echo(f"kind: {payload['kind']}")
+        typer.echo(f"contract_version: {payload['contract_version']}")
+        typer.echo(f"preferred_entrypoint: {payload['preferred_entrypoint']}")
+        typer.echo(f"read_surfaces: {len(payload['read_surfaces'])}")
+        typer.echo(f"write_surfaces: {len(payload['write_surfaces'])}")
+
     @app_group.command("capture-clipboard")
     def capture_clipboard(
         text: Annotated[str | None, typer.Option("--text", help="Clipboard text.")] = None,
@@ -248,22 +313,6 @@ def register_app_commands(app: typer.Typer) -> None:
         typer.echo(f"mode: {payload['mode']}")
         typer.echo(f"repository_available: {payload['repository_available']}")
 
-    @app_group.command("daemon-status")
-    def daemon_status(
-        host: Annotated[str, typer.Option("--host")] = "127.0.0.1",
-        port: Annotated[int, typer.Option("--port")] = 38741,
-        json_out: Annotated[bool, typer.Option("--json", help="Emit JSON output.")] = False,
-    ) -> None:
-        """Show resident daemon lifecycle status without starting a daemon."""
-        payload = _daemon_status_payload(host, port)
-        if json_out:
-            typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
-            return
-        typer.echo(f"kind: {payload['kind']}")
-        typer.echo(f"state: {payload['state']}")
-        typer.echo(f"mode: {payload['mode']}")
-        typer.echo(f"is_running_daemon: {payload['is_running_daemon']}")
-
     @app_group.command("daemon-plan")
     def daemon_plan(
         host: Annotated[str, typer.Option("--host")] = "127.0.0.1",
@@ -281,14 +330,26 @@ def register_app_commands(app: typer.Typer) -> None:
         typer.echo(f"daemon_process_started: {payload['daemon_process_started']}")
 
     register_daemon_identity_command(app_group)
+    register_daemon_packaging_status_command(app_group)
+    register_daemon_service_control_boundary_command(app_group)
+    register_daemon_supervision_status_command(app_group)
+    register_daemon_identity_proof_command(app_group)
+    register_daemon_overview_command(app_group)
     register_daemon_runtime_layout_command(app_group)
     register_daemon_runtime_init_command(app_group)
     register_daemon_stale_artifact_command(app_group)
     register_daemon_cleanup_decision_command(app_group)
+    register_daemon_cleanup_apply_command(app_group)
+    register_daemon_repair_apply_command(app_group)
     register_daemon_pid_diagnostic_command(app_group)
     register_daemon_liveness_diagnostic_command(app_group)
+    register_daemon_readiness_diagnostic_command(app_group)
+    register_daemon_readiness_proof_command(app_group)
+    register_daemon_api_readiness_proof_command(app_group)
+    register_daemon_proof_diagnostics_command(app_group)
     register_daemon_preflight_command(app_group)
     register_daemon_plan_commands(app_group)
+    register_daemon_control_commands(app_group)
 
     @app_group.command("serve")
     def serve(

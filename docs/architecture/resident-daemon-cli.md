@@ -4,20 +4,30 @@ This document records #188 resident daemon lifecycle CLI commands.
 
 ## Status
 
-Read-only lifecycle CLI commands are implemented.
-
-They do not start a resident daemon.
+Resident daemon lifecycle and control CLI commands are implemented for a minimal local-only MVP.
 
 ## Commands
 
 ```bash
 sayane app daemon-status --json
 sayane app daemon-plan --json
+sayane app daemon-start --json
+sayane app daemon-stop --json
+sayane app daemon-restart --json
+sayane app daemon-cleanup-preview --json
+sayane app daemon-cleanup-apply --remove pid_file --json
+sayane app daemon-repair-preview --json
+sayane app daemon-repair-apply --create runtime_root --json
+sayane app daemon-readiness-diagnostic --json
+sayane app daemon-packaging-status --json
+sayane app daemon-service-control-boundary --json
+sayane app daemon-supervision-status --json
+sayane app daemon-overview --json
 ```
 
 ## daemon-status
 
-`daemon-status` returns the current lifecycle contract metadata:
+`daemon-status` returns the current local resident daemon status metadata:
 
 ```text
 state
@@ -29,17 +39,25 @@ unlock_session_binding
 capability_policy
 is_local_bind
 is_running_daemon
+runtime_root
+pid_path
+lock_path
+log_path
+health_url
+pid
+pid_file_status
+runtime_initialized
+lock_exists
+healthcheck_ok
+manual_review_required
+failure_mode
 ```
 
-The default state is `stopped`.
-
-The default mode is `bridge_delegation`.
-
-`is_running_daemon` is always `false` in this phase.
+The default state is `stopped` until a daemon is started.
 
 ## daemon-plan
 
-`daemon-plan` returns a non-running plan payload.
+`daemon-plan` still returns a non-running plan payload.
 
 It records the current serving relationship:
 
@@ -49,6 +67,94 @@ bridge_command: sayane serve --host ... --port ...
 ```
 
 The command does not start a process.
+
+## daemon-start / daemon-stop / daemon-restart
+
+These commands implement the first actual local-only resident daemon control slice.
+
+`daemon-start` launches the existing `sayane serve` bridge as a subprocess after runtime
+initialization has been completed.
+
+`daemon-stop` sends a graceful termination signal to the managed subprocess and removes the PID and
+lock files after exit.
+
+`daemon-restart` combines the two operations.
+
+When `--include-event-record` is supplied, these commands also return a derived
+`resident_daemon_event_record` with `process` category.
+
+## daemon-cleanup-apply
+
+`daemon-cleanup-apply` is a narrow cleanup surface for reviewed local artifacts.
+
+In the current MVP it removes only explicitly requested file targets such as `pid_file`,
+`lock_file`, and `socket_file`.
+
+It also requires the current cleanup preview's `operation_id` and `preview_hash` before mutation.
+
+## daemon-repair-preview / daemon-repair-apply
+
+`daemon-repair-apply` is a separate conservative repair surface for reviewed local directory
+creation.
+
+In the current MVP it creates only explicitly requested directory targets such as `runtime_root`,
+`pid_dir`, `lock_dir`, `socket_dir`, `log_dir`, `temp_dir`, and `state_dir`.
+
+It requires the current repair preview's `operation_id` and `preview_hash` before mutation.
+
+When `--include-event-record` is supplied, the command also returns a derived
+`resident_daemon_event_record` with `apply` category.
+
+## daemon-readiness-diagnostic
+
+`daemon-readiness-diagnostic` is a preview-only readiness observation surface.
+
+It reports conservative `readiness_status` and `api_readiness_status` values for an
+operator-visible operation class, but it does not prove process identity, daemon readiness, or
+API readiness.
+
+When the local health endpoint responds, the evidence ceiling remains
+`unauthenticated_health_endpoint_only`.
+
+## daemon-packaging-status
+
+`daemon-packaging-status` exposes the current operator-facing packaging and supervision contract.
+
+It makes the current local-only commitment explicit:
+
+- primary entrypoint remains `sayane serve`
+- local daemon control remains CLI-first and bridge-delegated
+- OS service integration is not yet supported
+- tray, menu-bar, and background supervision UX are not yet supported
+
+## daemon-service-control-boundary
+
+`daemon-service-control-boundary` exposes the current control-plane and service-plane split.
+
+It makes all of the following explicit:
+
+- local control commands are supported only through CLI-first localhost operations
+- app UI may expose `daemon-start` only as a bounded next action, not as an unrestricted control surface
+- service-manager commands remain deferred until platform-specific rollback and policy work lands
+- background supervision toggles remain out of scope for the current app shell
+
+## daemon-supervision-status
+
+`daemon-supervision-status` exposes the current supervision UX decision line.
+
+It keeps these points explicit:
+
+- passive daemon visibility is supported through app and CLI read surfaces
+- active supervision remains limited to explicit CLI control commands
+- tray, menu-bar, and background agent surfaces remain deferred
+- recovery stays CLI-first and evidence-oriented
+
+## daemon-overview
+
+`daemon-overview` is an app-facing aggregate preview for future UI code.
+
+It combines current lifecycle status, liveness, readiness, runtime-init preview, cleanup preview,
+repair preview, and suggested next commands into one non-mutating payload.
 
 ## Local bind policy
 
@@ -70,14 +176,12 @@ Non-local addresses such as `0.0.0.0` are rejected.
 
 ## Non-goals
 
-This work does not add:
+This work still does not add:
 
-- daemon start or stop commands
 - OS service integration
 - systemd, launchd, or Windows Service support
 - durable credentials
 - vault unlock-session binding
-- production authentication
 - a second HTTP server path
 
 ## RDE Delta-M Review
@@ -94,6 +198,6 @@ Future UI and operators can inspect daemon lifecycle assumptions through stable 
 
 ### Deviation Risk
 
-Do not interpret these commands as daemon control commands.
+Do not interpret repair apply as metadata, PID, lock, or socket rewrite authority.
 
 Do not expose resident service beyond localhost.

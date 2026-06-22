@@ -178,6 +178,127 @@ Pending Candidates without decisions are added to `blocked_candidates` with `pen
 
 Rejected Candidates remain blocked by the MCP exposure guard.
 
+```text
+build_daemon_overview_preview()
+  -> ui capability
+  -> daemon status + liveness + readiness + runtime-init preview
+  -> cleanup/repair preview summaries
+  -> resident_daemon_overview_preview payload
+```
+
+The daemon overview is an app-facing aggregate preview for future UI code.
+
+It remains derived and non-mutating, and it does not prove process identity, daemon readiness, or
+API readiness.
+
+The same overview payload is now also exposed through the Bridge as:
+
+```text
+GET /app/daemon-overview
+```
+
+This gives future local UI code an HTTP entrypoint without bypassing the app-layer capability and
+aggregation boundary.
+
+An app-facing aggregate payload is also available:
+
+```text
+build_app_overview()
+  -> runtime diagnostics
+  -> UI-friendly summary
+  -> resident_review_queue
+  -> resident_mcp_preview
+  -> resident_daemon_overview_preview
+  -> resident_app_overview
+```
+
+Bridge now exposes that aggregate view as:
+
+```text
+GET /app/overview
+```
+
+## See also
+
+```text
+docs/architecture/resident-app-ui-integration-contract.md
+docs/architecture/resident-app-ui-screen-map.md
+docs/architecture/resident-app-bootstrap-ui.md
+docs/release/v1.0.14-ui-implementation-task-breakdown.md
+```
+
+For UI handoff, an explicit contract payload is also available:
+
+```text
+build_app_contract()
+  -> preferred_entrypoint
+  -> read_surfaces
+  -> write_surfaces
+  -> recommended_flow
+  -> resident_app_contract
+```
+
+Bridge exposes that contract as:
+
+```text
+GET /app/contract
+```
+
+Detailed UI integration mapping is recorded in:
+
+```text
+docs/architecture/resident-app-ui-integration-contract.md
+```
+
+The first app-facing write surface is now:
+
+```text
+POST /app/capture-clipboard
+  -> capture capability
+  -> ResidentAppService.capture_clipboard_as_candidate()
+  -> pending Candidate payload
+```
+
+This keeps UI-side writes inside the candidate/review boundary instead of writing profile state
+directly.
+
+App-facing review actions are now also exposed through the Bridge:
+
+```text
+GET /app/candidates
+GET /app/candidates/{id}
+GET /app/candidates/{id}/diff
+POST /app/candidates/{id}/evaluate
+POST /app/candidates/{id}/revise
+POST /app/candidates/{id}/approve
+POST /app/candidates/{id}/reject
+```
+
+These surfaces keep the app inside the existing candidate evaluation and approval workflow instead
+of introducing a parallel profile-mutation path.
+
+## Local Bootstrap HTML UI
+
+The current resident app phase also includes a local Bridge HTML bootstrap UI:
+
+```text
+GET /app/ui
+GET /app/ui/candidates
+GET /app/ui/candidates/{id}
+GET /app/ui/candidates/{id}/diff
+GET /app/ui/daemon
+```
+
+This HTML layer is a presentation seam over the existing app-facing resident surfaces.
+
+It is not the final GUI framework and does not add a new mutation boundary.
+
+The current bootstrap UI also includes:
+
+- cookie-backed follow-up navigation after the initial bearer-authenticated entry
+- redirect-based success notices
+- redirect-based validation / transition error feedback
+
 ## Resident Serve Decision
 
 For the initial command wiring, `sayane app serve` is not an independent daemon.

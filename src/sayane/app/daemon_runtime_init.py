@@ -17,6 +17,7 @@ from uuid import uuid4
 
 from sayane.app.daemon_runtime_layout import ResidentDaemonRuntimeLayout
 from sayane.app.daemon_runtime_metadata import build_runtime_init_metadata
+from sayane.app.daemon_runtime_receipts import build_runtime_init_receipt
 
 
 class ResidentDaemonRuntimeInitStatus(StrEnum):
@@ -25,6 +26,14 @@ class ResidentDaemonRuntimeInitStatus(StrEnum):
     CREATE = "create"
     NO_ACTION = "no_action"
     MANUAL_REVIEW_REQUIRED = "manual_review_required"
+
+
+class ResidentDaemonRuntimeInitApplyError(ValueError):
+    """Structured runtime-init apply refusal or failure."""
+
+    def __init__(self, message: str, *, payload: dict[str, Any]) -> None:
+        super().__init__(message)
+        self.payload = payload
 
 
 @dataclass(frozen=True)
@@ -189,54 +198,201 @@ def apply_runtime_init(
     confirm_plan_fingerprint: str | None = None,
 ) -> dict[str, Any]:
     """Apply a runtime initialization plan."""
+    metadata_path = plan.runtime_root / "state" / plan.metadata_filename
+    recovery_note = "No rollback performed; directories created explicitly under runtime_root."
+    confirmation_matched = (
+        confirm_operation_id == plan.operation_id if confirm_operation_id is not None else False
+    )
+    fingerprint_matched = (
+        confirm_plan_fingerprint == plan.plan_fingerprint()
+        if confirm_plan_fingerprint is not None
+        else False
+    )
+
+    def build_apply_payload(
+        *,
+        applied: bool,
+        result: str,
+        created_paths: list[str],
+        mutations_performed: list[str],
+        metadata_written: bool,
+        failure_mode: str | None,
+        recovery_note_override: str | None = None,
+        metadata_payload: dict[str, Any] | None = None,
+        include_event_record_payload: bool,
+    ) -> dict[str, Any]:
+        payload = plan.public_metadata()
+        payload.update(
+            {
+                "kind": "resident_daemon_runtime_init_apply",
+                "applied": applied,
+                "plan_fingerprint": plan.plan_fingerprint(),
+                "created_paths": created_paths,
+                "mutations_performed": mutations_performed,
+                "mutates_filesystem": applied,
+                "result": result,
+                "failure_mode": failure_mode,
+                "recovery_note": recovery_note_override or recovery_note,
+                "write_metadata_requested": write_metadata,
+                "confirm_operation_id": confirm_operation_id,
+                "confirm_plan_fingerprint": confirm_plan_fingerprint,
+                "confirmation_matched": confirmation_matched,
+                "fingerprint_matched": fingerprint_matched,
+                "metadata_written": metadata_written,
+            },
+        )
+        if metadata_payload is not None:
+            payload["metadata_path"] = str(metadata_path)
+            payload["metadata"] = metadata_payload
+        payload["receipt"] = build_runtime_init_receipt(
+            runtime_root=plan.runtime_root,
+            operation_id=plan.operation_id,
+            creator_surface=plan.creator_surface,
+            plan_fingerprint=plan.plan_fingerprint(),
+            applied=applied,
+            result=result,
+            created_paths=tuple(created_paths),
+            mutations_performed=tuple(mutations_performed),
+            metadata_written=metadata_written,
+            failure_mode=failure_mode,
+            recovery_note=recovery_note_override or recovery_note,
+            metadata_path=str(metadata_path) if metadata_written else None,
+            confirm_operation_id=confirm_operation_id,
+            confirm_plan_fingerprint=confirm_plan_fingerprint,
+            confirmation_matched=payload["confirmation_matched"],
+            fingerprint_matched=payload["fingerprint_matched"],
+        ).public_metadata()
+        if include_event_record_payload:
+            from sayane.app.daemon_event_records import build_runtime_init_event_record
+
+            payload["event_record"] = build_runtime_init_event_record(
+                plan,
+                applied=applied,
+                attempted_apply=not applied,
+                created_paths=tuple(mutations_performed),
+                failure_mode=failure_mode,
+                write_metadata=write_metadata,
+                confirm_operation_id=confirm_operation_id,
+                plan_fingerprint=plan.plan_fingerprint(),
+                confirm_plan_fingerprint=confirm_plan_fingerprint,
+                confirmation_matched=confirmation_matched,
+                fingerprint_matched=fingerprint_matched,
+            ).public_metadata()
+        return payload
+
     if plan.review_required:
         msg = "runtime init plan requires manual review before apply"
-        raise ValueError(msg)
+        raise ResidentDaemonRuntimeInitApplyError(
+            msg,
+            payload=build_apply_payload(
+                applied=False,
+                result="requires_review",
+                created_paths=[],
+                mutations_performed=[],
+                metadata_written=False,
+                failure_mode="manual_review_required",
+                recovery_note_override=(
+                    "Apply refused before mutation because the preview requires manual review."
+                ),
+                include_event_record_payload=include_event_record,
+            ),
+        )
     if write_metadata and confirm_operation_id is None:
         msg = "write_metadata requires explicit confirm_operation_id"
-        raise ValueError(msg)
+        raise ResidentDaemonRuntimeInitApplyError(
+            msg,
+            payload=build_apply_payload(
+                applied=False,
+                result="aborted",
+                created_paths=[],
+                mutations_performed=[],
+                metadata_written=False,
+                failure_mode="confirm_operation_id_missing",
+                recovery_note_override=(
+                    "Apply aborted before mutation because metadata confirmation was incomplete."
+                ),
+                include_event_record_payload=include_event_record,
+            ),
+        )
     if confirm_operation_id is not None and confirm_operation_id != plan.operation_id:
         msg = "confirm_operation_id must match the plan operation_id"
-        raise ValueError(msg)
+        raise ResidentDaemonRuntimeInitApplyError(
+            msg,
+            payload=build_apply_payload(
+                applied=False,
+                result="aborted",
+                created_paths=[],
+                mutations_performed=[],
+                metadata_written=False,
+                failure_mode="confirm_operation_id_mismatch",
+                recovery_note_override=(
+                    "Apply aborted before mutation because operation "
+                    "confirmation did not match the previewed plan."
+                ),
+                include_event_record_payload=include_event_record,
+            ),
+        )
     if confirm_plan_fingerprint is not None and confirm_plan_fingerprint != plan.plan_fingerprint():
         msg = "confirm_plan_fingerprint must match the plan fingerprint"
-        raise ValueError(msg)
+        raise ResidentDaemonRuntimeInitApplyError(
+            msg,
+            payload=build_apply_payload(
+                applied=False,
+                result="aborted",
+                created_paths=[],
+                mutations_performed=[],
+                metadata_written=False,
+                failure_mode="confirm_plan_fingerprint_mismatch",
+                recovery_note_override=(
+                    "Apply aborted before mutation because the fingerprint did "
+                    "not match the previewed plan."
+                ),
+                include_event_record_payload=include_event_record,
+            ),
+        )
     if write_metadata and confirm_plan_fingerprint is None:
         msg = "write_metadata requires explicit confirm_plan_fingerprint"
-        raise ValueError(msg)
+        raise ResidentDaemonRuntimeInitApplyError(
+            msg,
+            payload=build_apply_payload(
+                applied=False,
+                result="aborted",
+                created_paths=[],
+                mutations_performed=[],
+                metadata_written=False,
+                failure_mode="confirm_plan_fingerprint_missing",
+                recovery_note_override=(
+                    "Apply aborted before mutation because fingerprint confirmation was incomplete."
+                ),
+                include_event_record_payload=include_event_record,
+            ),
+        )
 
     created_paths: list[str] = []
-    for item in plan.items:
-        if item.status is ResidentDaemonRuntimeInitStatus.CREATE:
-            item.path.mkdir(parents=True, exist_ok=False)
-            created_paths.append(str(item.path))
-
-    payload = plan.public_metadata()
-    metadata_path = plan.runtime_root / "state" / plan.metadata_filename
-    payload.update(
-        {
-            "kind": "resident_daemon_runtime_init_apply",
-            "applied": True,
-            "plan_fingerprint": plan.plan_fingerprint(),
-            "created_paths": created_paths,
-            "mutations_performed": created_paths,
-            "mutates_filesystem": True,
-            "result": "applied" if created_paths else "no_action",
-            "failure_mode": None,
-            "recovery_note": (
-                "No rollback performed; directories created explicitly under runtime_root."
+    try:
+        for item in plan.items:
+            if item.status is ResidentDaemonRuntimeInitStatus.CREATE:
+                item.path.mkdir(parents=True, exist_ok=False)
+                created_paths.append(str(item.path))
+    except OSError as exc:
+        raise ResidentDaemonRuntimeInitApplyError(
+            f"runtime init apply failed: {exc}",
+            payload=build_apply_payload(
+                applied=False,
+                result="failed",
+                created_paths=created_paths,
+                mutations_performed=created_paths,
+                metadata_written=False,
+                failure_mode="directory_create_failed",
+                recovery_note_override=(
+                    "Partial directory creation may exist; inspect created_paths before retry."
+                ),
+                include_event_record_payload=include_event_record,
             ),
-            "write_metadata_requested": write_metadata,
-            "confirm_operation_id": confirm_operation_id,
-            "confirm_plan_fingerprint": confirm_plan_fingerprint,
-            "confirmation_matched": confirm_operation_id == plan.operation_id
-            if confirm_operation_id is not None
-            else False,
-            "fingerprint_matched": confirm_plan_fingerprint == plan.plan_fingerprint()
-            if confirm_plan_fingerprint is not None
-            else False,
-        },
-    )
+        ) from exc
+
+    metadata_payload: dict[str, Any] | None = None
+    mutations_performed = list(created_paths)
     if write_metadata:
         metadata_payload = build_runtime_init_metadata(
             runtime_root=plan.runtime_root,
@@ -246,31 +402,21 @@ def apply_runtime_init(
             write_metadata_requested=True,
             confirm_operation_id=confirm_operation_id,
             confirm_plan_fingerprint=confirm_plan_fingerprint,
-            confirmation_matched=payload["confirmation_matched"],
-            fingerprint_matched=payload["fingerprint_matched"],
+            confirmation_matched=confirmation_matched,
+            fingerprint_matched=fingerprint_matched,
         ).public_metadata()
         metadata_path.write_text(
             __import__("json").dumps(metadata_payload, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
         )
-        payload["metadata_written"] = True
-        payload["metadata_path"] = str(metadata_path)
-        payload["metadata"] = metadata_payload
-        payload["mutations_performed"] = [*created_paths, str(metadata_path)]
-    else:
-        payload["metadata_written"] = False
-    if include_event_record:
-        from sayane.app.daemon_event_records import build_runtime_init_event_record
-
-        payload["event_record"] = build_runtime_init_event_record(
-            plan,
-            applied=True,
-            created_paths=tuple(payload["mutations_performed"]),
-            write_metadata=write_metadata,
-            confirm_operation_id=confirm_operation_id,
-            plan_fingerprint=plan.plan_fingerprint(),
-            confirm_plan_fingerprint=confirm_plan_fingerprint,
-            confirmation_matched=payload["confirmation_matched"],
-            fingerprint_matched=payload["fingerprint_matched"],
-        ).public_metadata()
-    return payload
+        mutations_performed = [*created_paths, str(metadata_path)]
+    return build_apply_payload(
+        applied=True,
+        result="applied" if created_paths else "no_action",
+        created_paths=created_paths,
+        mutations_performed=mutations_performed,
+        metadata_written=write_metadata,
+        failure_mode=None,
+        metadata_payload=metadata_payload,
+        include_event_record_payload=include_event_record,
+    )

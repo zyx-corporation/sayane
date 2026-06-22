@@ -44,6 +44,12 @@ class CaptureResponse(BaseModel):
     warnings: list[str] = Field(default_factory=list)
 
 
+class AppCaptureClipboardRequest(BaseModel):
+    content: str = Field(min_length=1, description="Explicit clipboard text for resident app capture.")
+    profile_id: str = "default"
+    locale: str | None = None
+
+
 class CompileRequest(BaseModel):
     target: str
     profile_id: str = "default"

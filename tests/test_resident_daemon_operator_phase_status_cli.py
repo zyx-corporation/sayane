@@ -30,3 +30,4 @@ def test_daemon_operator_phase_status_json_uses_default_runtime_root(
     assert payload["kind"] == "resident_daemon_operator_phase_status"
     assert payload["runtime_root"] == str(isolated_home / ".sayane" / "run")
     assert payload["phase"] == "operator_packaging_and_supervision"
+    assert payload["phase_readiness"] == "not_ready_for_phase_closure"

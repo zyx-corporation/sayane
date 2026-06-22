@@ -49,10 +49,52 @@ class ResidentDaemonOperatorPhaseStatus:
             port=self.port,
         ).public_metadata()
         startup_command = ["sayane", "serve", "--host", self.host, "--port", str(self.port)]
+        phase_closure_checklist = [
+            {
+                "item": "supported_packaging_model_finalized",
+                "status": "in_progress",
+                "blocking_reasons": [
+                    "hybrid and service-first candidates remain explicitly open",
+                ],
+            },
+            {
+                "item": "service_lifecycle_implementation_closed",
+                "status": "blocked",
+                "blocking_reasons": service_control["service_plane"].get("deferred_commands", []),
+            },
+            {
+                "item": "platform_policy_and_rollback_closed",
+                "status": "blocked",
+                "blocking_reasons": [
+                    service_targets["policy_gates"]["hybrid_packaging_gate"],
+                ],
+            },
+            {
+                "item": "background_supervision_direction_decided",
+                "status": "in_progress",
+                "blocking_reasons": [
+                    item["surface"]
+                    for item in supervision["background_surfaces"].get("candidate_surfaces", [])
+                ],
+            },
+            {
+                "item": "recovery_and_consent_path_remains_explicit_under_next_model",
+                "status": "baseline_ready",
+                "blocking_reasons": [],
+            },
+        ]
+        blocking_reasons = sorted(
+            {
+                reason
+                for item in phase_closure_checklist
+                for reason in item.get("blocking_reasons", [])
+            }
+        )
         return {
             "kind": "resident_daemon_operator_phase_status",
             "phase": "operator_packaging_and_supervision",
             "phase_status": "baseline_contracts_implemented_next_phase_open",
+            "phase_readiness": "not_ready_for_phase_closure",
             "runtime_root": str(self.runtime_root),
             "host": self.host,
             "port": self.port,
@@ -120,6 +162,8 @@ class ResidentDaemonOperatorPhaseStatus:
                 "consent_and_recovery_alignment",
                 "operator_handoff_update",
             ],
+            "phase_closure_checklist": phase_closure_checklist,
+            "blocking_reasons": blocking_reasons,
             "exit_criteria": [
                 "supported operator packaging model is explicit",
                 "allowed daemon control and supervision actions are explicit",

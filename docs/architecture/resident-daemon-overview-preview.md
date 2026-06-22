@@ -17,11 +17,17 @@ The payload combines:
 - cleanup preview summary
 - repair preview summary
 - suggested next commands
+- operator phase summary for packaging / service / supervision / recovery review
+- operator phase detail sections for the current supported path, workstreams, exit criteria, and out-of-scope items
 
 ## Purpose
 
 The overview gives future resident UI code one stable, non-mutating payload instead of requiring
 multiple command-specific fetches just to render the current local daemon situation.
+
+It also keeps the post-app operator line summary-first so Bridge UI, screen-state builders, and
+plain-text CLI summaries can describe the same bounded work without inventing separate readiness or
+closure semantics.
 
 ## Evidence boundary
 
@@ -34,6 +40,8 @@ It does not:
 - prove API readiness
 - authorize mutation
 - authorize process control
+- close the post-app operator phase
+- turn implementation planning notes into proof-style runtime evidence
 
 ## Non-goals
 

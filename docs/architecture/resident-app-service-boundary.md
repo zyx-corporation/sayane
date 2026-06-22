@@ -183,6 +183,7 @@ build_daemon_overview_preview()
   -> ui capability
   -> daemon status + liveness + readiness + runtime-init preview
   -> cleanup/repair preview summaries
+  -> operator phase summary/detail framing
   -> resident_daemon_overview_preview payload
 ```
 
@@ -190,6 +191,10 @@ The daemon overview is an app-facing aggregate preview for future UI code.
 
 It remains derived and non-mutating, and it does not prove process identity, daemon readiness, or
 API readiness.
+
+The same preview line now also carries bounded post-app operator framing through
+`operator_phase_summary` and `operator_phase_details`, so the daemon UI and CLI can review the
+same packaging / service / supervision / recovery status without adding new control surfaces.
 
 The same overview payload is now also exposed through the Bridge as:
 
@@ -199,6 +204,9 @@ GET /app/daemon-overview
 
 This gives future local UI code an HTTP entrypoint without bypassing the app-layer capability and
 aggregation boundary.
+
+The same read model is intentionally aligned with the current plain-text operator CLI summaries.
+Those summaries stay read surfaces only and do not change the resident service boundary.
 
 An app-facing aggregate payload is also available:
 

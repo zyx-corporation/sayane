@@ -157,6 +157,10 @@ This keeps the current HTML flow simple while preserving the underlying app-faci
 The same bootstrap/local-shell line is now also aligned with human-readable daemon CLI summaries for
 terminal-first post-app review. Those CLI summaries remain read surfaces only.
 
+This alignment is handoff-ready visibility, not post-app phase closure. The local shell and CLI now
+describe the same bounded operator path without claiming shipped background supervision across every
+target platform.
+
 ## Boundaries
 
 The bootstrap UI must not:

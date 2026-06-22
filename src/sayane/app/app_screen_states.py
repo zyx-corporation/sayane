@@ -67,6 +67,7 @@ def build_daemon_panel_screen_state(daemon_payload: dict[str, Any]) -> dict[str,
     service_targets_status = daemon_payload.get("service_targets_status", {})
     supervision_status = daemon_payload.get("supervision_status", {})
     recovery_consent_status = daemon_payload.get("recovery_consent_status", {})
+    operator_phase_status = daemon_payload.get("operator_phase_status", {})
     launchagent_preview = daemon_payload.get("launchagent_preview")
     launchagent_status = daemon_payload.get("launchagent_status")
     return {
@@ -125,11 +126,19 @@ def build_daemon_panel_screen_state(daemon_payload: dict[str, Any]) -> dict[str,
             "loaded_status": (launchagent_status or {}).get("loaded_status"),
             "launchctl_commands": (launchagent_preview or {}).get("launchctl_commands", {}),
         },
+        "operator_phase_summary": {
+            "phase": operator_phase_status.get("phase"),
+            "phase_status": operator_phase_status.get("phase_status"),
+            "phase_readiness": operator_phase_status.get("phase_readiness"),
+            "blocking_reasons": operator_phase_status.get("blocking_reasons", []),
+            "checklist": operator_phase_status.get("phase_closure_checklist", []),
+        },
         "packaging_status": packaging_status,
         "service_control_boundary": service_control_boundary,
         "service_targets_status": service_targets_status,
         "supervision_status": supervision_status,
         "recovery_consent_status": recovery_consent_status,
+        "operator_phase_status": operator_phase_status,
         "launchagent_preview": launchagent_preview,
         "launchagent_status": launchagent_status,
         "next_actions": daemon_payload.get("next_actions", []),

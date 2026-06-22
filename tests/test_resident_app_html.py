@@ -190,6 +190,15 @@ def test_render_resident_app_daemon_panel_includes_service_targets_and_launchage
                 "phase_status": "baseline_contract_implemented",
                 "recommended_recovery_flow": ["inspect current status and proof-oriented diagnostics"],
             },
+            "operator_phase_status": {
+                "phase": "operator_packaging_and_supervision",
+                "phase_status": "baseline_contracts_implemented_next_phase_open",
+                "phase_readiness": "not_ready_for_phase_closure",
+                "blocking_reasons": ["daemon-service-install", "tray_supervision"],
+                "phase_closure_checklist": [
+                    {"item": "supported_packaging_model_finalized", "status": "in_progress"},
+                ],
+            },
             "service_targets_status": {
                 "kind": "resident_daemon_service_targets_status",
                 "current_platform": "macos",
@@ -232,6 +241,9 @@ def test_render_resident_app_daemon_panel_includes_service_targets_and_launchage
     assert "Recovery and Consent" in html
     assert "LaunchAgent Preview" in html
     assert "LaunchAgent Status" in html
+    assert "Operator Phase Status" in html
+    assert "Phase Closure Checklist" in html
+    assert "Blocking Reasons" in html
     assert "launchctl bootstrap" in html
     assert "com.sayane.resident.bridge" in html
 

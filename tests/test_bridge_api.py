@@ -468,6 +468,7 @@ def test_app_ui_state_endpoints_work_with_ui_cookie_session(
     assert daemon.status_code == 200
     assert daemon.json()["kind"] == "resident_app_daemon_panel_screen_state"
     assert daemon.json()["operator_panels"][0]["panel"] == "packaging_status"
+    assert daemon.json()["operator_phase_summary"]["phase_readiness"] == "not_ready_for_phase_closure"
     assert daemon.json()["service_target_summary"]["current_platform"] in {"macos", "linux", "windows", "other"}
 
 
@@ -593,6 +594,7 @@ def test_app_daemon_panel_screen_state_returns_framework_neutral_state(
     payload = response.json()
     assert payload["kind"] == "resident_app_daemon_panel_screen_state"
     assert payload["summary_cards"][0]["key"] == "state"
+    assert payload["operator_phase_summary"]["phase"] == "operator_packaging_and_supervision"
     assert payload["runtime_init"]["kind"] == "resident_daemon_runtime_init_plan"
 
 

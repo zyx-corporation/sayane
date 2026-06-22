@@ -98,6 +98,15 @@ def test_build_daemon_panel_screen_state_exposes_cards_and_previews() -> None:
                 "consent_model": "explicit_cli_confirmation_for_mutation",
                 "recommended_recovery_flow": ["inspect current status and proof-oriented diagnostics"],
             },
+            "operator_phase_status": {
+                "phase": "operator_packaging_and_supervision",
+                "phase_status": "baseline_contracts_implemented_next_phase_open",
+                "phase_readiness": "not_ready_for_phase_closure",
+                "blocking_reasons": ["daemon-service-install", "tray_supervision"],
+                "phase_closure_checklist": [
+                    {"item": "supported_packaging_model_finalized", "status": "in_progress"},
+                ],
+            },
             "launchagent_preview": {"kind": "resident_daemon_launchagent_plan"},
             "launchagent_status": {"kind": "resident_daemon_launchagent_status", "loaded_status": "loaded"},
         }
@@ -111,6 +120,9 @@ def test_build_daemon_panel_screen_state_exposes_cards_and_previews() -> None:
     assert payload["service_target_summary"]["targets"] == []
     assert payload["launchagent_summary"]["status_available"] is True
     assert payload["launchagent_summary"]["loaded_status"] == "loaded"
+    assert payload["operator_phase_summary"]["phase_readiness"] == "not_ready_for_phase_closure"
+    assert payload["operator_phase_summary"]["blocking_reasons"] == ["daemon-service-install", "tray_supervision"]
     assert payload["service_targets_status"]["kind"] == "resident_daemon_service_targets_status"
+    assert payload["operator_phase_status"]["phase"] == "operator_packaging_and_supervision"
     assert payload["launchagent_preview"]["kind"] == "resident_daemon_launchagent_plan"
     assert payload["launchagent_status"]["kind"] == "resident_daemon_launchagent_status"

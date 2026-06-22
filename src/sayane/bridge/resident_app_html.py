@@ -95,6 +95,9 @@ BOOTSTRAP_COPY_LABELS: dict[str, str] = {
     "label.service_control_boundary": "Service Control Boundary",
     "label.supervision_status": "Supervision Status",
     "label.recovery_consent_status": "Recovery and Consent",
+    "label.operator_phase_status": "Operator Phase Status",
+    "label.phase_closure_checklist": "Phase Closure Checklist",
+    "label.blocking_reasons": "Blocking Reasons",
     "label.allowed_commands": "Allowed Commands",
     "label.deferred_commands": "Deferred Commands",
     "label.recommended_flow": "Recommended Flow",
@@ -466,6 +469,9 @@ BOOTSTRAP_COPY_JA_LABELS: dict[str, str] = {
     "label.service_control_boundary": "サービス制御境界",
     "label.supervision_status": "監視状態",
     "label.recovery_consent_status": "復旧と同意",
+    "label.operator_phase_status": "運用フェーズ状態",
+    "label.phase_closure_checklist": "フェーズ完了チェックリスト",
+    "label.blocking_reasons": "阻害要因",
     "label.allowed_commands": "許可コマンド",
     "label.deferred_commands": "保留コマンド",
     "label.recommended_flow": "推奨フロー",
@@ -1108,6 +1114,38 @@ def _render_launchagent_status(locale: str, payload: dict[str, Any] | None) -> s
     )
 
 
+def _render_operator_phase_status(locale: str, payload: dict[str, Any] | None) -> str:
+    if not payload:
+        return f'<p class="muted">{escape(_copy("empty.metadata", locale))}</p>'
+    checklist_rows = "".join(
+        (
+            "<tr>"
+            f"<td>{escape(_translate_display_token(item.get('item', ''), locale))}</td>"
+            f"<td>{escape(_translate_display_token(item.get('status', ''), locale))}</td>"
+            "</tr>"
+        )
+        for item in payload.get("phase_closure_checklist", [])
+    ) or f'<tr><td colspan="2" class="muted">{escape(_copy("empty.metadata", locale))}</td></tr>'
+    return (
+        _render_kv_panel(
+            locale,
+            payload,
+            keys=["phase", "phase_status", "phase_readiness"],
+        )
+        + f"<h3>{escape(_copy('label.blocking_reasons', locale))}</h3>"
+        + _render_string_list(
+            list(payload.get("blocking_reasons", [])),
+            empty_label=_copy("empty.metadata", locale),
+        )
+        + f"<h3>{escape(_copy('label.phase_closure_checklist', locale))}</h3>"
+        + '<table class="compact-table"><thead><tr>'
+        f'<th>{escape(_translate_display_key("item", locale))}</th>'
+        f'<th>{escape(_copy("table.status", locale))}</th>'
+        '</tr></thead>'
+        f"<tbody>{checklist_rows}</tbody></table>"
+    )
+
+
 def _render_candidate_mapping(locale: str, title: str, payload: dict[str, Any]) -> str:
     return _render_panel(title, f"{_render_kv_panel(locale, payload)}{_render_json_fallback(payload)}")
 
@@ -1214,6 +1252,9 @@ def _render_resident_app_shell_bootstrap(
             "serviceControlBoundary": _copy("label.service_control_boundary", locale),
             "supervisionStatus": _copy("label.supervision_status", locale),
             "recoveryConsentStatus": _copy("label.recovery_consent_status", locale),
+            "operatorPhaseStatus": _copy("label.operator_phase_status", locale),
+            "phaseClosureChecklist": _copy("label.phase_closure_checklist", locale),
+            "blockingReasons": _copy("label.blocking_reasons", locale),
             "serviceTargets": _copy("label.service_targets", locale),
             "launchagentPreview": _copy("label.launchagent_preview", locale),
             "launchagentStatus": _copy("label.launchagent_status", locale),
@@ -1514,6 +1555,11 @@ def _render_resident_app_shell_bootstrap(
     return `<ul>${{items.map((item) => `<li>${{escapeDisplayHtml(item)}}</li>`).join("")}}</ul>`;
   }}
 
+  function renderChecklist(items, emptyLabel) {{
+    if (!items?.length) return `<ul><li class="muted">${{escapeHtml(emptyLabel || strings.emptyPreview)}}</li></ul>`;
+    return `<ul>${{items.map((item) => `<li><strong>${{escapeHtml(localizeFieldKey(item.item || ""))}}</strong>: ${{escapeDisplayHtml(item.status || "—")}}</li>`).join("")}}</ul>`;
+  }}
+
   function operatorPanelTitle(panelKey) {{
     if (panelKey === "packaging_status") return strings.packagingStatus;
     if (panelKey === "service_control_boundary") return strings.serviceControlBoundary;
@@ -1551,6 +1597,22 @@ def _render_resident_app_shell_bootstrap(
           <h4>${{escapeHtml(strings.recommendedFlow)}}</h4>
           ${{renderTextList(recommendedFlow, strings.emptyPreview)}}
         ` : ""}}
+      </div>`;
+  }}
+
+  function renderOperatorPhaseSummary(summary) {{
+    return `
+      <div class="panel">
+        <h3>${{escapeHtml(strings.operatorPhaseStatus)}}</h3>
+        ${{renderKeyValuePanel({{
+          phase: summary?.phase,
+          phase_status: summary?.phase_status,
+          phase_readiness: summary?.phase_readiness,
+        }})}}
+        <h4>${{escapeHtml(strings.blockingReasons)}}</h4>
+        ${{renderTextList(summary?.blocking_reasons || [], strings.emptyPreview)}}
+        <h4>${{escapeHtml(strings.phaseClosureChecklist)}}</h4>
+        ${{renderChecklist(summary?.checklist || [], strings.emptyPreview)}}
       </div>`;
   }}
 
@@ -1883,6 +1945,7 @@ def _render_resident_app_shell_bootstrap(
     const operatorPanels = daemon.operator_panels || [];
     const serviceTargetSummary = daemon.service_target_summary || {{}};
     const launchagentSummary = daemon.launchagent_summary || {{}};
+    const operatorPhaseSummary = daemon.operator_phase_summary || {{}};
     const cleanupReport = cleanupPreview.decision_report || {{}};
     const cleanupDecisions = (cleanupReport.decisions || []).map((decision) => ({{
       artifact_kind: decision.artifact_kind,
@@ -1972,6 +2035,7 @@ def _render_resident_app_shell_bootstrap(
       <div class="shell-grid two-up">
         ${{operatorPanels.map((panel) => renderOperatorPanel(panel)).join("")}}
       </div>
+      ${{renderOperatorPhaseSummary(operatorPhaseSummary)}}
       <div class="shell-grid two-up">
         <div class="panel">
           <h3>${{escapeHtml(strings.serviceTargets)}}</h3>
@@ -2553,6 +2617,7 @@ def render_resident_app_daemon_panel(
     service_control_boundary = payload.get("service_control_boundary", {})
     supervision_status = payload.get("supervision_status", {})
     recovery_consent_status = payload.get("recovery_consent_status", {})
+    operator_phase_status = payload.get("operator_phase_status", {})
     service_targets_status = payload.get("service_targets_status", {})
     launchagent_preview = payload.get("launchagent_preview")
     launchagent_status = payload.get("launchagent_status")
@@ -2650,6 +2715,7 @@ def render_resident_app_daemon_panel(
 {service_control_panel}
 {supervision_panel}
 {recovery_panel}
+{_render_panel(_copy("label.operator_phase_status", locale), _render_operator_phase_status(locale, operator_phase_status))}
 {_render_panel(_copy("label.service_targets", locale), _render_service_targets_status(locale, service_targets_status) if service_targets_status else _render_json_fallback(service_targets_status))}
 {_render_panel(_copy("label.launchagent_preview", locale), _render_launchagent_preview(locale, launchagent_preview))}
 {_render_panel(_copy("label.launchagent_status", locale), _render_launchagent_status(locale, launchagent_status))}

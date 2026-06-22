@@ -76,9 +76,9 @@ def register_resident_app_routes(
     def _daemon_panel_screen_state() -> dict[str, object]:
         from sayane.app import build_daemon_panel_screen_state
 
-        return build_daemon_panel_screen_state(
-            _daemon_overview_payload(host=cfg.host, port=cfg.port)
-        )
+        payload = _daemon_overview_payload(host=cfg.host, port=cfg.port)
+        payload["operator_phase_status"] = _operator_phase_status_payload()
+        return build_daemon_panel_screen_state(payload)
 
     def _operator_phase_status_payload() -> dict[str, object]:
         from sayane.app import build_daemon_operator_phase_status

@@ -265,8 +265,14 @@ proof-oriented CLI surfaces are now available for the same local runtime line:
 - `sayane app daemon-readiness-proof --operation-class bridge_health --json`
 - `sayane app daemon-api-readiness-proof --operation-class bridge_health --json`
 - `sayane app daemon-proof-diagnostics --operation-class bridge_health --json`
+- `sayane app daemon-packaging-status --json`
+- `sayane app daemon-service-control-boundary --json`
+- `sayane app daemon-supervision-status --json`
+- `sayane app daemon-recovery-consent-status --json`
 
 ただし、これらも conservative proof preview であり、verified proof を主張するものではない。
+また、packaging / service-control / supervision / recovery-consent contract は operator guidance
+surface であり、OS service integration や background control を有効化するものではない。
 
 #### `GET /app/ui-state/*`
 

@@ -62,6 +62,13 @@ def build_daemon_panel_screen_state(daemon_payload: dict[str, Any]) -> dict[str,
     """Build a GUI-oriented daemon panel state."""
     status = daemon_payload.get("status", {})
     readiness = daemon_payload.get("readiness", {})
+    packaging_status = daemon_payload.get("packaging_status", {})
+    service_control_boundary = daemon_payload.get("service_control_boundary", {})
+    service_targets_status = daemon_payload.get("service_targets_status", {})
+    supervision_status = daemon_payload.get("supervision_status", {})
+    recovery_consent_status = daemon_payload.get("recovery_consent_status", {})
+    launchagent_preview = daemon_payload.get("launchagent_preview")
+    launchagent_status = daemon_payload.get("launchagent_status")
     return {
         "kind": "resident_app_daemon_panel_screen_state",
         "summary_cards": [
@@ -70,13 +77,61 @@ def build_daemon_panel_screen_state(daemon_payload: dict[str, Any]) -> dict[str,
             {"key": "runtime_initialized", "value": status.get("runtime_initialized")},
             {"key": "readiness_status", "value": readiness.get("readiness_status")},
         ],
-        "packaging_status": daemon_payload.get("packaging_status", {}),
-        "service_control_boundary": daemon_payload.get("service_control_boundary", {}),
-        "service_targets_status": daemon_payload.get("service_targets_status", {}),
-        "supervision_status": daemon_payload.get("supervision_status", {}),
-        "recovery_consent_status": daemon_payload.get("recovery_consent_status", {}),
-        "launchagent_preview": daemon_payload.get("launchagent_preview"),
-        "launchagent_status": daemon_payload.get("launchagent_status"),
+        "operator_panels": [
+            {
+                "panel": "packaging_status",
+                "title": "packaging_status",
+                "status": packaging_status.get("packaging_model"),
+                "highlights": [
+                    packaging_status.get("supervision_model"),
+                    packaging_status.get("phase_status"),
+                ],
+            },
+            {
+                "panel": "service_control_boundary",
+                "title": "service_control_boundary",
+                "status": service_control_boundary.get("service_plane", {}).get("status"),
+                "commands": [
+                    item.get("command")
+                    for item in service_control_boundary.get("control_plane", {}).get("allowed_commands", [])
+                ] + [
+                    item.get("command")
+                    for item in service_control_boundary.get("service_plane", {}).get("allowed_commands", [])
+                ],
+                "deferred_commands": service_control_boundary.get("service_plane", {}).get("deferred_commands", []),
+            },
+            {
+                "panel": "supervision_status",
+                "title": "supervision_status",
+                "status": supervision_status.get("supervision_mode"),
+                "commands": supervision_status.get("active_supervision", {}).get("allowed_actions", []),
+            },
+            {
+                "panel": "recovery_consent_status",
+                "title": "recovery_consent_status",
+                "status": recovery_consent_status.get("consent_model"),
+                "recommended_flow": recovery_consent_status.get("recommended_recovery_flow", []),
+            },
+        ],
+        "service_target_summary": {
+            "current_platform": service_targets_status.get("current_platform"),
+            "recommended_target": service_targets_status.get("recommended_target"),
+            "targets": service_targets_status.get("targets", []),
+        },
+        "launchagent_summary": {
+            "preview_available": launchagent_preview is not None,
+            "status_available": launchagent_status is not None,
+            "plist_path": (launchagent_preview or {}).get("plist_path") or (launchagent_status or {}).get("plist_path"),
+            "loaded_status": (launchagent_status or {}).get("loaded_status"),
+            "launchctl_commands": (launchagent_preview or {}).get("launchctl_commands", {}),
+        },
+        "packaging_status": packaging_status,
+        "service_control_boundary": service_control_boundary,
+        "service_targets_status": service_targets_status,
+        "supervision_status": supervision_status,
+        "recovery_consent_status": recovery_consent_status,
+        "launchagent_preview": launchagent_preview,
+        "launchagent_status": launchagent_status,
         "next_actions": daemon_payload.get("next_actions", []),
         "runtime_init": daemon_payload.get("runtime_init", {}),
         "cleanup_preview": daemon_payload.get("cleanup_preview", {}),

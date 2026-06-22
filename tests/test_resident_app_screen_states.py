@@ -70,15 +70,47 @@ def test_build_daemon_panel_screen_state_exposes_cards_and_previews() -> None:
             "runtime_init": {"kind": "resident_daemon_runtime_init_plan"},
             "cleanup_preview": {"kind": "resident_daemon_cleanup_apply_preview"},
             "repair_preview": {"kind": "resident_daemon_repair_apply_preview"},
+            "packaging_status": {
+                "kind": "resident_daemon_packaging_status",
+                "packaging_model": "cli_first_local_bridge",
+                "supervision_model": "manual_cli_with_bridge_delegation",
+                "phase_status": "next_up_after_proof_phase",
+            },
+            "service_control_boundary": {
+                "kind": "resident_daemon_service_control_boundary",
+                "control_plane": {
+                    "allowed_commands": [{"command": "sayane app daemon-start --json"}],
+                },
+                "service_plane": {
+                    "status": "macos_explicit_cli_only",
+                    "allowed_commands": [{"command": "sayane app daemon-launchagent-bootstrap --json"}],
+                    "deferred_commands": ["daemon-service-install"],
+                },
+            },
             "service_targets_status": {"kind": "resident_daemon_service_targets_status"},
+            "supervision_status": {
+                "kind": "resident_daemon_supervision_status",
+                "supervision_mode": "passive_local_observation_with_cli_recovery",
+                "active_supervision": {"allowed_actions": ["sayane app daemon-start --json"]},
+            },
+            "recovery_consent_status": {
+                "kind": "resident_daemon_recovery_consent_status",
+                "consent_model": "explicit_cli_confirmation_for_mutation",
+                "recommended_recovery_flow": ["inspect current status and proof-oriented diagnostics"],
+            },
             "launchagent_preview": {"kind": "resident_daemon_launchagent_plan"},
-            "launchagent_status": {"kind": "resident_daemon_launchagent_status"},
+            "launchagent_status": {"kind": "resident_daemon_launchagent_status", "loaded_status": "loaded"},
         }
     )
 
     assert payload["kind"] == "resident_app_daemon_panel_screen_state"
     assert payload["summary_cards"][0]["key"] == "state"
     assert payload["next_actions"][0]["command"] == "sayane app daemon-status --json"
+    assert payload["operator_panels"][0]["panel"] == "packaging_status"
+    assert payload["operator_panels"][1]["deferred_commands"] == ["daemon-service-install"]
+    assert payload["service_target_summary"]["targets"] == []
+    assert payload["launchagent_summary"]["status_available"] is True
+    assert payload["launchagent_summary"]["loaded_status"] == "loaded"
     assert payload["service_targets_status"]["kind"] == "resident_daemon_service_targets_status"
     assert payload["launchagent_preview"]["kind"] == "resident_daemon_launchagent_plan"
     assert payload["launchagent_status"]["kind"] == "resident_daemon_launchagent_status"

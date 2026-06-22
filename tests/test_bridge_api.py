@@ -434,6 +434,8 @@ def test_app_ui_state_endpoints_work_with_ui_cookie_session(
     daemon = client.get("/app/ui-state/daemon")
     assert daemon.status_code == 200
     assert daemon.json()["kind"] == "resident_app_daemon_panel_screen_state"
+    assert daemon.json()["operator_panels"][0]["panel"] == "packaging_status"
+    assert daemon.json()["service_target_summary"]["current_platform"] in {"macos", "linux", "windows", "other"}
 
 
 def test_app_ui_action_review_flow_works_with_ui_cookie_session(

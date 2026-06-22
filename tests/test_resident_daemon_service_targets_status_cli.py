@@ -27,4 +27,6 @@ def test_daemon_service_targets_status_json(isolated_home: Path) -> None:
     payload = json.loads(result.stdout)
     assert payload["kind"] == "resident_daemon_service_targets_status"
     assert len(payload["targets"]) == 3
-
+    assert payload["policy_gates"]["hybrid_packaging_gate"] == (
+        "service_lifecycle_and_platform_policy_closure_required"
+    )

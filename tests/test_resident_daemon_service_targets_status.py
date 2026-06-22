@@ -11,8 +11,12 @@ def test_daemon_service_targets_status_lists_macos_linux_windows(tmp_path: Path)
     payload = build_daemon_service_targets_status(tmp_path / "run").public_metadata()
 
     assert payload["kind"] == "resident_daemon_service_targets_status"
+    assert payload["policy_gates"]["platform_policy_required"] is True
+    assert payload["policy_gates"]["rollback_policy_required"] is True
     targets = {entry["target"]: entry for entry in payload["targets"]}
     assert targets["macos_launchagent"]["platform"] == "macos"
     assert "sayane app daemon-launchagent-bootstrap --json" in targets["macos_launchagent"]["commands"]
+    assert targets["macos_launchagent"]["packaging_gate_status"] == "candidate_ready_after_service_lifecycle_closure"
     assert targets["linux_systemd_user"]["platform"] == "linux"
+    assert targets["linux_systemd_user"]["policy_status"] == "contract_only"
     assert targets["windows_service"]["platform"] == "windows"

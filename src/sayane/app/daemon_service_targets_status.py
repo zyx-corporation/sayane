@@ -33,18 +33,30 @@ class ResidentDaemonServiceTargetsStatus:
             "kind": "resident_daemon_service_targets_status",
             "current_platform": current_platform,
             "runtime_root": str(self.runtime_root),
+            "policy_gates": {
+                "platform_policy_required": True,
+                "rollback_policy_required": True,
+                "hybrid_packaging_gate": "service_lifecycle_and_platform_policy_closure_required",
+            },
             "targets": [
                 {
                     "target": "macos_launchagent",
                     "platform": "macos",
                     "service_manager": "launchd",
                     "status": macos_status,
+                    "policy_status": "partial_preview_apply_control" if current_platform == "macos" else "contract_only",
+                    "rollback_policy_status": "reviewed_local_control_only" if current_platform == "macos" else "not_defined",
+                    "packaging_gate_status": "candidate_ready_after_service_lifecycle_closure",
                     "commands": [
                         "sayane app daemon-launchagent-preview --json",
                         "sayane app daemon-launchagent-apply --json",
                         "sayane app daemon-launchagent-bootstrap --json",
                         "sayane app daemon-launchagent-bootout --json",
                         "sayane app daemon-launchagent-kickstart --json",
+                    ],
+                    "blocked_by": [
+                        "service lifecycle install/update/remove closure",
+                        "platform rollback policy",
                     ],
                 },
                 {
@@ -53,6 +65,14 @@ class ResidentDaemonServiceTargetsStatus:
                     "service_manager": "systemd --user",
                     "status": "contract_only",
                     "commands": [],
+                    "policy_status": "contract_only",
+                    "rollback_policy_status": "not_defined",
+                    "packaging_gate_status": "blocked_by_platform_policy",
+                    "blocked_by": [
+                        "service lifecycle implementation",
+                        "platform rollback policy",
+                        "operator packaging decision closure",
+                    ],
                 },
                 {
                     "target": "windows_service",
@@ -60,6 +80,14 @@ class ResidentDaemonServiceTargetsStatus:
                     "service_manager": "Windows Service Control Manager",
                     "status": "contract_only",
                     "commands": [],
+                    "policy_status": "contract_only",
+                    "rollback_policy_status": "not_defined",
+                    "packaging_gate_status": "blocked_by_platform_policy",
+                    "blocked_by": [
+                        "service lifecycle implementation",
+                        "platform rollback policy",
+                        "operator packaging decision closure",
+                    ],
                 },
             ],
             "recommended_target": "macos_launchagent" if current_platform == "macos" else None,

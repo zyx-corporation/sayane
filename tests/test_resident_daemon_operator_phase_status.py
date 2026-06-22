@@ -29,6 +29,7 @@ def test_daemon_operator_phase_status_aggregates_post_app_workstreams(
     assert payload["workstreams"][0]["candidate_models"][0]["model"] == "cli_first_local_bridge"
     assert payload["workstreams"][0]["candidate_models"][-1]["model"] == "service_first_resident_runtime"
     assert payload["workstreams"][1]["name"] == "service_integration_line"
+    assert payload["workstreams"][1]["policy_gates"]["platform_policy_required"] is True
     assert payload["workstreams"][1]["lifecycle_operations"][0]["operation"] == "install"
     assert payload["workstreams"][1]["lifecycle_operations"][-1]["operation"] == "update"
     assert payload["workstreams"][2]["name"] == "supervision_ux_line"

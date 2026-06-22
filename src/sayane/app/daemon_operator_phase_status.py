@@ -82,6 +82,7 @@ class ResidentDaemonOperatorPhaseStatus:
                     "status": packaging["service_integration"]["status"],
                     "current_target": service_targets.get("recommended_target"),
                     "current_platform": service_targets.get("current_platform"),
+                    "policy_gates": service_targets.get("policy_gates", {}),
                     "allowed_service_commands": [
                         item["command"]
                         for item in service_control["service_plane"].get("allowed_commands", [])

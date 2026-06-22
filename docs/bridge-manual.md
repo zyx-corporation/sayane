@@ -242,6 +242,7 @@ resident app の dedicated local UI session を明示的に無効化する local
 
 - Bridge bearer token は rotate しない
 - browser follow-up UI request は再 bootstrap が必要になる
+- focused regression では logout 後に `/app/ui-state/*` と `/app/ui-action/*` が再び UI session を要求することも確認する
 
 これらは HTML surface だが、実際の mutation / review 処理は既存 app-facing candidate endpoints と同じ boundary に留まる。
 

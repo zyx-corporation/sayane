@@ -160,3 +160,103 @@ def test_resident_app_gui_operator_path_daemon_panel(
     payload = daemon_state.json()
     assert payload["kind"] == "resident_app_daemon_panel_screen_state"
     assert payload["summary_cards"][0]["key"] == "state"
+
+
+def test_resident_app_gui_shell_json_state_and_logout_path(
+    tmp_path: Path,
+) -> None:
+    client, _, token = _bridge_env(tmp_path)
+
+    bootstrap = client.get("/app/ui?locale=ja", headers=_auth(token))
+    assert bootstrap.status_code == 200
+    assert "紗綾音 Resident App ホーム" in bootstrap.text
+
+    home_state = client.get("/app/ui-state/home")
+    assert home_state.status_code == 200
+    assert home_state.json()["kind"] == "resident_app_home_screen_state"
+
+    captured = client.post(
+        "/app/ui-action/capture-clipboard",
+        json={
+            "content": "Resident app JSON shell candidate",
+            "locale": "ja",
+            "profile_id": "default",
+        },
+    )
+    assert captured.status_code == 200
+    candidate_id = captured.json()["id"]
+
+    queue_state = client.get("/app/ui-state/candidates")
+    assert queue_state.status_code == 200
+    queue_payload = queue_state.json()
+    assert queue_payload["kind"] == "resident_app_candidate_queue_screen_state"
+    assert any(item["id"] == candidate_id for item in queue_payload["items"])
+
+    detail_state = client.get(f"/app/ui-state/candidates/{candidate_id}")
+    assert detail_state.status_code == 200
+    assert detail_state.json()["kind"] == "resident_app_candidate_detail_screen_state"
+
+    diff_state = client.get(f"/app/ui-state/candidates/{candidate_id}/diff")
+    assert diff_state.status_code == 200
+    diff_payload = diff_state.json()
+    assert diff_payload["candidate_id"] == candidate_id
+    assert "ui_summary" in diff_payload
+
+    lineage_state = client.get(f"/app/ui-state/candidates/{candidate_id}/lineage")
+    assert lineage_state.status_code == 200
+    assert lineage_state.json()["candidate_id"] == candidate_id
+
+    evaluated = client.post(
+        f"/app/ui-action/candidates/{candidate_id}/evaluate",
+        json={"level": 1},
+    )
+    assert evaluated.status_code == 200
+    assert evaluated.json()["status"] == "evaluated"
+
+    revised = client.post(
+        f"/app/ui-action/candidates/{candidate_id}/revise",
+        json={
+            "edited_text": "Resident app JSON shell revised candidate",
+            "target_section": "knowledge.concepts",
+            "change_reason": "json shell regression path",
+        },
+    )
+    assert revised.status_code == 200
+    revised_id = revised.json()["id"]
+
+    re_evaluated = client.post(
+        f"/app/ui-action/candidates/{revised_id}/evaluate",
+        json={"level": 1},
+    )
+    assert re_evaluated.status_code == 200
+    assert re_evaluated.json()["status"] == "evaluated"
+
+    approved = client.post(
+        f"/app/ui-action/candidates/{revised_id}/approve",
+        json={"force_critical": False, "override_reason": None},
+    )
+    assert approved.status_code == 200
+    assert approved.json()["status"] == "approved"
+
+    daemon_state = client.get("/app/ui-state/daemon")
+    assert daemon_state.status_code == 200
+    assert daemon_state.json()["kind"] == "resident_app_daemon_panel_screen_state"
+
+    logout = client.post("/app/ui-action/session/logout")
+    assert logout.status_code == 200
+    assert logout.json()["status"] == "logged_out"
+
+    home_after_logout = client.get("/app/ui-state/home")
+    assert home_after_logout.status_code == 401
+    assert home_after_logout.json()["detail"] == "Missing or invalid resident app UI session"
+
+    queue_after_logout = client.get("/app/ui/candidates")
+    assert queue_after_logout.status_code == 401
+    assert queue_after_logout.json()["detail"] == "Missing or invalid resident app UI session"
+
+    capture_after_logout = client.post(
+        "/app/ui-action/capture-clipboard",
+        json={"content": "blocked after logout"},
+    )
+    assert capture_after_logout.status_code == 401
+    assert capture_after_logout.json()["detail"] == "Missing or invalid resident app UI session"

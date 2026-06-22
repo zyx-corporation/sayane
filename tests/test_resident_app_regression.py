@@ -175,6 +175,12 @@ def test_resident_app_gui_shell_json_state_and_logout_path(
     assert home_state.status_code == 200
     assert home_state.json()["kind"] == "resident_app_home_screen_state"
 
+    contract_state = client.get("/app/ui-state/contract")
+    assert contract_state.status_code == 200
+    contract_payload = contract_state.json()
+    assert contract_payload["kind"] == "resident_app_contract"
+    assert contract_payload["preferred_entrypoint"] == "/app/overview"
+
     captured = client.post(
         "/app/ui-action/capture-clipboard",
         json={
@@ -249,6 +255,10 @@ def test_resident_app_gui_shell_json_state_and_logout_path(
     home_after_logout = client.get("/app/ui-state/home")
     assert home_after_logout.status_code == 401
     assert home_after_logout.json()["detail"] == "Missing or invalid resident app UI session"
+
+    contract_after_logout = client.get("/app/ui-state/contract")
+    assert contract_after_logout.status_code == 401
+    assert contract_after_logout.json()["detail"] == "Missing or invalid resident app UI session"
 
     queue_after_logout = client.get("/app/ui/candidates")
     assert queue_after_logout.status_code == 401

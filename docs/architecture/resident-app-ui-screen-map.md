@@ -264,6 +264,7 @@ The current local Bridge implementation maps those surfaces like this:
 - `/app/ui/candidates` -> candidate queue over `GET /app/candidates`
 - `/app/ui/candidates/{id}` -> candidate detail over `GET /app/candidates/{id}`
 - `/app/ui/candidates/{id}/diff` -> candidate diff over `GET /app/candidates/{id}/diff`
+- `/app/ui/daemon` -> daemon panel over daemon overview preview
 
 The current shell daemon view now treats these as the preferred derived read sections:
 
@@ -274,7 +275,6 @@ The current shell daemon view now treats these as the preferred derived read sec
 - `launchagent_summary`
 
 This keeps the daemon shell summary-first while preserving the underlying preview/contract boundary.
-- `/app/ui/daemon` -> daemon panel over daemon overview preview
 
 The embedded shell and retained HTML routes are transport variants over the same app-facing
 boundaries.

@@ -177,6 +177,15 @@ upgrade into background control or OS service automation.
 Recovery guidance may also be exposed in local app or CLI surfaces, but confirmation-bearing cleanup,
 repair, and other mutating steps must remain explicit operator actions.
 
+The current post-app daemon line now exposes this guidance through three aligned read layers:
+
+- machine-readable JSON CLI payloads
+- resident app daemon shell / legacy daemon panel detail sections
+- human-readable CLI summaries for packaging, service targets, service/control boundary, supervision, recovery/consent, and aggregate operator phase status
+
+These surfaces are operator guidance only. They do not relax consent requirements for apply,
+control, or future service commands.
+
 ## Recovery notes
 
 Future mutating commands should include recovery guidance when possible.

@@ -157,6 +157,15 @@ curl -s -H "$AUTH" \
 - daemon overview preview
 - operator packaging / service target / supervision / recovery boundary previews
 
+Current post-app operator boundary review is also available through aligned CLI summaries:
+
+- `sayane app daemon-packaging-status`
+- `sayane app daemon-service-targets-status`
+- `sayane app daemon-service-control-boundary`
+- `sayane app daemon-supervision-status`
+- `sayane app daemon-recovery-consent-status`
+- `sayane app daemon-operator-phase-status`
+
 #### `GET /app/contract`
 
 Future resident UI handoff 向けの contract metadata。
@@ -204,6 +213,10 @@ structured panel として表示する。
 
 resident shell 側の daemon 表示は raw nested payload を直接前提にせず、`operator_panels` /
 `service_target_summary` / `launchagent_summary` を優先して描画する。
+
+さらに current post-app line では `operator_phase_summary` と `operator_phase_details` を使い、
+現在の運用経路、workstreams、read surfaces、exit criteria、not-in-scope reminders を
+read-only で表示する。
 
 bootstrap 後の resident app browser activity は dedicated local UI session cookie を使う。
 follow-up browser request に raw bearer を毎回与える前提ではない。

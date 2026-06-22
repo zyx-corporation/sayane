@@ -155,21 +155,27 @@ sayane app daemon-readiness-diagnostic \
 
 # Preview current operator-facing packaging and supervision boundary
 sayane app daemon-packaging-status --json
+sayane app daemon-packaging-status
 
 # Preview one aggregated post-app operator packaging/supervision phase snapshot
 sayane app daemon-operator-phase-status --json
+sayane app daemon-operator-phase-status
 
 # Preview cross-platform service target status for macOS, Linux, and Windows
 sayane app daemon-service-targets-status --json
+sayane app daemon-service-targets-status
 
 # Preview current service/control boundary for allowed CLI control and deferred service commands
 sayane app daemon-service-control-boundary --json
+sayane app daemon-service-control-boundary
 
 # Preview current supervision UX boundary for passive visibility and CLI recovery
 sayane app daemon-supervision-status --json
+sayane app daemon-supervision-status
 
 # Preview current recovery flow and consent boundary
 sayane app daemon-recovery-consent-status --json
+sayane app daemon-recovery-consent-status
 
 # Preview and write a macOS LaunchAgent plist for the resident daemon line
 sayane app daemon-launchagent-preview --json
@@ -212,6 +218,14 @@ sayane app overview --json
 # Show app-facing UI handoff contract metadata
 sayane app contract --json
 ```
+
+Current post-app operator review can now be done through two parallel CLI styles:
+
+- `--json` payloads for machine-readable review and automation-safe inspection
+- plain-text summaries for operator handoff, terminal-first troubleshooting, and bounded status review
+
+These plain-text summaries are read surfaces only. They do not imply OS service activation,
+background supervision shipment, or stronger daemon proof than the underlying evidence supports.
 
 ## Bridge App Surfaces
 

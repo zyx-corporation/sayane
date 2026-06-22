@@ -88,6 +88,8 @@ BOOTSTRAP_COPY_LABELS: dict[str, str] = {
     "label.runtime_init_preview": "Runtime Init Preview",
     "label.cleanup_preview": "Cleanup Preview",
     "label.repair_preview": "Repair Preview",
+    "label.service_targets": "Service Targets",
+    "label.launchagent_preview": "LaunchAgent Preview",
     "label.planned_paths": "Planned Paths",
     "label.cleanup_decisions": "Cleanup Decisions",
     "label.repair_decisions": "Repair Decisions",
@@ -169,6 +171,8 @@ BOOTSTRAP_COPY_DETAILS: dict[str, str] = {
     "detail.action_unavailable": "This action is unavailable in the current candidate state.",
     "detail.empty_next_actions": "No immediate daemon actions.",
     "detail.empty_preview": "No preview payload.",
+    "detail.empty_service_targets": "No service target entries.",
+    "detail.empty_launchagent_preview": "No LaunchAgent preview is available on this platform.",
     "detail.empty_review_items": "No review items.",
     "detail.empty_quick_links": "No quick links.",
     "detail.target_none": "No active target.",
@@ -271,6 +275,14 @@ BOOTSTRAP_COPY_VALUES: dict[str, str] = {
     "value.resident_daemon_runtime_init_plan": "resident daemon runtime init plan",
     "value.resident_daemon_cleanup_apply_preview": "resident daemon cleanup apply preview",
     "value.resident_daemon_repair_apply_preview": "resident daemon repair apply preview",
+    "value.resident_daemon_launchagent_plan": "resident daemon LaunchAgent plan",
+    "value.resident_daemon_service_targets_status": "resident daemon service target status",
+    "value.supported_preview_apply_control": "supported: preview, apply, control",
+    "value.contract_only": "contract only",
+    "value.macos_launchagent": "macOS LaunchAgent",
+    "value.linux_systemd_user": "Linux systemd user service",
+    "value.windows_service": "Windows Service",
+    "value.macos_explicit_cli_only": "macOS explicit CLI only",
 }
 
 DISPLAY_PHRASE_KEYS: dict[str, str] = {
@@ -286,6 +298,9 @@ DISPLAY_PHRASE_KEYS: dict[str, str] = {
     "Missing runtime directories can be reviewed for explicit repair.": "phrase.reason_missing_runtime_repair",
     "Observe bounded readiness signals for the running local daemon.": "phrase.reason_observe_bounded_readiness",
     "Current daemon state is stable; refresh status when needed.": "phrase.reason_state_stable_refresh",
+    "Review the current macOS, Linux, and Windows service target contract before service-oriented control.": "phrase.reason_review_service_target_contract",
+    "Review the LaunchAgent plist and explicit launchctl commands for the macOS local service line.": "phrase.reason_review_launchagent_preview",
+    "A reviewed LaunchAgent plist already exists and may be bootstrapped explicitly.": "phrase.reason_bootstrap_existing_launchagent",
 }
 
 READ_SURFACE_PURPOSE_JA: dict[str, str] = {
@@ -333,6 +348,9 @@ BOOTSTRAP_COPY_PHRASES: dict[str, str] = {
     "phrase.reason_missing_runtime_repair": "Missing runtime directories can be reviewed for explicit repair.",
     "phrase.reason_observe_bounded_readiness": "Observe bounded readiness signals for the running local daemon.",
     "phrase.reason_state_stable_refresh": "Current daemon state is stable; refresh status when needed.",
+    "phrase.reason_review_service_target_contract": "Review the current macOS, Linux, and Windows service target contract before service-oriented control.",
+    "phrase.reason_review_launchagent_preview": "Review the LaunchAgent plist and explicit launchctl commands for the macOS local service line.",
+    "phrase.reason_bootstrap_existing_launchagent": "A reviewed LaunchAgent plist already exists and may be bootstrapped explicitly.",
 }
 
 BOOTSTRAP_COPY: dict[str, str] = (
@@ -424,6 +442,8 @@ BOOTSTRAP_COPY_JA_LABELS: dict[str, str] = {
     "label.runtime_init_preview": "ランタイム初期化プレビュー",
     "label.cleanup_preview": "クリーンアッププレビュー",
     "label.repair_preview": "修復プレビュー",
+    "label.service_targets": "サービスターゲット",
+    "label.launchagent_preview": "LaunchAgent プレビュー",
     "label.planned_paths": "予定パス",
     "label.cleanup_decisions": "クリーンアップ判断",
     "label.repair_decisions": "修復判断",
@@ -505,6 +525,8 @@ BOOTSTRAP_COPY_JA_DETAILS: dict[str, str] = {
     "detail.action_unavailable": "この操作は現在の候補状態では利用できません。",
     "detail.empty_next_actions": "すぐに必要なデーモン操作はありません。",
     "detail.empty_preview": "表示できるプレビュー内容はありません。",
+    "detail.empty_service_targets": "表示できるサービスターゲットはありません。",
+    "detail.empty_launchagent_preview": "このプラットフォームでは LaunchAgent プレビューを利用できません。",
     "detail.empty_review_items": "表示できるレビュー項目はありません。",
     "detail.empty_quick_links": "表示できるクイックリンクはありません。",
     "detail.target_none": "現在の対象はありません。",
@@ -607,6 +629,14 @@ BOOTSTRAP_COPY_JA_VALUES: dict[str, str] = {
     "value.resident_daemon_runtime_init_plan": "Resident Daemon ランタイム初期化計画",
     "value.resident_daemon_cleanup_apply_preview": "Resident Daemon クリーンアップ適用プレビュー",
     "value.resident_daemon_repair_apply_preview": "Resident Daemon 修復適用プレビュー",
+    "value.resident_daemon_launchagent_plan": "Resident Daemon LaunchAgent 計画",
+    "value.resident_daemon_service_targets_status": "Resident Daemon サービスターゲット状態",
+    "value.supported_preview_apply_control": "対応済み（preview / apply / control）",
+    "value.contract_only": "契約のみ",
+    "value.macos_launchagent": "macOS LaunchAgent",
+    "value.linux_systemd_user": "Linux systemd ユーザーサービス",
+    "value.windows_service": "Windows サービス",
+    "value.macos_explicit_cli_only": "macOS 明示CLI専用",
 }
 
 BOOTSTRAP_COPY_JA_FEEDBACK: dict[str, str] = {
@@ -635,6 +665,9 @@ BOOTSTRAP_COPY_JA_PHRASES: dict[str, str] = {
     "phrase.reason_missing_runtime_repair": "不足しているランタイムディレクトリは明示的な修復対象として確認できます。",
     "phrase.reason_observe_bounded_readiness": "実行中のローカルデーモンについて境界付きの準備状態シグナルを観測します。",
     "phrase.reason_state_stable_refresh": "現在のデーモン状態は安定しています。必要に応じて状態を更新してください。",
+    "phrase.reason_review_service_target_contract": "サービス指向の制御前に、macOS・Linux・Windows のサービスターゲット契約を確認します。",
+    "phrase.reason_review_launchagent_preview": "macOS ローカルサービス系統向けに LaunchAgent plist と明示的な launchctl コマンドを確認します。",
+    "phrase.reason_bootstrap_existing_launchagent": "レビュー済みの LaunchAgent plist がすでに存在するため、明示的に bootstrap できます。",
 }
 
 BOOTSTRAP_COPY_JA: dict[str, str] = (
@@ -972,6 +1005,53 @@ def _render_repair_preview(locale: str, payload: dict[str, Any]) -> str:
     )
 
 
+def _render_service_targets_status(locale: str, payload: dict[str, Any]) -> str:
+    targets = payload.get("targets", [])
+    target_rows = "".join(
+        (
+            "<tr>"
+            f"<td>{escape(_translate_display_token(item.get('target', ''), locale))}</td>"
+            f"<td>{escape(_translate_display_token(item.get('platform', ''), locale))}</td>"
+            f"<td>{escape(str(item.get('service_manager', '')))}</td>"
+            f"<td>{escape(_translate_display_token(item.get('status', ''), locale))}</td>"
+            "</tr>"
+        )
+        for item in targets
+    ) or f'<tr><td colspan="4" class="muted">{escape(_copy("detail.empty_service_targets", locale))}</td></tr>'
+    metadata = {
+        "kind": payload.get("kind"),
+        "current_platform": payload.get("current_platform"),
+        "recommended_target": payload.get("recommended_target"),
+    }
+    return (
+        f"{_render_kv_panel(locale, metadata)}"
+        '<table class="compact-table"><thead><tr>'
+        f'<th>{escape(_copy("table.target", locale))}</th>'
+        f'<th>{escape(_copy("field.section", locale).replace("Section", "Platform").replace("セクション", "プラットフォーム"))}</th>'
+        f'<th>{escape(_copy("label.operation", locale).replace("Operation", "Service Manager").replace("操作", "サービスマネージャ"))}</th>'
+        f'<th>{escape(_copy("table.status", locale))}</th>'
+        '</tr></thead>'
+        f"<tbody>{target_rows}</tbody></table>"
+    )
+
+
+def _render_launchagent_preview(locale: str, payload: dict[str, Any] | None) -> str:
+    if not payload:
+        return f'<p class="muted">{escape(_copy("detail.empty_launchagent_preview", locale))}</p>'
+    metadata = {
+        "kind": payload.get("kind"),
+        "operation_id": payload.get("operation_id"),
+        "preview_hash": payload.get("preview_hash"),
+        "label": payload.get("label"),
+        "plist_path": payload.get("plist_path"),
+    }
+    command_items = "".join(
+        f"<li><strong>{escape(name)}</strong>: <code>{escape(command)}</code></li>"
+        for name, command in payload.get("launchctl_commands", {}).items()
+    ) or f'<li class="muted">{escape(_copy("detail.empty_preview", locale))}</li>'
+    return f"{_render_kv_panel(locale, metadata)}<ul>{command_items}</ul>"
+
+
 def _render_candidate_mapping(locale: str, title: str, payload: dict[str, Any]) -> str:
     return _render_panel(title, f"{_render_kv_panel(locale, payload)}{_render_json_fallback(payload)}")
 
@@ -1074,6 +1154,8 @@ def _render_resident_app_shell_bootstrap(
             "runtimeInitPreview": _copy("label.runtime_init_preview", locale),
             "cleanupPreview": _copy("label.cleanup_preview", locale),
             "repairPreview": _copy("label.repair_preview", locale),
+            "serviceTargets": _copy("label.service_targets", locale),
+            "launchagentPreview": _copy("label.launchagent_preview", locale),
             "reviewableCountShort": _copy("label.reviewable_count_short", locale),
             "statusCountsShort": _copy("label.status_counts_short", locale),
             "topSectionsShort": _copy("label.top_sections_short", locale),
@@ -1684,6 +1766,8 @@ def _render_resident_app_shell_bootstrap(
     const runtimeInit = daemon.runtime_init || {{}};
     const cleanupPreview = daemon.cleanup_preview || {{}};
     const repairPreview = daemon.repair_preview || {{}};
+    const serviceTargetsStatus = daemon.service_targets_status || {{}};
+    const launchagentPreview = daemon.launchagent_preview || null;
     const cleanupReport = cleanupPreview.decision_report || {{}};
     const cleanupDecisions = (cleanupReport.decisions || []).map((decision) => ({{
       artifact_kind: decision.artifact_kind,
@@ -1702,6 +1786,12 @@ def _render_resident_app_shell_bootstrap(
       status: item.status,
       path: item.path,
       reason: item.reason,
+    }}));
+    const serviceTargetRows = (serviceTargetsStatus.targets || []).map((item) => ({{
+      target: item.target,
+      platform: item.platform,
+      service_manager: item.service_manager,
+      status: item.status,
     }}));
     root.innerHTML = `
       ${{shellHeader()}}
@@ -1763,6 +1853,31 @@ def _render_resident_app_shell_bootstrap(
           <thead><tr><th>${{escapeHtml(localizeTableLabel("target"))}}</th><th>${{escapeHtml(localizeTableLabel("status"))}}</th><th>${{escapeHtml(localizeTableLabel("repairable"))}}</th><th>${{escapeHtml(localizeTableLabel("path"))}}</th></tr></thead>
           <tbody>${{renderDecisionRows(repairDecisions, ["target", "status", "repairable", "path"], strings.emptyPreview)}}</tbody>
         </table></div>
+      </div>
+      <div class="shell-grid two-up">
+        <div class="panel">
+          <h3>${{escapeHtml(strings.serviceTargets)}}</h3>
+          ${{renderKeyValuePanel({{
+            kind: serviceTargetsStatus.kind,
+            current_platform: serviceTargetsStatus.current_platform,
+            recommended_target: serviceTargetsStatus.recommended_target,
+          }})}}
+          <div class="shell-table-wrap"><table class="compact-table">
+            <thead><tr><th>${{escapeHtml(localizeTableLabel("target"))}}</th><th>Platform</th><th>Service Manager</th><th>${{escapeHtml(localizeTableLabel("status"))}}</th></tr></thead>
+            <tbody>${{renderDecisionRows(serviceTargetRows, ["target", "platform", "service_manager", "status"], strings.emptyPreview)}}</tbody>
+          </table></div>
+        </div>
+        <div class="panel">
+          <h3>${{escapeHtml(strings.launchagentPreview)}}</h3>
+          ${{launchagentPreview ? renderKeyValuePanel({{
+            kind: launchagentPreview.kind,
+            operation_id: launchagentPreview.operation_id,
+            preview_hash: launchagentPreview.preview_hash,
+            label: launchagentPreview.label,
+            plist_path: launchagentPreview.plist_path,
+          }}) : `<p class="muted">${{escapeHtml(strings.emptyPreview)}}</p>`}}
+          ${{launchagentPreview?.launchctl_commands ? `<ul>${{Object.entries(launchagentPreview.launchctl_commands).map(([name, command]) => `<li><strong>${{escapeHtml(name)}}</strong>: <code>${{escapeHtml(command)}}</code></li>`).join("")}}</ul>` : ""}}
+        </div>
       </div>
       <div class="panel">
         <h3>${{escapeHtml(strings.daemonObservation)}}</h3>
@@ -2312,6 +2427,8 @@ def render_resident_app_daemon_panel(
     runtime_init = payload.get("runtime_init", {})
     cleanup_preview = payload.get("cleanup_preview", {})
     repair_preview = payload.get("repair_preview", {})
+    service_targets_status = payload.get("service_targets_status", {})
+    launchagent_preview = payload.get("launchagent_preview")
     next_actions = payload.get("next_actions", [])
     action_html = "".join(
         (
@@ -2335,6 +2452,8 @@ def render_resident_app_daemon_panel(
 {_render_panel(_copy("label.runtime_init_preview", locale), _render_runtime_init_preview(locale, runtime_init) if runtime_init else _render_json_fallback(runtime_init))}
 {_render_panel(_copy("label.cleanup_preview", locale), _render_cleanup_preview(locale, cleanup_preview) if cleanup_preview else _render_json_fallback(cleanup_preview))}
 {_render_panel(_copy("label.repair_preview", locale), _render_repair_preview(locale, repair_preview) if repair_preview else _render_json_fallback(repair_preview))}
+{_render_panel(_copy("label.service_targets", locale), _render_service_targets_status(locale, service_targets_status) if service_targets_status else _render_json_fallback(service_targets_status))}
+{_render_panel(_copy("label.launchagent_preview", locale), _render_launchagent_preview(locale, launchagent_preview))}
 <p class="muted">{escape(_copy("desc.daemon", locale))}</p>
 """
     return _page(_copy("title.daemon", locale), body, locale=locale, notice=notice, error=error)

@@ -70,9 +70,13 @@ def test_build_daemon_panel_screen_state_exposes_cards_and_previews() -> None:
             "runtime_init": {"kind": "resident_daemon_runtime_init_plan"},
             "cleanup_preview": {"kind": "resident_daemon_cleanup_apply_preview"},
             "repair_preview": {"kind": "resident_daemon_repair_apply_preview"},
+            "service_targets_status": {"kind": "resident_daemon_service_targets_status"},
+            "launchagent_preview": {"kind": "resident_daemon_launchagent_plan"},
         }
     )
 
     assert payload["kind"] == "resident_app_daemon_panel_screen_state"
     assert payload["summary_cards"][0]["key"] == "state"
     assert payload["next_actions"][0]["command"] == "sayane app daemon-status --json"
+    assert payload["service_targets_status"]["kind"] == "resident_daemon_service_targets_status"
+    assert payload["launchagent_preview"]["kind"] == "resident_daemon_launchagent_plan"

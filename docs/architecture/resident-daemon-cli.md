@@ -213,7 +213,7 @@ It keeps all of the following explicit:
 `daemon-overview` is an app-facing aggregate preview for future UI code.
 
 It combines current lifecycle status, liveness, readiness, runtime-init preview, cleanup preview,
-repair preview, and suggested next commands into one non-mutating payload.
+repair preview, service-target status, macOS LaunchAgent preview, and suggested next commands into one non-mutating payload.
 
 ## Local bind policy
 

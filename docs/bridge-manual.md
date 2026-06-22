@@ -131,6 +131,8 @@ curl -s -H "$AUTH" \
 - readiness diagnostic preview
 - runtime init preview
 - cleanup / repair preview
+- service target status preview
+- macOS LaunchAgent preview（macOS のみ）
 - suggested next actions
 
 この payload は derived preview であり、process identity / daemon readiness / API readiness の
@@ -192,6 +194,9 @@ curl -s -H "$AUTH" \
 - contract bootstrap guidance
 
 これは local presentation surface であり、final GUI framework の確定ではない。
+
+daemon panel では runtime / cleanup / repair preview に加えて、service target status と
+macOS LaunchAgent preview も表示する。
 
 bootstrap 後の resident app browser activity は dedicated local UI session cookie を使う。
 follow-up browser request に raw bearer を毎回与える前提ではない。

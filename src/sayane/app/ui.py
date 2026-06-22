@@ -4,11 +4,13 @@ from __future__ import annotations
 
 from dataclasses import asdict
 from pathlib import Path
+import sys
 from typing import Any
 
 from sayane.app.capabilities import CapabilityToken
 from sayane.app.daemon_cleanup_apply import build_cleanup_apply_preview
 from sayane.app.daemon_identity import ResidentDaemonIdentity
+from sayane.app.daemon_launchagent import build_launchagent_plan
 from sayane.app.daemon_liveness_diagnostics import build_liveness_diagnostic
 from sayane.app.daemon_packaging_status import build_daemon_packaging_status
 from sayane.app.daemon_process_control import build_daemon_status_report
@@ -17,6 +19,7 @@ from sayane.app.daemon_repair_apply import build_repair_apply_preview
 from sayane.app.daemon_recovery_consent_status import build_daemon_recovery_consent_status
 from sayane.app.daemon_runtime_init import build_runtime_init_plan
 from sayane.app.daemon_service_control_boundary import build_daemon_service_control_boundary
+from sayane.app.daemon_service_targets_status import build_daemon_service_targets_status
 from sayane.app.daemon_supervision_status import build_daemon_supervision_status
 from sayane.core.candidate import CandidateUpdate
 from sayane.core.mcp_context import build_compiled_context, build_mcp_exposure_denial
@@ -135,6 +138,11 @@ def build_daemon_overview_preview(
         host=host,
         port=port,
     ).public_metadata()
+    service_targets_status = build_daemon_service_targets_status(
+        runtime_root,
+        host=host,
+        port=port,
+    ).public_metadata()
     supervision_status = build_daemon_supervision_status(
         runtime_root,
         host=host,
@@ -145,6 +153,11 @@ def build_daemon_overview_preview(
         host=host,
         port=port,
     ).public_metadata()
+    launchagent_preview = (
+        build_launchagent_plan(runtime_root, host=host, port=port).public_metadata()
+        if sys.platform == "darwin"
+        else None
+    )
     return {
         "kind": "resident_daemon_overview_preview",
         "is_daemon_surface": True,
@@ -161,13 +174,17 @@ def build_daemon_overview_preview(
         "repair_preview": repair_preview,
         "packaging_status": packaging_status,
         "service_control_boundary": service_control_boundary,
+        "service_targets_status": service_targets_status,
         "supervision_status": supervision_status,
         "recovery_consent_status": recovery_consent_status,
+        "launchagent_preview": launchagent_preview,
         "next_actions": _build_daemon_next_actions(
             status=status_report.public_metadata(),
             runtime_init=runtime_init,
             cleanup_preview=cleanup_preview,
             repair_preview=repair_preview,
+            service_targets_status=service_targets_status,
+            launchagent_preview=launchagent_preview,
         ),
     }
 
@@ -178,6 +195,8 @@ def _build_daemon_next_actions(
     runtime_init: dict[str, Any],
     cleanup_preview: dict[str, Any],
     repair_preview: dict[str, Any],
+    service_targets_status: dict[str, Any],
+    launchagent_preview: dict[str, Any] | None,
 ) -> list[dict[str, str]]:
     actions: list[dict[str, str]] = []
     if not status["runtime_initialized"]:
@@ -224,6 +243,26 @@ def _build_daemon_next_actions(
                 "reason": "Runtime is initialized and local daemon control is available.",
             }
         )
+    if service_targets_status.get("current_platform") == "macos":
+        actions.append(
+            {
+                "command": "sayane app daemon-service-targets-status --json",
+                "reason": "Review the current macOS, Linux, and Windows service target contract before service-oriented control.",
+            }
+        )
+        actions.append(
+            {
+                "command": "sayane app daemon-launchagent-preview --json",
+                "reason": "Review the LaunchAgent plist and explicit launchctl commands for the macOS local service line.",
+            }
+        )
+        if launchagent_preview and Path(launchagent_preview.get("plist_path", "")).is_file():
+            actions.append(
+                {
+                    "command": "sayane app daemon-launchagent-bootstrap --json",
+                    "reason": "A reviewed LaunchAgent plist already exists and may be bootstrapped explicitly.",
+                }
+            )
     if status["is_running_daemon"]:
         actions.append(
             {

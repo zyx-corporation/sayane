@@ -76,6 +76,8 @@ def test_render_resident_app_home_includes_bootstrap_and_summary() -> None:
     assert "Runtime Init Preview" in html
     assert "Cleanup Preview" in html
     assert "Repair Preview" in html
+    assert "Service Targets" in html
+    assert "LaunchAgent Preview" in html
     assert "Daemon Observation" in html
     assert "Quick Links" in html
     assert "Queue Summary" in html
@@ -136,6 +138,47 @@ def test_render_resident_app_home_supports_japanese_locale() -> None:
     assert "セッション操作" in html
     assert "UIセッションを終了" in html
     assert "本文へ移動" in html
+
+
+def test_render_resident_app_daemon_panel_includes_service_targets_and_launchagent_preview() -> None:
+    html = render_resident_app_daemon_panel(
+        {
+            "status": {"state": "stopped", "is_running_daemon": False, "runtime_initialized": True},
+            "readiness": {"readiness_status": "review_required"},
+            "runtime_init": {"kind": "resident_daemon_runtime_init_plan", "items": []},
+            "cleanup_preview": {"kind": "resident_daemon_cleanup_apply_preview", "decision_report": {"decisions": []}},
+            "repair_preview": {"kind": "resident_daemon_repair_apply_preview", "decisions": {}},
+            "service_targets_status": {
+                "kind": "resident_daemon_service_targets_status",
+                "current_platform": "macos",
+                "recommended_target": "macos_launchagent",
+                "targets": [
+                    {
+                        "target": "macos_launchagent",
+                        "platform": "macos",
+                        "service_manager": "launchd",
+                        "status": "supported_preview_apply_control",
+                    }
+                ],
+            },
+            "launchagent_preview": {
+                "kind": "resident_daemon_launchagent_plan",
+                "operation_id": "launchagent-123",
+                "preview_hash": "abc123",
+                "label": "com.sayane.resident.bridge",
+                "plist_path": "/tmp/com.sayane.resident.bridge.plist",
+                "launchctl_commands": {
+                    "bootstrap": "launchctl bootstrap gui/501 /tmp/com.sayane.resident.bridge.plist",
+                },
+            },
+            "next_actions": [],
+        }
+    )
+
+    assert "Service Targets" in html
+    assert "LaunchAgent Preview" in html
+    assert "launchctl bootstrap" in html
+    assert "com.sayane.resident.bridge" in html
 
 
 def test_resident_app_home_translates_read_surface_purposes_in_japanese() -> None:

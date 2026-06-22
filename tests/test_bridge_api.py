@@ -1,6 +1,7 @@
 import json
 import shutil
 from pathlib import Path
+import sys
 
 import pytest
 from fastapi.testclient import TestClient
@@ -80,6 +81,11 @@ def test_app_daemon_overview_returns_preview_payload(
     assert payload["status"]["kind"] == "resident_daemon_lifecycle_status"
     assert payload["liveness"]["kind"] == "resident_daemon_liveness_diagnostic_preview"
     assert payload["readiness"]["kind"] == "resident_daemon_readiness_diagnostic_preview"
+    assert payload["service_targets_status"]["kind"] == "resident_daemon_service_targets_status"
+    if sys.platform == "darwin":
+        assert payload["launchagent_preview"]["kind"] == "resident_daemon_launchagent_plan"
+    else:
+        assert payload["launchagent_preview"] is None
     assert payload["is_preview"] is True
 
 

@@ -199,6 +199,9 @@ curl -s -H "$AUTH" \
 daemon panel では runtime / cleanup / repair preview に加えて、service target status と
 macOS LaunchAgent preview も表示する。
 
+また、packaging / service-control / supervision / recovery-consent の各契約も
+structured panel として表示する。
+
 bootstrap 後の resident app browser activity は dedicated local UI session cookie を使う。
 follow-up browser request に raw bearer を毎回与える前提ではない。
 

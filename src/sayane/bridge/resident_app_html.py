@@ -91,6 +91,13 @@ BOOTSTRAP_COPY_LABELS: dict[str, str] = {
     "label.service_targets": "Service Targets",
     "label.launchagent_preview": "LaunchAgent Preview",
     "label.launchagent_status": "LaunchAgent Status",
+    "label.packaging_status": "Packaging Status",
+    "label.service_control_boundary": "Service Control Boundary",
+    "label.supervision_status": "Supervision Status",
+    "label.recovery_consent_status": "Recovery and Consent",
+    "label.allowed_commands": "Allowed Commands",
+    "label.deferred_commands": "Deferred Commands",
+    "label.recommended_flow": "Recommended Flow",
     "label.planned_paths": "Planned Paths",
     "label.cleanup_decisions": "Cleanup Decisions",
     "label.repair_decisions": "Repair Decisions",
@@ -455,6 +462,13 @@ BOOTSTRAP_COPY_JA_LABELS: dict[str, str] = {
     "label.service_targets": "サービスターゲット",
     "label.launchagent_preview": "LaunchAgent プレビュー",
     "label.launchagent_status": "LaunchAgent 状態",
+    "label.packaging_status": "パッケージング状態",
+    "label.service_control_boundary": "サービス制御境界",
+    "label.supervision_status": "監視状態",
+    "label.recovery_consent_status": "復旧と同意",
+    "label.allowed_commands": "許可コマンド",
+    "label.deferred_commands": "保留コマンド",
+    "label.recommended_flow": "推奨フロー",
     "label.planned_paths": "予定パス",
     "label.cleanup_decisions": "クリーンアップ判断",
     "label.repair_decisions": "修復判断",
@@ -945,6 +959,13 @@ def _render_panel_without_title(content: str) -> str:
     return f'<div class="panel">{content}</div>'
 
 
+def _render_string_list(items: list[str], *, empty_label: str) -> str:
+    if not items:
+        return f'<p class="muted">{escape(empty_label)}</p>'
+    rows = "".join(f"<li><code>{escape(item)}</code></li>" for item in items)
+    return f"<ul>{rows}</ul>"
+
+
 def _render_runtime_init_preview(locale: str, payload: dict[str, Any]) -> str:
     items = payload.get("items", [])
     item_rows = "".join(
@@ -1189,9 +1210,16 @@ def _render_resident_app_shell_bootstrap(
             "runtimeInitPreview": _copy("label.runtime_init_preview", locale),
             "cleanupPreview": _copy("label.cleanup_preview", locale),
             "repairPreview": _copy("label.repair_preview", locale),
+            "packagingStatus": _copy("label.packaging_status", locale),
+            "serviceControlBoundary": _copy("label.service_control_boundary", locale),
+            "supervisionStatus": _copy("label.supervision_status", locale),
+            "recoveryConsentStatus": _copy("label.recovery_consent_status", locale),
             "serviceTargets": _copy("label.service_targets", locale),
             "launchagentPreview": _copy("label.launchagent_preview", locale),
             "launchagentStatus": _copy("label.launchagent_status", locale),
+            "allowedCommands": _copy("label.allowed_commands", locale),
+            "deferredCommands": _copy("label.deferred_commands", locale),
+            "recommendedFlow": _copy("label.recommended_flow", locale),
             "reviewableCountShort": _copy("label.reviewable_count_short", locale),
             "statusCountsShort": _copy("label.status_counts_short", locale),
             "topSectionsShort": _copy("label.top_sections_short", locale),
@@ -1802,6 +1830,10 @@ def _render_resident_app_shell_bootstrap(
     const runtimeInit = daemon.runtime_init || {{}};
     const cleanupPreview = daemon.cleanup_preview || {{}};
     const repairPreview = daemon.repair_preview || {{}};
+    const packagingStatus = daemon.packaging_status || {{}};
+    const serviceControlBoundary = daemon.service_control_boundary || {{}};
+    const supervisionStatus = daemon.supervision_status || {{}};
+    const recoveryConsentStatus = daemon.recovery_consent_status || {{}};
     const serviceTargetsStatus = daemon.service_targets_status || {{}};
     const launchagentPreview = daemon.launchagent_preview || null;
     const launchagentStatus = daemon.launchagent_status || null;
@@ -1830,6 +1862,11 @@ def _render_resident_app_shell_bootstrap(
       service_manager: item.service_manager,
       status: item.status,
     }}));
+    const allowedControlCommands = (serviceControlBoundary.control_plane?.allowed_commands || []).map((item) => item.command);
+    const allowedServiceCommands = (serviceControlBoundary.service_plane?.allowed_commands || []).map((item) => item.command);
+    const deferredServiceCommands = serviceControlBoundary.service_plane?.deferred_commands || [];
+    const supervisionActions = supervisionStatus.active_supervision?.allowed_actions || [];
+    const recoveryFlow = recoveryConsentStatus.recommended_recovery_flow || [];
     root.innerHTML = `
       ${{shellHeader()}}
       ${{renderCardGrid((daemon.summary_cards || []).map((card) => ({{
@@ -1890,6 +1927,53 @@ def _render_resident_app_shell_bootstrap(
           <thead><tr><th>${{escapeHtml(localizeTableLabel("target"))}}</th><th>${{escapeHtml(localizeTableLabel("status"))}}</th><th>${{escapeHtml(localizeTableLabel("repairable"))}}</th><th>${{escapeHtml(localizeTableLabel("path"))}}</th></tr></thead>
           <tbody>${{renderDecisionRows(repairDecisions, ["target", "status", "repairable", "path"], strings.emptyPreview)}}</tbody>
         </table></div>
+      </div>
+      <div class="shell-grid two-up">
+        <div class="panel">
+          <h3>${{escapeHtml(strings.packagingStatus)}}</h3>
+          ${{renderKeyValuePanel({{
+            kind: packagingStatus.kind,
+            packaging_model: packagingStatus.packaging_model,
+            supervision_model: packagingStatus.supervision_model,
+            phase_status: packagingStatus.phase_status,
+          }})}}
+        </div>
+        <div class="panel">
+          <h3>${{escapeHtml(strings.serviceControlBoundary)}}</h3>
+          ${{renderKeyValuePanel({{
+            kind: serviceControlBoundary.kind,
+            control_plane_status: serviceControlBoundary.control_plane?.status,
+            service_plane_status: serviceControlBoundary.service_plane?.status,
+          }})}}
+          <h4>${{escapeHtml(strings.allowedCommands)}}</h4>
+          <ul>${{[...allowedControlCommands, ...allowedServiceCommands].map((command) => `<li><code>${{escapeHtml(command)}}</code></li>`).join("") || `<li class="muted">${{escapeHtml(strings.emptyPreview)}}</li>`}}</ul>
+          <h4>${{escapeHtml(strings.deferredCommands)}}</h4>
+          <ul>${{deferredServiceCommands.map((command) => `<li><code>${{escapeHtml(command)}}</code></li>`).join("") || `<li class="muted">${{escapeHtml(strings.emptyPreview)}}</li>`}}</ul>
+        </div>
+      </div>
+      <div class="shell-grid two-up">
+        <div class="panel">
+          <h3>${{escapeHtml(strings.supervisionStatus)}}</h3>
+          ${{renderKeyValuePanel({{
+            kind: supervisionStatus.kind,
+            supervision_mode: supervisionStatus.supervision_mode,
+            phase_status: supervisionStatus.phase_status,
+            active_supervision_status: supervisionStatus.active_supervision?.status,
+          }})}}
+          <h4>${{escapeHtml(strings.allowedCommands)}}</h4>
+          <ul>${{supervisionActions.map((command) => `<li><code>${{escapeHtml(command)}}</code></li>`).join("") || `<li class="muted">${{escapeHtml(strings.emptyPreview)}}</li>`}}</ul>
+        </div>
+        <div class="panel">
+          <h3>${{escapeHtml(strings.recoveryConsentStatus)}}</h3>
+          ${{renderKeyValuePanel({{
+            kind: recoveryConsentStatus.kind,
+            consent_model: recoveryConsentStatus.consent_model,
+            recovery_model: recoveryConsentStatus.recovery_model,
+            phase_status: recoveryConsentStatus.phase_status,
+          }})}}
+          <h4>${{escapeHtml(strings.recommendedFlow)}}</h4>
+          <ul>${{recoveryFlow.map((item) => `<li>${{escapeHtml(item)}}</li>`).join("") || `<li class="muted">${{escapeHtml(strings.emptyPreview)}}</li>`}}</ul>
+        </div>
       </div>
       <div class="shell-grid two-up">
         <div class="panel">
@@ -2475,6 +2559,10 @@ def render_resident_app_daemon_panel(
     runtime_init = payload.get("runtime_init", {})
     cleanup_preview = payload.get("cleanup_preview", {})
     repair_preview = payload.get("repair_preview", {})
+    packaging_status = payload.get("packaging_status", {})
+    service_control_boundary = payload.get("service_control_boundary", {})
+    supervision_status = payload.get("supervision_status", {})
+    recovery_consent_status = payload.get("recovery_consent_status", {})
     service_targets_status = payload.get("service_targets_status", {})
     launchagent_preview = payload.get("launchagent_preview")
     launchagent_status = payload.get("launchagent_status")
@@ -2488,6 +2576,73 @@ def render_resident_app_daemon_panel(
             )
         for action in next_actions
     ) or f'<li class="muted">{escape(_copy("empty.immediate_daemon_actions", locale))}</li>'
+    packaging_panel = _render_panel(
+        _copy("label.packaging_status", locale),
+        _render_kv_panel(
+            locale,
+            packaging_status,
+            keys=["kind", "packaging_model", "supervision_model", "phase_status"],
+        ) if packaging_status else _render_json_fallback(packaging_status),
+    )
+    service_control_content = (
+        _render_kv_panel(
+            locale,
+            {
+                "kind": service_control_boundary.get("kind"),
+                "control_plane_status": service_control_boundary.get("control_plane", {}).get("status"),
+                "service_plane_status": service_control_boundary.get("service_plane", {}).get("status"),
+            },
+        )
+        + f"<h3>{escape(_copy('label.allowed_commands', locale))}</h3>"
+        + _render_string_list(
+            [item.get("command", "") for item in service_control_boundary.get("control_plane", {}).get("allowed_commands", [])]
+            + [item.get("command", "") for item in service_control_boundary.get("service_plane", {}).get("allowed_commands", [])],
+            empty_label=_copy("detail.empty_preview", locale),
+        )
+        + f"<h3>{escape(_copy('label.deferred_commands', locale))}</h3>"
+        + _render_string_list(
+            service_control_boundary.get("service_plane", {}).get("deferred_commands", []),
+            empty_label=_copy("detail.empty_preview", locale),
+        )
+    ) if service_control_boundary else _render_json_fallback(service_control_boundary)
+    service_control_panel = _render_panel(_copy("label.service_control_boundary", locale), service_control_content)
+    supervision_content = (
+        _render_kv_panel(
+            locale,
+            {
+                "kind": supervision_status.get("kind"),
+                "supervision_mode": supervision_status.get("supervision_mode"),
+                "phase_status": supervision_status.get("phase_status"),
+                "active_supervision_status": supervision_status.get("active_supervision", {}).get("status"),
+            },
+        )
+        + f"<h3>{escape(_copy('label.allowed_commands', locale))}</h3>"
+        + _render_string_list(
+            supervision_status.get("active_supervision", {}).get("allowed_actions", []),
+            empty_label=_copy("detail.empty_preview", locale),
+        )
+    ) if supervision_status else _render_json_fallback(supervision_status)
+    supervision_panel = _render_panel(_copy("label.supervision_status", locale), supervision_content)
+    recommended_flow_items = recovery_consent_status.get("recommended_recovery_flow", [])
+    recommended_flow_html = (
+        "<ul>" + "".join(f"<li>{escape(str(item))}</li>" for item in recommended_flow_items) + "</ul>"
+        if recommended_flow_items
+        else f'<p class="muted">{escape(_copy("detail.empty_preview", locale))}</p>'
+    )
+    recovery_content = (
+        _render_kv_panel(
+            locale,
+            {
+                "kind": recovery_consent_status.get("kind"),
+                "consent_model": recovery_consent_status.get("consent_model"),
+                "recovery_model": recovery_consent_status.get("recovery_model"),
+                "phase_status": recovery_consent_status.get("phase_status"),
+            },
+        )
+        + f"<h3>{escape(_copy('label.recommended_flow', locale))}</h3>"
+        + recommended_flow_html
+    ) if recovery_consent_status else _render_json_fallback(recovery_consent_status)
+    recovery_panel = _render_panel(_copy("label.recovery_consent_status", locale), recovery_content)
     body = f"""
 <h1>{escape(_copy("heading.daemon", locale))}</h1>
 <p><a href="/app/ui">{escape(_copy("action.back_to_home", locale))}</a></p>
@@ -2501,6 +2656,10 @@ def render_resident_app_daemon_panel(
 {_render_panel(_copy("label.runtime_init_preview", locale), _render_runtime_init_preview(locale, runtime_init) if runtime_init else _render_json_fallback(runtime_init))}
 {_render_panel(_copy("label.cleanup_preview", locale), _render_cleanup_preview(locale, cleanup_preview) if cleanup_preview else _render_json_fallback(cleanup_preview))}
 {_render_panel(_copy("label.repair_preview", locale), _render_repair_preview(locale, repair_preview) if repair_preview else _render_json_fallback(repair_preview))}
+{packaging_panel}
+{service_control_panel}
+{supervision_panel}
+{recovery_panel}
 {_render_panel(_copy("label.service_targets", locale), _render_service_targets_status(locale, service_targets_status) if service_targets_status else _render_json_fallback(service_targets_status))}
 {_render_panel(_copy("label.launchagent_preview", locale), _render_launchagent_preview(locale, launchagent_preview))}
 {_render_panel(_copy("label.launchagent_status", locale), _render_launchagent_status(locale, launchagent_status))}

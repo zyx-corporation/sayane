@@ -76,6 +76,10 @@ def test_render_resident_app_home_includes_bootstrap_and_summary() -> None:
     assert "Runtime Init Preview" in html
     assert "Cleanup Preview" in html
     assert "Repair Preview" in html
+    assert "Packaging Status" in html
+    assert "Service Control Boundary" in html
+    assert "Supervision Status" in html
+    assert "Recovery and Consent" in html
     assert "Service Targets" in html
     assert "LaunchAgent Preview" in html
     assert "LaunchAgent Status" in html
@@ -149,6 +153,40 @@ def test_render_resident_app_daemon_panel_includes_service_targets_and_launchage
             "runtime_init": {"kind": "resident_daemon_runtime_init_plan", "items": []},
             "cleanup_preview": {"kind": "resident_daemon_cleanup_apply_preview", "decision_report": {"decisions": []}},
             "repair_preview": {"kind": "resident_daemon_repair_apply_preview", "decisions": {}},
+            "packaging_status": {
+                "kind": "resident_daemon_packaging_status",
+                "packaging_model": "cli_first_local_bridge",
+                "supervision_model": "manual_cli_with_bridge_delegation",
+                "phase_status": "next_up_after_proof_phase",
+            },
+            "service_control_boundary": {
+                "kind": "resident_daemon_service_control_boundary",
+                "control_plane": {
+                    "status": "cli_control_supported_local_mvp",
+                    "allowed_commands": [{"command": "sayane app daemon-start --json"}],
+                },
+                "service_plane": {
+                    "status": "macos_explicit_cli_only",
+                    "allowed_commands": [{"command": "sayane app daemon-launchagent-bootstrap --json"}],
+                    "deferred_commands": ["daemon-service-install"],
+                },
+            },
+            "supervision_status": {
+                "kind": "resident_daemon_supervision_status",
+                "supervision_mode": "passive_local_observation_with_cli_recovery",
+                "phase_status": "decision_line_partially_defined",
+                "active_supervision": {
+                    "status": "limited_cli_only",
+                    "allowed_actions": ["sayane app daemon-start --json"],
+                },
+            },
+            "recovery_consent_status": {
+                "kind": "resident_daemon_recovery_consent_status",
+                "consent_model": "explicit_cli_confirmation_for_mutation",
+                "recovery_model": "diagnose_then_operator_review_then_cli_action",
+                "phase_status": "baseline_contract_implemented",
+                "recommended_recovery_flow": ["inspect current status and proof-oriented diagnostics"],
+            },
             "service_targets_status": {
                 "kind": "resident_daemon_service_targets_status",
                 "current_platform": "macos",
@@ -185,6 +223,10 @@ def test_render_resident_app_daemon_panel_includes_service_targets_and_launchage
     )
 
     assert "Service Targets" in html
+    assert "Packaging Status" in html
+    assert "Service Control Boundary" in html
+    assert "Supervision Status" in html
+    assert "Recovery and Consent" in html
     assert "LaunchAgent Preview" in html
     assert "LaunchAgent Status" in html
     assert "launchctl bootstrap" in html

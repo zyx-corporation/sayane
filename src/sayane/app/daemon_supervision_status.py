@@ -16,6 +16,38 @@ class ResidentDaemonSupervisionStatus:
     port: int
 
     def public_metadata(self) -> dict[str, Any]:
+        background_candidates = [
+            {
+                "surface": "tray_supervision",
+                "status": "separate_plan_required",
+                "platform_scope": ["windows", "linux"],
+                "operator_value": "quick passive status visibility and bounded entry into recovery commands",
+                "forbidden_capabilities": [
+                    "silent daemon mutation",
+                    "consent bypass for cleanup or repair apply",
+                ],
+            },
+            {
+                "surface": "menu_bar_supervision",
+                "status": "separate_plan_required",
+                "platform_scope": ["macos"],
+                "operator_value": "local visibility for resident daemon state without turning the app shell into a background controller",
+                "forbidden_capabilities": [
+                    "silent launchctl mutation",
+                    "proof-style wording without stronger evidence",
+                ],
+            },
+            {
+                "surface": "login_item_or_background_agent_visibility",
+                "status": "separate_plan_required",
+                "platform_scope": ["macos", "windows", "linux"],
+                "operator_value": "startup visibility for the supported packaging model after explicit policy closure",
+                "forbidden_capabilities": [
+                    "implicit startup enrollment",
+                    "host-level persistence without rollback policy",
+                ],
+            },
+        ]
         return {
             "kind": "resident_daemon_supervision_status",
             "supervision_mode": "passive_local_observation_with_cli_recovery",
@@ -52,6 +84,12 @@ class ResidentDaemonSupervisionStatus:
                     "menu_bar_supervision",
                     "login_item_or_background_agent_visibility",
                 ],
+                "candidate_surfaces": background_candidates,
+                "decision_guardrails": [
+                    "background surfaces may add visibility but not bypass explicit CLI-first control policy",
+                    "background surfaces may not imply daemon proof, readiness proof, or API readiness proof on their own",
+                    "background surfaces require packaging-model closure before becoming operator commitments",
+                ],
             },
             "recovery_entrypoints": [
                 "sayane app daemon-status --json",
@@ -63,6 +101,7 @@ class ResidentDaemonSupervisionStatus:
                 "passive status visibility remains separate from unrestricted daemon control",
                 "current app shell does not expose tray or menu-bar supervision toggles",
                 "current supervision line stays local-only and CLI-compatible",
+                "candidate background surfaces remain decision inputs, not current product commitments",
             ],
         }
 

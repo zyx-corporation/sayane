@@ -28,4 +28,4 @@ def test_daemon_supervision_status_json_uses_default_runtime_root(isolated_home:
     assert payload["kind"] == "resident_daemon_supervision_status"
     assert payload["runtime_root"] == str(isolated_home / ".sayane" / "run")
     assert payload["background_surfaces"]["status"] == "not_supported"
-
+    assert payload["background_surfaces"]["candidate_surfaces"][0]["surface"] == "tray_supervision"

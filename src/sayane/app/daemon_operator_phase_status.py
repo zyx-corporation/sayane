@@ -96,6 +96,10 @@ class ResidentDaemonOperatorPhaseStatus:
                     "status": supervision["active_supervision"]["status"],
                     "passive_visibility_status": supervision["passive_visibility"]["status"],
                     "background_status": supervision["background_surfaces"]["status"],
+                    "background_candidates": supervision["background_surfaces"].get(
+                        "candidate_surfaces",
+                        [],
+                    ),
                 },
                 {
                     "name": "recovery_and_consent_line",

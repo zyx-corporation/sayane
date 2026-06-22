@@ -23,5 +23,9 @@ def test_daemon_supervision_status_exposes_passive_visibility_and_cli_recovery(
     assert payload["passive_visibility"]["status"] == "supported"
     assert payload["active_supervision"]["status"] == "limited_cli_only"
     assert payload["background_surfaces"]["status"] == "not_supported"
+    candidates = payload["background_surfaces"]["candidate_surfaces"]
+    assert candidates[0]["surface"] == "tray_supervision"
+    assert candidates[1]["surface"] == "menu_bar_supervision"
+    assert candidates[2]["surface"] == "login_item_or_background_agent_visibility"
+    assert all(item["status"] == "separate_plan_required" for item in candidates)
     assert "sayane app daemon-service-control-boundary --json" in payload["recovery_entrypoints"]
-

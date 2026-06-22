@@ -38,6 +38,46 @@ class ResidentDaemonPackagingStatus:
             str(self.port),
             "--json",
         ]
+        packaging_candidates = [
+            {
+                "model": "cli_first_local_bridge",
+                "status": "current_supported_line",
+                "operator_value": "lowest-change path over the existing local Bridge and resident app shell",
+                "host_assumptions": [
+                    "operator starts Bridge explicitly",
+                    "browser shell stays local-only",
+                ],
+                "blocked_by": [],
+            },
+            {
+                "model": "hybrid_local_bridge_plus_service_targets",
+                "status": "candidate_requires_phase_closure",
+                "operator_value": "keep Bridge-hosted local shell while adding explicit OS service lifecycle support",
+                "host_assumptions": [
+                    "platform-specific service rollback policy exists",
+                    "service install/update/remove semantics are explicit",
+                ],
+                "blocked_by": [
+                    "service lifecycle implementation",
+                    "platform rollback policy",
+                    "operator packaging decision closure",
+                ],
+            },
+            {
+                "model": "service_first_resident_runtime",
+                "status": "candidate_requires_larger_architecture_change",
+                "operator_value": "daemon/service becomes the primary operator entrypoint rather than explicit Bridge startup",
+                "host_assumptions": [
+                    "resident runtime service semantics replace current CLI-first startup path",
+                    "supervision UX becomes a primary operator commitment",
+                ],
+                "blocked_by": [
+                    "service lifecycle implementation",
+                    "background supervision decision",
+                    "auth/runtime model redesign",
+                ],
+            },
+        ]
         return {
             "kind": "resident_daemon_packaging_status",
             "packaging_model": "cli_first_local_bridge",
@@ -51,6 +91,16 @@ class ResidentDaemonPackagingStatus:
                 "command": serve_command,
                 "command_text": " ".join(shlex.quote(part) for part in serve_command),
                 "purpose": "primary local operator entrypoint",
+            },
+            "packaging_decision": {
+                "status": "current_line_explicit_final_next_phase_not_closed",
+                "current_supported_model": "cli_first_local_bridge",
+                "candidate_models": packaging_candidates,
+                "decision_guardrails": [
+                    "do not smuggle service-first commitments into app-shell polish",
+                    "do not imply background supervision support before explicit phase closure",
+                    "keep current local-only operator path explicit until packaging-model closure lands",
+                ],
             },
             "local_daemon_control": {
                 "status": "supported_local_mvp",

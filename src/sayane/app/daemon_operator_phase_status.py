@@ -72,6 +72,10 @@ class ResidentDaemonOperatorPhaseStatus:
                     "status": "baseline_contract_implemented",
                     "current_state": packaging["packaging_model"],
                     "active_entrypoint": packaging["current_entrypoint"]["command_text"],
+                    "candidate_models": packaging["packaging_decision"].get(
+                        "candidate_models",
+                        [],
+                    ),
                 },
                 {
                     "name": "service_integration_line",

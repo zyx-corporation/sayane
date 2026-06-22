@@ -28,3 +28,4 @@ def test_daemon_packaging_status_json_uses_default_runtime_root(isolated_home: P
     assert payload["kind"] == "resident_daemon_packaging_status"
     assert payload["runtime_root"] == str(isolated_home / ".sayane" / "run")
     assert payload["packaging_model"] == "cli_first_local_bridge"
+    assert payload["packaging_decision"]["candidate_models"][1]["model"] == "hybrid_local_bridge_plus_service_targets"

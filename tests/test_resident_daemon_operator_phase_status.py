@@ -26,6 +26,8 @@ def test_daemon_operator_phase_status_aggregates_post_app_workstreams(
         "sayane serve --host localhost --port 39000"
     )
     assert payload["workstreams"][0]["name"] == "packaging_model_decision"
+    assert payload["workstreams"][0]["candidate_models"][0]["model"] == "cli_first_local_bridge"
+    assert payload["workstreams"][0]["candidate_models"][-1]["model"] == "service_first_resident_runtime"
     assert payload["workstreams"][1]["name"] == "service_integration_line"
     assert payload["workstreams"][1]["lifecycle_operations"][0]["operation"] == "install"
     assert payload["workstreams"][1]["lifecycle_operations"][-1]["operation"] == "update"

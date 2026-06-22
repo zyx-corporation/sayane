@@ -156,6 +156,9 @@ sayane app daemon-readiness-diagnostic \
 # Preview current operator-facing packaging and supervision boundary
 sayane app daemon-packaging-status --json
 
+# Preview one aggregated post-app operator packaging/supervision phase snapshot
+sayane app daemon-operator-phase-status --json
+
 # Preview cross-platform service target status for macOS, Linux, and Windows
 sayane app daemon-service-targets-status --json
 

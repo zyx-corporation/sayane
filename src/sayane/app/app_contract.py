@@ -60,6 +60,11 @@ def build_app_contract() -> dict[str, Any]:
                 "purpose": "focused daemon diagnostics panel",
             },
             {
+                "path": "cli:sayane app daemon-operator-phase-status --json",
+                "payload_kind": "resident_daemon_operator_phase_status",
+                "purpose": "aggregated post-app operator packaging and supervision phase status read",
+            },
+            {
                 "path": "cli:sayane app daemon-packaging-status --json",
                 "payload_kind": "resident_daemon_packaging_status",
                 "purpose": "operator-facing packaging and supervision boundary read",
@@ -332,6 +337,10 @@ def build_app_contract() -> dict[str, Any]:
             {
                 "command": "sayane app daemon-status --json",
                 "purpose": "current daemon lifecycle status",
+            },
+            {
+                "command": "sayane app daemon-operator-phase-status --json",
+                "purpose": "aggregated packaging, service, supervision, and recovery phase status",
             },
             {
                 "command": "sayane app daemon-packaging-status --json",

@@ -82,6 +82,10 @@ def test_app_daemon_overview_returns_preview_payload(
     assert payload["liveness"]["kind"] == "resident_daemon_liveness_diagnostic_preview"
     assert payload["readiness"]["kind"] == "resident_daemon_readiness_diagnostic_preview"
     assert payload["service_targets_status"]["kind"] == "resident_daemon_service_targets_status"
+    assert any(
+        item["command"] == "sayane app daemon-operator-phase-status --json"
+        for item in payload["next_actions"]
+    )
     if sys.platform == "darwin":
         assert payload["launchagent_preview"]["kind"] == "resident_daemon_launchagent_plan"
         assert payload["launchagent_status"]["kind"] == "resident_daemon_launchagent_status"

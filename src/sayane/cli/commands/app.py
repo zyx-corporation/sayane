@@ -44,6 +44,9 @@ from sayane.cli.commands.app_daemon_liveness_diagnostics import (
 from sayane.cli.commands.app_daemon_launchagent import (
     register_daemon_launchagent_commands,
 )
+from sayane.cli.commands.app_daemon_operator_phase_status import (
+    register_daemon_operator_phase_status_command,
+)
 from sayane.cli.commands.app_daemon_overview import register_daemon_overview_command
 from sayane.cli.commands.app_daemon_packaging_status import (
     register_daemon_packaging_status_command,
@@ -339,6 +342,7 @@ def register_app_commands(app: typer.Typer) -> None:
         typer.echo(f"daemon_process_started: {payload['daemon_process_started']}")
 
     register_daemon_identity_command(app_group)
+    register_daemon_operator_phase_status_command(app_group)
     register_daemon_packaging_status_command(app_group)
     register_daemon_service_targets_status_command(app_group)
     register_daemon_service_control_boundary_command(app_group)

@@ -253,6 +253,12 @@ def _build_daemon_next_actions(
                 "reason": "Runtime is initialized and local daemon control is available.",
             }
         )
+    actions.append(
+        {
+            "command": "sayane app daemon-operator-phase-status --json",
+            "reason": "Review the current packaging, service, supervision, and recovery phase contract before post-app operator changes.",
+        }
+    )
     if service_targets_status.get("current_platform") == "macos":
         actions.append(
             {

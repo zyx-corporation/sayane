@@ -78,6 +78,10 @@ from sayane.app.daemon_liveness_diagnostics import (
     build_liveness_diagnostic,
     build_liveness_diagnostic_from_pid_file_diagnostic,
 )
+from sayane.app.daemon_operator_phase_status import (
+    ResidentDaemonOperatorPhaseStatus,
+    build_daemon_operator_phase_status,
+)
 from sayane.app.daemon_launchagent import (
     LAUNCHAGENT_LABEL,
     ResidentDaemonLaunchAgentApplyError,
@@ -221,6 +225,7 @@ __all__ = [
     "ResidentDaemonLivenessDiagnostic",
     "ResidentDaemonLivenessStatus",
     "ResidentDaemonMode",
+    "ResidentDaemonOperatorPhaseStatus",
     "ResidentDaemonPackagingStatus",
     "ResidentDaemonPidFileDiagnostic",
     "ResidentDaemonPidParseStatus",
@@ -300,6 +305,7 @@ __all__ = [
     "build_daemon_service_control_boundary",
     "build_daemon_service_targets_status",
     "build_daemon_overview_preview",
+    "build_daemon_operator_phase_status",
     "build_pid_file_diagnostic",
     "build_preflight_event_record",
     "build_runtime_init_event_record",

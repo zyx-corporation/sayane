@@ -236,6 +236,15 @@ def test_resident_app_overview_command_is_registered(isolated_home: Path) -> Non
     assert json.loads(result.stdout)["kind"] == "resident_daemon_overview_preview"
 
 
+def test_resident_app_operator_phase_status_command_is_registered(
+    isolated_home: Path,
+) -> None:
+    result = runner.invoke(app, ["app", "daemon-operator-phase-status", "--json"])
+
+    assert result.exit_code == 0
+    assert json.loads(result.stdout)["kind"] == "resident_daemon_operator_phase_status"
+
+
 def test_resident_app_launchagent_control_commands_are_registered(
     isolated_home: Path,
     monkeypatch: pytest.MonkeyPatch,

@@ -44,6 +44,10 @@ def test_app_contract_exposes_entrypoint_and_surfaces() -> None:
         for surface in payload["read_surfaces"]
     )
     assert any(
+        surface["path"] == "cli:sayane app daemon-operator-phase-status --json"
+        for surface in payload["read_surfaces"]
+    )
+    assert any(
         surface["path"] == "cli:sayane app daemon-packaging-status --json"
         for surface in payload["read_surfaces"]
     )
@@ -154,6 +158,10 @@ def test_app_contract_exposes_surface_roles_and_shared_semantics() -> None:
     assert shared_semantics["review_and_daemon_boundary_wording"]["shared_by_design"] is True
     assert shared_semantics["host_container_ux"]["shared_by_design"] is False
     assert shared_semantics["auth_session_handling"]["shared_by_design"] is False
+    assert any(
+        item["command"] == "sayane app daemon-operator-phase-status --json"
+        for item in payload["operator_cli_surfaces"]
+    )
     assert any(
         item["command"] == "sayane app daemon-packaging-status --json"
         for item in payload["operator_cli_surfaces"]

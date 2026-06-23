@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Sayane — 候補レビュー</title>
+    <title>紗綾音</title>
     <style>
       * {
         box-sizing: border-box;
@@ -53,6 +53,129 @@
         display: flex;
         gap: 6px;
         align-items: center;
+      }
+      .resident-app-panel {
+        margin: 0 0 8px;
+        padding: 8px 10px;
+        font-size: 0.72rem;
+        line-height: 1.45;
+        color: #444;
+        background: #fff;
+        border: 1px solid #e3e7ee;
+        border-radius: 6px;
+      }
+      .resident-app-heading {
+        margin: 0 0 4px;
+        font-size: 0.76rem;
+        font-weight: 700;
+        color: #1d3557;
+      }
+      .resident-app-meta,
+      .resident-app-status {
+        margin: 0 0 6px;
+        color: #666;
+        font-size: 0.68rem;
+      }
+      .resident-app-active {
+        margin: 0 0 6px;
+        color: #334155;
+        font-size: 0.68rem;
+        font-family: ui-monospace, monospace;
+      }
+      .resident-app-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+        margin: 0 0 8px;
+        padding: 0;
+        list-style: none;
+      }
+      .resident-app-card {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 6px 8px;
+        background: #f7f9fc;
+        border: 1px solid #e6ebf2;
+        border-radius: 4px;
+      }
+      .resident-app-card-label {
+        font-size: 0.65rem;
+        color: #5f6b7a;
+      }
+      .resident-app-card-value {
+        font-size: 0.78rem;
+        color: #1f2937;
+      }
+      .resident-app-subheading {
+        margin: 8px 0 4px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: #4a5568;
+      }
+      .resident-app-list {
+        margin: 0;
+        padding-left: 1.2em;
+        font-size: 0.68rem;
+        color: #4b5563;
+      }
+      .resident-app-link-button {
+        width: 100%;
+        text-align: left;
+        padding: 4px 6px;
+        border: 1px solid #d7deea;
+        border-radius: 4px;
+        background: #fff;
+        color: #1f2937;
+        font-size: 0.68rem;
+        cursor: pointer;
+      }
+      .resident-app-link-button-active {
+        border-color: #93c5fd;
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-weight: 600;
+      }
+      .resident-app-link-button-active::before {
+        content: "● ";
+      }
+      .resident-app-link-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+      .resident-app-list[hidden] {
+        display: none !important;
+      }
+      .resident-app-daemon-panel {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #e6ebf2;
+      }
+      .resident-app-queue-panel {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #e6ebf2;
+      }
+      .resident-app-detail-panel {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #e6ebf2;
+      }
+      .resident-app-content {
+        margin: 0;
+        padding: 6px 8px;
+        background: #f7f9fc;
+        border: 1px solid #e6ebf2;
+        border-radius: 4px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-size: 0.68rem;
+        color: #374151;
+      }
+      .resident-app-actions-row {
+        display: flex;
+        gap: 6px;
+        margin: 6px 0 8px;
       }
       .filter-row select {
         flex: 1;
@@ -402,23 +525,88 @@
   <body>
     <div id="app-root" aria-busy="false">
       <header class="sticky-header">
-        <p class="context-banner" data-i18n="sidepanel.context_banner">
-          Sayane保存文脈との比較結果です。LLMの記憶ではありません。
-        </p>
+          <p class="context-banner" data-i18n="sidepanel.context_banner">
+          Comparison against your saved 紗綾音 context. This is not LLM memory.
+          </p>
+        <section id="resident-app-panel" class="resident-app-panel" hidden>
+          <p class="resident-app-heading" data-i18n="resident_app.heading">Resident App</p>
+          <p id="resident-app-meta" class="resident-app-meta"></p>
+          <p id="resident-app-active-review" class="resident-app-active"></p>
+          <p id="resident-app-status" class="resident-app-status"></p>
+          <ul id="resident-app-summary-cards" class="resident-app-grid"></ul>
+          <p class="resident-app-subheading" data-i18n="resident_app.top_review_items">Top review items</p>
+          <ul id="resident-app-review-items" class="resident-app-list" hidden></ul>
+          <p class="resident-app-subheading" data-i18n="resident_app.top_daemon_actions">Top daemon actions</p>
+          <ul id="resident-app-daemon-actions" class="resident-app-list" hidden></ul>
+          <p class="resident-app-subheading" data-i18n="resident_app.quick_links">Quick links</p>
+          <ul id="resident-app-quick-links" class="resident-app-list" hidden></ul>
+          <section id="resident-app-queue-panel" class="resident-app-queue-panel" hidden>
+            <p class="resident-app-subheading" data-i18n="resident_app.queue_heading">Candidate queue</p>
+            <ul id="resident-app-queue-summary" class="resident-app-list"></ul>
+            <div class="resident-app-actions-row">
+              <button type="button" id="resident-app-queue-open-active-review" class="resident-app-link-button" data-i18n="resident_app.queue_open_active_review">
+                Open active review
+              </button>
+            </div>
+            <p class="resident-app-subheading" data-i18n="resident_app.queue_sections">Top sections</p>
+            <ul id="resident-app-queue-sections" class="resident-app-list" hidden></ul>
+            <p class="resident-app-subheading" data-i18n="resident_app.queue_items">Top queue items</p>
+            <ul id="resident-app-queue-items" class="resident-app-list" hidden></ul>
+          </section>
+          <section id="resident-app-detail-panel" class="resident-app-detail-panel" hidden>
+            <p class="resident-app-subheading" data-i18n="resident_app.detail_heading">Candidate detail</p>
+            <ul id="resident-app-detail-summary" class="resident-app-list"></ul>
+            <div class="resident-app-actions-row">
+              <button type="button" id="resident-app-detail-open-review" class="resident-app-link-button" data-i18n="resident_app.detail_open_review">
+                Open in review
+              </button>
+              <button type="button" id="resident-app-detail-back-queue" class="resident-app-link-button" data-i18n="resident_app.detail_back_queue">
+                Back to queue
+              </button>
+              <button type="button" id="resident-app-detail-back-active-review" class="resident-app-link-button" data-i18n="resident_app.detail_back_active_review">
+                Back to active review
+              </button>
+            </div>
+            <p class="resident-app-subheading" data-i18n="resident_app.detail_actions">Allowed actions</p>
+            <ul id="resident-app-detail-actions" class="resident-app-list" hidden></ul>
+            <p class="resident-app-subheading" data-i18n="resident_app.detail_next_steps">Next steps</p>
+            <ul id="resident-app-detail-action-hints" class="resident-app-list" hidden></ul>
+            <p class="resident-app-subheading" data-i18n="resident_app.detail_proposal">Proposal</p>
+            <ul id="resident-app-detail-proposal" class="resident-app-list" hidden></ul>
+            <p class="resident-app-subheading" data-i18n="resident_app.detail_evaluation">Evaluation</p>
+            <ul id="resident-app-detail-evaluation" class="resident-app-list" hidden></ul>
+            <p class="resident-app-subheading" data-i18n="resident_app.detail_lineage">Lineage</p>
+            <ul id="resident-app-detail-lineage" class="resident-app-list" hidden></ul>
+            <p class="resident-app-subheading" data-i18n="resident_app.detail_diff">Diff</p>
+            <ul id="resident-app-detail-diff" class="resident-app-list" hidden></ul>
+            <p class="resident-app-subheading" data-i18n="resident_app.detail_content">Content</p>
+            <pre id="resident-app-detail-content" class="resident-app-content"></pre>
+          </section>
+          <section id="resident-app-daemon-panel" class="resident-app-daemon-panel" hidden>
+            <p class="resident-app-subheading" data-i18n="resident_app.daemon_heading">Daemon panel</p>
+            <ul id="resident-app-daemon-summary" class="resident-app-list"></ul>
+            <p class="resident-app-subheading" data-i18n="resident_app.daemon_runtime">Runtime init</p>
+            <ul id="resident-app-daemon-runtime" class="resident-app-list" hidden></ul>
+            <p class="resident-app-subheading" data-i18n="resident_app.daemon_cleanup">Cleanup preview</p>
+            <ul id="resident-app-daemon-cleanup" class="resident-app-list" hidden></ul>
+            <p class="resident-app-subheading" data-i18n="resident_app.daemon_repair">Repair preview</p>
+            <ul id="resident-app-daemon-repair" class="resident-app-list" hidden></ul>
+          </section>
+        </section>
         <div class="filter-row">
-          <select id="filter-select" aria-label="Filter">
+          <select id="filter-select" aria-label="Filter" data-i18n-aria-label="review.filter.all">
             <option value="review_required" data-i18n="review.filter.review_required" selected>
-              要判断
+              Review required
             </option>
-            <option value="all" data-i18n="review.filter.all">すべて</option>
+            <option value="all" data-i18n="review.filter.all">All</option>
             <option value="reject_recommended" data-i18n="review.filter.reject_recommended">
-              拒否推奨
+              Reject recommended
             </option>
-            <option value="has_diff" data-i18n="review.filter.has_diff">差分あり</option>
+            <option value="has_diff" data-i18n="review.filter.has_diff">Has diff</option>
             <option value="inferred_extension" data-i18n="review.filter.inferred_extension">
-              推論補完
+              Inferred extension
             </option>
-            <option value="low_value" data-i18n="review.filter.low_value">低リスク</option>
+            <option value="low_value" data-i18n="review.filter.low_value">Low value</option>
             <option
               value="debug"
               id="filter-option-debug"
@@ -433,6 +621,7 @@
             id="btn-refresh-candidates"
             class="btn-icon"
             data-i18n-title="candidate.refresh"
+            data-i18n-aria-label="candidate.refresh"
             aria-label="Refresh"
           >
             ↻

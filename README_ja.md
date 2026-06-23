@@ -230,7 +230,52 @@ sayane compile --target chatgpt
 
 詳しくは [Storage マニュアル](docs/storage-manual.md) を参照してください。
 
-### E. 開発者向けにリポジトリから入れる
+### E. resident app local shell を開く
+
+現行の resident app は Bridge-hosted local shell が主経路です。
+
+```bash
+cd /path/to/sayane
+./scripts/run-app-local.sh
+```
+
+補足:
+
+- resident app の URL は `http://127.0.0.1:38741/app/ui`
+- 初回ブラウザ導線は `bootstrap_token` 付き URL を 1 回踏み、その後は dedicated local UI session cookie を使う
+- `http://127.0.0.1:8008/index.html` のような別 static-site URL は現行 resident app では使わない
+
+詳しくは [Bridge マニュアル](docs/bridge-manual.md) と [Getting Started](docs/getting-started.md) を参照してください。
+
+### F. macOS native app preview を試す
+
+resident app の本線 UI は macOS native app へ移行中です。
+
+```bash
+swift build --package-path macos/SayaneApp
+./scripts/run-macos-app-preview.sh
+```
+
+Xcode で Swift package を開き、`SayaneApp` executable target を起動します。
+Bridge 切断時は app 内の `Bridge を起動` または `接続を復旧` を使います。
+native の daemon 画面は read-first 方針を保ち、CLI / `launchctl` コマンドのコピー、
+LaunchAgent plist の確認、runtime-init / cleanup / repair preview の要約確認を行えます。
+加えて operator packaging / supervision / recovery contract をそのまま表示し、
+packaging model 候補、background supervision 候補、guardrails、推奨 recovery flow を
+native app 内で確認できます。さらに startup command / bootstrap UI / phase closure checklist
+も native 側で可視化します。handoff 向けに workstream 状態と recommended implementation order
+も同じ画面で確認できます。service lifecycle operation / policy gate / app-UI exposure limit /
+governing rule も同じ daemon 画面で read-first に確認できます。macOS では LaunchAgent 向けの
+preflight / verification / log path / security boundary / troubleshooting に加えて、
+plist preview / program arguments / environment assumptions も native 画面で参照できます。
+さらに operation id / preview hash も native 画面で確認でき、handoff 時の照合に使えます。
+stdout/stderr の tail コマンドと preview/apply boundary も同画面で確認できます。
+loaded status / return code / stderr summary も先に確認できます。
+主要セクションは折りたたみ表示になっており、要点だけ先に確認しやすくなっています。
+
+詳しくは [macOS app preview](macos/SayaneApp/README.md) を参照してください。
+
+### G. 開発者向けにリポジトリから入れる
 
 ```bash
 git clone https://github.com/zyx-corporation/sayane.git

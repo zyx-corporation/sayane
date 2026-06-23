@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Sayane Settings</title>
+    <title>紗綾音 Settings</title>
     <style>
       body {
         font-family: system-ui, sans-serif;
@@ -60,8 +60,8 @@
   </head>
   <body>
     <div id="app-root" aria-busy="false">
-    <h1 data-i18n="options.title">Sayane Settings</h1>
-    <section class="build-info-panel" aria-label="Build information">
+    <h1 data-i18n="options.title">紗綾音 Settings</h1>
+    <section class="build-info-panel" aria-label="Build information" data-i18n-aria-label="options.build_info">
       <p id="extension-build-info" class="hint build-info-line"></p>
       <p id="bridge-build-info" class="hint build-info-line"></p>
     </section>
@@ -77,13 +77,13 @@
     </select>
 
     <label for="bridge-url" data-i18n="options.bridge_url">Bridge URL</label>
-    <input id="bridge-url" type="url" placeholder="http://127.0.0.1:38741" />
+    <input id="bridge-url" type="url" placeholder="http://127.0.0.1:38741" data-i18n-placeholder="options.bridge_url_placeholder" />
 
     <label for="bridge-token" data-i18n="options.bearer_token">Bearer token</label>
     <input id="bridge-token" type="password" autocomplete="off" />
 
     <label for="default-profile" data-i18n="options.default_profile">Default profile id</label>
-    <input id="default-profile" type="text" placeholder="default" />
+    <input id="default-profile" type="text" placeholder="default" data-i18n-placeholder="options.default_profile_placeholder" />
 
     <label>
       <input id="developer-mode" type="checkbox" />

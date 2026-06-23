@@ -1,6 +1,7 @@
 /** Format build metadata for Settings / debug UI. */
 
 import { EXTENSION_BUILD_INFO } from "./build-info.js";
+import { getLocale, t } from "./i18n.js";
 
 export type BuildInfoPayload = {
   version: string;
@@ -15,7 +16,7 @@ export function formatSourceUpdatedAt(isoTimestamp: string): string {
   try {
     const dt = new Date(normalized);
     if (Number.isNaN(dt.getTime())) return text.slice(0, 19).replace("T", " ");
-    return dt.toLocaleString("en-US", {
+    return dt.toLocaleString(getLocale() === "ja" ? "ja-JP" : "en-US", {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
@@ -30,18 +31,20 @@ export function formatSourceUpdatedAt(isoTimestamp: string): string {
 }
 
 export function extensionBuildInfoLine(): string {
-  return `Extension ${EXTENSION_BUILD_INFO.version} · codebase updated ${formatSourceUpdatedAt(
-    EXTENSION_BUILD_INFO.sourceUpdatedAt,
-  )}`;
+  return t("options.build.extension", {
+    version: EXTENSION_BUILD_INFO.version,
+    updatedAt: formatSourceUpdatedAt(EXTENSION_BUILD_INFO.sourceUpdatedAt),
+  });
 }
 
 export function bridgeBuildInfoLine(payload: BuildInfoPayload | null): string {
   if (!payload?.version) {
-    return "Bridge — version shown after connection";
+    return t("options.build.bridge_unknown");
   }
-  return `Bridge ${payload.version} · codebase updated ${formatSourceUpdatedAt(
-    payload.sourceUpdatedAt,
-  )}`;
+  return t("options.build.bridge", {
+    version: payload.version,
+    updatedAt: formatSourceUpdatedAt(payload.sourceUpdatedAt),
+  });
 }
 
 export async function fetchBridgeBuildInfo(

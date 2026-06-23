@@ -135,6 +135,11 @@ def build_app_contract() -> dict[str, Any]:
                 "purpose": "review diff panel",
             },
             {
+                "path": "/app/candidates/{id}/lineage",
+                "payload_kind": "candidate_lineage",
+                "purpose": "candidate lineage panel for native or token-backed clients",
+            },
+            {
                 "path": "/app/ui-state/contract",
                 "payload_kind": "resident_app_contract",
                 "purpose": "cookie-backed local UI contract read for the Bridge-hosted local shell",
@@ -249,6 +254,7 @@ def build_app_contract() -> dict[str, Any]:
             "GET /app/candidates",
             "GET /app/candidates/{id}",
             "GET /app/candidates/{id}/diff",
+            "GET /app/candidates/{id}/lineage",
             "POST /app/candidates/{id}/evaluate",
             "POST /app/candidates/{id}/revise",
             "POST /app/candidates/{id}/approve or /reject",
@@ -293,8 +299,8 @@ def build_app_contract() -> dict[str, Any]:
                 "surface": "resident_app",
                 "role": "primary_growth_surface",
                 "notes": [
-                    "Bridge-hosted local shell is the primary operator-facing growth path",
-                    "new workflow investment lands here first",
+                    "native macOS application is the primary operator-facing growth path",
+                    "Bridge-hosted local shell remains a bootstrap, debugging, and handoff surface",
                 ],
             },
             {
@@ -339,7 +345,8 @@ def build_app_contract() -> dict[str, Any]:
                 "topic": "auth_session_handling",
                 "shared_by_design": False,
                 "notes": [
-                    "resident app uses a dedicated local UI session after bootstrap",
+                    "native macOS app may use bearer-backed app-facing surfaces directly",
+                    "Bridge-hosted local shell keeps a dedicated local UI session after bootstrap",
                     "extension keeps background-worker mediated Bridge auth instead of browser cookie sessions",
                 ],
             },

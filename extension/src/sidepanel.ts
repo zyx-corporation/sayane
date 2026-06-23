@@ -2,6 +2,7 @@ import type { BackgroundMessage, BackgroundResponse } from "./types.js";
 import { formatUserFacingBridgeError } from "./bridge-error-format.js";
 import { applyDataI18n, initI18n, t } from "./i18n.js";
 import { BusyUiController } from "./busy-ui.js";
+import { initResidentAppSidepanel } from "./resident-app-sidepanel.js";
 import { initSidepanelCandidateUI } from "./sidepanel-candidate-ui.js";
 import { STORAGE_KEYS } from "./config.js";
 import type { OptionsUpdatedMessage } from "./options-notify.js";
@@ -48,6 +49,7 @@ function registerBusyButtons(): void {
 }
 
 let candidateUi: ReturnType<typeof initSidepanelCandidateUI> | null = null;
+let residentAppUi: ReturnType<typeof initResidentAppSidepanel> | null = null;
 
 async function init(): Promise<void> {
   await initI18n();
@@ -56,6 +58,17 @@ async function init(): Promise<void> {
   document.title = t("sidepanel.title");
 
   const evalLevel = await getStoredEvalLevel();
+  residentAppUi = initResidentAppSidepanel({
+    $,
+    send,
+    formatBridgeError,
+    loadCandidateQueue: async () => {
+      await candidateUi?.loadCandidates();
+    },
+    focusCandidate: async (candidateId: string) => {
+      await candidateUi?.focusCandidate(candidateId);
+    },
+  });
   candidateUi = initSidepanelCandidateUI({
     $,
     send,
@@ -65,6 +78,7 @@ async function init(): Promise<void> {
   });
 
   watchCandidatesChanged((candidateId) => {
+    void residentAppUi?.handleCandidatesChanged(candidateId);
     if (candidateId) {
       void candidateUi?.focusCandidate(candidateId);
       return;
@@ -72,6 +86,7 @@ async function init(): Promise<void> {
     void candidateUi?.loadCandidates();
   });
 
+  await residentAppUi.refresh();
   const initialFocusId = await peekCandidatesFocusId();
   await busyUi.run("refreshingCandidates", async () => {
     if (initialFocusId) {

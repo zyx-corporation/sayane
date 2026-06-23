@@ -48,6 +48,10 @@ def test_app_contract_exposes_entrypoint_and_surfaces() -> None:
         for surface in payload["read_surfaces"]
     )
     assert any(
+        surface["path"] == "/app/candidates/{id}/lineage"
+        for surface in payload["read_surfaces"]
+    )
+    assert any(
         surface["path"] == "cli:sayane app daemon-operator-phase-status --json"
         for surface in payload["read_surfaces"]
     )
@@ -161,12 +165,20 @@ def test_app_contract_exposes_surface_roles_and_shared_semantics() -> None:
     }
 
     assert surface_roles["resident_app"]["role"] == "primary_growth_surface"
+    assert any(
+        "native macOS application is the primary operator-facing growth path" in note
+        for note in surface_roles["resident_app"]["notes"]
+    )
     assert surface_roles["extension"]["role"] == "compatibility_surface"
     assert shared_semantics["app_facing_endpoint_contracts"]["shared_by_design"] is True
     assert shared_semantics["screen_state_payload_semantics"]["shared_by_design"] is True
     assert shared_semantics["review_and_daemon_boundary_wording"]["shared_by_design"] is True
     assert shared_semantics["host_container_ux"]["shared_by_design"] is False
     assert shared_semantics["auth_session_handling"]["shared_by_design"] is False
+    assert any(
+        "native macOS app may use bearer-backed app-facing surfaces directly" in note
+        for note in shared_semantics["auth_session_handling"]["notes"]
+    )
     assert any(
         item["command"] == "sayane app daemon-operator-phase-status --json"
         for item in payload["operator_cli_surfaces"]

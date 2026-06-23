@@ -170,10 +170,22 @@ def register_resident_app_routes(
                 return token
         return None
 
+    def _valid_bootstrap_query_token(request: Request) -> str | None:
+        token = request.query_params.get("bootstrap_token")
+        if token and verify_token(cfg, token):
+            return token
+        return None
+
+    def _valid_bootstrap_token(token: str | None) -> str | None:
+        if token and verify_token(cfg, token):
+            return token
+        return None
+
     def establish_ui_session(request: Request) -> str:
         existing = _valid_ui_session_cookie(request)
         bootstrap_bearer = _valid_bootstrap_bearer(request)
-        if bootstrap_bearer:
+        bootstrap_query = _valid_bootstrap_query_token(request)
+        if bootstrap_bearer or bootstrap_query:
             return issue_ui_session(cfg)
         if existing:
             return existing
@@ -268,6 +280,20 @@ def register_resident_app_routes(
             error=error,
         )
         return _html_response(html, token=token, locale=locale)
+
+    @router.post("/app/ui/bootstrap")
+    def post_app_ui_bootstrap(
+        request: Request,
+        bootstrap_token: str = Form(...),
+    ) -> RedirectResponse:
+        if not _valid_bootstrap_token(bootstrap_token):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid bearer token",
+            )
+        locale = _resolve_ui_locale(request)
+        token = issue_ui_session(cfg)
+        return _redirect_response("/app/ui", token=token, locale=locale)
 
     @router.post("/app/ui-action/session/logout")
     def post_app_ui_action_session_logout(
@@ -766,6 +792,16 @@ def register_resident_app_routes(
     def get_app_candidate_diff(candidate_id: str) -> dict[str, object]:
         try:
             return _candidate_diff_payload(candidate_id)
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    @router.get(
+        "/app/candidates/{candidate_id}/lineage",
+        dependencies=[Depends(require_bearer)],
+    )
+    def get_app_candidate_lineage(candidate_id: str) -> dict[str, object]:
+        try:
+            return candidate_api.get_candidate_lineage(cfg, candidate_id)
         except FileNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
 

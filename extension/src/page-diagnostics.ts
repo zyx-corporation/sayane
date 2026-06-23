@@ -61,6 +61,40 @@ function hostPermissionForUrl(url: string): boolean {
   }
 }
 
+function localizeDiagnosticToken(
+  value: unknown,
+  t: (key: string, params?: Record<string, string | number>) => string,
+): string {
+  if (value === true) return t("debug.ok");
+  if (value === false) return t("debug.failed");
+  if (value == null || value === "") return "—";
+  const token = String(value);
+  const known: Record<string, string> = {
+    chatgpt: "provider.chatgpt",
+    claude: "provider.claude",
+    gemini: "provider.gemini",
+    deepseek: "provider.deepseek",
+    openwebui: "provider.openwebui",
+    "local-custom": "provider.local_custom",
+    unsupported: "page.unsupported",
+  };
+  const key = known[token];
+  return key ? t(key) : token;
+}
+
+function localizeBridgeStateKind(
+  kind: BridgeState["kind"],
+  t: (key: string, params?: Record<string, string | number>) => string,
+): string {
+  const key: Record<BridgeState["kind"], string> = {
+    unknown: "debug.state.unknown",
+    checking: "debug.state.checking",
+    connected: "debug.state.connected",
+    failed: "debug.state.failed",
+  };
+  return t(key[kind]);
+}
+
 async function injectContentScript(tabId: number): Promise<void> {
   await chrome.scripting.executeScript({
     target: { tabId },
@@ -126,7 +160,7 @@ export function deriveCaptureAvailability(
   const debugLines: string[] = [];
   const bridgeConnected = bridgeState.kind === "connected";
 
-  debugLines.push(`${t("debug.bridge")}: ${bridgeState.kind}`);
+  debugLines.push(`${t("debug.bridge")}: ${localizeBridgeStateKind(bridgeState.kind, t)}`);
   if (tabUrl) debugLines.push(`${t("debug.url")}: ${tabUrl}`);
 
   let canCaptureSelection = false;
@@ -144,9 +178,9 @@ export function deriveCaptureAvailability(
     selectionDisabledReason = reason;
     clipboardDisabledReason = reason;
     pageDisabledReason = reason;
-    debugLines.push(`${t("debug.selection")}: false (${reason})`);
-    debugLines.push(`${t("debug.clipboard")}: false (${reason})`);
-    debugLines.push(`${t("debug.page_capture")}: false (${reason})`);
+    debugLines.push(`${t("debug.selection")}: ${t("debug.failed")} (${reason})`);
+    debugLines.push(`${t("debug.clipboard")}: ${t("debug.failed")} (${reason})`);
+    debugLines.push(`${t("debug.page_capture")}: ${t("debug.failed")} (${reason})`);
     return {
       bridgeState,
       pageState,
@@ -164,7 +198,7 @@ export function deriveCaptureAvailability(
 
   canCaptureClipboard = true;
   clipboardDisabledReason = null;
-  debugLines.push(`${t("debug.clipboard")}: true`);
+  debugLines.push(`${t("debug.clipboard")}: ${t("debug.ok")}`);
 
   if (pageState.kind === "checking" || pageState.kind === "unknown") {
     selectionDisabledReason = t("page.reason.checking");
@@ -206,7 +240,7 @@ export function deriveCaptureAvailability(
   if (pageState.kind === "unsupported_url") {
     selectionDisabledReason = pageState.reason;
     pageDisabledReason = pageState.reason;
-    debugLines.push(`${t("debug.provider")}: ${t("page.unsupported")}`);
+    debugLines.push(`${t("debug.provider")}: ${localizeDiagnosticToken("unsupported", t)}`);
     return {
       bridgeState,
       pageState,
@@ -227,7 +261,7 @@ export function deriveCaptureAvailability(
     selectionDisabledReason = reason;
     pageDisabledReason = reason;
     debugLines.push(`${t("debug.content_script")}: ${t("debug.no_response")}`);
-    debugLines.push(`${t("debug.page_readable")}: false`);
+    debugLines.push(`${t("debug.page_readable")}: ${t("debug.failed")}`);
     debugLines.push(`${t("debug.selection_length")}: 0`);
     return {
       bridgeState,
@@ -267,11 +301,11 @@ export function deriveCaptureAvailability(
     };
   }
 
-  debugLines.push(`${t("debug.provider")}: ${ping.provider}`);
+  debugLines.push(`${t("debug.provider")}: ${localizeDiagnosticToken(ping.provider, t)}`);
   debugLines.push(
     `${t("debug.content_script")}: ${ping.contentScriptReady ? t("debug.ok") : t("debug.no_response")}`,
   );
-  debugLines.push(`${t("debug.page_readable")}: ${ping.readable}`);
+  debugLines.push(`${t("debug.page_readable")}: ${localizeDiagnosticToken(ping.readable, t)}`);
   debugLines.push(`${t("debug.selection_length")}: ${ping.selectionTextLength}`);
   if (typeof ping.selectionCurrentLength === "number") {
     debugLines.push(
@@ -289,10 +323,10 @@ export function deriveCaptureAvailability(
     );
   }
   debugLines.push(
-    `${t("debug.extractor")}: ${ping.extractorAvailable ? t("debug.ok") : t("debug.failed")}`,
+    `${t("debug.extractor")}: ${ping.extractorAvailable ? t("page.value.available") : t("page.value.unavailable")}`,
   );
   debugLines.push(
-    `${t("debug.host_permission")}: ${ping.hostPermissionOk ? t("debug.ok") : t("debug.failed")}`,
+    `${t("debug.host_permission")}: ${ping.hostPermissionOk ? t("page.detail.host_ok") : t("page.detail.host_ng")}`,
   );
 
   const selectionOk = ping.contentScriptReady && ping.selectionTextLength > 0;
@@ -326,8 +360,8 @@ export function deriveCaptureAvailability(
     canCapturePage = false;
   }
 
-  debugLines.push(`${t("debug.selection")}: ${canCaptureSelection}`);
-  debugLines.push(`${t("debug.page_capture")}: ${canCapturePage}`);
+  debugLines.push(`${t("debug.selection")}: ${localizeDiagnosticToken(canCaptureSelection, t)}`);
+  debugLines.push(`${t("debug.page_capture")}: ${localizeDiagnosticToken(canCapturePage, t)}`);
 
   return {
     bridgeState,

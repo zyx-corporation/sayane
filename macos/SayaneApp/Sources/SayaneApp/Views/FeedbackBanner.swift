@@ -1,0 +1,27 @@
+import SwiftUI
+
+struct FeedbackBanner: View {
+    let title: String
+    let message: String
+    let tone: StatusTone
+    let dismiss: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            StatusBadge(text: title, tone: tone)
+            Text(message)
+                .font(.subheadline)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Button(action: dismiss) {
+                Image(systemName: "xmark")
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(title)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(tone.backgroundStyle, in: RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal, 16)
+        .padding(.top, 12)
+    }
+}

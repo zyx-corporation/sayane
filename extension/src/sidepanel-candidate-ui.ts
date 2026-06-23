@@ -95,6 +95,21 @@ type CardState = {
   detail: CandidateDetail | null;
 };
 
+const REVIEW_DISPLAY_TOKEN_KEYS: Record<string, string> = {
+  pending: "review.value.pending",
+  evaluated: "review.value.evaluated",
+  approved: "review.value.approved",
+  rejected: "review.value.rejected",
+  selection: "review.value.selection",
+  clipboard: "review.value.clipboard",
+  page: "review.value.page",
+  manual: "review.value.manual",
+  "knowledge.concepts": "review.value.knowledge_concepts",
+  important_terms: "review.value.important_terms",
+  add: "review.value.add",
+  list_add: "review.value.list_add",
+};
+
 export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
   loadCandidates: (preferId?: string) => Promise<void>;
   focusCandidate: (candidateId: string) => Promise<void>;
@@ -300,6 +315,13 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
 
   function locale(): SupportedLocale {
     return getLocale();
+  }
+
+  function localizeReviewToken(value: unknown): string {
+    if (value == null || value === "") return "—";
+    const token = String(value);
+    const key = REVIEW_DISPLAY_TOKEN_KEYS[token];
+    return key ? t(key) : token;
   }
 
   function setStatus(text: string, isError = false): void {
@@ -603,7 +625,8 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
     if (kind === "selection") return t("review.lineage.source_selection");
     if (kind === "clipboard") return t("review.lineage.source_clipboard");
     if (kind === "page") return t("review.lineage.source_page");
-    return kind ?? "—";
+    if (kind === "manual") return t("review.lineage.source_manual");
+    return localizeReviewToken(kind);
   }
 
   function lineageDecisionLabel(
@@ -828,7 +851,7 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
         ul.className = "proposal-list";
         for (const name of listDiff.added) {
           const li = document.createElement("li");
-          li.textContent = `important_terms[] · ${name}`;
+          li.textContent = `${t("review.value.important_terms_list")} · ${name}`;
           ul.appendChild(li);
         }
         parent.appendChild(ul);
@@ -842,7 +865,7 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
         ul.className = "proposal-list proposal-removed";
         for (const name of listDiff.removed) {
           const li = document.createElement("li");
-          li.textContent = `important_terms[] · ${name}`;
+          li.textContent = `${t("review.value.important_terms_list")} · ${name}`;
           ul.appendChild(li);
         }
         parent.appendChild(ul);
@@ -995,7 +1018,7 @@ export function initSidepanelCandidateUI(deps: SidepanelCandidateDeps): {
 
     const sectionRow = document.createElement("p");
     sectionRow.className = "meta-line";
-    sectionRow.textContent = `${t("detail.section")}: ${detail.proposal.section}`;
+    sectionRow.textContent = `${t("detail.section")}: ${localizeReviewToken(detail.proposal.section)}`;
     body.appendChild(sectionRow);
 
     const lineageBlock = document.createElement("details");

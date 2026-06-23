@@ -43,6 +43,14 @@ function setStatus(text: string, isError = false): void {
   el.className = isError ? "status error" : "status";
 }
 
+function runtimeErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message) {
+    return localizeError(error.message);
+  }
+  const text = String(error ?? "").trim();
+  return text ? localizeError(text) : t("error.generic_runtime");
+}
+
 let lastAvailability: CaptureAvailability | null = null;
 
 function renderBridgeState(state: BridgeState): void {
@@ -62,7 +70,9 @@ function renderPageStateLine(pageState: PageState): void {
   const el = $("page-state");
   switch (pageState.kind) {
     case "readable":
-      el.textContent = t("page.status.readable", { provider: pageState.ping.provider });
+      el.textContent = t("page.status.readable", {
+        provider: t(`provider.${pageState.ping.provider}`),
+      });
       break;
     case "extractor_failed":
       el.textContent = t("page.status.unreadable");
@@ -95,7 +105,7 @@ function formatPageDetail(avail: CaptureAvailability): string {
       : null;
 
   if (ping) {
-    lines.push(t("page.detail.provider", { provider: ping.provider }));
+    lines.push(t("page.detail.provider", { provider: t(`provider.${ping.provider}`) }));
     lines.push(
       t("page.detail.content_script", {
         status: ping.contentScriptReady
@@ -103,7 +113,11 @@ function formatPageDetail(avail: CaptureAvailability): string {
           : t("page.detail.content_script_no"),
       }),
     );
-    lines.push(t("page.detail.page_readable", { value: String(ping.readable) }));
+    lines.push(
+      t("page.detail.page_readable", {
+        value: ping.readable ? t("page.value.available") : t("page.value.unavailable"),
+      }),
+    );
     lines.push(t("page.detail.selection_length", { length: ping.selectionTextLength }));
     lines.push(
       t("page.detail.host_permission", {
@@ -140,7 +154,7 @@ function formatPageDetail(avail: CaptureAvailability): string {
 async function renderDebugPanel(avail: CaptureAvailability): Promise<void> {
   const config = await loadConfig();
   const debugEl = $("debug-lines");
-  const header = [`Bridge URL: ${config.bridgeUrl}`, ...avail.debugLines];
+  const header = [t("popup.debug.bridge_url", { url: config.bridgeUrl }), ...avail.debugLines];
   debugEl.textContent = header.join("\n");
 }
 
@@ -323,9 +337,9 @@ function formatBridgeError(res: Extract<BackgroundResponse, { ok: false }>): str
   const details = res.errorDetails;
   if (details && details.error === "unsafe_rde_category") {
     const category = String(details.rde_category ?? "unknown");
-    if (getLocale() === "ja") {
-      return `このCandidateは「${categoryLabel(category as CandidateCategory, "ja")}」と評価されているため、そのまま採用できません。差分を確認し、必要なら修正して新しいCandidateとして作成してください。`;
-    }
+    return t("error.unsafe_rde_category", {
+      category: categoryLabel(category as CandidateCategory, getLocale()),
+    });
   }
   if (details && typeof details.message === "string") {
     return localizeError(details.message);
@@ -457,7 +471,7 @@ $("btn-capture-selection").addEventListener("click", () => {
       }
       setCaptureStatus(res.data as import("./types.js").CaptureResult, { windowId });
     } catch (e) {
-      setStatus(localizeError(String(e)), true);
+      setStatus(runtimeErrorMessage(e), true);
     }
   });
 });
@@ -484,7 +498,7 @@ $("btn-capture-page").addEventListener("click", () => {
         windowId,
       });
     } catch (e) {
-      setStatus(localizeError(String(e)), true);
+      setStatus(runtimeErrorMessage(e), true);
     }
   });
 });
@@ -621,7 +635,7 @@ async function insertContext(target: InsertTarget): Promise<void> {
       });
       setStatus(res.ok ? t("status.inserted", { target }) : localizeError(res.error), !res.ok);
     } catch (e) {
-      setStatus(localizeError(String(e)), true);
+      setStatus(runtimeErrorMessage(e), true);
     }
   });
 }

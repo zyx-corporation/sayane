@@ -224,6 +224,107 @@ export interface CandidateDiff {
   [key: string]: unknown;
 }
 
+export interface SummaryCardState {
+  key: string;
+  value: unknown;
+}
+
+export interface QuickLinkState {
+  screen: string;
+  path: string;
+}
+
+export interface AppSurfaceDescriptor {
+  path: string;
+  purpose: string;
+  format?: string;
+  method?: string;
+  payload_kind?: string;
+  result_kind?: string;
+}
+
+export interface ScreenStateContractDescriptor {
+  screen: string;
+  builder: string;
+  primary_source: string;
+}
+
+export interface SurfaceRoleDescriptor {
+  surface: string;
+  role: string;
+  notes: string[];
+}
+
+export interface SharedSemanticDescriptor {
+  topic: string;
+  shared_by_design: boolean;
+  notes: string[];
+}
+
+export interface ResidentAppContract {
+  kind: "resident_app_contract";
+  contract_version: string;
+  preferred_entrypoint: string;
+  human_surfaces: AppSurfaceDescriptor[];
+  read_surfaces: AppSurfaceDescriptor[];
+  write_surfaces: AppSurfaceDescriptor[];
+  recommended_flow: string[];
+  screen_state_contracts: ScreenStateContractDescriptor[];
+  surface_roles: SurfaceRoleDescriptor[];
+  shared_semantics: SharedSemanticDescriptor[];
+  boundaries?: string[];
+  non_mvp_boundaries?: Array<Record<string, unknown>>;
+}
+
+export interface ResidentAppOverview {
+  kind: "resident_app_overview";
+  profile_id: string;
+  runtime: Record<string, unknown>;
+  summary: Record<string, unknown>;
+  review_summary: Record<string, unknown>;
+  mcp_summary: Record<string, unknown>;
+  daemon_summary: Record<string, unknown>;
+  review_queue: Record<string, unknown>;
+  mcp_preview: Record<string, unknown>;
+  daemon_overview: Record<string, unknown>;
+}
+
+export interface HomeScreenState {
+  kind: "resident_app_home_screen_state";
+  summary_cards: SummaryCardState[];
+  top_review_items: Array<Record<string, unknown>>;
+  top_daemon_actions: Array<Record<string, unknown>>;
+  quick_links: QuickLinkState[];
+}
+
+export interface CandidateQueueScreenState {
+  kind: "resident_app_candidate_queue_screen_state";
+  reviewable_count: number;
+  status_counts: Record<string, number>;
+  top_sections: Array<{ section: string; count: number }>;
+  items: CandidateSummary[];
+  default_sort: string;
+}
+
+export interface CandidateDetailScreenState {
+  kind: "resident_app_candidate_detail_screen_state";
+  ui_summary: Record<string, unknown>;
+  allowed_actions: Record<string, boolean>;
+  proposal: Record<string, unknown>;
+  evaluation: Record<string, unknown>;
+  content?: string;
+  diff_available: boolean;
+}
+
+export interface DaemonPanelScreenState {
+  kind: "resident_app_daemon_panel_screen_state";
+  summary_cards: SummaryCardState[];
+  next_actions: Array<Record<string, unknown>>;
+  runtime_init: Record<string, unknown>;
+  cleanup_preview: Record<string, unknown>;
+  repair_preview: Record<string, unknown>;
+}
+
 export type SayanePingPayload = {
   ok: true;
   provider: string;
@@ -270,6 +371,15 @@ export type ContentResponse =
 export type BackgroundMessage =
   | { type: "BRIDGE_HEALTH" }
   | { type: "BRIDGE_LIST_PROFILES" }
+  | { type: "BRIDGE_GET_APP_CONTRACT" }
+  | { type: "BRIDGE_GET_APP_OVERVIEW" }
+  | { type: "BRIDGE_GET_HOME_SCREEN_STATE" }
+  | { type: "BRIDGE_GET_CANDIDATE_QUEUE_SCREEN_STATE" }
+  | {
+      type: "BRIDGE_GET_CANDIDATE_DETAIL_SCREEN_STATE";
+      candidateId: string;
+    }
+  | { type: "BRIDGE_GET_DAEMON_PANEL_SCREEN_STATE" }
   | {
       type: "BRIDGE_PREFLIGHT_IMPORTANT_TERMS";
       content: string;

@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Sayane Diff</title>
+    <title data-i18n="diff.title">Diff Viewer</title>
     <style>
       body {
         font-family: system-ui, sans-serif;
@@ -70,46 +70,46 @@
   </head>
   <body>
     <div id="app-root" aria-busy="false">
-    <h1 id="title">差分ビュー</h1>
+    <h1 id="title" data-i18n="diff.title">Diff Viewer</h1>
     <div id="status" class="status"></div>
     <div id="warning" class="warn" hidden></div>
     <div class="toolbar">
       <select id="eval-level">
-        <option value="1">再評価レベル 1</option>
-        <option value="2">再評価レベル 2</option>
-        <option value="3">再評価レベル 3</option>
+        <option value="1">Re-evaluation Level 1</option>
+        <option value="2">Re-evaluation Level 2</option>
+        <option value="3">Re-evaluation Level 3</option>
       </select>
-      <button type="button" id="btn-evaluate">評価</button>
-      <button type="button" id="btn-approve">採用</button>
-      <button type="button" id="btn-reject">棄却</button>
-      <button type="button" id="btn-close">閉じる</button>
+      <button type="button" id="btn-evaluate" data-i18n="candidate.evaluate">Evaluate</button>
+      <button type="button" id="btn-approve" data-i18n="candidate.approve">Approve</button>
+      <button type="button" id="btn-reject" data-i18n="candidate.reject">Reject</button>
+      <button type="button" id="btn-close" data-i18n="diff.close">Close</button>
     </div>
     <section>
-      <h2 id="heading-meta">候補メタデータ</h2>
+      <h2 id="heading-meta" data-i18n="diff.section.meta">Candidate Metadata</h2>
       <pre id="meta"></pre>
     </section>
     <section>
-      <h2 id="heading-source">元の文脈（表示用要約）</h2>
+      <h2 id="heading-source" data-i18n="diff.section.source">Source Context</h2>
       <pre id="content-source"></pre>
       <details id="raw-capture-details" hidden>
-        <summary id="heading-raw">元のCapture全文（raw）</summary>
+        <summary id="heading-raw" data-i18n="diff.section.raw">Full Raw Capture</summary>
         <pre id="content-raw"></pre>
       </details>
     </section>
     <section>
-      <h2 id="heading-proposal">候補文脈</h2>
+      <h2 id="heading-proposal" data-i18n="diff.section.proposal">Candidate Context</h2>
       <pre id="content-proposal"></pre>
     </section>
     <section>
-      <h2 id="heading-diff">差分</h2>
+      <h2 id="heading-diff" data-i18n="diff.section.diff">Diff</h2>
       <pre id="content-diff"></pre>
     </section>
     <section>
-      <h2 id="heading-rde">RDE評価</h2>
+      <h2 id="heading-rde" data-i18n="diff.section.rde">RDE Evaluation</h2>
       <pre id="content-rde"></pre>
     </section>
     <section>
-      <h2 id="heading-notes">注意点</h2>
+      <h2 id="heading-notes" data-i18n="diff.section.notes">Notes</h2>
       <pre id="content-notes"></pre>
     </section>
     </div>

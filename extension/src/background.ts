@@ -11,9 +11,15 @@ import {
   evaluateCandidate,
   fetchContextPacket,
   formatContextPacketForInsert,
+  getAppContract,
+  getAppOverview,
   getCandidate,
+  getCandidateDetailScreenState,
   getCandidateLineage,
+  getCandidateQueueScreenState,
   getCaptureLineage,
+  getDaemonPanelScreenState,
+  getHomeScreenState,
   listCandidates,
   listProfiles,
   preflightImportantTerms,
@@ -60,6 +66,21 @@ chrome.runtime.onMessage.addListener(
             return { ok: true, data: { healthy: await checkHealth() } };
           case "BRIDGE_LIST_PROFILES":
             return { ok: true, data: await listProfiles() };
+          case "BRIDGE_GET_APP_CONTRACT":
+            return { ok: true, data: await getAppContract() };
+          case "BRIDGE_GET_APP_OVERVIEW":
+            return { ok: true, data: await getAppOverview() };
+          case "BRIDGE_GET_HOME_SCREEN_STATE":
+            return { ok: true, data: await getHomeScreenState() };
+          case "BRIDGE_GET_CANDIDATE_QUEUE_SCREEN_STATE":
+            return { ok: true, data: await getCandidateQueueScreenState() };
+          case "BRIDGE_GET_CANDIDATE_DETAIL_SCREEN_STATE":
+            return {
+              ok: true,
+              data: await getCandidateDetailScreenState(message.candidateId),
+            };
+          case "BRIDGE_GET_DAEMON_PANEL_SCREEN_STATE":
+            return { ok: true, data: await getDaemonPanelScreenState() };
           case "BRIDGE_PREFLIGHT_IMPORTANT_TERMS":
             return {
               ok: true,

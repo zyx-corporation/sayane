@@ -156,8 +156,12 @@ cd extension && npm install && npm run build
 現行の operator-facing growth path は、extension ではなく Bridge-hosted local shell である。
 
 ```bash
-sayane serve
-# open http://127.0.0.1:38741/app/ui
+./scripts/run-app-local.sh
+# 必要なら:
+# ./scripts/run-app-local.sh --foreground
+# ./scripts/run-app-local.sh --no-open
+# 初回ブラウザ導線は /app/ui?bootstrap_token=... を 1 回だけ踏み、
+# 以後は dedicated local UI session cookie で /app/ui を継続利用する
 sayane app overview --json
 sayane app daemon-overview --json
 sayane app daemon-packaging-status --json
@@ -169,9 +173,83 @@ sayane app daemon-recovery-consent-status --json
 この local shell は preview / review / operator guidance surface であり、直接 profile patch や
 OS service activation を行うものではない。
 
+現在の resident app entrypoint は:
+
+```text
+http://127.0.0.1:38741/app/ui
+```
+
+`http://127.0.0.1:8008/index.html` のような別 static-site URL は使わない。
+
 → [Bridge マニュアル](bridge-manual.md) / [CLI コマンドリファレンス](reference/cli-command-reference.md)
 
-### 5.5 Obsidian / Git（Phase 5 / compatibility）
+### 5.5 macOS native app preview
+
+macOS では、Bridge-hosted web shell に加えて native app preview も開発中です。
+
+```bash
+swift build --package-path macos/SayaneApp
+./scripts/run-macos-app-preview.sh
+./scripts/check-macos-app-preview.sh
+```
+
+Swift package を Xcode で開き、`SayaneApp` executable target を起動する。
+Bridge 切断時は native error view の `Start Bridge` / `Reconnect` を使う。
+`./scripts/check-macos-app-preview.sh` は local Bridge shell の準備、Swift package build/test、
+`/app/ui` bootstrap と screen-state surface の smoke check をまとめて実行する。
+既存の手動起動 Bridge をそのまま使いたい場合は `--no-start`、Bridge/session 切り分けだけを
+したい場合は `--no-build --no-tests`、失敗時のレスポンス本文まで見たい場合は `--verbose` を使う。
+
+この native app preview は resident app contract / screen-state / action surfaces を使う。
+native app 自体は `~/.sayane/bridge.token` を使って bearer-backed app-facing surface を直接読む。
+Browser bootstrap と resident app UI session は Bridge-hosted debug shell 側の話として切り分ける。
+Home と error view には共通の connection diagnostics card があり、Bridge URL / health endpoint /
+debug shell URL / token path / log path と、Reconnect / Start Bridge / Open Logs などの復旧操作を
+同じ場所から使える。
+さらに Home 最上部には Bridge status panel があり、未接続 / 起動中 / 利用可能 を先に判断してから
+次の操作へ進める。
+同じ status rail は Queue / Daemon にも compact 表示されるため、作業中の画面から戻らずに
+Bridge の再接続やログ確認へ進める。
+また capture / review / copy の結果は共通の feedback banner に集約され、mutation 失敗時は
+sheet が閉じずに入力内容を保ったまま再試行できる。
+Queue detail では、現在選択中の候補に関係する直近アクション結果だけを candidate result strip として
+残すため、approve / revise 後の文脈を見失いにくい。
+さらに Queue detail の review command deck に readiness / 実行ボタン / shortcut をまとめ、
+判断と操作を 1 箇所で完結できるようにしている。
+Home では review / quick link / daemon action の先頭項目を start-here section に集約し、
+起動直後の最初の一手を選びやすくしている。
+Daemon でも next action / LaunchAgent status / runbook を focus section にまとめ、
+長い運用情報に入る前の優先確認ポイントを先に見せる。
+daemon 画面では copyable な CLI / `launchctl` コマンド、LaunchAgent plist 確認、
+runtime-init / cleanup / repair の conservative preview 要約を確認できる。
+さらに current operator packaging / supervision / recovery contract を read-first で表示し、
+packaging model 候補、background supervision 候補、guardrails、推奨 recovery flow を
+native app 内で参照できる。加えて startup command / bootstrap UI / phase closure checklist
+も native 側で可視化する。handoff 向けに workstream 状態と recommended implementation order
+も同じ画面で確認できる。service lifecycle operation / policy gate / app-UI exposure limit /
+governing rule も同じ daemon 画面で read-first に確認できる。macOS では LaunchAgent 向けの
+preflight / verification / log path / security boundary / troubleshooting に加えて、
+plist preview / program arguments / environment assumptions も native 画面で参照できる。
+さらに operation id / preview hash も native 画面で確認でき、handoff 時の照合に使える。
+stdout/stderr の tail コマンドと preview/apply boundary も同画面で確認できる。
+loaded status / return code / stderr summary も先に確認できる。
+主要セクションは折りたたみ表示になっており、要点だけ先に確認しやすい。
+
+失敗時の基本切り分け:
+
+```bash
+curl -s http://127.0.0.1:38741/health
+open "http://127.0.0.1:38741/app/ui?bootstrap_token=$(cat ~/.sayane/bridge.token)"
+tail -n 40 ~/.sayane/macos-app-smoke.log
+```
+
+- `ERR_CONNECTION_REFUSED`: Bridge 未起動または listen 失敗
+- `Missing bootstrap bearer or valid resident app UI session`: bootstrap URL を踏まずに `/app/ui` を開いている
+- `Missing or invalid resident app UI session`: cookie が stale。bootstrap URL を開き直すか smoke script を再実行する
+
+→ [macOS app preview](../macos/SayaneApp/README.md)
+
+### 5.6 Obsidian / Git（Phase 5 / compatibility）
 
 ```bash
 export SAYANE_OBSIDIAN_VAULT="$HOME/Documents/MyVault"   # 任意: 存在する vault

@@ -18,7 +18,7 @@ import {
 import { buildRdeSummaryFromDiff } from "./diff-summary.js";
 import { formatEvaluationNotes } from "./rde-notes.js";
 import { BusyUiController } from "./busy-ui.js";
-import { getLocale, initI18n, localizeError, t } from "./i18n.js";
+import { applyDataI18n, getLocale, initI18n, localizeError, t } from "./i18n.js";
 import type { CandidateDetail, CandidateSummary, ProfileSummary, SupportedLocale } from "./types.js";
 
 function $(id: string): HTMLElement {
@@ -369,6 +369,8 @@ async function runAction(action: "evaluate" | "approve" | "reject"): Promise<voi
 
 async function init(): Promise<void> {
   await initI18n();
+  applyDataI18n(document);
+  document.title = t("diff.title");
   const profiles = await listProfiles();
   profilesById = new Map(profiles.map((p) => [p.id, p]));
 
@@ -381,8 +383,7 @@ async function init(): Promise<void> {
   $("heading-notes").textContent = t("diff.section.notes");
   const rawHeading = document.getElementById("heading-raw");
   if (rawHeading) {
-    rawHeading.textContent =
-      getLocale() === "ja" ? "元のCapture全文（raw）" : "Full raw capture";
+    rawHeading.textContent = t("diff.section.raw");
   }
   const evalSelect = $("eval-level") as HTMLSelectElement;
   const option1 = evalSelect.options.item(0);

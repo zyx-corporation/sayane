@@ -41,6 +41,10 @@ Only the presentation layer should call `t(...)` for display text.
 
 Decision logic should not inspect translated strings.
 
+Resident app summary / queue / detail / daemon panels in the extension follow the same rule:
+Bridge screen-state payload keys and machine tokens stay locale-neutral, and the sidepanel maps them
+to localized field labels, token labels, and known phrase labels only when rendering.
+
 ## Required patterns
 
 ### Use i18n keys for all user-visible text
@@ -164,6 +168,7 @@ Recommended tests:
 - Verify that changing translation text does not change Candidate classification.
 - Test list diff behavior using `list_diff.removed`, not label text.
 - Test fallback behavior when translation keys are missing.
+- For resident-app additions, keep `resident_app.*` key coverage aligned between `extension/locale/ja.json` and `extension/locale/en.json`.
 
 ## Review checklist
 
@@ -181,3 +186,26 @@ Before merging extension UI changes, check:
 Sayane compares captured content against Sayane stored context, not LLM memory.
 
 This boundary must remain clear across all locales. Localized text can explain the boundary, but the underlying state and decision logic must be language-independent.
+
+## Stable concept names
+
+Some UI terms may intentionally remain in English, even in Japanese copy, when they work as stable product or workflow concept names rather than ordinary labels.
+
+Current examples:
+
+- `active review`
+- `review card`
+- `contract`
+- `entrypoint`
+- `Cleanup preview`
+- `Repair preview`
+
+Use this exception narrowly.
+
+Preferred approach:
+
+- localize ordinary labels around the term
+- keep the stable concept name unchanged
+- document the choice when the term appears repeatedly in a surface such as the resident app
+
+Avoid mixing languages casually when the term is only a generic UI label and not a stable concept name.

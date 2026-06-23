@@ -6,7 +6,7 @@ import {
   fetchBridgeBuildInfo,
 } from "./build-info-display.js";
 import { BusyUiController } from "./busy-ui.js";
-import { applyDataI18n, initI18n, t } from "./i18n.js";
+import { applyDataI18n, initI18n, localizeError, t } from "./i18n.js";
 import { notifyOptionsUpdated } from "./options-notify.js";
 import type { DisplayLanguage } from "./types.js";
 
@@ -33,6 +33,14 @@ function setStatus(text: string, isError = false): void {
   if (!status) return;
   status.textContent = text;
   status.className = isError ? "error" : "";
+}
+
+function runtimeErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message) {
+    return localizeError(error.message);
+  }
+  const text = String(error ?? "").trim();
+  return text ? localizeError(text) : t("error.generic_runtime");
 }
 
 const busyUi = new BusyUiController($("app-root"));
@@ -131,7 +139,7 @@ $("save").addEventListener("click", () => {
       void refreshBridgeBuildInfo(form.bridgeUrl);
       setStatus(t("options.saved"));
     } catch (err) {
-      setStatus(String(err), true);
+      setStatus(runtimeErrorMessage(err), true);
     }
   })();
 });
@@ -151,9 +159,9 @@ $("test-bridge").addEventListener("click", () => {
       await refreshBridgeBuildInfo(form.bridgeUrl);
       setStatus(t(result.messageKey, result.ok ? undefined : result.params), !result.ok);
     } catch (err) {
-      setStatus(String(err), true);
+      setStatus(runtimeErrorMessage(err), true);
     }
   });
 });
 
-void init().catch((err) => setStatus(String(err), true));
+void init().catch((err) => setStatus(runtimeErrorMessage(err), true));

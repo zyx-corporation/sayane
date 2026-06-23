@@ -223,6 +223,42 @@ def test_app_ui_returns_bootstrap_home_html(
     assert "sayane_bridge_ui_session" in response.cookies
 
 
+def test_app_ui_bootstrap_form_can_mint_browser_ui_session(
+    bridge_env: tuple[TestClient, BridgeConfig, str],
+) -> None:
+    client, _, token = bridge_env
+
+    response = client.post(
+        "/app/ui/bootstrap",
+        data={"bootstrap_token": token},
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/app/ui"
+    assert response.cookies.get("sayane_bridge_ui_session")
+
+    follow_up = client.get("/app/ui-state/home")
+    assert follow_up.status_code == 200
+
+
+def test_app_ui_bootstrap_query_token_mints_session_and_returns_home_html(
+    bridge_env: tuple[TestClient, BridgeConfig, str],
+) -> None:
+    client, _, token = bridge_env
+
+    response = client.get(
+        f"/app/ui?bootstrap_token={token}",
+    )
+
+    assert response.status_code == 200
+    assert "text/html" in response.headers["content-type"]
+    assert response.cookies.get("sayane_bridge_ui_session")
+
+    follow_up = client.get("/app/ui-state/home")
+    assert follow_up.status_code == 200
+
+
 def test_app_ui_follow_up_routes_require_dedicated_ui_session_not_raw_bearer(
     bridge_env: tuple[TestClient, BridgeConfig, str],
 ) -> None:
@@ -689,6 +725,10 @@ def test_app_candidate_review_flow(
     assert diff.json()["review_surface"] == "resident_app_bridge"
     assert diff.json()["ui_summary"]["added_count"] >= 1
     assert "add" in diff.json()
+
+    lineage = client.get(f"/app/candidates/{cid}/lineage", headers=_auth(token))
+    assert lineage.status_code == 200
+    assert lineage.json()["candidate_id"] == cid
 
     evaluated = client.post(
         f"/app/candidates/{cid}/evaluate",

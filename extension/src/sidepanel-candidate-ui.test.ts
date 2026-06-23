@@ -53,6 +53,9 @@ test("applyCardActionUi uses getApproveAvailability for approve buttons", () => 
   assert.ok(src.includes("approve-blocked-hint"));
   assert.ok(src.includes("BRIDGE_GET_CANDIDATE_LINEAGE"));
   assert.ok(src.includes("renderCandidateLineage"));
+  assert.ok(src.includes("localizeReviewToken"));
+  assert.ok(src.includes('review.value.important_terms_list'));
+  assert.ok(src.includes('manual: "review.value.manual"'));
   assert.ok(!src.includes("canInitiateApproveFromDetail"));
   assert.ok(!src.includes("ensureEvaluatedForApprove"));
 });

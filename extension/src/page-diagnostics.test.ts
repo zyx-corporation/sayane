@@ -97,8 +97,22 @@ describe("deriveCaptureAvailability", () => {
       t,
     );
     assert.equal(avail.canCaptureSelection, true);
-    assert.ok(
-      avail.debugLines.some((line) => line.includes("debug.selection_cached_length")),
-    );
-  });
+  assert.ok(
+    avail.debugLines.some((line) => line.includes("debug.selection_cached_length")),
+  );
+});
+
+it("routes provider and availability tokens through translator", () => {
+  const avail = deriveCaptureAvailability(
+    { kind: "connected" },
+    { kind: "readable", ping: ping({ provider: "chatgpt", readable: true, hostPermissionOk: true }) },
+    1,
+    "https://chatgpt.com/",
+    t,
+  );
+  assert.ok(avail.debugLines.some((line) => line.includes("provider.chatgpt")));
+  assert.ok(avail.debugLines.some((line) => line.includes("page.value.available")));
+  assert.ok(avail.debugLines.some((line) => line.includes("page.detail.host_ok")));
+  assert.ok(avail.debugLines.some((line) => line.includes("debug.state.connected")));
+});
 });

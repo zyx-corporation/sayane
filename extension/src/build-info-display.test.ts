@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import test from "node:test";
 import { formatSourceUpdatedAt } from "./build-info-display.js";
 import { EXTENSION_BUILD_INFO } from "./build-info.js";
+
+const extRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 test("formatSourceUpdatedAt returns dash for empty input", () => {
   assert.equal(formatSourceUpdatedAt(""), "—");
@@ -16,4 +21,11 @@ test("EXTENSION_BUILD_INFO has version and sourceUpdatedAt", () => {
   assert.match(EXTENSION_BUILD_INFO.version, /^\d+\.\d+/);
   assert.match(EXTENSION_BUILD_INFO.sourceUpdatedAt, /^\d{4}-\d{2}-\d{2}T/);
   assert.notEqual(EXTENSION_BUILD_INFO.sourceUpdatedAt, "1970-01-01T00:00:00.000Z");
+});
+
+test("build info display uses localized catalog keys", () => {
+  const src = readFileSync(join(extRoot, "src", "build-info-display.ts"), "utf8");
+  assert.ok(src.includes('t("options.build.extension"'));
+  assert.ok(src.includes('t("options.build.bridge"'));
+  assert.ok(src.includes('t("options.build.bridge_unknown"'));
 });

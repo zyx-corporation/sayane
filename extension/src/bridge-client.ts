@@ -1,13 +1,19 @@
 import { loadConfig } from "./config.js";
 import type {
   CandidateDetail,
+  CandidateDetailScreenState,
   CandidateDiff,
   CandidateLineage,
+  CandidateQueueScreenState,
   CandidateSummary,
   CaptureResult,
   ContextPacket,
+  DaemonPanelScreenState,
+  HomeScreenState,
   ImportantTermsPreflightSummary,
   ProfileSummary,
+  ResidentAppContract,
+  ResidentAppOverview,
 } from "./types.js";
 
 export class BridgeError extends Error {
@@ -186,9 +192,36 @@ export async function listCandidates(): Promise<CandidateSummary[]> {
   return (await res.json()) as CandidateSummary[];
 }
 
+export async function getAppContract(): Promise<ResidentAppContract> {
+  const res = await bridgeFetch("/app/contract");
+  return (await res.json()) as ResidentAppContract;
+}
+
+export async function getAppOverview(): Promise<ResidentAppOverview> {
+  const res = await bridgeFetch("/app/overview");
+  return (await res.json()) as ResidentAppOverview;
+}
+
+export async function getHomeScreenState(): Promise<HomeScreenState> {
+  const res = await bridgeFetch("/app/screen-state/home");
+  return (await res.json()) as HomeScreenState;
+}
+
+export async function getCandidateQueueScreenState(): Promise<CandidateQueueScreenState> {
+  const res = await bridgeFetch("/app/screen-state/candidates");
+  return (await res.json()) as CandidateQueueScreenState;
+}
+
 export async function getCandidate(candidateId: string): Promise<CandidateDetail> {
   const res = await bridgeFetch(`/candidates/${encodeURIComponent(candidateId)}`);
   return (await res.json()) as CandidateDetail;
+}
+
+export async function getCandidateDetailScreenState(
+  candidateId: string,
+): Promise<CandidateDetailScreenState> {
+  const res = await bridgeFetch(`/app/screen-state/candidates/${encodeURIComponent(candidateId)}`);
+  return (await res.json()) as CandidateDetailScreenState;
 }
 
 export async function evaluateCandidate(
@@ -205,6 +238,11 @@ export async function evaluateCandidate(
 export async function diffCandidate(candidateId: string): Promise<CandidateDiff> {
   const res = await bridgeFetch(`/candidates/${encodeURIComponent(candidateId)}/diff`);
   return (await res.json()) as CandidateDiff;
+}
+
+export async function getDaemonPanelScreenState(): Promise<DaemonPanelScreenState> {
+  const res = await bridgeFetch("/app/screen-state/daemon");
+  return (await res.json()) as DaemonPanelScreenState;
 }
 
 export async function getCandidateLineage(

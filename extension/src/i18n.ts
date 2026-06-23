@@ -69,6 +69,10 @@ export function applyDataI18n(root: ParentNode = document): void {
     const key = el.dataset.i18nTitle;
     if (key) el.title = t(key);
   });
+  root.querySelectorAll<HTMLElement>("[data-i18n-aria-label]").forEach((el) => {
+    const key = el.dataset.i18nAriaLabel;
+    if (key) el.setAttribute("aria-label", t(key));
+  });
 }
 
 /** Map known English API / Bridge errors to locale keys. */

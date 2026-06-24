@@ -57,6 +57,15 @@ if [[ "${START_BRIDGE}" == "1" ]]; then
   bridge_arg=(--start)
 fi
 
+run_smoke() {
+  local script_path="$1"
+  if (( ${#bridge_arg[@]} > 0 )); then
+    bash "${script_path}" "${bridge_arg[@]}"
+    return
+  fi
+  bash "${script_path}"
+}
+
 main() {
   cd "${ROOT}"
   if [[ "${START_BRIDGE}" == "1" ]]; then
@@ -67,17 +76,17 @@ main() {
 
   if [[ "${RUN_API}" == "1" ]]; then
     info "Running resident app API surface smoke"
-    bash "${ROOT}/scripts/check-resident-app-api-surfaces.sh" "${bridge_arg[@]}"
+    run_smoke "${ROOT}/scripts/check-resident-app-api-surfaces.sh"
   fi
 
   if [[ "${RUN_UI}" == "1" ]]; then
     info "Running resident app UI session smoke"
-    bash "${ROOT}/scripts/check-resident-app-ui-session.sh" "${bridge_arg[@]}"
+    run_smoke "${ROOT}/scripts/check-resident-app-ui-session.sh"
   fi
 
   if [[ "${RUN_NATIVE}" == "1" ]]; then
     info "Running native macOS preview smoke"
-    bash "${ROOT}/scripts/check-macos-app-preview.sh" "${bridge_arg[@]}"
+    run_smoke "${ROOT}/scripts/check-macos-app-preview.sh"
   fi
 
   cat <<EOF

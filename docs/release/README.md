@@ -150,4 +150,5 @@ Use these documents first:
 - [v1.0.58 Resident App Release Smoke Wrapper Release Note](v1.0.58-resident-app-release-smoke-wrapper-release-note.md) — current release verification now has one wrapper for API surface and UI session smoke
 - [v1.0.59 Resident App Smoke CLI Bridge Start Release Note](v1.0.59-resident-app-smoke-cli-bridge-start-release-note.md) — current smoke scripts now start the Bridge through the same `sayane serve` CLI path used by operators
 - [v1.0.60 Resident App Smoke Venv CLI Preference Release Note](v1.0.60-resident-app-smoke-venv-cli-preference-release-note.md) — current smoke scripts now prefer the repo-local CLI install over user-local shims during Bridge startup
+- [v1.0.61 Resident App CLI Serve Watchfiles Guard Release Note](v1.0.61-resident-app-cli-serve-watchfiles-guard-release-note.md) — current CLI/local-launch path now avoids broken optional `watchfiles` imports and clears stale detached `serve` processes before restart
 - [v1.0.15 Post-App Follow-on Roadmap](v1.0.15-post-app-follow-on-roadmap.md) — current recommended order after the app-completion line

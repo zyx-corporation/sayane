@@ -8,10 +8,9 @@ from typing import Annotated, Any
 
 import typer
 
-from sayane.app import ResidentDaemonLifecycle, ResidentDaemonMode, ResidentDaemonState
-
-
 def _lifecycle(host: str, port: int) -> ResidentDaemonLifecycle:
+    from sayane.app import ResidentDaemonLifecycle
+
     try:
         return ResidentDaemonLifecycle(host=host, port=port)
     except ValueError as exc:
@@ -19,6 +18,8 @@ def _lifecycle(host: str, port: int) -> ResidentDaemonLifecycle:
 
 
 def _base_plan(host: str, port: int) -> dict[str, Any]:
+    from sayane.app import ResidentDaemonMode
+
     lifecycle = _lifecycle(host, port)
     bridge_command = ["sayane", "serve", "--host", host, "--port", str(port)]
     payload = lifecycle.public_metadata()
@@ -36,6 +37,8 @@ def _base_plan(host: str, port: int) -> dict[str, Any]:
 
 def build_operation_plan(host: str, port: int, operation: str) -> dict[str, Any]:
     """Build a plan-only lifecycle operation payload."""
+    from sayane.app import ResidentDaemonState
+
     lifecycle = _lifecycle(host, port)
     target_by_operation = {
         "start": ResidentDaemonState.STARTING,

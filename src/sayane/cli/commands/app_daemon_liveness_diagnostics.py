@@ -8,7 +8,6 @@ from typing import Annotated
 
 import typer
 
-from sayane.app import ResidentDaemonIdentity, build_liveness_diagnostic
 from sayane.bridge.config import BridgeConfig
 
 
@@ -18,6 +17,8 @@ def _default_runtime_root() -> Path:
 
 def build_liveness_diagnostic_payload(runtime_root: Path | None = None) -> dict[str, object]:
     """Build a read-only liveness diagnostic preview payload."""
+    from sayane.app import ResidentDaemonIdentity, build_liveness_diagnostic
+
     root = runtime_root or _default_runtime_root()
     identity = ResidentDaemonIdentity(runtime_dir=root)
     return build_liveness_diagnostic(identity).public_metadata()

@@ -12,12 +12,15 @@ from sayane.cli.i18n import t
 
 def register_mcp(app: typer.Typer) -> None:
     """Register MCP commands on the given Typer app."""
-    from sayane.mcp.operations import get_operations
-
     mcp_app = typer.Typer(help=t("group.mcp"), no_args_is_help=True)
 
     def _echo_json(data: object) -> None:
         typer.echo(json.dumps(data, ensure_ascii=False, indent=2))
+
+    def _get_operations():
+        from sayane.mcp.operations import get_operations
+
+        return get_operations()
 
     @mcp_app.command("serve")
     def mcp_serve() -> None:
@@ -29,14 +32,14 @@ def register_mcp(app: typer.Typer) -> None:
 
     @mcp_app.command("list-profiles")
     def mcp_list_profiles() -> None:
-        _echo_json(get_operations().list_profiles())
+        _echo_json(_get_operations().list_profiles())
 
     @mcp_app.command("inspect-profile")
     def mcp_inspect_profile(
         profile_id: Annotated[str, typer.Option("--profile-id")] = "default",
     ) -> None:
         try:
-            _echo_json(get_operations().inspect_profile(profile_id=profile_id))
+            _echo_json(_get_operations().inspect_profile(profile_id=profile_id))
         except FileNotFoundError as exc:
             raise typer.BadParameter(str(exc)) from exc
 
@@ -45,10 +48,10 @@ def register_mcp(app: typer.Typer) -> None:
         target: Annotated[str, typer.Option("--target")],
         profile_id: Annotated[str, typer.Option("--profile-id")] = "default",
         instruction: Annotated[str | None, typer.Option("--instruction")] = None,
-    ) -> None:
+        ) -> None:
         try:
             _echo_json(
-                get_operations().compile_prompt(
+                _get_operations().compile_prompt(
                     target=target,
                     profile_id=profile_id,
                     instruction=instruction,
@@ -62,10 +65,10 @@ def register_mcp(app: typer.Typer) -> None:
         target: Annotated[str, typer.Option("--target")],
         profile_id: Annotated[str, typer.Option("--profile-id")] = "default",
         instruction: Annotated[str | None, typer.Option("--instruction")] = None,
-    ) -> None:
+        ) -> None:
         try:
             _echo_json(
-                get_operations().generate_context_packet(
+                _get_operations().generate_context_packet(
                     target=target,
                     profile_id=profile_id,
                     instruction=instruction,
@@ -76,12 +79,12 @@ def register_mcp(app: typer.Typer) -> None:
 
     @mcp_app.command("list-candidates")
     def mcp_list_candidates() -> None:
-        _echo_json(get_operations().list_candidate_updates())
+        _echo_json(_get_operations().list_candidate_updates())
 
     @mcp_app.command("show-candidate")
     def mcp_show_candidate(candidate_id: Annotated[str, typer.Argument()]) -> None:
         try:
-            _echo_json(get_operations().show_candidate(candidate_id))
+            _echo_json(_get_operations().show_candidate(candidate_id))
         except FileNotFoundError as exc:
             raise typer.BadParameter(str(exc)) from exc
 
@@ -91,7 +94,7 @@ def register_mcp(app: typer.Typer) -> None:
         level: Annotated[int, typer.Option("--level", min=1, max=3)] = 1,
     ) -> None:
         try:
-            _echo_json(get_operations().evaluate_candidate(candidate_id, level=level))
+            _echo_json(_get_operations().evaluate_candidate(candidate_id, level=level))
         except FileNotFoundError as exc:
             raise typer.BadParameter(str(exc)) from exc
 
@@ -102,7 +105,7 @@ def register_mcp(app: typer.Typer) -> None:
     ) -> None:
         try:
             _echo_json(
-                get_operations().approve_candidate(
+                _get_operations().approve_candidate(
                     candidate_id,
                     force_critical=force_critical,
                 ),
@@ -116,14 +119,14 @@ def register_mcp(app: typer.Typer) -> None:
         reason: Annotated[str | None, typer.Option("--reason")] = None,
     ) -> None:
         try:
-            _echo_json(get_operations().reject_candidate(candidate_id, reason=reason))
+            _echo_json(_get_operations().reject_candidate(candidate_id, reason=reason))
         except FileNotFoundError as exc:
             raise typer.BadParameter(str(exc)) from exc
 
     @mcp_app.command("diff-candidate")
     def mcp_diff_candidate(candidate_id: Annotated[str, typer.Argument()]) -> None:
         try:
-            _echo_json(get_operations().diff_candidate(candidate_id))
+            _echo_json(_get_operations().diff_candidate(candidate_id))
         except FileNotFoundError as exc:
             raise typer.BadParameter(str(exc)) from exc
 

@@ -9,17 +9,6 @@ from pathlib import Path
 from typing import Annotated, Any
 
 import typer
-
-from sayane.app import (
-    build_app_contract,
-    ResidentDaemonLifecycle,
-    ResidentDaemonMode,
-    build_app_overview,
-    build_daemon_status_report,
-    build_mcp_preview,
-    build_resident_runtime,
-    build_review_queue,
-)
 from sayane.bridge.config import BridgeConfig
 from sayane.cli.commands.app_daemon_cleanup_decisions import (
     register_daemon_cleanup_decision_command,
@@ -110,6 +99,8 @@ def _ensure_local_host(host: str) -> None:
 
 
 def _serve_plan(host: str, port: int) -> dict[str, object]:
+    from sayane.app import build_resident_runtime
+
     _ensure_local_host(host)
     runtime = build_resident_runtime(host=host, port=port)
     command = ["sayane", "serve", "--host", host, "--port", str(port)]
@@ -127,6 +118,8 @@ def _serve_plan(host: str, port: int) -> dict[str, object]:
 
 
 def _daemon_lifecycle(host: str, port: int) -> ResidentDaemonLifecycle:
+    from sayane.app import ResidentDaemonLifecycle
+
     try:
         return ResidentDaemonLifecycle(host=host, port=port)
     except ValueError as exc:
@@ -134,10 +127,14 @@ def _daemon_lifecycle(host: str, port: int) -> ResidentDaemonLifecycle:
 
 
 def _daemon_status_payload(host: str, port: int) -> dict[str, Any]:
+    from sayane.app import build_daemon_status_report
+
     return build_daemon_status_report(BridgeConfig().home / "run", host=host, port=port).public_metadata()
 
 
 def _daemon_plan_payload(host: str, port: int) -> dict[str, Any]:
+    from sayane.app import ResidentDaemonMode
+
     lifecycle = _daemon_lifecycle(host, port)
     bridge_command = ["sayane", "serve", "--host", host, "--port", str(port)]
     payload = lifecycle.public_metadata()
@@ -198,6 +195,8 @@ def register_app_commands(app: typer.Typer) -> None:
         json_out: Annotated[bool, typer.Option("--json", help="Emit JSON output.")] = False,
     ) -> None:
         """Show resident app service boundary status."""
+        from sayane.app import build_resident_runtime
+
         runtime = build_resident_runtime()
         payload = runtime.describe()
         if json_out:
@@ -219,6 +218,8 @@ def register_app_commands(app: typer.Typer) -> None:
         json_out: Annotated[bool, typer.Option("--json", help="Emit JSON output.")] = False,
     ) -> None:
         """Show an aggregate resident app overview payload."""
+        from sayane.app import build_app_overview, build_resident_runtime
+
         runtime = build_resident_runtime()
         payload = build_app_overview(runtime)
         if json_out:
@@ -237,6 +238,8 @@ def register_app_commands(app: typer.Typer) -> None:
         json_out: Annotated[bool, typer.Option("--json", help="Emit JSON output.")] = False,
     ) -> None:
         """Show app-facing UI handoff contract metadata."""
+        from sayane.app import build_app_contract
+
         payload = build_app_contract()
         if json_out:
             typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
@@ -258,6 +261,8 @@ def register_app_commands(app: typer.Typer) -> None:
         json_out: Annotated[bool, typer.Option("--json", help="Emit JSON output.")] = False,
     ) -> None:
         """Capture explicit clipboard text as a pending Candidate."""
+        from sayane.app import build_resident_runtime
+
         content = _read_clipboard_input(text, file)
         if not content:
             raise typer.BadParameter("Clipboard content is empty.")
@@ -284,6 +289,8 @@ def register_app_commands(app: typer.Typer) -> None:
         json_out: Annotated[bool, typer.Option("--json", help="Emit JSON output.")] = False,
     ) -> None:
         """Show the resident review queue preview."""
+        from sayane.app import build_resident_runtime, build_review_queue
+
         runtime = build_resident_runtime()
         if runtime.service.repositories is None:
             payload = _empty_review_queue_payload(runtime.service.profile_id)
@@ -307,6 +314,8 @@ def register_app_commands(app: typer.Typer) -> None:
         json_out: Annotated[bool, typer.Option("--json", help="Emit JSON output.")] = False,
     ) -> None:
         """Show a derived resident MCP preview payload."""
+        from sayane.app import build_mcp_preview, build_resident_runtime
+
         runtime = build_resident_runtime()
         if runtime.service.repositories is None:
             payload = _empty_mcp_preview_payload(runtime.service.profile_id, mode=mode)

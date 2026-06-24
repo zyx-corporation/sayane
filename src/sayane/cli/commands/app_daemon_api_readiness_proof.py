@@ -8,7 +8,6 @@ from typing import Annotated
 
 import typer
 
-from sayane.app import build_api_readiness_proof
 from sayane.bridge.config import BridgeConfig
 
 
@@ -37,6 +36,8 @@ def register_daemon_api_readiness_proof_command(app_group: typer.Typer) -> None:
         json_out: Annotated[bool, typer.Option("--json", help="Emit JSON output.")] = False,
     ) -> None:
         """Report conservative daemon API-readiness proof observations."""
+        from sayane.app import build_api_readiness_proof
+
         payload = build_api_readiness_proof(
             runtime_root or _default_runtime_root(),
             host=host,

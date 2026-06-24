@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated, Callable
@@ -128,6 +129,7 @@ def register_core_commands(
         port: Annotated[int, typer.Option("--port")] = 38741,
     ) -> None:
         """Start the Local Bridge API server."""
+        sys.modules.setdefault("watchfiles", None)
         import uvicorn
 
         if host not in ("127.0.0.1", "localhost", "::1"):

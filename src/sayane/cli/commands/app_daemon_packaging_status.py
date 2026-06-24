@@ -8,7 +8,6 @@ from typing import Annotated
 
 import typer
 
-from sayane.app import build_daemon_packaging_status
 from sayane.bridge.config import BridgeConfig
 from sayane.cli.commands._text_sections import echo_list_section, echo_object_section
 
@@ -31,6 +30,8 @@ def register_daemon_packaging_status_command(app_group: typer.Typer) -> None:
         json_out: Annotated[bool, typer.Option("--json", help="Emit JSON output.")] = False,
     ) -> None:
         """Show the current operator-facing packaging and supervision boundary."""
+        from sayane.app import build_daemon_packaging_status
+
         payload = build_daemon_packaging_status(
             runtime_root or _default_runtime_root(),
             host=host,

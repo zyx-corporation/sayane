@@ -8,7 +8,6 @@ from typing import Annotated
 
 import typer
 
-from sayane.app import build_daemon_operator_phase_status
 from sayane.bridge.config import BridgeConfig
 
 
@@ -30,6 +29,8 @@ def register_daemon_operator_phase_status_command(app_group: typer.Typer) -> Non
         json_out: Annotated[bool, typer.Option("--json", help="Emit JSON output.")] = False,
     ) -> None:
         """Show the aggregated post-app operator packaging/supervision phase status."""
+        from sayane.app import build_daemon_operator_phase_status
+
         payload = build_daemon_operator_phase_status(
             runtime_root or _default_runtime_root(),
             host=host,

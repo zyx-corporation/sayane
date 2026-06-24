@@ -8,12 +8,6 @@ from typing import Annotated
 
 import typer
 
-from sayane.app import (
-    ResidentDaemonIdentity,
-    ResidentDaemonRuntimeLayout,
-    build_cleanup_decision_report,
-    build_stale_artifact_report,
-)
 from sayane.bridge.config import BridgeConfig
 
 
@@ -23,6 +17,13 @@ def _default_runtime_root() -> Path:
 
 def build_cleanup_decision_payload(runtime_root: Path | None = None) -> dict[str, object]:
     """Build a read-only cleanup decision preview payload."""
+    from sayane.app import (
+        ResidentDaemonIdentity,
+        ResidentDaemonRuntimeLayout,
+        build_cleanup_decision_report,
+        build_stale_artifact_report,
+    )
+
     root = runtime_root or _default_runtime_root()
     identity = ResidentDaemonIdentity(runtime_dir=root)
     layout = ResidentDaemonRuntimeLayout(runtime_root=root)

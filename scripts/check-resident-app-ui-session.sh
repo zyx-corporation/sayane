@@ -99,11 +99,15 @@ bridge_listener_pids() {
   lsof -tiTCP:"${PORT}" -sTCP:LISTEN 2>/dev/null || true
 }
 
+bridge_command_pids() {
+  pgrep -f "serve --host ${HOST} --port ${PORT}" 2>/dev/null || true
+}
+
 stop_existing_bridge() {
   local pids
-  pids="$(bridge_listener_pids)"
+  pids="$(printf '%s\n%s\n' "$(bridge_listener_pids)" "$(bridge_command_pids)" | awk 'NF' | sort -u)"
   [[ -n "${pids}" ]] || return 0
-  info "Stopping existing Bridge listener on ${HOST}:${PORT}"
+  info "Stopping existing Bridge processes on ${HOST}:${PORT}"
   while IFS= read -r pid; do
     [[ -n "${pid}" ]] || continue
     kill "${pid}" 2>/dev/null || true

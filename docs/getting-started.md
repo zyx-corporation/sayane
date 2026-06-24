@@ -232,6 +232,8 @@ Bridge-hosted local shell の UI session だけを軽く確認したい場合は
 `./scripts/check-resident-app-ui-session.sh` を使う。
 bearer-backed resident app JSON read surface だけを軽く確認したい場合は
 `./scripts/check-resident-app-api-surfaces.sh` を使う。
+release 向けに API surface smoke と UI session smoke をまとめて流したい場合は
+`./scripts/check-resident-app-release-smoke.sh --start` を使う。
 既存の手動起動 Bridge をそのまま使いたい場合は `--no-start`、Bridge/session 切り分けだけを
 したい場合は `--no-build --no-tests`、
 失敗時のレスポンス本文まで見たい場合は `--verbose` を使う。

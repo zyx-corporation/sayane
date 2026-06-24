@@ -73,14 +73,26 @@ find_python() {
   command -v python3
 }
 
+find_sayane() {
+  if [[ -x "${ROOT}/.venv/bin/sayane" ]]; then
+    printf '%s\n' "${ROOT}/.venv/bin/sayane"
+    return 0
+  fi
+  if command -v sayane >/dev/null 2>&1; then
+    command -v sayane
+    return 0
+  fi
+  die "Could not find \`sayane\`."
+}
+
 run_init_if_needed() {
   if [[ -f "${HOME}/.sayane/profiles/default/sayane.profile.yaml" ]]; then
     return 0
   fi
-  local python_bin
-  python_bin="$(find_python)"
+  local sayane_bin
+  sayane_bin="$(find_sayane)"
   info "Initializing ~/.sayane"
-  PYTHONPATH="${ROOT}/src${PYTHONPATH:+:${PYTHONPATH}}" "${python_bin}" -m sayane.cli.main init
+  "${sayane_bin}" init
 }
 
 bridge_listener_pids() {
@@ -117,12 +129,11 @@ ensure_bridge() {
   [[ "${START_BRIDGE}" == "1" ]] || die "Bridge is not healthy at ${BASE_URL}"
   run_init_if_needed
   stop_existing_bridge
-  local python_bin
-  python_bin="$(find_python)"
+  local sayane_bin
+  sayane_bin="$(find_sayane)"
   mkdir -p "$(dirname "${LOG_FILE}")"
   info "Starting Bridge at ${BASE_URL}"
-  nohup env "PYTHONPATH=${ROOT}/src${PYTHONPATH:+:${PYTHONPATH}}" \
-    "${python_bin}" -m sayane.cli.main serve --host "${HOST}" --port "${PORT}" >"${LOG_FILE}" 2>&1 &
+  nohup "${sayane_bin}" serve --host "${HOST}" --port "${PORT}" >"${LOG_FILE}" 2>&1 &
   wait_for_bridge || die "Bridge did not become healthy. Check ${LOG_FILE}"
 }
 

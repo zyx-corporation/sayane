@@ -228,6 +228,8 @@ Bridge 切断時は native error view の `Start Bridge` / `Reconnect` を使う
 `/app/ui` bootstrap と screen-state surface の smoke check をまとめて実行する。
 現状の smoke test は既定で full `swift test --package-path macos/SayaneApp --disable-xctest` を実行し、
 native app 導線の回帰をそのまま確認する。
+Bridge-hosted local shell の UI session だけを軽く確認したい場合は
+`./scripts/check-resident-app-ui-session.sh` を使う。
 既存の手動起動 Bridge をそのまま使いたい場合は `--no-start`、Bridge/session 切り分けだけを
 したい場合は `--no-build --no-tests`、
 失敗時のレスポンス本文まで見たい場合は `--verbose` を使う。

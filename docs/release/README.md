@@ -145,4 +145,5 @@ Use these documents first:
 - [v1.0.53 Native Daemon Handoff Diagnostic Label I18n Release Note](v1.0.53-native-daemon-handoff-diagnostic-label-i18n-release-note.md) — current native Daemon export now localizes diagnostic section labels consistently
 - [v1.0.54 Native Daemon Handoff CLI Label I18n Release Note](v1.0.54-native-daemon-handoff-cli-label-i18n-release-note.md) — current native Daemon export now localizes CLI label text such as `launchctl print` and log tails
 - [v1.0.55 Native Smoke Full Test Default Release Note](v1.0.55-native-smoke-full-test-default-release-note.md) — current native smoke script now validates with the full Swift Testing suite by default and skips the hanging XCTest path
+- [v1.0.56 Resident App UI Session Smoke Release Note](v1.0.56-resident-app-ui-session-smoke-release-note.md) — current bridge-hosted local shell now has a direct UI-session smoke path outside full pytest
 - [v1.0.15 Post-App Follow-on Roadmap](v1.0.15-post-app-follow-on-roadmap.md) — current recommended order after the app-completion line

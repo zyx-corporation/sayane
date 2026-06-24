@@ -196,6 +196,13 @@ schema-only gate 状態を browser 上から直接確認できる。
 さらに current gate / next command / next read surface を 1 つにまとめた operator summary rail が
 bridge-hosted shell に追加され、長い panel を読む前に優先確認ポイントを先に揃えられる。
 
+package line を local で release 確認したい場合は、長寿命の開発用 `.venv` に依存せず
+短命な metadata-check 用 venv を内部で作る次のコマンドを使う:
+
+```bash
+bash scripts/build-wheel.sh
+```
+
 この local shell は preview / review / operator guidance surface であり、直接 profile patch や
 OS service activation を行うものではない。
 

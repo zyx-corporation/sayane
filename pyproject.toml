@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "sayane"
-version = "1.0.13"
+version = "1.0.14"
 description = "Local-first persona and context portability for cross-LLM collaboration"
 readme = "README.md"
 license = "Apache-2.0"

@@ -6,6 +6,34 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.0.14] - 2026-06-24 Resident App Release Reliability
+
+### Summary
+
+Sayane v1.0.14 packages the current resident app release-readiness line. It
+stabilizes Bridge startup around damaged optional native wheels, aligns native
+and browser smoke entrypoints, and moves local package metadata verification
+onto an isolated reproducible toolchain.
+
+### Changed
+
+- Guarded normal `sayane serve` startup from broken optional `watchfiles`
+  imports during resident app launch.
+- Kept resident app CLI / MCP imports lazy enough for ordinary Bridge startup.
+- Aligned resident app shell and native macOS smoke around the same
+  `run-app-local.sh` startup path and stale-process cleanup.
+- Added retry protection to wrapper-driven resident app Bridge startup.
+- Replaced hanging long-lived-environment package metadata checks with an
+  isolated build-and-metadata verification path in `scripts/build-wheel.sh`.
+
+### Validation
+
+- `ruff check src tests`
+- `ruff format --check src tests`
+- `bash scripts/check-resident-app-release-smoke.sh --start --with-native`
+- `swift test --package-path macos/SayaneApp --disable-xctest`
+- `bash scripts/build-wheel.sh`
+
 ## [1.0.13] - 2026-06-18 Resident Daemon Preflight Schema Preview
 
 ### Summary
@@ -493,7 +521,8 @@ Sayane v1.0.0 is the first stable architecture release for local-first LLM conte
 
 See [git history](https://github.com/zyx-corporation/sayane/commits/main) and release tags prior to v0.5.9.
 
-[Unreleased]: https://github.com/zyx-corporation/sayane/compare/v1.0.13...HEAD
+[Unreleased]: https://github.com/zyx-corporation/sayane/compare/v1.0.14...HEAD
+[1.0.14]: https://github.com/zyx-corporation/sayane/compare/v1.0.13...v1.0.14
 [1.0.13]: https://github.com/zyx-corporation/sayane/compare/v1.0.12...v1.0.13
 [1.0.12]: https://github.com/zyx-corporation/sayane/compare/v1.0.11...v1.0.12
 [1.0.11]: https://github.com/zyx-corporation/sayane/compare/v1.0.10...v1.0.11

@@ -4,6 +4,7 @@ This directory contains release notes, release closures, and release-prep docume
 
 ## Current release line
 
+- [v1.0.14 Community Release Note](v1.0.14-community-release-note.md) — published package release note for the current resident app reliability line
 - [v1.0.13 Resident Daemon Preflight Schema Preview](v1.0.13-resident-daemon-preflight-schema-preview.md) — published release note
 - [v1.0.13 Release Prep Checklist](v1.0.13-release-prep-checklist.md) — operator checklist
 - [v1.0.13 Release Prep Issue Body](v1.0.13-release-prep-issue-body.md) — short reusable issue text

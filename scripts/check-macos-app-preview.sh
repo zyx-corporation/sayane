@@ -13,6 +13,8 @@ START_LOCAL_SHELL=1
 RUN_BUILD=1
 RUN_TESTS=1
 VERBOSE=0
+TEST_TIMEOUT_SECONDS="${SAYANE_MACOS_SMOKE_TEST_TIMEOUT_SECONDS:-45}"
+CHECK_TIMEOUT_SECONDS="${SAYANE_MACOS_SMOKE_CHECK_TIMEOUT_SECONDS:-15}"
 CURRENT_STEP="initializing"
 STARTED_BRIDGE=0
 LAST_RESPONSE_BODY=""
@@ -28,7 +30,7 @@ Usage: $(basename "$0") [options]
 Options:
   --no-start   Use the existing Bridge instead of starting a fresh one
   --no-build   Skip swift build
-  --no-tests   Skip swift test --skip-build
+  --no-tests   Skip swift test validation
   --verbose    Print response-body and curl diagnostics on failure
   -h, --help   Show this help
 EOF
@@ -92,7 +94,7 @@ find_python() {
 capture_response_body() {
   local output_file
   output_file="$(mktemp)"
-  if curl "$@" -o "${output_file}"; then
+  if curl --max-time "${CHECK_TIMEOUT_SECONDS}" "$@" -o "${output_file}"; then
     LAST_RESPONSE_BODY="$(cat "${output_file}")"
     rm -f "${output_file}"
     return 0
@@ -160,6 +162,36 @@ wait_for_bridge() {
   return 1
 }
 
+run_with_timeout() {
+  local seconds="$1"
+  shift
+  python3 - "$seconds" "$@" <<'PY'
+import subprocess
+import sys
+
+timeout = int(sys.argv[1])
+cmd = sys.argv[2:]
+try:
+    completed = subprocess.run(cmd, check=False, timeout=timeout)
+    raise SystemExit(completed.returncode)
+except subprocess.TimeoutExpired:
+    print(f"error: timed out after {timeout}s: {' '.join(cmd)}", file=sys.stderr)
+    raise SystemExit(124)
+PY
+}
+
+cleanup_stale_swiftpm_processes() {
+  local pids=""
+  pids="$(pgrep -f "/macos/SayaneApp/.build|swift test --package-path ${PACKAGE_PATH}|SayaneAppPackageTests" 2>/dev/null || true)"
+  [[ -n "${pids}" ]] || return 0
+  info "Stopping stale SwiftPM test processes"
+  while IFS= read -r pid; do
+    [[ -n "${pid}" ]] || continue
+    kill "${pid}" 2>/dev/null || true
+  done <<< "${pids}"
+  sleep 1
+}
+
 prepare_local_bridge() {
   local sayane_bin python_bin
   sayane_bin="$(find_sayane)"
@@ -224,8 +256,11 @@ main() {
   fi
 
   if [[ "${RUN_TESTS}" == "1" ]]; then
-    info "Running Swift package tests"
-    swift test --package-path "${PACKAGE_PATH}" --skip-build
+    cleanup_stale_swiftpm_processes
+    info "Running full Swift package test suite"
+    CURRENT_STEP="running swift test suite"
+    run_with_timeout "${TEST_TIMEOUT_SECONDS}" \
+      swift test --package-path "${PACKAGE_PATH}" --skip-build --disable-xctest
   fi
 
   check_json_endpoint "/health"

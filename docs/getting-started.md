@@ -1,6 +1,6 @@
 # Sayane はじめに（利用者ガイド）
 
-Sayane **1.0.13** 時点で、Phase 0〜5 の成果物に加え resident app 準備フェーズのプレビュー/方針文書が追加されている。本書は「何ができて」「どこから始めるか」をまとめる。
+Sayane **1.0.13 package line** 時点で、Phase 0〜5 の成果物に加え resident app / daemon proof / operator packaging フェーズのプレビュー/方針文書が追加されている。本書は「何ができて」「どこから始めるか」をまとめる。
 
 設計の詳細は [設計概要](architecture.md)、開発者向けは [開発原則](development-principles.md) を参照。
 
@@ -160,15 +160,41 @@ cd extension && npm install && npm run build
 # 必要なら:
 # ./scripts/run-app-local.sh --foreground
 # ./scripts/run-app-local.sh --no-open
+# Google Chrome があれば bootstrap URL を Chrome で優先的に開く
 # 初回ブラウザ導線は /app/ui?bootstrap_token=... を 1 回だけ踏み、
 # 以後は dedicated local UI session cookie で /app/ui を継続利用する
 sayane app overview --json
 sayane app daemon-overview --json
 sayane app daemon-packaging-status --json
+sayane app daemon-service-targets-status --json
 sayane app daemon-service-control-boundary --json
 sayane app daemon-supervision-status --json
 sayane app daemon-recovery-consent-status --json
+sayane app daemon-operator-phase-status --json
+sayane app daemon-preflight --json
+sayane app daemon-proof-diagnostics --operation-class bridge_health --json
 ```
+
+Bridge-hosted daemon shell では、UI session 確立後に次の read surface へそのまま drill-down できる:
+
+```text
+/app/ui-state/operator-phase-status
+/app/ui-state/daemon-packaging-status
+/app/ui-state/daemon-service-targets-status
+/app/ui-state/daemon-service-control-boundary
+/app/ui-state/daemon-supervision-status
+/app/ui-state/daemon-recovery-consent-status
+```
+
+同じ daemon shell には decision assist も追加されており、service control / recovery /
+supervision / LaunchAgent の各判断について、次に確認すべき command と read surface を
+ブラウザ上からそのまま辿れる。
+さらに phase-closure gate guide も追加されており、未完了の gate ごとにどの read surface を
+先に確認すべきかを同じ daemon shell 上で辿れる。
+加えて implementation gate preflight も同じ drill-down stack に統合され、daemon 実装前の
+schema-only gate 状態を browser 上から直接確認できる。
+さらに current gate / next command / next read surface を 1 つにまとめた operator summary rail が
+bridge-hosted shell に追加され、長い panel を読む前に優先確認ポイントを先に揃えられる。
 
 この local shell は preview / review / operator guidance surface であり、直接 profile patch や
 OS service activation を行うものではない。
@@ -194,11 +220,17 @@ swift build --package-path macos/SayaneApp
 ```
 
 Swift package を Xcode で開き、`SayaneApp` executable target を起動する。
+現在は `./scripts/run-macos-app-preview.sh` だけで、Bridge を整えてから
+`macos/SayaneApp/.build/arm64-apple-macosx/debug/SayaneApp` を直接起動できる。
+IDE で確認したい場合だけ `./scripts/run-macos-app-preview.sh --xcode` を使う。
 Bridge 切断時は native error view の `Start Bridge` / `Reconnect` を使う。
 `./scripts/check-macos-app-preview.sh` は local Bridge shell の準備、Swift package build/test、
 `/app/ui` bootstrap と screen-state surface の smoke check をまとめて実行する。
+現状の smoke test は既定で full `swift test --package-path macos/SayaneApp --disable-xctest` を実行し、
+native app 導線の回帰をそのまま確認する。
 既存の手動起動 Bridge をそのまま使いたい場合は `--no-start`、Bridge/session 切り分けだけを
-したい場合は `--no-build --no-tests`、失敗時のレスポンス本文まで見たい場合は `--verbose` を使う。
+したい場合は `--no-build --no-tests`、
+失敗時のレスポンス本文まで見たい場合は `--verbose` を使う。
 
 この native app preview は resident app contract / screen-state / action surfaces を使う。
 native app 自体は `~/.sayane/bridge.token` を使って bearer-backed app-facing surface を直接読む。
@@ -214,12 +246,84 @@ Bridge の再接続やログ確認へ進める。
 sheet が閉じずに入力内容を保ったまま再試行できる。
 Queue detail では、現在選択中の候補に関係する直近アクション結果だけを candidate result strip として
 残すため、approve / revise 後の文脈を見失いにくい。
+同じ detail 面から candidate detail / diff / lineage をそのままコピーできるため、
+レビュー内容を外部メモやチャットへ移すときに手動選択が要らない。
 さらに Queue detail の review command deck に readiness / 実行ボタン / shortcut をまとめ、
 判断と操作を 1 箇所で完結できるようにしている。
 Home では review / quick link / daemon action の先頭項目を start-here section に集約し、
 起動直後の最初の一手を選びやすくしている。
 Daemon でも next action / LaunchAgent status / runbook を focus section にまとめ、
+さらに current gate / next command / next read surface を operator summary rail にまとめてから、
 長い運用情報に入る前の優先確認ポイントを先に見せる。
+同じ `Start Here` カード自体から、そのまま該当 daemon section へ移動できるため、
+「何を見るべきか」と「どこを開くか」を分けずに辿れる。
+さらに section navigator も priority sections と other sections に分かれ、
+直前の `Start Here` / operator summary rail で触れた判断面を先に辿りやすくしている。
+そのため next-epic workspace 側は、同じ優先導線で既に触れた判断面を重ねず、
+残りの判断面だけを deeper review 用に残す構成になっている。
+さらに phase-closure gates / decision assist / evidence drill-down / remaining workstreams も
+同じ priority path に沿った順で並ぶため、深掘りに入っても読み順が急に変わらない。
+macOS の LaunchAgent 面では、compact な `LaunchAgent Focus` を先頭に置きつつ、
+下段の `Current State Details` / `Recovery Preview Details` で要約の根拠と診断内訳を追える。
+同じ detail groups から current state / recovery preview の内容をそのままコピーできるため、
+handoff や troubleshooting の転記も native app だけで進めやすい。
+さらに operator summary rail / phase closure gates / decision assist / evidence drill-down にも
+copy action が入り、現在の運用判断・次コマンド・参照先を daemon 画面からそのまま共有できる。
+同じ daemon header からは、それらを LaunchAgent current state / recovery preview と合わせた
+handoff note として `.txt` に書き出せるため、セッション終端時の引き継ぎも native app 内で完結する。
+書き出し内容には生成日時・Profile・Bridge URL・Health Endpoint・現在の Bridge 状態も含まれるため、
+あとから見返したときにも「どの接続状態で保存したメモか」を追いやすい。
+さらにファイル名自体にも timestamp が入り、Bridge Version / Source Updated も記録されるため、
+同日に複数回 handoff を残しても衝突しにくく、どの build / source freshness だったかを追いやすい。
+加えて Component / Token File / Log File も入るため、引き継ぎ相手が app を開き直さなくても
+まずどの bridge 実体を見て、どの token / log を辿ればよいかを exported note だけで把握しやすい。
+さらに Debug Shell と最初の Next Command / Reason も冒頭に入るため、ブラウザ側の fallback 確認と
+daemon 側の初手判断を同じ exported note からすぐ始められる。
+加えて launchctl print / stdout tail / stderr tail も入るため、CLI ベースの一次診断へも
+そのまま接続でき、handoff 先でコマンドを再発見し直す手間が減る。
+さらに Preflight Checks / Proof Diagnostics の代表コマンドも含まれるため、準備確認と
+proof-oriented な深掘りのどちらから入る場合でも exported note を起点に進めやすい。
+加えて command 群自体も `Status Diagnostics` / `Tail Commands` / `Preflight Checks` /
+`Proof Diagnostics` に分かれているため、handoff 相手が今どの診断モードに入るかを選びやすい。
+さらに後半の `Operator Summary` / `Phase Gates` / `Suggested Action` / `Read Surfaces` /
+`Current State` / `Recovery Preview` も同じ見出し付きになったため、長めの exported note でも
+目当ての塊へ素早く飛びやすい。
+加えて並び順自体も `Operator Summary → Suggested Action → Phase Gates → Read Surfaces →
+Current State → Recovery Preview` に寄せたため、handoff の読み手が実際の判断順に沿って追いやすい。
+さらに先頭の metadata も `Bridge Context` でまとまったため、接続前提・診断入口・運用判断の境界が
+exported note 上でよりはっきり分かれる。
+加えてその見出し自体も i18n 文言に移したため、日本語環境では hard-coded な英語見出しが残らず、
+他の native app 文言と同じ調整経路で将来の表現変更にも追従できる。
+さらに bridge metadata や diagnostic section 周りのラベルも日本語側へ寄せたため、
+handoff note 全体の見出しが日本語環境でより一貫して読めるようになっている。
+加えて `コンポーネント` や `ログ追跡コマンド` など CLI に近いラベルも i18n 管理に入ったため、
+後続の文言調整でも exported note だけ別管理になる状態を避けやすい。
+さらに LaunchAgent Runbook も、preflight / verification / proof diagnostics を先に並べ、
+その後に log / preview detail を続ける順になっているため、確認系から深掘り系へ自然に進める。
+同じ LaunchAgent section 内の command deck も inspect / recover / start / log の順に並び、
+状態確認と復旧判断のあとで起動系コマンドへ進む読み順に揃えている。
+さらに inspect は非破壊の status / health 確認だけに絞られ、recover では cleanup / repair /
+bootout をその順で出すため、確認・復旧・再起動の境界がより明確になっている。
+各グループには短い summary も付いているため、command deck を開いた直後に
+「この段では何をするか」をコマンド列より先に掴める。
+さらに LaunchAgent section の先頭には compact な focus ブロックがあり、
+current state / recovery preview / next command を先にひとまとめで確認したあと、
+下段の detail groups で重複なしに確認を続けられる。
+次のEpic向けには packaging / service / supervision / recovery を 1 画面で見比べる
+next-epic workspace も追加されており、各判断面の read surface コマンドをその場でコピーできる。
+同じ next-epic workspace には unresolved な phase closure gate ごとのカードもあり、
+packaging / service / supervision / recovery のどの read surface を先に見るべきかを
+その場で開き分けられる。
+同じ場所で recommended implementation order と phase closure checklist の要約も見えるため、
+どの判断から先に着手すべきかと、何が未解決ブロッカーかを native app 上で先に揃えられる。
+さらに evidence drill-down から operator phase / packaging / service targets / service control /
+supervision / recovery consent の JSON read surface へ即座に降りられる。
+各 evidence card 自体にも current snapshot が出るため、command をコピーする前に比較の起点を揃えやすい。
+さらに decision assist が service control / recovery / supervision の次の確認コマンドを先に提案する。
+LaunchAgent 系では runtime-init / cleanup-preview / repair-preview の確認経路も同じ assist 面から辿れる。
+proof line では `daemon-identity-proof` / `daemon-readiness-proof` / `daemon-api-readiness-proof` /
+`daemon-proof-diagnostics` に加え、implementation gate 確認用の `daemon-preflight` も
+LaunchAgent Runbook から copyable な read command として辿れる。
 daemon 画面では copyable な CLI / `launchctl` コマンド、LaunchAgent plist 確認、
 runtime-init / cleanup / repair の conservative preview 要約を確認できる。
 さらに current operator packaging / supervision / recovery contract を read-first で表示し、
@@ -239,7 +343,7 @@ loaded status / return code / stderr summary も先に確認できる。
 
 ```bash
 curl -s http://127.0.0.1:38741/health
-open "http://127.0.0.1:38741/app/ui?bootstrap_token=$(cat ~/.sayane/bridge.token)"
+open -a "Google Chrome" "http://127.0.0.1:38741/app/ui?bootstrap_token=$(cat ~/.sayane/bridge.token)"
 tail -n 40 ~/.sayane/macos-app-smoke.log
 ```
 

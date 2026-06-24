@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import sys
 from dataclasses import asdict
 from pathlib import Path
-import sys
 from typing import Any
 
 from sayane.app.capabilities import CapabilityToken
@@ -15,8 +15,8 @@ from sayane.app.daemon_liveness_diagnostics import build_liveness_diagnostic
 from sayane.app.daemon_packaging_status import build_daemon_packaging_status
 from sayane.app.daemon_process_control import build_daemon_status_report
 from sayane.app.daemon_readiness_diagnostics import build_readiness_diagnostic
-from sayane.app.daemon_repair_apply import build_repair_apply_preview
 from sayane.app.daemon_recovery_consent_status import build_daemon_recovery_consent_status
+from sayane.app.daemon_repair_apply import build_repair_apply_preview
 from sayane.app.daemon_runtime_init import build_runtime_init_plan
 from sayane.app.daemon_service_control_boundary import build_daemon_service_control_boundary
 from sayane.app.daemon_service_targets_status import build_daemon_service_targets_status
@@ -159,9 +159,7 @@ def build_daemon_overview_preview(
         else None
     )
     launchagent_status = (
-        build_launchagent_status(
-            build_launchagent_plan(runtime_root, host=host, port=port)
-        )
+        build_launchagent_status(build_launchagent_plan(runtime_root, host=host, port=port))
         if sys.platform == "darwin"
         else None
     )
@@ -246,7 +244,11 @@ def _build_daemon_next_actions(
                 "reason": "Missing runtime directories can be reviewed for explicit repair.",
             }
         )
-    if status["runtime_initialized"] and not status["is_running_daemon"] and not status["manual_review_required"]:
+    if (
+        status["runtime_initialized"]
+        and not status["is_running_daemon"]
+        and not status["manual_review_required"]
+    ):
         actions.append(
             {
                 "command": "sayane app daemon-start --json",
@@ -256,40 +258,60 @@ def _build_daemon_next_actions(
     actions.append(
         {
             "command": "sayane app daemon-operator-phase-status --json",
-            "reason": "Review the current packaging, service, supervision, and recovery phase contract before post-app operator changes.",
+            "reason": (
+                "Review the current packaging, service, supervision, and "
+                "recovery phase contract before post-app operator changes."
+            ),
         }
     )
     if service_targets_status.get("current_platform") == "macos":
         actions.append(
             {
                 "command": "sayane app daemon-service-targets-status --json",
-                "reason": "Review the current macOS, Linux, and Windows service target contract before service-oriented control.",
+                "reason": (
+                    "Review the current macOS, Linux, and Windows service "
+                    "target contract before service-oriented control."
+                ),
             }
         )
         actions.append(
             {
                 "command": "sayane app daemon-launchagent-preview --json",
-                "reason": "Review the LaunchAgent plist and explicit launchctl commands for the macOS local service line.",
+                "reason": (
+                    "Review the LaunchAgent plist and explicit launchctl "
+                    "commands for the macOS local service line."
+                ),
             }
         )
         actions.append(
             {
                 "command": "sayane app daemon-launchagent-status --json",
-                "reason": "Observe whether the reviewed LaunchAgent plist exists and whether launchd currently reports the label as loaded.",
+                "reason": (
+                    "Observe whether the reviewed LaunchAgent plist exists "
+                    "and whether launchd currently reports the label as "
+                    "loaded."
+                ),
             }
         )
         if launchagent_preview and Path(launchagent_preview.get("plist_path", "")).is_file():
             actions.append(
                 {
                     "command": "sayane app daemon-launchagent-bootstrap --json",
-                    "reason": "A reviewed LaunchAgent plist already exists and may be bootstrapped explicitly.",
+                    "reason": (
+                        "A reviewed LaunchAgent plist already exists and may "
+                        "be bootstrapped explicitly."
+                    ),
                 }
             )
         if launchagent_status and launchagent_status.get("loaded") is True:
             actions.append(
                 {
                     "command": "sayane app daemon-launchagent-kickstart --json",
-                    "reason": "The LaunchAgent is already loaded and may be explicitly kickstarted when the service line needs a bounded restart.",
+                    "reason": (
+                        "The LaunchAgent is already loaded and may be "
+                        "explicitly kickstarted when the service line needs "
+                        "a bounded restart."
+                    ),
                 }
             )
     if status["is_running_daemon"]:

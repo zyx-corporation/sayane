@@ -28,7 +28,9 @@ class ResidentDaemonServiceTargetsStatus:
 
     def public_metadata(self) -> dict[str, Any]:
         current_platform = _platform_family()
-        macos_status = "supported_preview_apply_control" if current_platform == "macos" else "contract_only"
+        macos_status = (
+            "supported_preview_apply_control" if current_platform == "macos" else "contract_only"
+        )
         return {
             "kind": "resident_daemon_service_targets_status",
             "current_platform": current_platform,
@@ -44,8 +46,12 @@ class ResidentDaemonServiceTargetsStatus:
                     "platform": "macos",
                     "service_manager": "launchd",
                     "status": macos_status,
-                    "policy_status": "partial_preview_apply_control" if current_platform == "macos" else "contract_only",
-                    "rollback_policy_status": "reviewed_local_control_only" if current_platform == "macos" else "not_defined",
+                    "policy_status": "partial_preview_apply_control"
+                    if current_platform == "macos"
+                    else "contract_only",
+                    "rollback_policy_status": "reviewed_local_control_only"
+                    if current_platform == "macos"
+                    else "not_defined",
                     "packaging_gate_status": "candidate_ready_after_service_lifecycle_closure",
                     "commands": [
                         "sayane app daemon-launchagent-preview --json",

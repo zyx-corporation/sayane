@@ -118,7 +118,8 @@ class ResidentDaemonServiceControlBoundary:
                 ],
                 "recovery_policy": [
                     "manual review remains required before stale-artifact cleanup or repair apply",
-                    "control failures should route operators to status, log, readiness, and proof diagnostics",
+                    "control failures should route operators to status, log, "
+                    "readiness, and proof diagnostics",
                 ],
             },
             "service_plane": {
@@ -149,7 +150,8 @@ class ResidentDaemonServiceControlBoundary:
                 ],
                 "allowed_writes": [],
                 "allowed_control_exposure": [
-                    "daemon-start may appear as a next action when runtime is initialized and no manual review is required",
+                    "daemon-start may appear as a next action when runtime "
+                    "is initialized and no manual review is required",
                 ],
                 "forbidden_control_exposure": [
                     "direct OS service install/enable/disable actions",
@@ -162,7 +164,11 @@ class ResidentDaemonServiceControlBoundary:
                 "apply commands require explicit operator consent",
                 "control commands remain local-only and CLI-first in the current MVP",
                 "service commands remain deferred until platform-specific rollback policy exists",
-                "service lifecycle install/enable/disable/remove/update expectations remain contract-only until the operator packaging/supervision phase closes",
+                (
+                    "service lifecycle install/enable/disable/remove/update "
+                    "expectations remain contract-only until the operator "
+                    "packaging/supervision phase closes"
+                ),
             ],
         }
 

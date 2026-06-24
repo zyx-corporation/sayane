@@ -74,7 +74,8 @@ class ResidentDaemonRecoveryConsentStatus:
                 },
             ],
             "app_ui_guardrails": [
-                "local app UI may expose read-only recovery guidance but not destructive consent bypasses",
+                "local app UI may expose read-only recovery guidance but "
+                "not destructive consent bypasses",
                 "automation must not bypass explicit operator review for cleanup or repair apply",
                 "background supervision must not silently escalate into mutating recovery",
             ],

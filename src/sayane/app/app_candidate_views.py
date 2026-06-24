@@ -17,8 +17,7 @@ def build_app_candidate_queue(items: list[dict[str, Any]]) -> dict[str, Any]:
         "is_review_surface": True,
         "status_counts": dict(statuses),
         "top_sections": [
-            {"section": section, "count": count}
-            for section, count in sections.most_common(3)
+            {"section": section, "count": count} for section, count in sections.most_common(3)
         ],
     }
 
@@ -62,7 +61,9 @@ def build_app_candidate_diff(payload: dict[str, Any]) -> dict[str, Any]:
         "list_operation": list_diff.get("operation"),
         "list_added_count": len(list_diff.get("added") or []),
         "list_removed_count": len(list_diff.get("removed") or []),
-        "list_unchanged_count": list_diff.get("unchanged_count", len(list_diff.get("unchanged") or [])),
+        "list_unchanged_count": list_diff.get(
+            "unchanged_count", len(list_diff.get("unchanged") or [])
+        ),
         "has_structured_list_diff": bool(list_diff),
         "has_note": bool(payload.get("note")),
     }

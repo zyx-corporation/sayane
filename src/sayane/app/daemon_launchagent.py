@@ -14,7 +14,6 @@ from uuid import uuid4
 
 from sayane.bridge.config import BridgeConfig
 
-
 LAUNCHAGENT_LABEL = "com.sayane.resident.bridge"
 
 

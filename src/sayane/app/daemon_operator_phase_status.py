@@ -105,7 +105,8 @@ class ResidentDaemonOperatorPhaseStatus:
                 "local_only": True,
                 "notes": [
                     "current supported operator path remains local Python CLI plus Local Bridge",
-                    "resident app shell remains a Bridge-hosted local shell over existing app-facing endpoints",
+                    "resident app shell remains a Bridge-hosted local shell "
+                    "over existing app-facing endpoints",
                 ],
             },
             "workstreams": [

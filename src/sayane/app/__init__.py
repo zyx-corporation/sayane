@@ -27,10 +27,6 @@ from sayane.app.daemon_api_readiness_proof import (
     build_api_readiness_proof,
     build_api_readiness_proof_from_status_report,
 )
-from sayane.app.daemon_proof_status import (
-    ResidentDaemonProofDowngradeReason,
-    ResidentDaemonProofStatus,
-)
 from sayane.app.daemon_cleanup_apply import (
     ResidentDaemonCleanupApplyError,
     ResidentDaemonCleanupApplyTarget,
@@ -65,6 +61,16 @@ from sayane.app.daemon_identity_proof import (
     build_identity_proof,
     build_identity_proof_from_status_report,
 )
+from sayane.app.daemon_launchagent import (
+    LAUNCHAGENT_LABEL,
+    ResidentDaemonLaunchAgentApplyError,
+    ResidentDaemonLaunchAgentControlError,
+    ResidentDaemonLaunchAgentPlan,
+    apply_launchagent_plan,
+    build_launchagent_plan,
+    build_launchagent_status,
+    run_launchagent_command,
+)
 from sayane.app.daemon_lifecycle import (
     ResidentDaemonLifecycle,
     ResidentDaemonMode,
@@ -81,16 +87,6 @@ from sayane.app.daemon_liveness_diagnostics import (
 from sayane.app.daemon_operator_phase_status import (
     ResidentDaemonOperatorPhaseStatus,
     build_daemon_operator_phase_status,
-)
-from sayane.app.daemon_launchagent import (
-    LAUNCHAGENT_LABEL,
-    ResidentDaemonLaunchAgentApplyError,
-    ResidentDaemonLaunchAgentControlError,
-    ResidentDaemonLaunchAgentPlan,
-    apply_launchagent_plan,
-    build_launchagent_plan,
-    build_launchagent_status,
-    run_launchagent_command,
 )
 from sayane.app.daemon_packaging_status import (
     ResidentDaemonPackagingStatus,
@@ -117,13 +113,9 @@ from sayane.app.daemon_process_control import (
     start_resident_daemon,
     stop_resident_daemon,
 )
-from sayane.app.daemon_service_control_boundary import (
-    ResidentDaemonServiceControlBoundary,
-    build_daemon_service_control_boundary,
-)
-from sayane.app.daemon_service_targets_status import (
-    ResidentDaemonServiceTargetsStatus,
-    build_daemon_service_targets_status,
+from sayane.app.daemon_proof_status import (
+    ResidentDaemonProofDowngradeReason,
+    ResidentDaemonProofStatus,
 )
 from sayane.app.daemon_readiness_diagnostics import (
     ResidentDaemonApiReadinessStatus,
@@ -168,6 +160,14 @@ from sayane.app.daemon_runtime_receipts import (
     ResidentDaemonRuntimeInitReceipt,
     build_runtime_init_receipt,
 )
+from sayane.app.daemon_service_control_boundary import (
+    ResidentDaemonServiceControlBoundary,
+    build_daemon_service_control_boundary,
+)
+from sayane.app.daemon_service_targets_status import (
+    ResidentDaemonServiceTargetsStatus,
+    build_daemon_service_targets_status,
+)
 from sayane.app.daemon_stale_artifacts import (
     ResidentDaemonArtifactDiagnostic,
     ResidentDaemonArtifactKind,
@@ -175,15 +175,15 @@ from sayane.app.daemon_stale_artifacts import (
     ResidentDaemonStaleArtifactReport,
     build_stale_artifact_report,
 )
-from sayane.app.daemon_supervision_status import (
-    ResidentDaemonSupervisionStatus,
-    build_daemon_supervision_status,
-)
 from sayane.app.daemon_state_machine import (
     ResidentDaemonStateMachine,
     ResidentDaemonStateMachineState,
     ResidentDaemonStateMachineTransition,
     build_resident_daemon_state_machine,
+)
+from sayane.app.daemon_supervision_status import (
+    ResidentDaemonSupervisionStatus,
+    build_daemon_supervision_status,
 )
 from sayane.app.runtime import (
     ResidentRepositoryBackend,

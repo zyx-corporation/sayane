@@ -35,12 +35,16 @@ def build_app_contract() -> dict[str, Any]:
             {
                 "path": "/app/ui-state/*",
                 "format": "application/json",
-                "purpose": "cookie-backed local UI screen-state reads for the Bridge-hosted local shell",
+                "purpose": (
+                    "cookie-backed local UI screen-state reads for the Bridge-hosted local shell"
+                ),
             },
             {
                 "path": "/app/ui-action/*",
                 "format": "application/json",
-                "purpose": "cookie-backed local UI action writes for the Bridge-hosted local shell",
+                "purpose": (
+                    "cookie-backed local UI action writes for the Bridge-hosted local shell"
+                ),
             },
         ],
         "read_surfaces": [
@@ -62,42 +66,60 @@ def build_app_contract() -> dict[str, Any]:
             {
                 "path": "/app/operator-phase-status",
                 "payload_kind": "resident_daemon_operator_phase_status",
-                "purpose": "app-facing post-app operator packaging and supervision phase status read",
+                "purpose": (
+                    "app-facing post-app operator packaging and supervision phase status read"
+                ),
             },
             {
                 "path": "/app/daemon-packaging-status",
                 "payload_kind": "resident_daemon_packaging_status",
-                "purpose": "app-facing packaging boundary read for browser or token-backed drill-down",
+                "purpose": (
+                    "app-facing packaging boundary read for browser or token-backed drill-down"
+                ),
             },
             {
                 "path": "/app/daemon-service-targets-status",
                 "payload_kind": "resident_daemon_service_targets_status",
-                "purpose": "app-facing service target status read for browser or token-backed drill-down",
+                "purpose": (
+                    "app-facing service target status read for browser or token-backed drill-down"
+                ),
             },
             {
                 "path": "/app/daemon-service-control-boundary",
                 "payload_kind": "resident_daemon_service_control_boundary",
-                "purpose": "app-facing service control boundary read for browser or token-backed drill-down",
+                "purpose": (
+                    "app-facing service control boundary read for browser or "
+                    "token-backed drill-down"
+                ),
             },
             {
                 "path": "/app/daemon-supervision-status",
                 "payload_kind": "resident_daemon_supervision_status",
-                "purpose": "app-facing supervision status read for browser or token-backed drill-down",
+                "purpose": (
+                    "app-facing supervision status read for browser or token-backed drill-down"
+                ),
             },
             {
                 "path": "/app/daemon-recovery-consent-status",
                 "payload_kind": "resident_daemon_recovery_consent_status",
-                "purpose": "app-facing recovery and consent read for browser or token-backed drill-down",
+                "purpose": (
+                    "app-facing recovery and consent read for browser or token-backed drill-down"
+                ),
             },
             {
                 "path": "/app/daemon-preflight",
                 "payload_kind": "resident_daemon_preflight_report",
-                "purpose": "app-facing implementation gate preflight read for browser or token-backed drill-down",
+                "purpose": (
+                    "app-facing implementation gate preflight read for "
+                    "browser or token-backed drill-down"
+                ),
             },
             {
                 "path": "cli:sayane app daemon-operator-phase-status --json",
                 "payload_kind": "resident_daemon_operator_phase_status",
-                "purpose": "aggregated post-app operator packaging and supervision phase status read",
+                "purpose": (
+                    "aggregated post-app operator packaging and supervision phase status read"
+                ),
             },
             {
                 "path": "cli:sayane app daemon-packaging-status --json",
@@ -127,7 +149,10 @@ def build_app_contract() -> dict[str, Any]:
             {
                 "path": "cli:sayane app daemon-launchagent-status --json",
                 "payload_kind": "resident_daemon_launchagent_status",
-                "purpose": "macOS LaunchAgent status read for plist presence and current launchd loaded state",
+                "purpose": (
+                    "macOS LaunchAgent status read for plist presence and "
+                    "current launchd loaded state"
+                ),
             },
             {
                 "path": "cli:sayane app daemon-recovery-consent-status --json",
@@ -172,7 +197,9 @@ def build_app_contract() -> dict[str, Any]:
             {
                 "path": "/app/ui-state/contract",
                 "payload_kind": "resident_app_contract",
-                "purpose": "cookie-backed local UI contract read for the Bridge-hosted local shell",
+                "purpose": (
+                    "cookie-backed local UI contract read for the Bridge-hosted local shell"
+                ),
             },
             {
                 "path": "/app/ui-state/home",
@@ -192,12 +219,16 @@ def build_app_contract() -> dict[str, Any]:
             {
                 "path": "/app/ui-state/daemon-service-targets-status",
                 "payload_kind": "resident_daemon_service_targets_status",
-                "purpose": "cookie-backed local UI service-target read for bridge-hosted drill-down",
+                "purpose": (
+                    "cookie-backed local UI service-target read for bridge-hosted drill-down"
+                ),
             },
             {
                 "path": "/app/ui-state/daemon-service-control-boundary",
                 "payload_kind": "resident_daemon_service_control_boundary",
-                "purpose": "cookie-backed local UI service-boundary read for bridge-hosted drill-down",
+                "purpose": (
+                    "cookie-backed local UI service-boundary read for bridge-hosted drill-down"
+                ),
             },
             {
                 "path": "/app/ui-state/daemon-supervision-status",
@@ -212,7 +243,10 @@ def build_app_contract() -> dict[str, Any]:
             {
                 "path": "/app/ui-state/daemon-preflight",
                 "payload_kind": "resident_daemon_preflight_report",
-                "purpose": "cookie-backed local UI implementation-gate preflight read for bridge-hosted drill-down",
+                "purpose": (
+                    "cookie-backed local UI implementation-gate preflight "
+                    "read for bridge-hosted drill-down"
+                ),
             },
             {
                 "path": "/app/ui-state/candidates",
@@ -305,7 +339,9 @@ def build_app_contract() -> dict[str, Any]:
                 "path": "/app/ui-action/session/logout",
                 "method": "POST",
                 "result_kind": "session_logout",
-                "purpose": "cookie-backed local UI session invalidation for the Bridge-hosted local shell",
+                "purpose": (
+                    "cookie-backed local UI session invalidation for the Bridge-hosted local shell"
+                ),
             },
         ],
         "recommended_flow": [
@@ -383,28 +419,32 @@ def build_app_contract() -> dict[str, Any]:
                 "topic": "app_facing_endpoint_contracts",
                 "shared_by_design": True,
                 "notes": [
-                    "extension and resident app read the same app-facing contract and screen-state surfaces",
+                    "extension and resident app read the same app-facing "
+                    "contract and screen-state surfaces",
                 ],
             },
             {
                 "topic": "screen_state_payload_semantics",
                 "shared_by_design": True,
                 "notes": [
-                    "home, candidate queue, candidate detail, and daemon panel keep one semantic contract",
+                    "home, candidate queue, candidate detail, and daemon "
+                    "panel keep one semantic contract",
                 ],
             },
             {
                 "topic": "review_and_daemon_boundary_wording",
                 "shared_by_design": True,
                 "notes": [
-                    "preview-or-review-only wording remains aligned across extension and resident app surfaces",
+                    "preview-or-review-only wording remains aligned across "
+                    "extension and resident app surfaces",
                 ],
             },
             {
                 "topic": "host_container_ux",
                 "shared_by_design": False,
                 "notes": [
-                    "resident app and extension may keep different navigation and launch ergonomics",
+                    "resident app and extension may keep different "
+                    "navigation and launch ergonomics",
                 ],
             },
             {
@@ -413,7 +453,8 @@ def build_app_contract() -> dict[str, Any]:
                 "notes": [
                     "native macOS app may use bearer-backed app-facing surfaces directly",
                     "Bridge-hosted local shell keeps a dedicated local UI session after bootstrap",
-                    "extension keeps background-worker mediated Bridge auth instead of browser cookie sessions",
+                    "extension keeps background-worker mediated Bridge auth "
+                    "instead of browser cookie sessions",
                 ],
             },
         ],
@@ -432,11 +473,11 @@ def build_app_contract() -> dict[str, Any]:
             },
             {
                 "command": "sayane app daemon-service-targets-status --json",
-                "purpose": "cross-platform service target status for macOS, Linux, and Windows",
+                "purpose": ("cross-platform service target status for macOS, Linux, and Windows"),
             },
             {
                 "command": "sayane app daemon-service-control-boundary --json",
-                "purpose": "current allowed control and deferred service-command boundary",
+                "purpose": ("current allowed control and deferred service-command boundary"),
             },
             {
                 "command": "sayane app daemon-supervision-status --json",
@@ -448,19 +489,23 @@ def build_app_contract() -> dict[str, Any]:
             },
             {
                 "command": "sayane app daemon-launchagent-status --json",
-                "purpose": "macOS LaunchAgent status read for explicit local service observation",
+                "purpose": ("macOS LaunchAgent status read for explicit local service observation"),
             },
             {
                 "command": "sayane app daemon-launchagent-bootstrap --json",
-                "purpose": "explicit local launchctl bootstrap after reviewed LaunchAgent plist write",
+                "purpose": (
+                    "explicit local launchctl bootstrap after reviewed LaunchAgent plist write"
+                ),
             },
             {
                 "command": "sayane app daemon-launchagent-bootout --json",
-                "purpose": "explicit local launchctl bootout for reviewed LaunchAgent rollback",
+                "purpose": ("explicit local launchctl bootout for reviewed LaunchAgent rollback"),
             },
             {
                 "command": "sayane app daemon-launchagent-kickstart --json",
-                "purpose": "explicit local launchctl kickstart for the reviewed resident LaunchAgent label",
+                "purpose": (
+                    "explicit local launchctl kickstart for the reviewed resident LaunchAgent label"
+                ),
             },
             {
                 "command": "sayane app daemon-recovery-consent-status --json",
@@ -471,7 +516,9 @@ def build_app_contract() -> dict[str, Any]:
                 "purpose": "schema-only resident daemon implementation-gate preflight",
             },
             {
-                "command": "sayane app daemon-proof-diagnostics --operation-class bridge_health --json",
+                "command": (
+                    "sayane app daemon-proof-diagnostics --operation-class bridge_health --json"
+                ),
                 "purpose": "aggregated proof-oriented daemon diagnostics",
             },
         ],
@@ -479,13 +526,17 @@ def build_app_contract() -> dict[str, Any]:
             "preview and review surfaces remain derived or candidate-scoped",
             "app-facing writes do not patch profile state directly",
             "daemon surfaces do not prove process identity, daemon readiness, or API readiness",
-            "cookie-backed local UI shell reuses existing resident app semantics instead of introducing a parallel mutation model",
+            "cookie-backed local UI shell reuses existing resident app "
+            "semantics instead of introducing a parallel mutation model",
         ],
         "non_mvp_boundaries": [
             {
                 "topic": "daemon_identity_proof",
                 "status": "explicit_defer",
-                "current_scope": "current resident app and daemon preview surfaces do not prove production daemon identity",
+                "current_scope": (
+                    "current resident app and daemon preview surfaces do "
+                    "not prove production daemon identity"
+                ),
                 "governing_docs": [
                     "docs/release/v1.0.8-resident-daemon-identity-preview.md",
                     "docs/architecture/resident-app-service-boundary.md",
@@ -494,7 +545,10 @@ def build_app_contract() -> dict[str, Any]:
             {
                 "topic": "daemon_readiness_and_api_readiness_proof",
                 "status": "explicit_defer",
-                "current_scope": "current resident app and daemon preview surfaces do not prove daemon readiness or API readiness",
+                "current_scope": (
+                    "current resident app and daemon preview surfaces do "
+                    "not prove daemon readiness or API readiness"
+                ),
                 "governing_docs": [
                     "docs/architecture/resident-daemon-readiness-and-api-readiness-policy.md",
                     "docs/release/v1.0.14-resident-app-operator-handoff.md",
@@ -503,7 +557,10 @@ def build_app_contract() -> dict[str, Any]:
             {
                 "topic": "os_service_integration_ui",
                 "status": "separate_plan",
-                "current_scope": "current release line excludes OS service installation, supervision, and service-oriented operator UI",
+                "current_scope": (
+                    "current release line excludes OS service installation, "
+                    "supervision, and service-oriented operator UI"
+                ),
                 "governing_docs": [
                     "docs/release/v1.0.14-resident-app-operator-handoff.md",
                     "docs/release/v1.0.15-operator-packaging-supervision-phase-plan.md",
@@ -512,7 +569,9 @@ def build_app_contract() -> dict[str, Any]:
             {
                 "topic": "tray_or_background_supervision_ui",
                 "status": "separate_plan",
-                "current_scope": "current release line excludes tray, menu-bar, and background supervision UX",
+                "current_scope": (
+                    "current release line excludes tray, menu-bar, and background supervision UX"
+                ),
                 "governing_docs": [
                     "docs/release/v1.0.14-resident-app-operator-handoff.md",
                     "docs/release/v1.0.15-operator-packaging-supervision-phase-plan.md",
@@ -521,7 +580,10 @@ def build_app_contract() -> dict[str, Any]:
             {
                 "topic": "direct_profile_patch_ui",
                 "status": "explicit_defer",
-                "current_scope": "current app-facing writes remain inside candidate review and do not patch profile state directly",
+                "current_scope": (
+                    "current app-facing writes remain inside candidate "
+                    "review and do not patch profile state directly"
+                ),
                 "governing_docs": [
                     "docs/architecture/resident-app-ui-integration-contract.md",
                     "docs/release/v1.0.14-resident-app-operator-handoff.md",

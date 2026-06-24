@@ -119,7 +119,9 @@ def build_identity_proof_from_status_report(
         downgrade_reason = ResidentDaemonProofDowngradeReason.UNAUTHENTICATED_HEALTH_ENDPOINT_ONLY
     else:
         notes.append("running process observed through local process status")
-        downgrade_reason = ResidentDaemonProofDowngradeReason.PROCESS_EXISTENCE_WITHOUT_IDENTITY_PROOF
+        downgrade_reason = (
+            ResidentDaemonProofDowngradeReason.PROCESS_EXISTENCE_WITHOUT_IDENTITY_PROOF
+        )
 
     notes.append("runtime-root scoping is known, but daemon identity remains unverified")
     return ResidentDaemonIdentityProof(

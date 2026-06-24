@@ -94,18 +94,27 @@ def build_daemon_panel_screen_state(daemon_payload: dict[str, Any]) -> dict[str,
                 "status": service_control_boundary.get("service_plane", {}).get("status"),
                 "commands": [
                     item.get("command")
-                    for item in service_control_boundary.get("control_plane", {}).get("allowed_commands", [])
-                ] + [
+                    for item in service_control_boundary.get("control_plane", {}).get(
+                        "allowed_commands", []
+                    )
+                ]
+                + [
                     item.get("command")
-                    for item in service_control_boundary.get("service_plane", {}).get("allowed_commands", [])
+                    for item in service_control_boundary.get("service_plane", {}).get(
+                        "allowed_commands", []
+                    )
                 ],
-                "deferred_commands": service_control_boundary.get("service_plane", {}).get("deferred_commands", []),
+                "deferred_commands": service_control_boundary.get("service_plane", {}).get(
+                    "deferred_commands", []
+                ),
             },
             {
                 "panel": "supervision_status",
                 "title": "supervision_status",
                 "status": supervision_status.get("supervision_mode"),
-                "commands": supervision_status.get("active_supervision", {}).get("allowed_actions", []),
+                "commands": supervision_status.get("active_supervision", {}).get(
+                    "allowed_actions", []
+                ),
             },
             {
                 "panel": "recovery_consent_status",
@@ -122,7 +131,8 @@ def build_daemon_panel_screen_state(daemon_payload: dict[str, Any]) -> dict[str,
         "launchagent_summary": {
             "preview_available": launchagent_preview is not None,
             "status_available": launchagent_status is not None,
-            "plist_path": (launchagent_preview or {}).get("plist_path") or (launchagent_status or {}).get("plist_path"),
+            "plist_path": (launchagent_preview or {}).get("plist_path")
+            or (launchagent_status or {}).get("plist_path"),
             "loaded_status": (launchagent_status or {}).get("loaded_status"),
             "launchctl_commands": (launchagent_preview or {}).get("launchctl_commands", {}),
         },
@@ -135,12 +145,18 @@ def build_daemon_panel_screen_state(daemon_payload: dict[str, Any]) -> dict[str,
         },
         "operator_phase_details": {
             "current_supported_operator_path": {
-                "startup_command_text": operator_phase_status.get("current_supported_operator_path", {}).get(
-                    "startup_command_text"
+                "startup_command_text": operator_phase_status.get(
+                    "current_supported_operator_path", {}
+                ).get("startup_command_text"),
+                "bootstrap_ui": operator_phase_status.get(
+                    "current_supported_operator_path", {}
+                ).get("bootstrap_ui"),
+                "local_only": operator_phase_status.get("current_supported_operator_path", {}).get(
+                    "local_only"
                 ),
-                "bootstrap_ui": operator_phase_status.get("current_supported_operator_path", {}).get("bootstrap_ui"),
-                "local_only": operator_phase_status.get("current_supported_operator_path", {}).get("local_only"),
-                "notes": operator_phase_status.get("current_supported_operator_path", {}).get("notes", []),
+                "notes": operator_phase_status.get("current_supported_operator_path", {}).get(
+                    "notes", []
+                ),
             },
             "workstreams": [
                 {

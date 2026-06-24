@@ -42,7 +42,9 @@ class ResidentDaemonPackagingStatus:
             {
                 "model": "cli_first_local_bridge",
                 "status": "current_supported_line",
-                "operator_value": "lowest-change path over the existing local Bridge and resident app shell",
+                "operator_value": (
+                    "lowest-change path over the existing local Bridge and resident app shell"
+                ),
                 "host_assumptions": [
                     "operator starts Bridge explicitly",
                     "browser shell stays local-only",
@@ -52,7 +54,10 @@ class ResidentDaemonPackagingStatus:
             {
                 "model": "hybrid_local_bridge_plus_service_targets",
                 "status": "candidate_requires_phase_closure",
-                "operator_value": "keep Bridge-hosted local shell while adding explicit OS service lifecycle support",
+                "operator_value": (
+                    "keep Bridge-hosted local shell while adding explicit "
+                    "OS service lifecycle support"
+                ),
                 "host_assumptions": [
                     "platform-specific service rollback policy exists",
                     "service install/update/remove semantics are explicit",
@@ -66,7 +71,10 @@ class ResidentDaemonPackagingStatus:
             {
                 "model": "service_first_resident_runtime",
                 "status": "candidate_requires_larger_architecture_change",
-                "operator_value": "daemon/service becomes the primary operator entrypoint rather than explicit Bridge startup",
+                "operator_value": (
+                    "daemon/service becomes the primary operator entrypoint "
+                    "rather than explicit Bridge startup"
+                ),
                 "host_assumptions": [
                     "resident runtime service semantics replace current CLI-first startup path",
                     "supervision UX becomes a primary operator commitment",
@@ -99,7 +107,8 @@ class ResidentDaemonPackagingStatus:
                 "decision_guardrails": [
                     "do not smuggle service-first commitments into app-shell polish",
                     "do not imply background supervision support before explicit phase closure",
-                    "keep current local-only operator path explicit until packaging-model closure lands",
+                    "keep current local-only operator path explicit until "
+                    "packaging-model closure lands",
                 ],
             },
             "local_daemon_control": {
@@ -114,14 +123,22 @@ class ResidentDaemonPackagingStatus:
                 ],
             },
             "service_integration": {
-                "status": "macos_launchagent_preview_apply_control" if platform_family == "macos" else "contract_only",
+                "status": "macos_launchagent_preview_apply_control"
+                if platform_family == "macos"
+                else "contract_only",
                 "supported_targets": ["macos_launchagent"] if platform_family == "macos" else [],
-                "reason": "Common cross-platform service targets are defined; concrete preview/apply plus explicit local launchctl control currently exists for macOS LaunchAgent only.",
+                "reason": (
+                    "Common cross-platform service targets are defined; "
+                    "concrete preview/apply plus explicit local launchctl "
+                    "control currently exists for macOS LaunchAgent only."
+                ),
             },
             "background_supervision": {
                 "status": "not_supported",
                 "supported_surfaces": [],
-                "reason": "Tray, menu-bar, and background supervision UX remain separate-plan items.",
+                "reason": (
+                    "Tray, menu-bar, and background supervision UX remain separate-plan items."
+                ),
             },
             "operator_commitments": {
                 "local_only": True,

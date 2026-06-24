@@ -152,4 +152,5 @@ Use these documents first:
 - [v1.0.60 Resident App Smoke Venv CLI Preference Release Note](v1.0.60-resident-app-smoke-venv-cli-preference-release-note.md) — current smoke scripts now prefer the repo-local CLI install over user-local shims during Bridge startup
 - [v1.0.61 Resident App CLI Serve Watchfiles Guard Release Note](v1.0.61-resident-app-cli-serve-watchfiles-guard-release-note.md) — current CLI/local-launch path now avoids broken optional `watchfiles` imports and clears stale detached `serve` processes before restart
 - [v1.0.62 Native Smoke Launcher Alignment Release Note](v1.0.62-native-smoke-launcher-alignment-release-note.md) — current native preview smoke now shares the same Bridge launcher path, stale-process cleanup, and timeout budget as the resident app shell
+- [v1.0.63 Resident App Full Release Smoke Release Note](v1.0.63-resident-app-full-release-smoke-release-note.md) — current one-command release smoke now covers API, UI session, and native preview together with launcher retry protection
 - [v1.0.15 Post-App Follow-on Roadmap](v1.0.15-post-app-follow-on-roadmap.md) — current recommended order after the app-completion line

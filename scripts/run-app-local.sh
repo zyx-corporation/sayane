@@ -240,7 +240,13 @@ main() {
 
   start_bridge_background
   info "Waiting for Bridge"
-  wait_for_bridge || die "Bridge did not become healthy. Check ${LOG_FILE}"
+  if ! wait_for_bridge; then
+    warn "Initial Bridge launch did not become healthy; retrying once"
+    stop_existing_bridge
+    start_bridge_background
+    info "Waiting for Bridge"
+    wait_for_bridge || die "Bridge did not become healthy. Check ${LOG_FILE}"
+  fi
 
   ensure_token
   bootstrap_check

@@ -13,7 +13,7 @@ START_LOCAL_SHELL=1
 RUN_BUILD=1
 RUN_TESTS=1
 VERBOSE=0
-TEST_TIMEOUT_SECONDS="${SAYANE_MACOS_SMOKE_TEST_TIMEOUT_SECONDS:-45}"
+TEST_TIMEOUT_SECONDS="${SAYANE_MACOS_SMOKE_TEST_TIMEOUT_SECONDS:-120}"
 CHECK_TIMEOUT_SECONDS="${SAYANE_MACOS_SMOKE_CHECK_TIMEOUT_SECONDS:-15}"
 CURRENT_STEP="initializing"
 STARTED_BRIDGE=0
@@ -68,12 +68,12 @@ require_token() {
 }
 
 find_sayane() {
-  if command -v sayane >/dev/null 2>&1; then
-    command -v sayane
-    return 0
-  fi
   if [[ -x "${ROOT}/.venv/bin/sayane" ]]; then
     printf '%s\n' "${ROOT}/.venv/bin/sayane"
+    return 0
+  fi
+  if command -v sayane >/dev/null 2>&1; then
+    command -v sayane
     return 0
   fi
   die "Could not find \`sayane\`."
@@ -135,16 +135,35 @@ bridge_listener_pids() {
   lsof -tiTCP:"${PORT}" -sTCP:LISTEN 2>/dev/null || true
 }
 
+bridge_command_pids() {
+  pgrep -f "serve --host ${HOST} --port ${PORT}" 2>/dev/null || true
+}
+
 stop_existing_bridge() {
   local pids
-  pids="$(bridge_listener_pids)"
+  pids="$(printf '%s\n%s\n' "$(bridge_listener_pids)" "$(bridge_command_pids)" | awk 'NF' | sort -u)"
   [[ -z "${pids}" ]] && return 0
-  info "Stopping existing listener on ${HOST}:${PORT}"
+  info "Stopping existing Bridge processes on ${HOST}:${PORT}"
   while IFS= read -r pid; do
     [[ -n "${pid}" ]] || continue
     kill "${pid}" 2>/dev/null || true
   done <<< "${pids}"
-  sleep 1
+
+  local attempt
+  for attempt in {1..10}; do
+    if [[ -z "$(bridge_listener_pids)" && -z "$(bridge_command_pids)" ]]; then
+      return 0
+    fi
+    sleep 1
+  done
+
+  pids="$(printf '%s\n%s\n' "$(bridge_listener_pids)" "$(bridge_command_pids)" | awk 'NF' | sort -u)"
+  [[ -z "${pids}" ]] && return 0
+  info "Force stopping stale Bridge processes on ${HOST}:${PORT}"
+  while IFS= read -r pid; do
+    [[ -n "${pid}" ]] || continue
+    kill -9 "${pid}" 2>/dev/null || true
+  done <<< "${pids}"
 }
 
 bridge_healthy() {
@@ -193,9 +212,8 @@ cleanup_stale_swiftpm_processes() {
 }
 
 prepare_local_bridge() {
-  local sayane_bin python_bin
+  local sayane_bin
   sayane_bin="$(find_sayane)"
-  python_bin="$(find_python)"
   if [[ ! -f "${HOME}/.sayane/profiles/default/sayane.profile.yaml" ]]; then
     info "Initializing ~/.sayane"
     "${sayane_bin}" init
@@ -204,7 +222,11 @@ prepare_local_bridge() {
   mkdir -p "$(dirname "${LOG_FILE}")"
   info "Starting Bridge for smoke check"
   CURRENT_STEP="starting bridge"
-  nohup "${python_bin}" -m sayane.cli.main serve --host "${HOST}" --port "${PORT}" >"${LOG_FILE}" 2>&1 &
+  if ! bash "${ROOT}/scripts/run-app-local.sh" --no-open --no-bootstrap-check; then
+    warn "Initial Bridge launch did not become healthy; retrying once"
+    stop_existing_bridge
+    bash "${ROOT}/scripts/run-app-local.sh" --no-open --no-bootstrap-check
+  fi
   STARTED_BRIDGE=1
   CURRENT_STEP="waiting for bridge health"
   wait_for_bridge || die "Bridge did not become healthy. Check ${LOG_FILE}"
@@ -260,7 +282,7 @@ main() {
     info "Running full Swift package test suite"
     CURRENT_STEP="running swift test suite"
     run_with_timeout "${TEST_TIMEOUT_SECONDS}" \
-      swift test --package-path "${PACKAGE_PATH}" --skip-build --disable-xctest
+      swift test --package-path "${PACKAGE_PATH}" --disable-xctest
   fi
 
   check_json_endpoint "/health"

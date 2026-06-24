@@ -151,16 +151,35 @@ bridge_listener_pids() {
   lsof -tiTCP:"${BRIDGE_PORT}" -sTCP:LISTEN 2>/dev/null || true
 }
 
+bridge_command_pids() {
+  pgrep -f "serve --host ${BRIDGE_HOST} --port ${BRIDGE_PORT}" 2>/dev/null || true
+}
+
 stop_existing_bridge() {
   local pids
-  pids="$(bridge_listener_pids)"
+  pids="$(printf '%s\n%s\n' "$(bridge_listener_pids)" "$(bridge_command_pids)" | awk 'NF' | sort -u)"
   [[ -n "${pids}" ]] || return 0
-  info "Stopping existing Bridge listener on ${BRIDGE_HOST}:${BRIDGE_PORT}"
+  info "Stopping existing Bridge processes on ${BRIDGE_HOST}:${BRIDGE_PORT}"
   while IFS= read -r pid; do
     [[ -n "${pid}" ]] || continue
     kill "${pid}" 2>/dev/null || true
   done <<< "${pids}"
-  sleep 1
+
+  local attempt
+  for attempt in {1..10}; do
+    if [[ -z "$(bridge_listener_pids)" && -z "$(bridge_command_pids)" ]]; then
+      return 0
+    fi
+    sleep 1
+  done
+
+  pids="$(printf '%s\n%s\n' "$(bridge_listener_pids)" "$(bridge_command_pids)" | awk 'NF' | sort -u)"
+  [[ -n "${pids}" ]] || return 0
+  info "Force stopping stale Bridge processes on ${BRIDGE_HOST}:${BRIDGE_PORT}"
+  while IFS= read -r pid; do
+    [[ -n "${pid}" ]] || continue
+    kill -9 "${pid}" 2>/dev/null || true
+  done <<< "${pids}"
 }
 
 wait_for_bridge() {
@@ -194,13 +213,9 @@ ensure_bridge() {
   fi
   run_init_if_needed
   stop_existing_bridge
-  local python_bin
-  python_bin="$(find_python)"
   mkdir -p "$(dirname "${BRIDGE_LOG_FILE}")"
-  info "Starting Bridge directly at ${BRIDGE_URL}"
-  spawn_detached "${BRIDGE_LOG_FILE}" env \
-    "PYTHONPATH=${ROOT}/src${PYTHONPATH:+:${PYTHONPATH}}" \
-    "${python_bin}" -m sayane.cli.main serve --host "${BRIDGE_HOST}" --port "${BRIDGE_PORT}"
+  info "Starting Bridge through local launcher at ${BRIDGE_URL}"
+  bash "${ROOT}/scripts/run-app-local.sh" --no-open --no-bootstrap-check
   wait_for_bridge || die "Bridge did not become healthy at ${BRIDGE_URL}. Check ${BRIDGE_LOG_FILE}"
 }
 

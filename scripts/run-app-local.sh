@@ -134,7 +134,7 @@ stop_existing_bridge() {
 
   local attempt
   for attempt in {1..10}; do
-    if [[ -z "$(bridge_listener_pids)" ]]; then
+    if [[ -z "$(bridge_listener_pids)" && -z "$(bridge_command_pids)" ]]; then
       return 0
     fi
     sleep 1

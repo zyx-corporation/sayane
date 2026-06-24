@@ -111,7 +111,22 @@ stop_existing_bridge() {
     [[ -n "${pid}" ]] || continue
     kill "${pid}" 2>/dev/null || true
   done <<< "${pids}"
-  sleep 1
+
+  local attempt
+  for attempt in {1..10}; do
+    if [[ -z "$(bridge_listener_pids)" && -z "$(bridge_command_pids)" ]]; then
+      return 0
+    fi
+    sleep 1
+  done
+
+  pids="$(printf '%s\n%s\n' "$(bridge_listener_pids)" "$(bridge_command_pids)" | awk 'NF' | sort -u)"
+  [[ -n "${pids}" ]] || return 0
+  info "Force stopping stale Bridge processes on ${HOST}:${PORT}"
+  while IFS= read -r pid; do
+    [[ -n "${pid}" ]] || continue
+    kill -9 "${pid}" 2>/dev/null || true
+  done <<< "${pids}"
 }
 
 wait_for_bridge() {

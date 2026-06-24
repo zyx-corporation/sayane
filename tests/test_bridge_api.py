@@ -101,6 +101,12 @@ def test_app_overview_requires_auth(
     client, _, _ = bridge_env
     assert client.get("/app/overview").status_code == 401
     assert client.get("/app/operator-phase-status").status_code == 401
+    assert client.get("/app/daemon-packaging-status").status_code == 401
+    assert client.get("/app/daemon-service-targets-status").status_code == 401
+    assert client.get("/app/daemon-service-control-boundary").status_code == 401
+    assert client.get("/app/daemon-supervision-status").status_code == 401
+    assert client.get("/app/daemon-recovery-consent-status").status_code == 401
+    assert client.get("/app/daemon-preflight").status_code == 401
     assert client.get("/app/screen-state/home").status_code == 401
 
 
@@ -113,6 +119,12 @@ def test_app_ui_requires_auth(
     assert client.get("/app/ui/daemon").status_code == 401
     assert client.get("/app/ui-state/home").status_code == 401
     assert client.get("/app/ui-state/operator-phase-status").status_code == 401
+    assert client.get("/app/ui-state/daemon-packaging-status").status_code == 401
+    assert client.get("/app/ui-state/daemon-service-targets-status").status_code == 401
+    assert client.get("/app/ui-state/daemon-service-control-boundary").status_code == 401
+    assert client.get("/app/ui-state/daemon-supervision-status").status_code == 401
+    assert client.get("/app/ui-state/daemon-recovery-consent-status").status_code == 401
+    assert client.get("/app/ui-state/daemon-preflight").status_code == 401
     assert client.post("/app/ui-action/capture-clipboard", json={"content": "hello"}).status_code == 401
 
 
@@ -179,6 +191,19 @@ def test_app_operator_phase_status_returns_aggregate_payload(
     assert payload["phase_readiness"] == "not_ready_for_phase_closure"
 
 
+def test_app_operator_drilldown_routes_return_payloads(
+    bridge_env: tuple[TestClient, BridgeConfig, str],
+) -> None:
+    client, _, token = bridge_env
+
+    assert client.get("/app/daemon-packaging-status", headers=_auth(token)).json()["kind"] == "resident_daemon_packaging_status"
+    assert client.get("/app/daemon-service-targets-status", headers=_auth(token)).json()["kind"] == "resident_daemon_service_targets_status"
+    assert client.get("/app/daemon-service-control-boundary", headers=_auth(token)).json()["kind"] == "resident_daemon_service_control_boundary"
+    assert client.get("/app/daemon-supervision-status", headers=_auth(token)).json()["kind"] == "resident_daemon_supervision_status"
+    assert client.get("/app/daemon-recovery-consent-status", headers=_auth(token)).json()["kind"] == "resident_daemon_recovery_consent_status"
+    assert client.get("/app/daemon-preflight", headers=_auth(token)).json()["kind"] == "resident_daemon_preflight_report"
+
+
 def test_app_home_screen_state_returns_framework_neutral_state(
     bridge_env: tuple[TestClient, BridgeConfig, str],
 ) -> None:
@@ -203,6 +228,21 @@ def test_app_ui_operator_phase_state_returns_cookie_backed_payload(
     payload = response.json()
     assert payload["kind"] == "resident_daemon_operator_phase_status"
     assert payload["phase_readiness"] == "not_ready_for_phase_closure"
+
+
+def test_app_ui_operator_drilldown_states_return_cookie_backed_payloads(
+    bridge_env: tuple[TestClient, BridgeConfig, str],
+) -> None:
+    client, _, token = bridge_env
+    bootstrap = client.get("/app/ui", headers=_auth(token))
+    assert bootstrap.status_code == 200
+
+    assert client.get("/app/ui-state/daemon-packaging-status").json()["kind"] == "resident_daemon_packaging_status"
+    assert client.get("/app/ui-state/daemon-service-targets-status").json()["kind"] == "resident_daemon_service_targets_status"
+    assert client.get("/app/ui-state/daemon-service-control-boundary").json()["kind"] == "resident_daemon_service_control_boundary"
+    assert client.get("/app/ui-state/daemon-supervision-status").json()["kind"] == "resident_daemon_supervision_status"
+    assert client.get("/app/ui-state/daemon-recovery-consent-status").json()["kind"] == "resident_daemon_recovery_consent_status"
+    assert client.get("/app/ui-state/daemon-preflight").json()["kind"] == "resident_daemon_preflight_report"
 
 
 def test_app_ui_returns_bootstrap_home_html(
@@ -332,6 +372,11 @@ def test_app_ui_candidate_queue_detail_and_diff_html(
     assert f"/app/ui/candidates/{candidate_id}/diff" in detail.text
     assert "<dt>Section</dt>" in detail.text
     assert "<dt>Operation</dt>" in detail.text
+    assert '<select id="evaluate-level" name="level">' in detail.text
+    assert "Level 1 — Quick check (heuristics only)" in detail.text
+    assert "Level 2 — Local AI check (includes Level 1)" in detail.text
+    assert "Level 3 — External AI check (includes Level 1)" in detail.text
+    assert 'type="number" min="1" max="3" name="level"' not in detail.text
 
     diff = client.get(f"/app/ui/candidates/{candidate_id}/diff")
     assert diff.status_code == 200

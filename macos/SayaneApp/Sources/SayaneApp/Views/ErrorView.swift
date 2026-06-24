@@ -8,9 +8,7 @@ struct ErrorView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text(model.strings.text(.error)).font(.largeTitle).bold()
             Text(model.strings.text(.connectionProblem))
-            Text(message)
-                .font(.body.monospaced())
-                .textSelection(.enabled)
+            SelectableMonospaceText(text: message, font: .body.monospaced())
             BridgeDiagnosticsCard(model: model, compact: true)
         }
         .padding(24)

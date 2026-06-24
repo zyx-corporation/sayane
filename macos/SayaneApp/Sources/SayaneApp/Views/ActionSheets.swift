@@ -9,11 +9,11 @@ struct EvaluateSheet: View {
         VStack(alignment: .leading, spacing: 16) {
             SheetTitle(text: model.strings.text(.evaluate))
             Picker(model.strings.text(.evaluateLevel), selection: $level) {
-                Text("1").tag(1)
-                Text("2").tag(2)
-                Text("3").tag(3)
+                Text(model.strings.evaluationLevelLabel(1, detailed: true)).tag(1)
+                Text(model.strings.evaluationLevelLabel(2, detailed: true)).tag(2)
+                Text(model.strings.evaluationLevelLabel(3, detailed: true)).tag(3)
             }
-            .pickerStyle(.segmented)
+            .pickerStyle(.menu)
             HStack {
                 Button(model.strings.text(.cancel)) { dismiss() }
                 Button(model.strings.text(.submit)) {
@@ -27,7 +27,7 @@ struct EvaluateSheet: View {
             }
         }
         .padding(24)
-        .frame(width: 360)
+        .frame(width: 420)
     }
 }
 

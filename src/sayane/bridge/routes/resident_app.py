@@ -66,12 +66,14 @@ def register_resident_app_routes(
         from sayane.app.capabilities import create_local_capability_token
         from sayane.app.ui import build_daemon_overview_preview
 
-        return build_daemon_overview_preview(
+        payload = build_daemon_overview_preview(
             cfg.home / "run",
             capability=create_local_capability_token(["ui"]),
             host=host,
             port=port,
         )
+        payload["preflight_report"] = _daemon_preflight_payload()
+        return payload
 
     def _daemon_panel_screen_state() -> dict[str, object]:
         from sayane.app import build_daemon_panel_screen_state
@@ -88,6 +90,59 @@ def register_resident_app_routes(
             host=cfg.host,
             port=cfg.port,
         ).public_metadata()
+
+    def _daemon_packaging_status_payload() -> dict[str, object]:
+        from sayane.app import build_daemon_packaging_status
+
+        return build_daemon_packaging_status(
+            cfg.home / "run",
+            host=cfg.host,
+            port=cfg.port,
+        ).public_metadata()
+
+    def _daemon_service_targets_status_payload() -> dict[str, object]:
+        from sayane.app import build_daemon_service_targets_status
+
+        return build_daemon_service_targets_status(
+            cfg.home / "run",
+            host=cfg.host,
+            port=cfg.port,
+        ).public_metadata()
+
+    def _daemon_service_control_boundary_payload() -> dict[str, object]:
+        from sayane.app import build_daemon_service_control_boundary
+
+        return build_daemon_service_control_boundary(
+            cfg.home / "run",
+            host=cfg.host,
+            port=cfg.port,
+        ).public_metadata()
+
+    def _daemon_supervision_status_payload() -> dict[str, object]:
+        from sayane.app import build_daemon_supervision_status
+
+        return build_daemon_supervision_status(
+            cfg.home / "run",
+            host=cfg.host,
+            port=cfg.port,
+        ).public_metadata()
+
+    def _daemon_recovery_consent_status_payload() -> dict[str, object]:
+        from sayane.app import build_daemon_recovery_consent_status
+
+        return build_daemon_recovery_consent_status(
+            cfg.home / "run",
+            host=cfg.host,
+            port=cfg.port,
+        ).public_metadata()
+
+    def _daemon_preflight_payload() -> dict[str, object]:
+        from sayane.app import build_implementation_gate_preflight_report, build_preflight_event_record
+
+        report = build_implementation_gate_preflight_report()
+        payload = report.public_metadata()
+        payload["event_record"] = build_preflight_event_record(report).public_metadata()
+        return payload
 
     def _redirect_url(path: str, *, notice: str | None = None, error: str | None = None) -> str:
         query = urlencode({k: v for k, v in {"notice": notice, "error": error}.items() if v})
@@ -249,6 +304,48 @@ def register_resident_app_routes(
         return _operator_phase_status_payload()
 
     @router.get(
+        "/app/daemon-packaging-status",
+        dependencies=[Depends(require_bearer)],
+    )
+    def get_app_daemon_packaging_status() -> dict[str, object]:
+        return _daemon_packaging_status_payload()
+
+    @router.get(
+        "/app/daemon-service-targets-status",
+        dependencies=[Depends(require_bearer)],
+    )
+    def get_app_daemon_service_targets_status() -> dict[str, object]:
+        return _daemon_service_targets_status_payload()
+
+    @router.get(
+        "/app/daemon-service-control-boundary",
+        dependencies=[Depends(require_bearer)],
+    )
+    def get_app_daemon_service_control_boundary() -> dict[str, object]:
+        return _daemon_service_control_boundary_payload()
+
+    @router.get(
+        "/app/daemon-supervision-status",
+        dependencies=[Depends(require_bearer)],
+    )
+    def get_app_daemon_supervision_status() -> dict[str, object]:
+        return _daemon_supervision_status_payload()
+
+    @router.get(
+        "/app/daemon-recovery-consent-status",
+        dependencies=[Depends(require_bearer)],
+    )
+    def get_app_daemon_recovery_consent_status() -> dict[str, object]:
+        return _daemon_recovery_consent_status_payload()
+
+    @router.get(
+        "/app/daemon-preflight",
+        dependencies=[Depends(require_bearer)],
+    )
+    def get_app_daemon_preflight() -> dict[str, object]:
+        return _daemon_preflight_payload()
+
+    @router.get(
         "/app/ui",
         response_class=HTMLResponse,
     )
@@ -330,6 +427,42 @@ def register_resident_app_routes(
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
         return _operator_phase_status_payload()
+
+    @router.get("/app/ui-state/daemon-packaging-status")
+    def get_app_ui_daemon_packaging_status(
+        _token: str = Depends(require_ui_session),
+    ) -> dict[str, object]:
+        return _daemon_packaging_status_payload()
+
+    @router.get("/app/ui-state/daemon-service-targets-status")
+    def get_app_ui_daemon_service_targets_status(
+        _token: str = Depends(require_ui_session),
+    ) -> dict[str, object]:
+        return _daemon_service_targets_status_payload()
+
+    @router.get("/app/ui-state/daemon-service-control-boundary")
+    def get_app_ui_daemon_service_control_boundary(
+        _token: str = Depends(require_ui_session),
+    ) -> dict[str, object]:
+        return _daemon_service_control_boundary_payload()
+
+    @router.get("/app/ui-state/daemon-supervision-status")
+    def get_app_ui_daemon_supervision_status(
+        _token: str = Depends(require_ui_session),
+    ) -> dict[str, object]:
+        return _daemon_supervision_status_payload()
+
+    @router.get("/app/ui-state/daemon-recovery-consent-status")
+    def get_app_ui_daemon_recovery_consent_status(
+        _token: str = Depends(require_ui_session),
+    ) -> dict[str, object]:
+        return _daemon_recovery_consent_status_payload()
+
+    @router.get("/app/ui-state/daemon-preflight")
+    def get_app_ui_daemon_preflight(
+        _token: str = Depends(require_ui_session),
+    ) -> dict[str, object]:
+        return _daemon_preflight_payload()
 
     @router.get("/app/ui-state/candidates")
     def get_app_ui_candidate_queue_state(

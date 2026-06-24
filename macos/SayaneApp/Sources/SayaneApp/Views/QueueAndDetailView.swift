@@ -2,6 +2,20 @@ import SwiftUI
 
 struct QueueAndDetailView: View {
     @ObservedObject var model: AppModel
+    private struct ReviewActionItem: Identifiable {
+        let id: String
+        let title: String
+        let enabled: Bool
+        let shortcut: KeyboardShortcut
+        let action: () -> Void
+    }
+
+    private struct ActionReadinessItem: Identifiable {
+        let id: String
+        let label: String
+        let enabled: Bool
+    }
+
     private enum SortMode: String, CaseIterable {
         case newest
         case status
@@ -69,7 +83,7 @@ struct QueueAndDetailView: View {
             if let topSections = model.queueState?.topSections, !topSections.isEmpty {
                 GroupBox(model.strings.text(.topSections)) {
                     ForEach(topSections) { section in
-                        HStack { Text(section.section); Spacer(); Text(String(section.count)) }
+                        HStack { Text(model.strings.residentValueLabel(section.section)); Spacer(); Text(String(section.count)) }
                     }
                 }
             }
@@ -106,7 +120,7 @@ struct QueueAndDetailView: View {
                 )) { item in
                     VStack(alignment: .leading, spacing: 4) {
                         Text(item.id).font(.headline)
-                        Text(item.displaySummary ?? item.section ?? item.status ?? model.strings.text(.none))
+                        Text(item.displaySummary ?? item.section.map(model.strings.residentValueLabel) ?? item.status.map(model.strings.statusValueLabel) ?? model.strings.text(.none))
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                         HStack(spacing: 10) {
@@ -115,14 +129,14 @@ struct QueueAndDetailView: View {
                                     .labelStyle(.titleAndIcon)
                             }
                             if let section = item.section {
-                                Text(section)
+                                Text(model.strings.residentValueLabel(section))
                             }
                         }
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         HStack(spacing: 10) {
                             if let proposalSection = item.proposalSection {
-                                Text("\(model.strings.fieldLabel("proposal_section")): \(proposalSection)")
+                                Text("\(model.strings.fieldLabel("proposal_section")): \(model.strings.residentValueLabel(proposalSection))")
                             }
                             if let capturedAt = formattedCapturedAt(item.capturedAt) {
                                 Text("\(model.strings.fieldLabel("captured_at")): \(capturedAt)")
@@ -190,7 +204,7 @@ struct QueueAndDetailView: View {
                     Picker(model.strings.fieldLabel("section"), selection: $selectedSectionFilter) {
                         Text(model.strings.text(.allSections)).tag("")
                         ForEach(availableSections, id: \.self) { section in
-                            Text(section).tag(section)
+                            Text(model.strings.residentValueLabel(section)).tag(section)
                         }
                     }
                     Picker(model.strings.text(.sortOrder), selection: $sortMode) {
@@ -229,7 +243,7 @@ struct QueueAndDetailView: View {
                         selection: selectedSectionFilter,
                         label: { section in
                             let count = topSections.first(where: { $0.section == section })?.count ?? 0
-                            return "\(section) (\(count))"
+                            return "\(model.strings.residentValueLabel(section)) (\(count))"
                         },
                         action: { section in toggleSectionFilter(section) }
                     )
@@ -248,6 +262,7 @@ struct QueueAndDetailView: View {
                 if let record = model.selectedCandidateActionRecord {
                     CandidateResultStrip(strings: model.strings, record: record)
                 }
+                detailCopyActions
                 if model.isLoading && model.detailState == nil && model.selectedCandidateID != nil {
                     StateCardView(
                         icon: "arrow.triangle.2.circlepath",
@@ -308,6 +323,27 @@ struct QueueAndDetailView: View {
         }
     }
 
+    private var detailCopyActions: some View {
+        HStack(spacing: 8) {
+            Button(model.strings.text(.copyDetail)) {
+                model.copySelectedCandidateDetail()
+            }
+            .disabled(model.detailState == nil)
+
+            Button(model.strings.text(.copyDiff)) {
+                model.copySelectedCandidateDiff()
+            }
+            .disabled(model.diffState == nil)
+
+            Button(model.strings.text(.copyLineage)) {
+                model.copySelectedCandidateLineage()
+            }
+            .disabled(model.lineageState == nil)
+
+            Spacer()
+        }
+    }
+
     private var reviewCommandDeck: some View {
         GroupBox(model.strings.text(.commandDeck)) {
             VStack(alignment: .leading, spacing: 10) {
@@ -315,7 +351,7 @@ struct QueueAndDetailView: View {
                     .font(.headline)
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
-                        ForEach(actionReadinessItems, id: \.label) { item in
+                        ForEach(actionReadinessItems) { item in
                             StatusBadge(text: item.label, tone: item.enabled ? .positive : .neutral)
                         }
                     }
@@ -323,21 +359,12 @@ struct QueueAndDetailView: View {
                 Divider()
                 Text(model.strings.text(.queueActions))
                     .font(.headline)
-                HStack {
-                    Button(model.strings.text(.evaluate)) { model.showingEvaluateSheet = true }
-                        .keyboardShortcut("e", modifiers: [.command])
-                        .disabled(!(model.detailState?.allowedActions.evaluate ?? false))
-                    Button(model.strings.text(.approve)) {
-                        Task { await model.approveSelected() }
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                    ForEach(reviewActionItems) { item in
+                        Button(item.title) { item.action() }
+                            .keyboardShortcut(item.shortcut)
+                            .disabled(!item.enabled)
                     }
-                    .keyboardShortcut(.return, modifiers: [.command])
-                    .disabled(!(model.detailState?.allowedActions.approve ?? false))
-                    Button(model.strings.text(.reject)) { model.showingRejectSheet = true }
-                        .keyboardShortcut(.delete, modifiers: [.command])
-                        .disabled(!(model.detailState?.allowedActions.reject ?? false))
-                    Button(model.strings.text(.revise)) { model.showingReviseSheet = true }
-                        .keyboardShortcut("m", modifiers: [.command])
-                        .disabled(!(model.detailState?.allowedActions.revise ?? false))
                 }
                 Divider()
                 Text(model.strings.text(.shortcutGuide))
@@ -357,15 +384,33 @@ struct QueueAndDetailView: View {
     private func detailSummary(_ summary: CandidateUISummary) -> some View {
         GroupBox(model.strings.text(.summaryCards)) {
             VStack(alignment: .leading, spacing: 8) {
-                Text("\(model.strings.fieldLabel("status")): \(summary.status.map(model.strings.statusValueLabel) ?? model.strings.text(.none))")
-                Text("\(model.strings.fieldLabel("section")): \(summary.section ?? model.strings.text(.none))")
-                Text("\(model.strings.fieldLabel("operation")): \(summary.operation ?? model.strings.text(.none))")
-                Text("\(model.strings.fieldLabel("rde")): \(summary.rdeClass ?? model.strings.text(.none))")
+                DetailLabelValueRow(
+                    label: model.strings.fieldLabel("status"),
+                    value: summary.status.map(model.strings.statusValueLabel) ?? model.strings.text(.none)
+                )
+                DetailLabelValueRow(
+                    label: model.strings.fieldLabel("section"),
+                    value: summary.section.map(model.strings.residentValueLabel) ?? model.strings.text(.none)
+                )
+                DetailLabelValueRow(
+                    label: model.strings.fieldLabel("operation"),
+                    value: summary.operation.map(model.strings.residentValueLabel) ?? model.strings.text(.none)
+                )
+                DetailLabelValueRow(
+                    label: model.strings.fieldLabel("rde"),
+                    value: summary.rdeClass.map(model.strings.residentValueLabel) ?? model.strings.text(.none)
+                )
                 if let sourceType = summary.sourceType {
-                    Text("\(model.strings.fieldLabel("source_type")): \(sourceType)")
+                    DetailLabelValueRow(
+                        label: model.strings.fieldLabel("source_type"),
+                        value: model.strings.residentValueLabel(sourceType)
+                    )
                 }
                 if let evaluationLevel = summary.evaluationLevel {
-                    Text("\(model.strings.text(.evaluateLevel)): \(evaluationLevel)")
+                    DetailLabelValueRow(
+                        label: model.strings.text(.evaluateLevel),
+                        value: model.strings.evaluationLevelLabel(evaluationLevel)
+                    )
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -460,7 +505,7 @@ struct QueueAndDetailView: View {
             values.append("\(model.strings.text(.status)): \(model.strings.statusValueLabel(selectedStatusFilter))")
         }
         if !selectedSectionFilter.isEmpty {
-            values.append("\(model.strings.fieldLabel("section")): \(selectedSectionFilter)")
+            values.append("\(model.strings.fieldLabel("section")): \(model.strings.residentValueLabel(selectedSectionFilter))")
         }
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         if !query.isEmpty {
@@ -469,13 +514,47 @@ struct QueueAndDetailView: View {
         return values
     }
 
-    private var actionReadinessItems: [(label: String, enabled: Bool)] {
+    private var actionReadinessItems: [ActionReadinessItem] {
         let actions = model.detailState?.allowedActions
         return [
-            (label: "\(model.strings.text(.evaluate)) · \(stateLabel(actions?.evaluate ?? false))", enabled: actions?.evaluate ?? false),
-            (label: "\(model.strings.text(.approve)) · \(stateLabel(actions?.approve ?? false))", enabled: actions?.approve ?? false),
-            (label: "\(model.strings.text(.reject)) · \(stateLabel(actions?.reject ?? false))", enabled: actions?.reject ?? false),
-            (label: "\(model.strings.text(.revise)) · \(stateLabel(actions?.revise ?? false))", enabled: actions?.revise ?? false),
+            ActionReadinessItem(id: "evaluate", label: "\(model.strings.text(.evaluate)) · \(stateLabel(actions?.evaluate ?? false))", enabled: actions?.evaluate ?? false),
+            ActionReadinessItem(id: "approve", label: "\(model.strings.text(.approve)) · \(stateLabel(actions?.approve ?? false))", enabled: actions?.approve ?? false),
+            ActionReadinessItem(id: "reject", label: "\(model.strings.text(.reject)) · \(stateLabel(actions?.reject ?? false))", enabled: actions?.reject ?? false),
+            ActionReadinessItem(id: "revise", label: "\(model.strings.text(.revise)) · \(stateLabel(actions?.revise ?? false))", enabled: actions?.revise ?? false),
+        ]
+    }
+
+    private var reviewActionItems: [ReviewActionItem] {
+        let actions = model.detailState?.allowedActions
+        return [
+            ReviewActionItem(
+                id: "evaluate",
+                title: model.strings.text(.evaluate),
+                enabled: actions?.evaluate ?? false,
+                shortcut: KeyboardShortcut("e", modifiers: [.command]),
+                action: { model.showingEvaluateSheet = true }
+            ),
+            ReviewActionItem(
+                id: "approve",
+                title: model.strings.text(.approve),
+                enabled: actions?.approve ?? false,
+                shortcut: KeyboardShortcut(.return, modifiers: [.command]),
+                action: { Task { await model.approveSelected() } }
+            ),
+            ReviewActionItem(
+                id: "reject",
+                title: model.strings.text(.reject),
+                enabled: actions?.reject ?? false,
+                shortcut: KeyboardShortcut(.delete, modifiers: [.command]),
+                action: { model.showingRejectSheet = true }
+            ),
+            ReviewActionItem(
+                id: "revise",
+                title: model.strings.text(.revise),
+                enabled: actions?.revise ?? false,
+                shortcut: KeyboardShortcut("m", modifiers: [.command]),
+                action: { model.showingReviseSheet = true }
+            ),
         ]
     }
 
@@ -495,10 +574,10 @@ struct QueueAndDetailView: View {
     private func candidateAccessibilityLabel(_ item: CandidateItem) -> String {
         [
             item.id,
-            item.displaySummary ?? item.section ?? item.status ?? model.strings.text(.none),
+            item.displaySummary ?? item.section.map(model.strings.residentValueLabel) ?? item.status.map(model.strings.statusValueLabel) ?? model.strings.text(.none),
             item.status.map(model.strings.statusValueLabel),
-            item.section,
-            item.proposalSection.map { "\(model.strings.fieldLabel("proposal_section")): \($0)" },
+            item.section.map(model.strings.residentValueLabel),
+            item.proposalSection.map { "\(model.strings.fieldLabel("proposal_section")): \(model.strings.residentValueLabel($0))" },
         ]
         .compactMap { $0 }
         .joined(separator: " ")
@@ -560,15 +639,15 @@ private struct DiffSection: View {
     private var diffSummary: some View {
         GroupBox(strings.text(.diffSummary)) {
             VStack(alignment: .leading, spacing: 8) {
-                if let section = diff.section { Text("\(strings.fieldLabel("section")): \(section)") }
+                if let section = diff.section { Text("\(strings.fieldLabel("section")): \(strings.residentValueLabel(section))") }
                 if let recommendedSection = diff.recommendedSection {
                     HStack {
                         Text("\(strings.fieldLabel("recommended_section")):")
-                        StatusBadge(text: recommendedSection, tone: .caution)
+                        StatusBadge(text: strings.residentValueLabel(recommendedSection), tone: .caution)
                     }
                 }
                 if let reviewSurface = diff.reviewSurface {
-                    Text("\(strings.fieldLabel("review_surface")): \(reviewSurface)")
+                    Text("\(strings.fieldLabel("review_surface")): \(strings.residentValueLabel(reviewSurface))")
                 }
                 HStack(spacing: 8) {
                     if let profileUpdateRecommended = diff.profileUpdateRecommended {
@@ -627,17 +706,19 @@ private struct LineageSection: View {
                                 )
                                 Spacer()
                             }
-                            Text(entry.summary).bold()
+                            Text(localizedLineageSummary(for: entry)).bold()
                             if let event = entry.details["event"] {
                                 HStack {
                                     Text("\(strings.text(.timelineEvent)):")
                                     StatusBadge(text: localizedLineageValue(for: "event", value: event), tone: primaryLineageTone(for: entry))
                                 }
                             }
-                            ForEach(entry.details.keys.sorted(), id: \.self) { key in
+                            ForEach(orderedLineageDetailKeys(entry.details.keys), id: \.self) { key in
                                 if key != "event" {
-                                    Text("\(strings.lineageDetailLabel(key)): \(localizedLineageValue(for: key, value: entry.details[key] ?? ""))")
-                                        .foregroundStyle(.secondary)
+                                    DetailLabelValueRow(
+                                        label: strings.lineageDetailLabel(key),
+                                        value: localizedLineageValue(for: key, value: entry.details[key] ?? "")
+                                    )
                                 }
                             }
                         }
@@ -651,10 +732,25 @@ private struct LineageSection: View {
     }
 
     private func localizedLineageValue(for key: String, value: String) -> String {
-        if key == "status" || key == "decision" || key == "event" || key == "operation" {
+        if key.hasSuffix("_at") {
+            return formattedLineageTimestamp(value)
+        }
+        if key == "status" || key == "decision" || key == "event" || key == "from_status" || key == "to_status" {
             return strings.statusValueLabel(value)
         }
+        if key == "operation" || key == "section" || key == "proposal_section" || key == "recommended_section" || key == "review_surface" || key == "source_type" || key == "rde" || key.hasSuffix("_section") {
+            return strings.residentValueLabel(value)
+        }
         return value
+    }
+
+    private func formattedLineageTimestamp(_ rawValue: String) -> String {
+        guard let date = ISO8601DateFormatter().date(from: rawValue) else { return rawValue }
+        let relativeFormatter = RelativeDateTimeFormatter()
+        relativeFormatter.unitsStyle = .short
+        let relative = relativeFormatter.localizedString(for: date, relativeTo: Date())
+        let absolute = date.formatted(date: .abbreviated, time: .shortened)
+        return "\(relative) (\(absolute))"
     }
 
     private func primaryLineageLabel(for entry: LineageEntry) -> String {
@@ -670,17 +766,87 @@ private struct LineageSection: View {
         return entry.summary
     }
 
+    private func localizedLineageSummary(for entry: LineageEntry) -> String {
+        if let event = entry.details["event"] {
+            var components = [localizedLineageValue(for: "event", value: event)]
+            if let section = entry.details["proposal_section"] ?? entry.details["section"] {
+                components.append(localizedLineageValue(for: "section", value: section))
+            } else if let status = entry.details["status"] {
+                components.append(localizedLineageValue(for: "status", value: status))
+            }
+            return components.joined(separator: " · ")
+        }
+        if let decision = entry.details["decision"] {
+            var components = [localizedLineageValue(for: "decision", value: decision)]
+            if let status = entry.details["to_status"] ?? entry.details["status"] {
+                components.append(localizedLineageValue(for: "status", value: status))
+            }
+            return components.joined(separator: " · ")
+        }
+        if let operation = entry.details["operation"] {
+            var components = [localizedLineageValue(for: "operation", value: operation)]
+            if let status = entry.details["status"] {
+                components.append(localizedLineageValue(for: "status", value: status))
+            }
+            return components.joined(separator: " · ")
+        }
+        if let status = entry.details["status"] {
+            return localizedLineageValue(for: "status", value: status)
+        }
+        return entry.summary
+    }
+
     private func primaryLineageTone(for entry: LineageEntry) -> StatusTone {
-        let source = entry.details["event"] ?? entry.details["decision"] ?? entry.details["status"] ?? ""
-        if source.contains("approved") {
-            return .positive
+        if let event = entry.details["event"] {
+            return toneForLineageToken(event)
         }
-        if source.contains("rejected") || source.contains("reject") {
-            return .critical
+        if let decision = entry.details["decision"] {
+            return toneForLineageToken(decision)
         }
-        if source.contains("revised") || source.contains("pending") || source.contains("evaluated") {
-            return .caution
+        if let status = entry.details["to_status"] ?? entry.details["status"] {
+            return toneForLineageToken(status)
         }
         return .neutral
+    }
+
+    private func toneForLineageToken(_ token: String) -> StatusTone {
+        switch token {
+        case "approved", "candidate_approved", "captured":
+            return .positive
+        case "rejected", "candidate_rejected", "reject":
+            return .critical
+        case "evaluated", "candidate_evaluated", "candidate_revised", "revised", "pending":
+            return .caution
+        default:
+            return strings.tone(forToken: token)
+        }
+    }
+
+    private func orderedLineageDetailKeys<S: Sequence>(_ keys: S) -> [String] where S.Element == String {
+        keys.sorted { lhs, rhs in
+            let lhsPriority = lineageDetailPriority(lhs)
+            let rhsPriority = lineageDetailPriority(rhs)
+            if lhsPriority != rhsPriority {
+                return lhsPriority < rhsPriority
+            }
+            return lhs < rhs
+        }
+    }
+
+    private func lineageDetailPriority(_ key: String) -> Int {
+        switch key {
+        case "event":
+            return 0
+        case "decision", "status", "from_status", "to_status", "operation":
+            return 1
+        case "section", "proposal_section", "recommended_section", "review_surface", "source_type", "rde":
+            return 2
+        case "created_at", "captured_at", "evaluated_at", "approved_at", "rejected_at":
+            return 3
+        case "candidate_id", "source_candidate_id", "revised_candidate_id":
+            return 4
+        default:
+            return 5
+        }
     }
 }

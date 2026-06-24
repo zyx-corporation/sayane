@@ -44,8 +44,8 @@ def test_render_resident_app_home_includes_bootstrap_and_summary() -> None:
             "daemon_summary": {
                 "top_next_actions": [
                     {
-                        "kind": "runtime_init",
-                        "summary": "Initialize runtime metadata before daemon start",
+                        "command": "sayane app daemon-runtime-init --json",
+                        "reason": "Initialize runtime metadata before daemon start",
                     }
                 ]
             },
@@ -68,6 +68,7 @@ def test_render_resident_app_home_includes_bootstrap_and_summary() -> None:
     assert "/app/ui-state/home" in html
     assert "/app/ui-action/capture-clipboard" in html
     assert "紗綾音 Resident App Shell" in html
+    assert "sayane app daemon-runtime-init --json" in html
     assert "resident-shell-evaluate-form" in html
     assert "resident-shell-approve-form" in html
     assert "resident-shell-reject-form" in html
@@ -136,6 +137,7 @@ def test_render_resident_app_home_supports_japanese_locale() -> None:
     assert "表示言語" in html
     assert "保留候補を作成" in html
     assert 'value="ja"' in html
+    assert "レベル1 — クイック確認（ヒューリスティックのみ）" in html
     assert "概要" in html
     assert "停止中" in html
     assert "知識 / 概念" in html or "レビュー可能な候補はありません。" in html
@@ -220,12 +222,18 @@ def test_render_resident_app_daemon_panel_includes_service_targets_and_launchage
                 "kind": "resident_daemon_service_targets_status",
                 "current_platform": "macos",
                 "recommended_target": "macos_launchagent",
+                "policy_gates": {
+                    "platform_policy_required": True,
+                    "rollback_policy_required": True,
+                    "hybrid_packaging_gate": "service_lifecycle_and_platform_policy_closure_required",
+                },
                 "targets": [
                     {
                         "target": "macos_launchagent",
                         "platform": "macos",
                         "service_manager": "launchd",
                         "status": "supported_preview_apply_control",
+                        "packaging_gate_status": "candidate_ready_after_service_lifecycle_closure",
                     }
                 ],
             },
@@ -252,6 +260,7 @@ def test_render_resident_app_daemon_panel_includes_service_targets_and_launchage
     )
 
     assert "Service Targets" in html
+    assert "Policy Gates" in html
     assert "Packaging Status" in html
     assert "Service Control Boundary" in html
     assert "Supervision Status" in html
@@ -259,6 +268,12 @@ def test_render_resident_app_daemon_panel_includes_service_targets_and_launchage
     assert "LaunchAgent Preview" in html
     assert "LaunchAgent Status" in html
     assert "Operator Phase Status" in html
+    assert "Operator Summary Rail" in html
+    assert "Operator Workspace" in html
+    assert "Phase Closure Gates" in html
+    assert "Evidence Drill-Down" in html
+    assert "Decision Assist" in html
+    assert "Proof Diagnostics" in html
     assert "Phase Closure Checklist" in html
     assert "Blocking Reasons" in html
     assert "Current Operator Path" in html
@@ -266,6 +281,25 @@ def test_render_resident_app_daemon_panel_includes_service_targets_and_launchage
     assert "Read Surfaces" in html
     assert "sayane serve --host 127.0.0.1 --port 38741" in html
     assert "sayane app daemon-operator-phase-status --json" in html
+    assert "sayane app daemon-packaging-status --json" in html
+    assert "/app/ui-state/daemon-packaging-status" in html
+    assert "/app/ui-state/daemon-service-targets-status" in html
+    assert "/app/ui-state/daemon-service-control-boundary" in html
+    assert "/app/ui-state/daemon-supervision-status" in html
+    assert "/app/ui-state/daemon-recovery-consent-status" in html
+    assert "/app/ui-state/daemon-preflight" in html
+    assert "Implementation Gate" in html
+    assert "Keep the current gate, next command, and next read surface in one compact operator rail." in html
+    assert "supported packaging model finalized" in html
+    assert "sayane app daemon-service-targets-status --json" in html
+    assert "sayane app daemon-service-control-boundary --json" in html
+    assert "sayane app daemon-preflight --json" in html
+    assert "sayane app daemon-recovery-consent-status --json" in html
+    assert "sayane app daemon-supervision-status --json" in html
+    assert "sayane app daemon-preflight --json" in html
+    assert "sayane app daemon-proof-diagnostics --operation-class bridge_health --json" in html
+    assert "service_lifecycle_and_platform_policy_closure_required" in html
+    assert "candidate_ready_after_service_lifecycle_closure" in html
     assert "launchctl bootstrap" in html
     assert "com.sayane.resident.bridge" in html
 
@@ -277,6 +311,10 @@ def test_resident_app_home_translates_read_surface_purposes_in_japanese() -> Non
             "read_surfaces": [
                 {"path": "/app/overview", "purpose": "primary initial screen payload"},
                 {"path": "/app/candidates", "purpose": "reviewable candidate queue"},
+                {
+                    "path": "/app/operator-phase-status",
+                    "purpose": "app-facing post-app operator packaging and supervision phase status read",
+                },
             ],
         },
         {
@@ -297,6 +335,7 @@ def test_resident_app_home_translates_read_surface_purposes_in_japanese() -> Non
 
     assert "初期画面の主要ペイロード" in html
     assert "レビュー可能な候補キュー" in html
+    assert "app 向け post-app オペレーター packaging / supervision フェーズ状態の読取" in html
 
 
 def test_resident_app_japanese_display_values_cover_status_and_source_tokens() -> None:
@@ -441,7 +480,7 @@ def test_render_resident_app_candidate_queue_links_to_detail() -> None:
     assert "紗綾音 Resident App Candidate Queue" in html
     assert "/app/ui/candidates/cand-001" in html
     assert "Resident queue preview" in html
-    assert "1 / Preserved" in html
+    assert "Quick check / Preserved" in html
     assert "Pending:" in html
     assert "Evaluated:" in html
     assert "Queue Status Counts" in html
@@ -471,9 +510,10 @@ def test_render_resident_app_candidate_queue_supports_japanese_status_labels() -
 
     assert "保留:" in html
     assert "評価済み:" in html
+    assert "クイック確認 / 保存された要素" in html
     assert "<strong>保留</strong>: 1" in html
     assert "<strong>評価済み</strong>: 2" in html
-    assert "1 / 保存された要素" in html
+    assert "クイック確認 / 保存された要素" in html
 
 
 def test_render_resident_app_candidate_diff_supports_japanese_labels() -> None:
@@ -520,6 +560,11 @@ def test_render_resident_app_candidate_detail_links_to_diff() -> None:
     assert '/app/ui/candidates/cand-001/approve' in html
     assert '/app/ui/candidates/cand-001/reject' in html
     assert "Evaluate before approve." in html
+    assert '<select id="evaluate-level" name="level">' in html
+    assert "Level 1 — Quick check (heuristics only)" in html
+    assert "Level 2 — Local AI check (includes Level 1)" in html
+    assert "Level 3 — External AI check (includes Level 1)" in html
+    assert 'type="number" min="1" max="3" name="level"' not in html
     assert "Action guidance" in html
     assert "Not evaluated yet" in html
     assert "add" in html
@@ -543,7 +588,7 @@ def test_render_resident_app_candidate_detail_shows_rde_guidance_when_evaluated(
 
     assert "RDE class: Preserved" in html
     assert "pill-evaluated" in html
-    assert "Level 1 / Preserved" in html
+    assert "Quick check / Preserved" in html
 
 
 def test_render_resident_app_candidate_diff_renders_payload() -> None:
@@ -678,6 +723,7 @@ def test_render_resident_app_candidate_detail_supports_japanese_locale() -> None
     assert "<dt>セクション</dt>" in html
     assert "<dt>操作</dt>" in html
     assert "<dt>レベル</dt>" in html
+    assert "レベル1 — クイック確認（ヒューリスティックのみ）" in html
     assert "知識 / 概念" in html
     assert "クリップボード" in html
     assert ">追加<" in html
@@ -741,7 +787,12 @@ def test_render_resident_app_daemon_panel_supports_japanese_locale() -> None:
                     }
                 },
             },
-            "next_actions": [],
+            "next_actions": [
+                {
+                    "command": "sayane app daemon-operator-phase-status --json",
+                    "reason": "Review the current packaging, service, supervision, and recovery phase contract before post-app operator changes.",
+                }
+            ],
         },
         locale="ja",
     )
@@ -754,6 +805,7 @@ def test_render_resident_app_daemon_panel_supports_japanese_locale() -> None:
     assert "準備状態" in html
     assert "停止中" in html
     assert "いいえ" in html
+    assert "現在の packaging・service・supervision・recovery フェーズ契約を確認します。" in html
     assert "ランタイムルート" in html
     assert "作成" in html
     assert "PID ファイル" in html

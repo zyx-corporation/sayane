@@ -65,6 +65,36 @@ def build_app_contract() -> dict[str, Any]:
                 "purpose": "app-facing post-app operator packaging and supervision phase status read",
             },
             {
+                "path": "/app/daemon-packaging-status",
+                "payload_kind": "resident_daemon_packaging_status",
+                "purpose": "app-facing packaging boundary read for browser or token-backed drill-down",
+            },
+            {
+                "path": "/app/daemon-service-targets-status",
+                "payload_kind": "resident_daemon_service_targets_status",
+                "purpose": "app-facing service target status read for browser or token-backed drill-down",
+            },
+            {
+                "path": "/app/daemon-service-control-boundary",
+                "payload_kind": "resident_daemon_service_control_boundary",
+                "purpose": "app-facing service control boundary read for browser or token-backed drill-down",
+            },
+            {
+                "path": "/app/daemon-supervision-status",
+                "payload_kind": "resident_daemon_supervision_status",
+                "purpose": "app-facing supervision status read for browser or token-backed drill-down",
+            },
+            {
+                "path": "/app/daemon-recovery-consent-status",
+                "payload_kind": "resident_daemon_recovery_consent_status",
+                "purpose": "app-facing recovery and consent read for browser or token-backed drill-down",
+            },
+            {
+                "path": "/app/daemon-preflight",
+                "payload_kind": "resident_daemon_preflight_report",
+                "purpose": "app-facing implementation gate preflight read for browser or token-backed drill-down",
+            },
+            {
                 "path": "cli:sayane app daemon-operator-phase-status --json",
                 "payload_kind": "resident_daemon_operator_phase_status",
                 "purpose": "aggregated post-app operator packaging and supervision phase status read",
@@ -153,6 +183,36 @@ def build_app_contract() -> dict[str, Any]:
                 "path": "/app/ui-state/operator-phase-status",
                 "payload_kind": "resident_daemon_operator_phase_status",
                 "purpose": "cookie-backed local UI operator phase status read",
+            },
+            {
+                "path": "/app/ui-state/daemon-packaging-status",
+                "payload_kind": "resident_daemon_packaging_status",
+                "purpose": "cookie-backed local UI packaging read for bridge-hosted drill-down",
+            },
+            {
+                "path": "/app/ui-state/daemon-service-targets-status",
+                "payload_kind": "resident_daemon_service_targets_status",
+                "purpose": "cookie-backed local UI service-target read for bridge-hosted drill-down",
+            },
+            {
+                "path": "/app/ui-state/daemon-service-control-boundary",
+                "payload_kind": "resident_daemon_service_control_boundary",
+                "purpose": "cookie-backed local UI service-boundary read for bridge-hosted drill-down",
+            },
+            {
+                "path": "/app/ui-state/daemon-supervision-status",
+                "payload_kind": "resident_daemon_supervision_status",
+                "purpose": "cookie-backed local UI supervision read for bridge-hosted drill-down",
+            },
+            {
+                "path": "/app/ui-state/daemon-recovery-consent-status",
+                "payload_kind": "resident_daemon_recovery_consent_status",
+                "purpose": "cookie-backed local UI recovery read for bridge-hosted drill-down",
+            },
+            {
+                "path": "/app/ui-state/daemon-preflight",
+                "payload_kind": "resident_daemon_preflight_report",
+                "purpose": "cookie-backed local UI implementation-gate preflight read for bridge-hosted drill-down",
             },
             {
                 "path": "/app/ui-state/candidates",
@@ -261,6 +321,12 @@ def build_app_contract() -> dict[str, Any]:
             "GET /app/ui",
             "GET /app/ui-state/home",
             "GET /app/ui-state/operator-phase-status",
+            "GET /app/ui-state/daemon-packaging-status",
+            "GET /app/ui-state/daemon-service-targets-status",
+            "GET /app/ui-state/daemon-service-control-boundary",
+            "GET /app/ui-state/daemon-supervision-status",
+            "GET /app/ui-state/daemon-recovery-consent-status",
+            "GET /app/ui-state/daemon-preflight",
             "GET /app/ui-state/candidates",
             "GET /app/ui-state/candidates/{id}",
             "GET /app/ui-state/candidates/{id}/diff",
@@ -399,6 +465,10 @@ def build_app_contract() -> dict[str, Any]:
             {
                 "command": "sayane app daemon-recovery-consent-status --json",
                 "purpose": "current recovery flow and consent boundary status",
+            },
+            {
+                "command": "sayane app daemon-preflight --json",
+                "purpose": "schema-only resident daemon implementation-gate preflight",
             },
             {
                 "command": "sayane app daemon-proof-diagnostics --operation-class bridge_health --json",

@@ -96,7 +96,11 @@ BOOTSTRAP_COPY_LABELS: dict[str, str] = {
     "label.supervision_status": "Supervision Status",
     "label.recovery_consent_status": "Recovery and Consent",
     "label.operator_phase_status": "Operator Phase Status",
+    "label.proof_diagnostics": "Proof Diagnostics",
+    "label.policy_gates": "Policy Gates",
     "label.phase_closure_checklist": "Phase Closure Checklist",
+    "label.phase_closure_gates": "Phase Closure Gates",
+    "label.implementation_gate": "Implementation Gate",
     "label.blocking_reasons": "Blocking Reasons",
     "label.operator_path": "Current Operator Path",
     "label.workstreams": "Workstreams",
@@ -152,6 +156,10 @@ BOOTSTRAP_COPY_LABELS: dict[str, str] = {
     "label.evaluation_summary_cards": "Evaluation Summary",
     "label.route_state": "Route State",
     "label.operator_workspace": "Operator Workspace",
+    "label.operator_summary_rail": "Operator Summary Rail",
+    "label.evidence_drill_down": "Evidence Drill-Down",
+    "label.decision_assist": "Decision Assist",
+    "label.snapshot": "Snapshot",
     "label.primary_navigation": "Primary Navigation",
     "label.session_actions": "Session Actions",
     "label.shell_workspace": "Shell Workspace",
@@ -192,6 +200,7 @@ BOOTSTRAP_COPY_DETAILS: dict[str, str] = {
     "detail.empty_service_targets": "No service target entries.",
     "detail.empty_launchagent_preview": "No LaunchAgent preview is available on this platform.",
     "detail.empty_launchagent_status": "No LaunchAgent status is available on this platform.",
+    "detail.proof_diagnostics_summary": "Proof-oriented read commands for identity, readiness, and API readiness.",
     "detail.empty_review_items": "No review items.",
     "detail.empty_quick_links": "No quick links.",
     "detail.target_none": "No active target.",
@@ -200,6 +209,22 @@ BOOTSTRAP_COPY_DETAILS: dict[str, str] = {
     "detail.skip_to_content": "Skip to content",
     "detail.workspace_desc": "Summary-first resident workflow for queue, review, capture, and daemon observation.",
     "detail.session_action_hint": "Use logout to invalidate this browser session without rotating the Bridge bearer.",
+    "detail.operator_summary_rail_summary": "Keep the current gate, next command, and next read surface in one compact operator rail.",
+    "detail.decision_assist_summary": "Show the next action first with a short summary and command.",
+    "detail.phase_closure_gates_summary": "Map unfinished gates to the surfaces that clarify them.",
+    "detail.service_control_assist_summary": "Check the service control boundary first to confirm the allowed local control path.",
+    "detail.recovery_assist_summary": "Review the recovery flow and consent boundary first.",
+    "detail.supervision_assist_summary": "Review the current supervision mode and deferred background surfaces.",
+    "detail.launchagent_assist_runtime_init": "Review the runtime-init preview first.",
+    "detail.launchagent_assist_cleanup": "Review the cleanup preview before touching the local service line.",
+    "detail.launchagent_assist_repair": "Review the repair preview before touching the local service line.",
+    "detail.launchagent_assist_healthy": "Re-check the current LaunchAgent state from the inspection commands.",
+    "detail.evaluate_level_1": "Level 1 — Quick check (heuristics only)",
+    "detail.evaluate_level_2": "Level 2 — Local AI check (includes Level 1)",
+    "detail.evaluate_level_3": "Level 3 — External AI check (includes Level 1)",
+    "detail.evaluate_level_short_1": "Quick check",
+    "detail.evaluate_level_short_2": "Local AI check",
+    "detail.evaluate_level_short_3": "External AI check",
 }
 
 BOOTSTRAP_COPY_TABLES: dict[str, str] = {
@@ -271,6 +296,7 @@ BOOTSTRAP_COPY_VALUES: dict[str, str] = {
     "value.rejected": "rejected",
     "value.stopped": "stopped",
     "value.readiness_not_ready": "not ready",
+    "value.resident_daemon_implementation_gate": "resident daemon implementation gate",
     "value.review_required": "review required",
     "value.manual_review_required": "manual review required",
     "value.present_review_required": "present and requires review",
@@ -340,6 +366,7 @@ DISPLAY_PHRASE_KEYS: dict[str, str] = {
     "Runtime initialization preview currently requires manual review.": "phrase.reason_runtime_init_manual_review",
     "Reviewed stale-file cleanup candidates are available.": "phrase.reason_reviewed_cleanup_available",
     "Missing runtime directories can be reviewed for explicit repair.": "phrase.reason_missing_runtime_repair",
+    "Review the current packaging, service, supervision, and recovery phase contract before post-app operator changes.": "phrase.reason_review_operator_phase_contract",
     "Observe bounded readiness signals for the running local daemon.": "phrase.reason_observe_bounded_readiness",
     "Current daemon state is stable; refresh status when needed.": "phrase.reason_state_stable_refresh",
     "Review the current macOS, Linux, and Windows service target contract before service-oriented control.": "phrase.reason_review_service_target_contract",
@@ -353,14 +380,35 @@ READ_SURFACE_PURPOSE_JA: dict[str, str] = {
     "primary initial screen payload": "初期画面の主要ペイロード",
     "framework-neutral home screen state": "フレームワーク非依存のホーム画面状態",
     "focused daemon diagnostics panel": "重点デーモン診断パネル",
+    "app-facing post-app operator packaging and supervision phase status read": "app 向け post-app オペレーター packaging / supervision フェーズ状態の読取",
+    "app-facing packaging boundary read for browser or token-backed drill-down": "ブラウザまたはトークンベース drill-down 向け app 側 packaging 境界の読取",
+    "app-facing service target status read for browser or token-backed drill-down": "ブラウザまたはトークンベース drill-down 向け app 側 service target 状態の読取",
+    "app-facing service control boundary read for browser or token-backed drill-down": "ブラウザまたはトークンベース drill-down 向け app 側 service control 境界の読取",
+    "app-facing supervision status read for browser or token-backed drill-down": "ブラウザまたはトークンベース drill-down 向け app 側 supervision 状態の読取",
+    "app-facing recovery and consent read for browser or token-backed drill-down": "ブラウザまたはトークンベース drill-down 向け app 側 recovery / consent の読取",
+    "aggregated post-app operator packaging and supervision phase status read": "集約済み post-app オペレーター packaging / supervision フェーズ状態の読取",
+    "operator-facing packaging and supervision boundary read": "オペレーター向け packaging / supervision 境界の読取",
+    "cross-platform operator-facing service target status read": "クロスプラットフォームのオペレーター向け service target 状態の読取",
+    "operator-facing allowed control and deferred service boundary read": "オペレーター向けの許可済み control / deferred service 境界の読取",
+    "operator-facing supervision UX status read": "オペレーター向け supervision UX 状態の読取",
+    "macOS LaunchAgent preview for the current local daemon line": "現在のローカルデーモン系列向け macOS LaunchAgent プレビュー",
+    "macOS LaunchAgent status read for plist presence and current launchd loaded state": "plist の有無と現在の launchd loaded 状態についての macOS LaunchAgent 状態読取",
+    "operator-facing recovery and consent boundary read": "オペレーター向け recovery / consent 境界の読取",
     "framework-neutral daemon panel state": "フレームワーク非依存のデーモンパネル状態",
     "reviewable candidate queue": "レビュー可能な候補キュー",
     "framework-neutral candidate queue state": "フレームワーク非依存の候補キュー状態",
     "candidate detail panel": "候補詳細パネル",
     "framework-neutral candidate detail state": "フレームワーク非依存の候補詳細状態",
     "review diff panel": "レビュー差分パネル",
+    "candidate lineage panel for native or token-backed clients": "ネイティブまたはトークンベースクライアント向け候補 lineage パネル",
     "cookie-backed local UI contract read for the Bridge-hosted local shell": "Cookie ベースのローカルUI契約読取（Bridge ホストのローカルシェル向け）",
     "cookie-backed local UI home screen state": "Cookie ベースのローカルUIホーム画面状態",
+    "cookie-backed local UI operator phase status read": "Cookie ベースのローカルUI operator phase 状態の読取",
+    "cookie-backed local UI packaging read for bridge-hosted drill-down": "Bridge ホスト drill-down 向け Cookie ベースのローカルUI packaging 読取",
+    "cookie-backed local UI service-target read for bridge-hosted drill-down": "Bridge ホスト drill-down 向け Cookie ベースのローカルUI service-target 読取",
+    "cookie-backed local UI service-boundary read for bridge-hosted drill-down": "Bridge ホスト drill-down 向け Cookie ベースのローカルUI service-boundary 読取",
+    "cookie-backed local UI supervision read for bridge-hosted drill-down": "Bridge ホスト drill-down 向け Cookie ベースのローカルUI supervision 読取",
+    "cookie-backed local UI recovery read for bridge-hosted drill-down": "Bridge ホスト drill-down 向け Cookie ベースのローカルUI recovery 読取",
     "cookie-backed local UI candidate queue state": "Cookie ベースのローカルUI候補キュー状態",
     "cookie-backed local UI candidate detail state": "Cookie ベースのローカルUI候補詳細状態",
     "cookie-backed local UI candidate diff payload": "Cookie ベースのローカルUI候補差分ペイロード",
@@ -392,6 +440,7 @@ BOOTSTRAP_COPY_PHRASES: dict[str, str] = {
     "phrase.reason_runtime_init_manual_review": "Runtime initialization preview currently requires manual review.",
     "phrase.reason_reviewed_cleanup_available": "Reviewed stale-file cleanup candidates are available.",
     "phrase.reason_missing_runtime_repair": "Missing runtime directories can be reviewed for explicit repair.",
+    "phrase.reason_review_operator_phase_contract": "Review the current packaging, service, supervision, and recovery phase contract before post-app operator changes.",
     "phrase.reason_observe_bounded_readiness": "Observe bounded readiness signals for the running local daemon.",
     "phrase.reason_state_stable_refresh": "Current daemon state is stable; refresh status when needed.",
     "phrase.reason_review_service_target_contract": "Review the current macOS, Linux, and Windows service target contract before service-oriented control.",
@@ -498,7 +547,11 @@ BOOTSTRAP_COPY_JA_LABELS: dict[str, str] = {
     "label.supervision_status": "監視状態",
     "label.recovery_consent_status": "復旧と同意",
     "label.operator_phase_status": "運用フェーズ状態",
+    "label.proof_diagnostics": "Proof Diagnostics",
+    "label.policy_gates": "ポリシーゲート",
     "label.phase_closure_checklist": "フェーズ完了チェックリスト",
+    "label.phase_closure_gates": "フェーズ完了ゲート",
+    "label.implementation_gate": "実装ゲート",
     "label.blocking_reasons": "阻害要因",
     "label.operator_path": "現在の運用経路",
     "label.workstreams": "ワークストリーム",
@@ -554,6 +607,10 @@ BOOTSTRAP_COPY_JA_LABELS: dict[str, str] = {
     "label.evaluation_summary_cards": "評価要約",
     "label.route_state": "ルート状態",
     "label.operator_workspace": "オペレーター作業領域",
+    "label.operator_summary_rail": "オペレーター要約レール",
+    "label.evidence_drill_down": "根拠ドリルダウン",
+    "label.decision_assist": "判断支援",
+    "label.snapshot": "スナップショット",
     "label.primary_navigation": "主要ナビゲーション",
     "label.session_actions": "セッション操作",
     "label.shell_workspace": "シェル作業領域",
@@ -594,6 +651,7 @@ BOOTSTRAP_COPY_JA_DETAILS: dict[str, str] = {
     "detail.empty_service_targets": "表示できるサービスターゲットはありません。",
     "detail.empty_launchagent_preview": "このプラットフォームでは LaunchAgent プレビューを利用できません。",
     "detail.empty_launchagent_status": "このプラットフォームでは LaunchAgent 状態を利用できません。",
+    "detail.proof_diagnostics_summary": "identity / readiness / API readiness の proof-oriented 読み取りコマンドです。",
     "detail.empty_review_items": "表示できるレビュー項目はありません。",
     "detail.empty_quick_links": "表示できるクイックリンクはありません。",
     "detail.target_none": "現在の対象はありません。",
@@ -602,6 +660,22 @@ BOOTSTRAP_COPY_JA_DETAILS: dict[str, str] = {
     "detail.skip_to_content": "本文へ移動",
     "detail.workspace_desc": "候補キュー、レビュー、取り込み、デーモン観測を要約優先で扱う Resident ワークフローです。",
     "detail.session_action_hint": "logout を使うと Bridge bearer を回さずに、このブラウザセッションだけを無効化できます。",
+    "detail.operator_summary_rail_summary": "現在のゲート、次のコマンド、次の read surface を 1 つの要約レールにまとめます。",
+    "detail.decision_assist_summary": "次の一手を要約とコマンドで先に示します。",
+    "detail.phase_closure_gates_summary": "未完了ゲートと確認先を対応づけて示します。",
+    "detail.service_control_assist_summary": "まず service control boundary を確認して、許可された local control を見極めます。",
+    "detail.recovery_assist_summary": "復旧フローと consent boundary を先に確認します。",
+    "detail.supervision_assist_summary": "現在の supervision mode と deferred background surface を確認します。",
+    "detail.launchagent_assist_runtime_init": "runtime init preview を先に確認します。",
+    "detail.launchagent_assist_cleanup": "ローカル service line に触る前に cleanup preview を確認します。",
+    "detail.launchagent_assist_repair": "ローカル service line に触る前に repair preview を確認します。",
+    "detail.launchagent_assist_healthy": "確認系コマンドから現在の LaunchAgent 状態を再確認します。",
+    "detail.evaluate_level_1": "レベル1 — クイック確認（ヒューリスティックのみ）",
+    "detail.evaluate_level_2": "レベル2 — ローカルAI確認（レベル1を含む）",
+    "detail.evaluate_level_3": "レベル3 — 外部AI確認（レベル1を含む）",
+    "detail.evaluate_level_short_1": "クイック確認",
+    "detail.evaluate_level_short_2": "ローカルAI確認",
+    "detail.evaluate_level_short_3": "外部AI確認",
 }
 
 BOOTSTRAP_COPY_JA_TABLES: dict[str, str] = {
@@ -673,6 +747,7 @@ BOOTSTRAP_COPY_JA_VALUES: dict[str, str] = {
     "value.rejected": "却下済み",
     "value.stopped": "停止中",
     "value.readiness_not_ready": "未準備",
+    "value.resident_daemon_implementation_gate": "resident daemon 実装ゲート",
     "value.review_required": "レビュー要",
     "value.manual_review_required": "手動レビュー要",
     "value.present_review_required": "要レビューで存在",
@@ -755,6 +830,7 @@ BOOTSTRAP_COPY_JA_PHRASES: dict[str, str] = {
     "phrase.reason_runtime_init_manual_review": "ランタイム初期化プレビューは現在手動レビューを要します。",
     "phrase.reason_reviewed_cleanup_available": "レビュー済みの古いファイル向けクリーンアップ候補を利用できます。",
     "phrase.reason_missing_runtime_repair": "不足しているランタイムディレクトリは明示的な修復対象として確認できます。",
+    "phrase.reason_review_operator_phase_contract": "post-app のオペレーター変更前に、現在の packaging・service・supervision・recovery フェーズ契約を確認します。",
     "phrase.reason_observe_bounded_readiness": "実行中のローカルデーモンについて境界付きの準備状態シグナルを観測します。",
     "phrase.reason_state_stable_refresh": "現在のデーモン状態は安定しています。必要に応じて状態を更新してください。",
     "phrase.reason_review_service_target_contract": "サービス指向の制御前に、macOS・Linux・Windows のサービスターゲット契約を確認します。",
@@ -820,6 +896,57 @@ def _translate_display_phrase(text: str | None, locale: str = DEFAULT_BOOTSTRAP_
         return ""
     copy_key = DISPLAY_PHRASE_KEYS.get(text)
     return _copy(copy_key, locale) if copy_key else text
+
+
+def _daemon_action_display(
+    action: dict[str, Any],
+    locale: str = DEFAULT_BOOTSTRAP_LOCALE,
+) -> tuple[str, str]:
+    primary = action.get("command") or action.get("kind") or "action"
+    secondary = action.get("reason") or action.get("summary") or ""
+    return (
+        _translate_display_token(primary, locale),
+        _translate_display_phrase(secondary, locale),
+    )
+
+
+def _evaluation_level_options(
+    selected: int,
+    locale: str = DEFAULT_BOOTSTRAP_LOCALE,
+) -> str:
+    options: list[str] = []
+    for level in (1, 2, 3):
+        selected_attr = ' selected="selected"' if level == selected else ""
+        options.append(
+            f'<option value="{level}"{selected_attr}>{escape(_evaluation_level_label(level, locale, detailed=True))}</option>'
+        )
+    return "".join(options)
+
+
+def _evaluation_level_label(
+    level: Any,
+    locale: str = DEFAULT_BOOTSTRAP_LOCALE,
+    *,
+    detailed: bool = False,
+) -> str:
+    try:
+        normalized = int(level)
+    except (TypeError, ValueError):
+        return str(level) if level is not None else "—"
+    copy_key = (
+        {
+            1: "detail.evaluate_level_1",
+            2: "detail.evaluate_level_2",
+            3: "detail.evaluate_level_3",
+        }
+        if detailed
+        else {
+            1: "detail.evaluate_level_short_1",
+            2: "detail.evaluate_level_short_2",
+            3: "detail.evaluate_level_short_3",
+        }
+    ).get(normalized)
+    return _copy(copy_key, locale) if copy_key else str(normalized)
 
 
 def _translate_display_token(value: Any, locale: str = DEFAULT_BOOTSTRAP_LOCALE) -> str:
@@ -1115,6 +1242,7 @@ def _render_repair_preview(locale: str, payload: dict[str, Any]) -> str:
 
 def _render_service_targets_status(locale: str, payload: dict[str, Any]) -> str:
     targets = payload.get("targets", [])
+    policy_gates = payload.get("policy_gates", {})
     target_rows = "".join(
         (
             "<tr>"
@@ -1122,10 +1250,11 @@ def _render_service_targets_status(locale: str, payload: dict[str, Any]) -> str:
             f"<td>{escape(_translate_display_token(item.get('platform', ''), locale))}</td>"
             f"<td>{escape(str(item.get('service_manager', '')))}</td>"
             f"<td>{escape(_translate_display_token(item.get('status', ''), locale))}</td>"
+            f"<td>{escape(_translate_display_token(item.get('packaging_gate_status', ''), locale))}</td>"
             "</tr>"
         )
         for item in targets
-    ) or f'<tr><td colspan="4" class="muted">{escape(_copy("detail.empty_service_targets", locale))}</td></tr>'
+    ) or f'<tr><td colspan="5" class="muted">{escape(_copy("detail.empty_service_targets", locale))}</td></tr>'
     metadata = {
         "kind": payload.get("kind"),
         "current_platform": payload.get("current_platform"),
@@ -1133,11 +1262,14 @@ def _render_service_targets_status(locale: str, payload: dict[str, Any]) -> str:
     }
     return (
         f"{_render_kv_panel(locale, metadata)}"
-        '<table class="compact-table"><thead><tr>'
+        + f"<h3>{escape(_copy('label.policy_gates', locale))}</h3>"
+        + _render_kv_panel(locale, policy_gates)
+        + '<table class="compact-table"><thead><tr>'
         f'<th>{escape(_copy("table.target", locale))}</th>'
         f'<th>{escape(_copy("field.section", locale).replace("Section", "Platform").replace("セクション", "プラットフォーム"))}</th>'
         f'<th>{escape(_copy("label.operation", locale).replace("Operation", "Service Manager").replace("操作", "サービスマネージャ"))}</th>'
         f'<th>{escape(_copy("table.status", locale))}</th>'
+        f'<th>{escape(_copy("label.policy_gates", locale))}</th>'
         '</tr></thead>'
         f"<tbody>{target_rows}</tbody></table>"
     )
@@ -1262,6 +1394,517 @@ def _render_operator_phase_status(locale: str, payload: dict[str, Any] | None) -
     )
 
 
+def _daemon_operator_workspace_items(payload: dict[str, Any]) -> list[dict[str, str]]:
+    packaging_status = payload.get("packaging_status", {})
+    service_targets_status = payload.get("service_targets_status", {})
+    service_control_boundary = payload.get("service_control_boundary", {})
+    supervision_status = payload.get("supervision_status", {})
+    recovery_consent_status = payload.get("recovery_consent_status", {})
+
+    packaging_blocker = next(
+        (
+            blocker
+            for item in packaging_status.get("packaging_decision", {}).get("candidate_models", [])
+            for blocker in item.get("blocked_by", [])
+        ),
+        "",
+    )
+    service_gate = service_targets_status.get("policy_gates", {}).get("hybrid_packaging_gate", "")
+    supervision_candidate = next(
+        (
+            item.get("surface", "")
+            for item in supervision_status.get("background_surfaces", {}).get("candidate_surfaces", [])
+            if item.get("surface")
+        ),
+        "",
+    )
+    recovery_flow = next(
+        (str(item) for item in recovery_consent_status.get("recommended_recovery_flow", []) if item),
+        "",
+    )
+
+    return [
+        {
+            "title": "label.packaging_status",
+            "status": str(packaging_status.get("packaging_model", "")),
+            "summary": str(packaging_status.get("packaging_model", "")),
+            "detail": str(packaging_blocker),
+            "command": "sayane app daemon-packaging-status --json",
+            "path": "/app/ui-state/daemon-packaging-status",
+        },
+        {
+            "title": "label.service_targets",
+            "status": str(service_targets_status.get("recommended_target", "")),
+            "summary": f"{service_targets_status.get('current_platform', '')} → {service_targets_status.get('recommended_target', '')}",
+            "detail": str(service_gate),
+            "command": "sayane app daemon-service-targets-status --json",
+            "path": "/app/ui-state/daemon-service-targets-status",
+        },
+        {
+            "title": "label.supervision_status",
+            "status": str(supervision_status.get("supervision_mode", "")),
+            "summary": str(supervision_status.get("supervision_mode", "")),
+            "detail": str(supervision_candidate),
+            "command": "sayane app daemon-supervision-status --json",
+            "path": "/app/ui-state/daemon-supervision-status",
+        },
+        {
+            "title": "label.recovery_consent_status",
+            "status": str(recovery_consent_status.get("consent_model", "")),
+            "summary": f"{recovery_consent_status.get('consent_model', '')} · {recovery_consent_status.get('recovery_model', '')}",
+            "detail": str(recovery_flow),
+            "command": "sayane app daemon-recovery-consent-status --json",
+            "path": "/app/ui-state/daemon-recovery-consent-status",
+        },
+        {
+            "title": "label.service_control_boundary",
+            "status": str(service_control_boundary.get("service_plane", {}).get("status", "")),
+            "summary": str(service_control_boundary.get("control_plane", {}).get("status", "")),
+            "detail": next((str(item) for item in service_control_boundary.get("service_plane", {}).get("deferred_commands", []) if item), ""),
+            "command": "sayane app daemon-service-control-boundary --json",
+            "path": "/app/ui-state/daemon-service-control-boundary",
+        },
+    ]
+
+
+def _render_daemon_operator_workspace(locale: str, payload: dict[str, Any]) -> str:
+    items = _daemon_operator_workspace_items(payload)
+    if not items:
+        return f'<p class="muted">{escape(_copy("empty.metadata", locale))}</p>'
+    cards = []
+    for item in items:
+        detail = (
+            f"<p class=\"muted\">{escape(_translate_display_token(item['detail'], locale))}</p>"
+            if item["detail"]
+            else ""
+        )
+        cards.append(
+            _render_card(
+                _copy(item["title"], locale),
+                escape(_translate_display_token(item["summary"], locale)),
+                detail=(
+                    f"<div class=\"detail\">"
+                    f"{escape(_copy('label.status', locale))}: {escape(_translate_display_token(item['status'], locale))}<br>"
+                    f"{escape(_copy('label.json_surface', locale))}: <a href=\"{escape(item['path'])}\"><code>{escape(item['path'])}</code></a><br>"
+                    f"<code>{escape(item['command'])}</code>"
+                    f"</div>{detail}"
+                ),
+            )
+        )
+    return _render_cards_grid(cards)
+
+
+def _render_operator_summary_rail(locale: str, payload: dict[str, Any]) -> str:
+    operator_phase = payload.get("operator_phase_status", {})
+    preflight = payload.get("preflight_report", {})
+    checklist = operator_phase.get("phase_closure_checklist", [])
+    next_gate = next((item for item in checklist if item.get("status") != "pass"), checklist[0] if checklist else None)
+    next_gate_name = str(next_gate.get("item", "")) if next_gate else ""
+    next_gate_status = str(next_gate.get("status", "")) if next_gate else ""
+    next_gate_destination = _phase_closure_gate_destination(next_gate_name) if next_gate_name else None
+
+    assist_cards = _daemon_decision_assist_entries(locale, payload)
+    next_assist = assist_cards[0] if assist_cards else None
+    next_gate_link_html = (
+        f'<a href="{escape(next_gate_destination[2])}"><code>{escape(next_gate_destination[2])}</code></a><br><code>{escape(next_gate_destination[1])}</code>'
+        if next_gate_destination
+        else ""
+    )
+    next_assist_link_html = (
+        f'<a href="{escape(next_assist["path"])}"><code>{escape(next_assist["path"])}</code></a><br><code>{escape(next_assist["command"])}</code>'
+        if next_assist
+        else ""
+    )
+
+    cards = [
+        _render_card(
+            _copy("label.operator_phase_status", locale),
+            " · ".join(
+                part
+                for part in [
+                    _translate_display_token(operator_phase.get("phase_readiness", ""), locale),
+                    _translate_display_token(operator_phase.get("phase_status", ""), locale),
+                ]
+                if part
+            ) or _copy("empty.metadata", locale),
+            detail=(
+                f"<div class=\"detail\">"
+                f"<a href=\"/app/ui-state/operator-phase-status\"><code>/app/ui-state/operator-phase-status</code></a><br>"
+                f"<code>sayane app daemon-operator-phase-status --json</code>"
+                f"</div>"
+            ),
+            detail_is_html=True,
+        ),
+        _render_card(
+            _copy("label.implementation_gate", locale),
+            _translate_display_token(preflight.get("status", ""), locale) or _copy("empty.metadata", locale),
+            detail=(
+                f"<div class=\"detail\">"
+                f"{escape(_translate_display_token(preflight.get('target_scope', ''), locale))}<br>"
+                f"<a href=\"/app/ui-state/daemon-preflight\"><code>/app/ui-state/daemon-preflight</code></a><br>"
+                f"<code>sayane app daemon-preflight --json</code>"
+                f"</div>"
+            ),
+            detail_is_html=True,
+        ),
+        _render_card(
+            _copy("label.phase_closure_gates", locale),
+            _translate_display_token(next_gate_name, locale) if next_gate_name else _copy("empty.metadata", locale),
+            detail=(
+                f"<div class=\"detail\">"
+                f"{escape(_translate_display_token(next_gate_status, locale)) if next_gate_status else ''}<br>"
+                f"{next_gate_link_html}"
+                f"</div>"
+            ),
+            detail_is_html=True,
+        ),
+        _render_card(
+            _copy("label.decision_assist", locale),
+            _translate_display_token(next_assist["command"], locale) if next_assist else _copy("empty.metadata", locale),
+            detail=(
+                f"<div class=\"detail\">"
+                f"{escape(next_assist['summary']) if next_assist else ''}<br>"
+                f"{next_assist_link_html}"
+                f"</div>"
+            ),
+            detail_is_html=True,
+        ),
+    ]
+    return f'<p class="muted">{escape(_copy("detail.operator_summary_rail_summary", locale))}</p>' + _render_cards_grid(cards)
+
+
+def _render_daemon_evidence_drill_down(locale: str, payload: dict[str, Any]) -> str:
+    preflight = payload.get("preflight_report", {})
+    entries = [
+        {
+            "title": _copy("label.implementation_gate", locale),
+            "snapshot": _translate_display_token(preflight.get("status", ""), locale),
+            "detail": _translate_display_token(preflight.get("target_scope", ""), locale),
+            "command": "sayane app daemon-preflight --json",
+            "path": "/app/ui-state/daemon-preflight",
+        },
+        {
+            "title": _copy("label.operator_phase_status", locale),
+            "snapshot": " · ".join(
+                [
+                    _translate_display_token(payload.get("operator_phase_status", {}).get("phase_readiness", ""), locale),
+                    _translate_display_token(payload.get("operator_phase_status", {}).get("phase_status", ""), locale),
+                ]
+            ).strip(" ·"),
+            "detail": next((str(item) for item in payload.get("operator_phase_status", {}).get("blocking_reasons", []) if item), ""),
+            "command": "sayane app daemon-operator-phase-status --json",
+            "path": "/app/ui-state/operator-phase-status",
+        },
+        {
+            "title": _copy("label.packaging_status", locale),
+            "snapshot": _translate_display_token(payload.get("packaging_status", {}).get("packaging_model", ""), locale),
+            "detail": next(
+                (
+                    blocker
+                    for item in payload.get("packaging_status", {}).get("packaging_decision", {}).get("candidate_models", [])
+                    for blocker in item.get("blocked_by", [])
+                ),
+                "",
+            ),
+            "command": "sayane app daemon-packaging-status --json",
+            "path": "/app/ui-state/daemon-packaging-status",
+        },
+        {
+            "title": _copy("label.service_targets", locale),
+            "snapshot": _translate_display_token(payload.get("service_targets_status", {}).get("policy_gates", {}).get("hybrid_packaging_gate", ""), locale),
+            "detail": _translate_display_token(payload.get("service_targets_status", {}).get("recommended_target", ""), locale),
+            "command": "sayane app daemon-service-targets-status --json",
+            "path": "/app/ui-state/daemon-service-targets-status",
+        },
+        {
+            "title": _copy("label.service_control_boundary", locale),
+            "snapshot": _translate_display_token(payload.get("service_control_boundary", {}).get("service_plane", {}).get("status", ""), locale),
+            "detail": next((str(item) for item in payload.get("service_control_boundary", {}).get("service_plane", {}).get("deferred_commands", []) if item), ""),
+            "command": "sayane app daemon-service-control-boundary --json",
+            "path": "/app/ui-state/daemon-service-control-boundary",
+        },
+        {
+            "title": _copy("label.supervision_status", locale),
+            "snapshot": _translate_display_token(payload.get("supervision_status", {}).get("supervision_mode", ""), locale),
+            "detail": next(
+                (
+                    str(item.get("surface", ""))
+                    for item in payload.get("supervision_status", {}).get("background_surfaces", {}).get("candidate_surfaces", [])
+                    if item.get("surface")
+                ),
+                "",
+            ),
+            "command": "sayane app daemon-supervision-status --json",
+            "path": "/app/ui-state/daemon-supervision-status",
+        },
+        {
+            "title": _copy("label.recovery_consent_status", locale),
+            "snapshot": _translate_display_token(payload.get("recovery_consent_status", {}).get("consent_model", ""), locale),
+            "detail": next((str(item) for item in payload.get("recovery_consent_status", {}).get("recommended_recovery_flow", []) if item), ""),
+            "command": "sayane app daemon-recovery-consent-status --json",
+            "path": "/app/ui-state/daemon-recovery-consent-status",
+        },
+    ]
+    rows = "".join(
+        (
+            "<tr>"
+            f"<td>{entry['title']}</td>"
+            f"<td>{escape(entry['snapshot'] or _copy('empty.metadata', locale))}</td>"
+            f"<td>{escape(_translate_display_token(entry['detail'], locale)) if entry['detail'] else escape(_copy('empty.metadata', locale))}</td>"
+            f"<td><a href=\"{escape(entry['path'])}\"><code>{escape(entry['path'])}</code></a><br><code>{escape(entry['command'])}</code></td>"
+            "</tr>"
+        )
+        for entry in entries
+    )
+    return (
+        '<table class="compact-table"><thead><tr>'
+        f'<th>{escape(_translate_display_key("section", locale))}</th>'
+        f'<th>{escape(_copy("label.snapshot", locale))}</th>'
+        f'<th>{escape(_translate_display_key("detail", locale))}</th>'
+        f'<th>{escape(_copy("label.json_surface", locale))}</th>'
+        '</tr></thead>'
+        f"<tbody>{rows}</tbody></table>"
+    )
+
+
+def _daemon_decision_assist_entries(locale: str, payload: dict[str, Any]) -> list[dict[str, str]]:
+    status = payload.get("status", {})
+    runtime_init = payload.get("runtime_init", {})
+    cleanup_preview = payload.get("cleanup_preview", {})
+    repair_preview = payload.get("repair_preview", {})
+    service_control_boundary = payload.get("service_control_boundary", {})
+    recovery_consent_status = payload.get("recovery_consent_status", {})
+    supervision_status = payload.get("supervision_status", {})
+    launchagent_preview = payload.get("launchagent_preview")
+    launchagent_status = payload.get("launchagent_status")
+
+    entries: list[dict[str, str]] = []
+
+    service_command = next(
+        (
+            item.get("command", "")
+            for item in service_control_boundary.get("control_plane", {}).get("allowed_commands", [])
+            if item.get("command")
+        ),
+        "sayane app daemon-service-control-boundary --json",
+    )
+    service_detail = next(
+        (str(item) for item in service_control_boundary.get("service_plane", {}).get("deferred_commands", []) if item),
+        "",
+    )
+    entries.append(
+        {
+            "title": _copy("label.service_control_boundary", locale),
+            "command": service_command,
+            "summary": _copy("detail.service_control_assist_summary", locale),
+            "detail": _translate_display_token(service_detail, locale) if service_detail else "",
+            "path": "/app/ui-state/daemon-service-control-boundary",
+        }
+    )
+
+    recovery_command = next(
+        (
+            item.get("command", "")
+            for item in recovery_consent_status.get("control_recovery_actions", [])
+            if item.get("command")
+        ),
+        "sayane app daemon-recovery-consent-status --json",
+    )
+    recovery_detail = next((str(item) for item in recovery_consent_status.get("recommended_recovery_flow", []) if item), "")
+    entries.append(
+        {
+            "title": _copy("label.recovery_consent_status", locale),
+            "command": recovery_command,
+            "summary": _copy("detail.recovery_assist_summary", locale),
+            "detail": _translate_display_token(recovery_detail, locale) if recovery_detail else "",
+            "path": "/app/ui-state/daemon-recovery-consent-status",
+        }
+    )
+
+    supervision_command = "sayane app daemon-supervision-status --json"
+    supervision_detail = next(
+        (
+            str(item.get("surface", ""))
+            for item in supervision_status.get("background_surfaces", {}).get("candidate_surfaces", [])
+            if item.get("surface")
+        ),
+        "",
+    )
+    entries.append(
+        {
+            "title": _copy("label.supervision_status", locale),
+            "command": supervision_command,
+            "summary": _copy("detail.supervision_assist_summary", locale),
+            "detail": _translate_display_token(supervision_detail, locale) if supervision_detail else "",
+            "path": "/app/ui-state/daemon-supervision-status",
+        }
+    )
+
+    launchagent_command = "sayane app daemon-launchagent-status --json"
+    launchagent_reason = _copy("detail.launchagent_assist_healthy", locale)
+    cleanup_decisions = cleanup_preview.get("decision_report", {}).get("decisions", [])
+    repair_decisions = repair_preview.get("decisions", {})
+    if not status.get("runtime_initialized") or runtime_init.get("review_required"):
+        launchagent_command = "sayane app daemon-runtime-init --json"
+        launchagent_reason = _copy("detail.launchagent_assist_runtime_init", locale)
+    elif any(decision.get("recommended_action") == "remove" for decision in cleanup_decisions):
+        launchagent_command = "sayane app daemon-cleanup-preview --json"
+        launchagent_reason = _copy("detail.launchagent_assist_cleanup", locale)
+    elif any(decision.get("status") == "missing" for decision in repair_decisions.values()):
+        launchagent_command = "sayane app daemon-repair-preview --json"
+        launchagent_reason = _copy("detail.launchagent_assist_repair", locale)
+    elif launchagent_status and launchagent_status.get("print_command"):
+        launchagent_command = str(launchagent_status.get("print_command"))
+        launchagent_reason = _translate_display_phrase(
+            "Observe whether the reviewed LaunchAgent plist exists and whether launchd currently reports the label as loaded.",
+            locale,
+        )
+    elif launchagent_preview and launchagent_preview.get("launchctl_commands", {}).get("bootstrap"):
+        launchagent_command = str(launchagent_preview.get("launchctl_commands", {}).get("bootstrap"))
+        launchagent_reason = _translate_display_phrase(
+            "A reviewed LaunchAgent plist already exists and may be bootstrapped explicitly.",
+            locale,
+        )
+
+    entries.append(
+        {
+            "title": _copy("label.launchagent_status", locale),
+            "command": launchagent_command,
+            "summary": launchagent_reason,
+            "detail": "",
+            "path": "/app/ui-state/daemon",
+        }
+    )
+
+    return entries
+
+
+def _render_daemon_decision_assist(locale: str, payload: dict[str, Any]) -> str:
+    entries = _daemon_decision_assist_entries(locale, payload)
+    cards: list[str] = []
+    for entry in entries:
+        cards.append(
+            _render_card(
+                entry["title"],
+                _translate_display_token(entry["command"], locale),
+                detail=(
+                    f"{escape(entry['summary'])}<br>"
+                    f"{escape(entry['detail']) if entry['detail'] else ''}<br>"
+                    f"<a href=\"{escape(entry['path'])}\"><code>{escape(entry['path'])}</code></a><br>"
+                    f"<code>{escape(entry['command'])}</code>"
+                ),
+                detail_is_html=True,
+            )
+        )
+
+    return (
+        f'<p class="muted">{escape(_copy("detail.decision_assist_summary", locale))}</p>'
+        + _render_cards_grid(cards)
+    )
+
+
+def _phase_closure_gate_destination(item_name: str) -> tuple[str, str, str] | None:
+    mapping = {
+        "supported_packaging_model_finalized": (
+            "label.packaging_status",
+            "sayane app daemon-packaging-status --json",
+            "/app/ui-state/daemon-packaging-status",
+        ),
+        "service_lifecycle_implementation_closed": (
+            "label.service_control_boundary",
+            "sayane app daemon-service-control-boundary --json",
+            "/app/ui-state/daemon-service-control-boundary",
+        ),
+        "platform_policy_and_rollback_closed": (
+            "label.service_targets",
+            "sayane app daemon-service-targets-status --json",
+            "/app/ui-state/daemon-service-targets-status",
+        ),
+        "background_supervision_direction_decided": (
+            "label.supervision_status",
+            "sayane app daemon-supervision-status --json",
+            "/app/ui-state/daemon-supervision-status",
+        ),
+        "recovery_and_consent_path_remains_explicit_under_next_model": (
+            "label.recovery_consent_status",
+            "sayane app daemon-recovery-consent-status --json",
+            "/app/ui-state/daemon-recovery-consent-status",
+        ),
+    }
+    return mapping.get(item_name)
+
+
+def _render_phase_closure_gates(locale: str, payload: dict[str, Any]) -> str:
+    checklist = payload.get("operator_phase_status", {}).get("phase_closure_checklist", [])
+    recommended_order = payload.get("operator_phase_status", {}).get("recommended_implementation_order", [])
+    preflight = payload.get("preflight_report", {})
+    order_lookup = {name: index + 1 for index, name in enumerate(recommended_order)}
+
+    gate_to_order_key = {
+        "supported_packaging_model_finalized": "packaging_model_decision",
+        "service_lifecycle_implementation_closed": "service_control_boundary_definition",
+        "platform_policy_and_rollback_closed": "service_control_boundary_definition",
+        "background_supervision_direction_decided": "supervision_ux_decision",
+        "recovery_and_consent_path_remains_explicit_under_next_model": "consent_and_recovery_alignment",
+    }
+
+    rows = []
+    preflight_evidence = ", ".join(
+        _translate_display_token(item.get("key", ""), locale)
+        for item in preflight.get("items", [])
+        if item.get("status") == "review_required"
+    )
+    rows.append(
+        "<tr>"
+        f"<td>{escape(_copy('label.implementation_gate', locale))}</td>"
+        f"<td>{escape(_translate_display_token(preflight.get('status', ''), locale))}</td>"
+        f"<td>{escape(preflight_evidence or _copy('empty.metadata', locale))}</td>"
+        f"<td>{escape(_copy('label.implementation_gate', locale))}<br><a href=\"/app/ui-state/daemon-preflight\"><code>/app/ui-state/daemon-preflight</code></a><br><code>sayane app daemon-preflight --json</code></td>"
+        "</tr>"
+    )
+    for item in checklist:
+        item_name = str(item.get("item", ""))
+        destination = _phase_closure_gate_destination(item_name)
+        if not destination:
+            continue
+        label_key, command, path = destination
+        order_key = gate_to_order_key.get(item_name, "")
+        order_prefix = f"{order_lookup[order_key]}. " if order_key in order_lookup else ""
+        blockers = item.get("blocking_reasons", [])
+        blocker_text = ", ".join(_translate_display_token(blocker, locale) for blocker in blockers) if blockers else _copy("empty.metadata", locale)
+        rows.append(
+            "<tr>"
+            f"<td>{escape(order_prefix + _translate_display_token(item_name, locale))}</td>"
+            f"<td>{escape(_translate_display_token(item.get('status', ''), locale))}</td>"
+            f"<td>{escape(blocker_text)}</td>"
+            f"<td>{escape(_copy(label_key, locale))}<br><a href=\"{escape(path)}\"><code>{escape(path)}</code></a><br><code>{escape(command)}</code></td>"
+            "</tr>"
+        )
+    if not rows:
+        return f'<p class="muted">{escape(_copy("empty.metadata", locale))}</p>'
+    return (
+        f'<p class="muted">{escape(_copy("detail.phase_closure_gates_summary", locale))}</p>'
+        + '<table class="compact-table"><thead><tr>'
+        f'<th>{escape(_translate_display_key("item", locale))}</th>'
+        f'<th>{escape(_copy("table.status", locale))}</th>'
+        f'<th>{escape(_copy("label.blocking_reasons", locale))}</th>'
+        f'<th>{escape(_copy("label.json_surface", locale))}</th>'
+        '</tr></thead>'
+        f"<tbody>{''.join(rows)}</tbody></table>"
+    )
+
+
+def _proof_diagnostic_commands() -> list[str]:
+    return [
+        "sayane app daemon-preflight --json",
+        "sayane app daemon-preflight --json --include-event-record",
+        "sayane app daemon-identity-proof --json",
+        "sayane app daemon-readiness-proof --operation-class bridge_health --json",
+        "sayane app daemon-api-readiness-proof --operation-class bridge_health --json",
+        "sayane app daemon-proof-diagnostics --operation-class bridge_health --json",
+    ]
+
+
 def _render_candidate_mapping(locale: str, title: str, payload: dict[str, Any]) -> str:
     return _render_panel(title, f"{_render_kv_panel(locale, payload)}{_render_json_fallback(payload)}")
 
@@ -1350,6 +1993,12 @@ def _render_resident_app_shell_bootstrap(
             "workspaceDesc": _copy("detail.workspace_desc", locale),
             "sessionActionHint": _copy("detail.session_action_hint", locale),
             "evaluateLevel": _copy("label.evaluate_level", locale),
+            "evaluateLevel1": _copy("detail.evaluate_level_1", locale),
+            "evaluateLevel2": _copy("detail.evaluate_level_2", locale),
+            "evaluateLevel3": _copy("detail.evaluate_level_3", locale),
+            "evaluateLevelShort1": _copy("detail.evaluate_level_short_1", locale),
+            "evaluateLevelShort2": _copy("detail.evaluate_level_short_2", locale),
+            "evaluateLevelShort3": _copy("detail.evaluate_level_short_3", locale),
             "overrideReason": _copy("label.override_reason", locale),
             "rejectReason": _copy("label.reject_reason", locale),
             "revisedContent": _copy("label.revised_content", locale),
@@ -1656,6 +2305,41 @@ def _render_resident_app_shell_bootstrap(
     `).join("")}}</ul>`;
   }}
 
+  function displayDaemonAction(action) {{
+    return {{
+      primary: displayText(action?.command || action?.kind || "action"),
+      secondary: displayText(action?.reason || action?.summary || ""),
+    }};
+  }}
+
+  function evaluationLevelOptions(currentLevel) {{
+    const level = Number(currentLevel || 1);
+    const options = [
+      {{ value: 1, label: strings.evaluateLevel1 }},
+      {{ value: 2, label: strings.evaluateLevel2 }},
+      {{ value: 3, label: strings.evaluateLevel3 }},
+    ];
+    return options.map((option) => `
+      <option value="${{option.value}}"${{option.value === level ? ' selected="selected"' : ""}}>${{escapeHtml(option.label)}}</option>
+    `).join("");
+  }}
+
+  function formatEvaluationLevel(level, detailed = false) {{
+    const normalized = Number(level);
+    const labels = detailed
+      ? {{
+          1: strings.evaluateLevel1,
+          2: strings.evaluateLevel2,
+          3: strings.evaluateLevel3,
+        }}
+      : {{
+          1: strings.evaluateLevelShort1,
+          2: strings.evaluateLevelShort2,
+          3: strings.evaluateLevelShort3,
+        }};
+    return labels[normalized] || String(level ?? "—");
+  }}
+
   function renderDecisionValue(column, value) {{
     if (column === "path" || column.endsWith("_path")) return escapeHtml(value);
     return escapeDisplayHtml(value);
@@ -1819,7 +2503,7 @@ def _render_resident_app_shell_bootstrap(
     if (!entries.length) return `<p class="muted">${{escapeHtml(options.emptyLabel || strings.emptyPreview)}}</p>`;
     return renderCardGrid(entries.map(([key, value]) => ({{
       key: labelMap[key] || localizeFieldKey(key),
-      value,
+      value: key === "level" || key === "evaluation_level" ? formatEvaluationLevel(value) : value,
     }})));
   }}
 
@@ -1846,8 +2530,10 @@ def _render_resident_app_shell_bootstrap(
         · ${{escapeDisplayHtml(item.status)}} · ${{escapeDisplayHtml(item.proposal_section)}}<br>
         <span class="muted">${{escapeHtml(item.display_summary || "")}}</span>
       </li>`).join("") || `<li class="muted">${{escapeHtml(strings.emptyReviewItems)}}</li>`;
-    const daemonActions = (homeState.top_daemon_actions || []).map((action) => `
-      <li><strong>${{escapeDisplayHtml(action.kind)}}</strong> · ${{escapeDisplayHtml(action.summary || "")}}</li>`).join("") || `<li class="muted">${{escapeHtml(strings.emptyNextActions)}}</li>`;
+    const daemonActions = (homeState.top_daemon_actions || []).map((action) => {{
+      const display = displayDaemonAction(action);
+      return `<li><strong>${{escapeHtml(display.primary)}}</strong>${{display.secondary ? ` · ${{escapeHtml(display.secondary)}}` : ""}}</li>`;
+    }}).join("") || `<li class="muted">${{escapeHtml(strings.emptyNextActions)}}</li>`;
     root.innerHTML = `
       ${{shellHeader()}}
       <div class="cards">${{(homeState.summary_cards || []).map((card) => `
@@ -1930,7 +2616,7 @@ def _render_resident_app_shell_bootstrap(
         <td><button type="button" class="link-button" data-open-detail="${{escapeHtml(item.id)}}">${{escapeHtml(item.id)}}</button></td>
         <td>${{escapeDisplayHtml(item.status)}}</td>
         <td>${{escapeDisplayHtml(item.section)}}</td>
-        <td>${{escapeHtml(item.evaluation_level)}} / ${{escapeDisplayHtml(item.rde_class || "—")}}</td>
+        <td>${{escapeHtml(formatEvaluationLevel(item.evaluation_level))}} / ${{escapeDisplayHtml(item.rde_class || "—")}}</td>
         <td>${{escapeHtml(item.content_preview)}}</td>
       </tr>`).join("") || `<tr><td colspan="5" class="muted">${{escapeHtml(hasQueueState ? strings.emptyReviewableCandidates : strings.emptyPreview)}}</td></tr>`;
     root.innerHTML = `
@@ -2026,7 +2712,7 @@ def _render_resident_app_shell_bootstrap(
         <div class="shell-action-grid">
           <form id="resident-shell-evaluate-form" class="shell-form-grid" hidden>
             <label for="resident-shell-evaluate-level">${{escapeHtml(strings.evaluateLevel)}}</label>
-            <input id="resident-shell-evaluate-level" name="level" type="number" min="1" max="3" value="${{escapeHtml(evaluateLevel)}}">
+            <select id="resident-shell-evaluate-level" name="level">${{evaluationLevelOptions(evaluateLevel)}}</select>
             <button type="submit"${{disabledAttr(allowed.evaluate)}}>${{escapeHtml(strings.evaluate)}}</button>
             ${{actionHint(allowed.evaluate)}}
           </form>
@@ -2360,13 +3046,15 @@ def _render_resident_app_shell_bootstrap(
     state.screen = "home";
     state.candidateId = null;
     syncRouteHash();
-    setLoading();
+    if (state.homeState) renderHome();
+    else setLoading();
     try {{
       state.homeState = await fetchJson(endpoints.home);
       renderHome();
     }} catch (error) {{
       setStatus(error.message || strings.genericShellFetch, "error");
-      renderHome();
+      if (state.homeState) renderHome();
+      else root.innerHTML = `<div class="panel"><p class="muted">${{escapeHtml(strings.genericShellFetch)}}</p></div>`;
     }}
   }}
 
@@ -2499,19 +3187,17 @@ def render_resident_app_home(
     )
 
     top_actions = daemon_summary.get("top_next_actions", [])
-    daemon_actions_html = (
-        "".join(
-            (
-                "<li>"
-                f'<strong>{escape(_translate_display_token(action.get("kind", "action"), locale))}</strong> · '
-                f'{escape(_translate_display_phrase(action.get("summary", ""), locale))}'
-                "</li>"
-            )
-            for action in top_actions
-        )
-        if top_actions
-        else f'<li class="muted">{escape(_copy("empty.immediate_daemon_actions", locale))}</li>'
-    )
+    if top_actions:
+        daemon_action_items: list[str] = []
+        for action in top_actions:
+            primary, secondary = _daemon_action_display(action, locale)
+            item_html = f"<strong>{escape(primary)}</strong>"
+            if secondary:
+                item_html += f" · {escape(secondary)}"
+            daemon_action_items.append(f"<li>{item_html}</li>")
+        daemon_actions_html = "".join(daemon_action_items)
+    else:
+        daemon_actions_html = f'<li class="muted">{escape(_copy("empty.immediate_daemon_actions", locale))}</li>'
 
     read_surface_html = "".join(
         (
@@ -2615,7 +3301,7 @@ def render_resident_app_candidate_queue(
             f'<td><a href="/app/ui/candidates/{escape(item["id"])}">{escape(item["id"])}</a></td>'
             f'<td><span class="pill pill-{escape(item.get("status", ""))}">{escape(_translate_display_token(item.get("status", ""), locale))}</span></td>'
             f'<td>{escape(_translate_display_token(item.get("section", ""), locale))}</td>'
-            f'<td>{escape(str(item.get("evaluation_level", "")) if item.get("evaluation_level") is not None else "-")} / {escape(_translate_display_token(item.get("rde_class", ""), locale) if item.get("rde_class") else _copy("detail.not_evaluated_short", locale))}</td>'
+            f'<td>{escape(_evaluation_level_label(item.get("evaluation_level"), locale) if item.get("evaluation_level") is not None else "-")} / {escape(_translate_display_token(item.get("rde_class", ""), locale) if item.get("rde_class") else _copy("detail.not_evaluated_short", locale))}</td>'
             f'<td>{escape(item.get("content_preview", ""))}</td>'
             "</tr>"
         )
@@ -2653,7 +3339,7 @@ def render_resident_app_candidate_detail(
     source = candidate.get("source") or {}
     status_value = str(candidate.get("status", ""))
     evaluation_summary = (
-        f'{escape(_copy("detail.level_prefix", locale))} {escape(str(evaluation.get("level")))} / {escape(_translate_display_token(evaluation.get("rde_class"), locale))}'
+        f'{escape(_evaluation_level_label(evaluation.get("level"), locale))} / {escape(_translate_display_token(evaluation.get("rde_class"), locale))}'
         if evaluation.get("level") is not None and evaluation.get("rde_class")
         else _copy("detail.not_evaluated_yet", locale)
     )
@@ -2687,7 +3373,7 @@ def render_resident_app_candidate_detail(
         _copy("label.actions", locale),
         f"""
 <form method="post" action="/app/ui/candidates/{escape(candidate.get("id", ""))}/evaluate">
-<p><label for="evaluate-level">{escape(_copy("label.evaluate_level", locale))}</label> <input id="evaluate-level" type="number" min="1" max="3" name="level" value="1"></p>
+<p><label for="evaluate-level">{escape(_copy("label.evaluate_level", locale))}</label> <select id="evaluate-level" name="level">{_evaluation_level_options(1, locale)}</select></p>
 <p><button type="submit">{escape(_copy("action.evaluate", locale))}</button></p>
 </form>
 <hr>
@@ -2842,6 +3528,10 @@ def render_resident_app_daemon_panel(
         + recommended_flow_html
     ) if recovery_consent_status else _render_json_fallback(recovery_consent_status)
     recovery_panel = _render_panel(_copy("label.recovery_consent_status", locale), recovery_content)
+    proof_panel_content = (
+        f'<p class="muted">{escape(_copy("detail.proof_diagnostics_summary", locale))}</p>'
+        + _render_string_list(_proof_diagnostic_commands(), empty_label=_copy("empty.metadata", locale))
+    )
     body = f"""
 <h1>{escape(_copy("heading.daemon", locale))}</h1>
 <p><a href="/app/ui">{escape(_copy("action.back_to_home", locale))}</a></p>
@@ -2852,6 +3542,7 @@ def render_resident_app_daemon_panel(
     _render_card(_copy("label.readiness", locale), _translate_display_token(readiness.get("readiness_status", ""), locale)),
 ])}
 {_render_panel(_copy("label.next_actions", locale), f"<ul>{action_html}</ul>")}
+{_render_panel(_copy("label.operator_summary_rail", locale), _render_operator_summary_rail(locale, payload))}
 {_render_panel(_copy("label.runtime_init_preview", locale), _render_runtime_init_preview(locale, runtime_init) if runtime_init else _render_json_fallback(runtime_init))}
 {_render_panel(_copy("label.cleanup_preview", locale), _render_cleanup_preview(locale, cleanup_preview) if cleanup_preview else _render_json_fallback(cleanup_preview))}
 {_render_panel(_copy("label.repair_preview", locale), _render_repair_preview(locale, repair_preview) if repair_preview else _render_json_fallback(repair_preview))}
@@ -2860,6 +3551,11 @@ def render_resident_app_daemon_panel(
 {supervision_panel}
 {recovery_panel}
 {_render_panel(_copy("label.operator_phase_status", locale), _render_operator_phase_status(locale, operator_phase_status))}
+{_render_panel(_copy("label.operator_workspace", locale), _render_daemon_operator_workspace(locale, payload))}
+{_render_panel(_copy("label.phase_closure_gates", locale), _render_phase_closure_gates(locale, payload))}
+{_render_panel(_copy("label.evidence_drill_down", locale), _render_daemon_evidence_drill_down(locale, payload))}
+{_render_panel(_copy("label.decision_assist", locale), _render_daemon_decision_assist(locale, payload))}
+{_render_panel(_copy("label.proof_diagnostics", locale), proof_panel_content)}
 {_render_panel(_copy("label.service_targets", locale), _render_service_targets_status(locale, service_targets_status) if service_targets_status else _render_json_fallback(service_targets_status))}
 {_render_panel(_copy("label.launchagent_preview", locale), _render_launchagent_preview(locale, launchagent_preview))}
 {_render_panel(_copy("label.launchagent_status", locale), _render_launchagent_status(locale, launchagent_status))}

@@ -44,6 +44,30 @@ def test_app_contract_exposes_entrypoint_and_surfaces() -> None:
         for surface in payload["read_surfaces"]
     )
     assert any(
+        surface["path"] == "/app/daemon-packaging-status"
+        for surface in payload["read_surfaces"]
+    )
+    assert any(
+        surface["path"] == "/app/daemon-service-targets-status"
+        for surface in payload["read_surfaces"]
+    )
+    assert any(
+        surface["path"] == "/app/daemon-service-control-boundary"
+        for surface in payload["read_surfaces"]
+    )
+    assert any(
+        surface["path"] == "/app/daemon-supervision-status"
+        for surface in payload["read_surfaces"]
+    )
+    assert any(
+        surface["path"] == "/app/daemon-recovery-consent-status"
+        for surface in payload["read_surfaces"]
+    )
+    assert any(
+        surface["path"] == "/app/daemon-preflight"
+        for surface in payload["read_surfaces"]
+    )
+    assert any(
         surface["path"] == "/app/screen-state/home"
         for surface in payload["read_surfaces"]
     )
@@ -92,6 +116,30 @@ def test_app_contract_exposes_entrypoint_and_surfaces() -> None:
         for surface in payload["read_surfaces"]
     )
     assert any(
+        surface["path"] == "/app/ui-state/daemon-packaging-status"
+        for surface in payload["read_surfaces"]
+    )
+    assert any(
+        surface["path"] == "/app/ui-state/daemon-service-targets-status"
+        for surface in payload["read_surfaces"]
+    )
+    assert any(
+        surface["path"] == "/app/ui-state/daemon-service-control-boundary"
+        for surface in payload["read_surfaces"]
+    )
+    assert any(
+        surface["path"] == "/app/ui-state/daemon-supervision-status"
+        for surface in payload["read_surfaces"]
+    )
+    assert any(
+        surface["path"] == "/app/ui-state/daemon-recovery-consent-status"
+        for surface in payload["read_surfaces"]
+    )
+    assert any(
+        surface["path"] == "/app/ui-state/daemon-preflight"
+        for surface in payload["read_surfaces"]
+    )
+    assert any(
         surface["path"] == "/app/ui-state/candidates/{id}/lineage"
         for surface in payload["read_surfaces"]
     )
@@ -114,6 +162,9 @@ def test_app_contract_exposes_entrypoint_and_surfaces() -> None:
     assert "GET /app/overview" in payload["recommended_flow"]
     assert "GET /app/ui-state/home" in payload["recommended_flow"]
     assert "GET /app/ui-state/operator-phase-status" in payload["recommended_flow"]
+    assert "GET /app/ui-state/daemon-packaging-status" in payload["recommended_flow"]
+    assert "GET /app/ui-state/daemon-service-targets-status" in payload["recommended_flow"]
+    assert "GET /app/ui-state/daemon-preflight" in payload["recommended_flow"]
     assert "POST /app/ui-action/candidates/{id}/approve or /reject" in payload["recommended_flow"]
     assert "POST /app/ui-action/session/logout" in payload["recommended_flow"]
 
@@ -221,5 +272,9 @@ def test_app_contract_exposes_surface_roles_and_shared_semantics() -> None:
     )
     assert any(
         item["command"] == "sayane app daemon-recovery-consent-status --json"
+        for item in payload["operator_cli_surfaces"]
+    )
+    assert any(
+        item["command"] == "sayane app daemon-preflight --json"
         for item in payload["operator_cli_surfaces"]
     )

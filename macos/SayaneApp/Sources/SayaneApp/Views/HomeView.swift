@@ -24,7 +24,7 @@ struct HomeView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(model.strings.text(.appTitle)).font(.largeTitle).bold()
             if let health = model.health {
-                Text("\(model.strings.text(.bridgeHealthy)): \(health.status) · \(health.version ?? "-")")
+                Text("\(model.strings.text(.bridgeHealthy)): \(model.strings.summaryValueLabel(key: "state", value: health.status)) · \(health.version ?? "-")")
                     .foregroundStyle(.secondary)
             }
         }
@@ -38,7 +38,7 @@ struct HomeView: View {
                     SurfaceCard(emphasis: 0.4) {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(model.strings.summaryCardLabel(card.key)).font(.caption).foregroundStyle(.secondary)
-                            summaryValueView(card)
+                            SummaryCardValueView(strings: model.strings, card: card)
                         }
                     }
                 }
@@ -65,13 +65,7 @@ struct HomeView: View {
                         SurfaceCard(emphasis: 0.38) {
                             HStack(alignment: .top, spacing: 12) {
                                 StatusBadge(text: item.badge, tone: item.tone)
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(item.title)
-                                        .font(.headline)
-                                    Text(item.summary)
-                                        .font(.subheadline)
-                                        .foregroundStyle(.secondary)
-                                }
+                                CardTitleSummary(title: item.title, summary: item.summary)
                                 Spacer()
                                 Image(systemName: "arrow.right.circle.fill")
                                     .foregroundStyle(.secondary)
@@ -105,7 +99,7 @@ struct HomeView: View {
                         SurfaceCard {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(item.candidateId).font(.headline)
-                                Text(item.displaySummary ?? item.proposalSection ?? item.status ?? model.strings.text(.none))
+                                Text(homeReviewItemSummary(item))
                                     .foregroundStyle(.secondary)
                                 if let status = item.status {
                                     StatusBadge(
@@ -117,7 +111,7 @@ struct HomeView: View {
                         }
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("\(item.candidateId) \(item.displaySummary ?? item.proposalSection ?? item.status ?? model.strings.text(.none))")
+                    .accessibilityLabel("\(item.candidateId) \(homeReviewItemSummary(item))")
                 }
             }
         }
@@ -142,13 +136,10 @@ struct HomeView: View {
                     } label: {
                         SurfaceCard {
                             HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(model.strings.quickLinkLabel(screen: link.screen))
-                                        .font(.headline)
-                                    Text(link.path)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
+                                CardTitleSummary(
+                                    title: model.strings.quickLinkLabel(screen: link.screen),
+                                    summary: quickLinkSummary(link)
+                                )
                                 Spacer()
                                 Image(systemName: "arrow.right.circle.fill")
                                     .foregroundStyle(.secondary)
@@ -188,12 +179,14 @@ struct HomeView: View {
                                     )
                                     Spacer()
                                 }
-                                Text(action)
-                                    .font(.system(.body, design: .monospaced))
-                                    .textSelection(.enabled)
                                 Text(homeDaemonActionSummary(action))
-                                    .font(.caption)
+                                    .font(.subheadline)
                                     .foregroundStyle(.secondary)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(model.strings.text(.nextCommand))
+                                        .font(.caption.weight(.semibold))
+                                    CommandRowView(command: action, lineLimit: 2)
+                                }
                             }
                         }
                     }
@@ -204,56 +197,34 @@ struct HomeView: View {
         }
     }
 
-    private func homeSummaryValue(_ card: SummaryCard) -> String {
-        guard let value = card.value else {
-            return model.strings.text(.none)
-        }
-        if let string = value.stringValue {
-            return model.strings.summaryValueLabel(key: card.key, value: string)
-        }
-        return value.displayText
-    }
-
-    @ViewBuilder
-    private func summaryValueView(_ card: SummaryCard) -> some View {
-        if let string = card.value?.stringValue {
-            StatusBadge(
-                text: model.strings.summaryValueLabel(key: card.key, value: string),
-                tone: model.strings.tone(forToken: string)
-            )
-        } else {
-            Text(homeSummaryValue(card)).font(.headline)
-        }
-    }
-
     private func homeDaemonActionTitle(_ action: String) -> String {
-        if action.contains("status") || action.contains("health") {
-            return model.strings.text(.verifyNow)
-        }
-        if action.contains("start") || action.contains("bootstrap") || action.contains("kickstart") {
-            return model.strings.text(.suggestedAction)
-        }
-        if action.contains("repair") || action.contains("cleanup") || action.contains("bootout") {
-            return model.strings.text(.needsAttention)
-        }
-        return model.strings.text(.actionSummary)
+        model.strings.commandPriorityTitle(for: action)
     }
 
     private func homeDaemonActionTone(_ action: String) -> StatusTone {
-        if action.contains("repair") || action.contains("cleanup") || action.contains("bootout") {
-            return .critical
-        }
-        if action.contains("start") || action.contains("bootstrap") || action.contains("kickstart") {
-            return .caution
-        }
-        if action.contains("status") || action.contains("health") {
-            return .positive
-        }
-        return .neutral
+        model.strings.tone(forCommand: action)
     }
 
     private func homeDaemonActionSummary(_ action: String) -> String {
         model.strings.homeDaemonActionSummary(for: action)
+    }
+
+    private func homeReviewItemSummary(_ item: TopReviewItem) -> String {
+        item.displaySummary
+            ?? item.proposalSection.map(model.strings.residentValueLabel)
+            ?? item.status.map(model.strings.statusValueLabel)
+            ?? model.strings.text(.none)
+    }
+
+    private func quickLinkSummary(_ link: QuickLink) -> String {
+        switch link.screen {
+        case "candidate_queue":
+            return model.strings.text(.selectCandidatePrompt)
+        case "daemon_panel":
+            return model.strings.text(.reviewDaemonAction)
+        default:
+            return "\(model.strings.text(.screenOverview)): \(link.path)"
+        }
     }
 
     private var priorityItems: [(title: String, summary: String, badge: String, tone: StatusTone, action: () -> Void)] {
@@ -262,7 +233,7 @@ struct HomeView: View {
         if let review = model.homeState?.topReviewItems.first {
             items.append((
                 model.strings.text(.reviewNextCandidate),
-                review.displaySummary ?? review.proposalSection ?? review.candidateId,
+                homeReviewItemSummary(review),
                 model.strings.text(.topReviewItems),
                 .caution,
                 { model.openCandidate(review.candidateId) }
@@ -272,7 +243,7 @@ struct HomeView: View {
         if let link = model.homeState?.quickLinks.first {
             items.append((
                 model.strings.quickLinkLabel(screen: link.screen),
-                link.path,
+                quickLinkSummary(link),
                 model.strings.text(.quickLinks),
                 .positive,
                 { model.openQuickLink(link) }

@@ -29,9 +29,7 @@ struct BridgeDiagnosticsCard: View {
             Text(label)
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            Text(value)
-                .font(.system(.caption, design: .monospaced))
-                .textSelection(.enabled)
+            SelectableMonospaceText(text: value, font: .system(.caption, design: .monospaced))
         }
     }
 

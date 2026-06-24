@@ -61,23 +61,13 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-find_sayane() {
-  if command -v sayane >/dev/null 2>&1; then
-    command -v sayane
-    return 0
-  fi
-  if [[ -x "${ROOT}/.venv/bin/sayane" ]]; then
-    printf '%s\n' "${ROOT}/.venv/bin/sayane"
-    return 0
-  fi
-  die "Could not find \`sayane\`. Activate your venv or install the CLI first."
-}
-
-SAYANE_BIN="$(find_sayane)"
-
 find_sayane_python() {
   if [[ -x "${ROOT}/.venv/bin/python" ]]; then
     printf '%s\n' "${ROOT}/.venv/bin/python"
+    return 0
+  fi
+  if command -v python >/dev/null 2>&1; then
+    command -v python
     return 0
   fi
   if command -v python3 >/dev/null 2>&1; then
@@ -88,6 +78,11 @@ find_sayane_python() {
 }
 
 SAYANE_PYTHON_BIN="$(find_sayane_python)"
+SAYANE_PYTHONPATH="${ROOT}/src${PYTHONPATH:+:${PYTHONPATH}}"
+
+run_sayane_cli() {
+  PYTHONPATH="${SAYANE_PYTHONPATH}" "${SAYANE_PYTHON_BIN}" -m sayane.cli.main "$@"
+}
 
 run_init_if_needed() {
   if [[ "${AUTO_INIT}" != "1" ]]; then
@@ -97,7 +92,7 @@ run_init_if_needed() {
     return 0
   fi
   info "Initializing ~/.sayane"
-  "${SAYANE_BIN}" init
+  run_sayane_cli init
 }
 
 bridge_healthy() {
@@ -152,12 +147,12 @@ stop_existing_bridge() {
 start_bridge_background() {
   mkdir -p "$(dirname "${LOG_FILE}")"
   info "Starting Bridge in background"
-  "${SAYANE_PYTHON_BIN}" -m sayane.cli.main serve --host "${HOST}" --port "${PORT}" </dev/null >"${LOG_FILE}" 2>&1 &
+  nohup env PYTHONPATH="${SAYANE_PYTHONPATH}" "${SAYANE_PYTHON_BIN}" -m sayane.cli.main serve --host "${HOST}" --port "${PORT}" >"${LOG_FILE}" 2>&1 </dev/null &
 }
 
 start_bridge_foreground() {
   info "Starting Bridge in foreground at ${BRIDGE_URL}"
-  exec "${SAYANE_BIN}" serve --host "${HOST}" --port "${PORT}"
+  exec env PYTHONPATH="${SAYANE_PYTHONPATH}" "${SAYANE_PYTHON_BIN}" -m sayane.cli.main serve --host "${HOST}" --port "${PORT}"
 }
 
 ensure_token() {
@@ -179,6 +174,11 @@ open_browser() {
     return 0
   fi
   local bootstrap_url="${APP_URL}?bootstrap_token=${TOKEN}"
+  if command -v open >/dev/null 2>&1 && [[ -d "/Applications/Google Chrome.app" ]]; then
+    info "Opening browser bootstrap in Google Chrome"
+    (nohup open -a "Google Chrome" "${bootstrap_url}" >/dev/null 2>&1 &) || warn "Could not open Google Chrome automatically"
+    return 0
+  fi
   if command -v open >/dev/null 2>&1; then
     info "Opening browser bootstrap"
     (nohup open "${bootstrap_url}" >/dev/null 2>&1 &) || warn "Could not open browser automatically"
@@ -204,9 +204,17 @@ Useful checks:
   curl -s ${BRIDGE_URL}/health
   curl -s -H "Authorization: Bearer \$(cat ${TOKEN_FILE})" ${BRIDGE_URL}/app/contract
   curl -s -H "Authorization: Bearer \$(cat ${TOKEN_FILE})" ${BRIDGE_URL}/app/overview
+  curl -s -H "Authorization: Bearer \$(cat ${TOKEN_FILE})" ${BRIDGE_URL}/app/operator-phase-status
+  curl -s -H "Authorization: Bearer \$(cat ${TOKEN_FILE})" ${BRIDGE_URL}/app/daemon-packaging-status
+  curl -s -H "Authorization: Bearer \$(cat ${TOKEN_FILE})" ${BRIDGE_URL}/app/daemon-service-targets-status
+  sayane app daemon-operator-phase-status --json
+  sayane app daemon-service-targets-status --json
+  sayane app daemon-preflight --json
+  sayane app daemon-proof-diagnostics --operation-class bridge_health --json
 
 Notes:
   - Current resident app entrypoint is ${APP_URL}
+  - Bridge startup prefers repo-local source via PYTHONPATH=${ROOT}/src
   - Do not use http://127.0.0.1:8008/index.html
   - Browser bootstrap is performed through one local URL hop using /app/ui?bootstrap_token=...
   - If browser or follow-up shell requests return 401, reopen ${APP_URL} after restarting the Bridge

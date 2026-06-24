@@ -610,6 +610,329 @@ final class AppModel: ObservableObject {
         copyToClipboard("tail -f \(path)", message: strings.copiedCommandMessage(context: strings.fieldLabel(kind)))
     }
 
+    func candidateDetailClipboardText() -> String? {
+        guard let detailState else { return nil }
+        var lines: [String] = []
+        if let candidateID = selectedCandidateID {
+            lines.append("\(strings.text(.currentCandidate)): \(candidateID)")
+        }
+        let summary = detailState.uiSummary
+        lines.append("\(strings.fieldLabel("status")): \(summary.status.map(strings.statusValueLabel) ?? strings.text(.none))")
+        lines.append("\(strings.fieldLabel("section")): \(summary.section.map(strings.residentValueLabel) ?? strings.text(.none))")
+        lines.append("\(strings.fieldLabel("operation")): \(summary.operation.map(strings.residentValueLabel) ?? strings.text(.none))")
+        lines.append("\(strings.fieldLabel("rde")): \(summary.rdeClass.map(strings.residentValueLabel) ?? strings.text(.none))")
+        if let sourceType = summary.sourceType {
+            lines.append("\(strings.fieldLabel("source_type")): \(strings.residentValueLabel(sourceType))")
+        }
+        if let evaluationLevel = summary.evaluationLevel {
+            lines.append("\(strings.text(.evaluateLevel)): \(strings.evaluationLevelLabel(evaluationLevel))")
+        }
+        if let content = detailState.content, !content.isEmpty {
+            lines.append("")
+            lines.append(strings.text(.detail))
+            lines.append(content)
+        }
+        return lines.isEmpty ? nil : lines.joined(separator: "\n")
+    }
+
+    func candidateDiffClipboardText() -> String? {
+        guard let diffState else { return nil }
+        var lines: [String] = [strings.text(.diff)]
+        if let section = diffState.section {
+            lines.append("\(strings.fieldLabel("section")): \(strings.residentValueLabel(section))")
+        }
+        if let recommendedSection = diffState.recommendedSection {
+            lines.append("\(strings.fieldLabel("recommended_section")): \(strings.residentValueLabel(recommendedSection))")
+        }
+        if let reviewSurface = diffState.reviewSurface {
+            lines.append("\(strings.fieldLabel("review_surface")): \(strings.residentValueLabel(reviewSurface))")
+        }
+        if let note = diffState.note, !note.isEmpty {
+            lines.append("")
+            lines.append(note)
+        }
+        func appendList(_ title: String, prefix: String, items: [String]?) {
+            guard let items, !items.isEmpty else { return }
+            lines.append("")
+            lines.append(title)
+            lines.append(contentsOf: items.map { "\(prefix) \($0)" })
+        }
+        appendList(strings.text(.addedItems), prefix: "+", items: diffState.add)
+        appendList(strings.text(.removedItems), prefix: "-", items: diffState.remove)
+        appendList(strings.text(.existingItems), prefix: "•", items: diffState.alreadyPresent)
+        return lines.joined(separator: "\n")
+    }
+
+    func candidateLineageClipboardText() -> String? {
+        guard let lineageState else { return nil }
+        var lines: [String] = [strings.text(.lineage), lineageState.candidateId]
+        for entry in lineageState.lineageEntries ?? [] {
+            lines.append("")
+            lines.append(entry.summary)
+            for key in entry.details.keys.sorted() {
+                lines.append("\(strings.lineageDetailLabel(key)): \(entry.details[key] ?? "")")
+            }
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    func copySelectedCandidateDetail() {
+        guard let value = candidateDetailClipboardText() else { return }
+        copyToClipboard(value, message: strings.copiedCommandMessage(context: strings.text(.detail)))
+    }
+
+    func copySelectedCandidateDiff() {
+        guard let value = candidateDiffClipboardText() else { return }
+        copyToClipboard(value, message: strings.copiedCommandMessage(context: strings.text(.diff)))
+    }
+
+    func copySelectedCandidateLineage() {
+        guard let value = candidateLineageClipboardText() else { return }
+        copyToClipboard(value, message: strings.copiedCommandMessage(context: strings.text(.lineage)))
+    }
+
+    func launchAgentCurrentStateClipboardText() -> String? {
+        guard let daemonState else { return nil }
+        var lines: [String] = [strings.text(.currentState)]
+        lines.append("\(strings.fieldLabel("plist_path")): \(daemonState.launchagentSummary.plistPath ?? strings.text(.none))")
+        lines.append("\(strings.text(.loadedStatus)): \(daemonState.launchagentSummary.loadedStatus.map(strings.tokenLabel) ?? strings.text(.none))")
+        if let returnCode = daemonState.launchagentStatus?["returncode"]?.displayText {
+            lines.append("\(strings.text(.returnCode)): \(returnCode)")
+        }
+        if let printCommand = daemonState.launchagentStatus?["print_command"]?.stringValue {
+            lines.append("\(strings.text(.nextCommand)): \(printCommand)")
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    func launchAgentRecoveryPreviewClipboardText() -> String? {
+        guard daemonState != nil else { return nil }
+        var lines: [String] = [strings.text(.reviewPreviews)]
+        lines.append("\(strings.diagnosticSummaryLabel("runtime_init")): \(strings.runtimeInitSummary(reviewRequired: runtimeInitReviewRequired, itemCount: runtimeInitItemCount))")
+        lines.append("\(strings.diagnosticSummaryLabel("cleanup_preview")): \(strings.cleanupSummary(removeCount: cleanupRemoveCount, totalCount: cleanupTotalCount))")
+        lines.append("\(strings.diagnosticSummaryLabel("repair_preview")): \(repairSummaryText)")
+        let diagnostics = launchAgentDiagnosticMessages
+        if !diagnostics.isEmpty {
+            lines.append("")
+            lines.append(contentsOf: diagnostics)
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    func copyLaunchAgentCurrentState() {
+        guard let value = launchAgentCurrentStateClipboardText() else { return }
+        copyToClipboard(value, message: strings.copiedCommandMessage(context: strings.text(.currentState)))
+    }
+
+    func copyLaunchAgentRecoveryPreview() {
+        guard let value = launchAgentRecoveryPreviewClipboardText() else { return }
+        copyToClipboard(value, message: strings.copiedCommandMessage(context: strings.text(.reviewPreviews)))
+    }
+
+    func daemonOperatorSummaryClipboardText() -> String? {
+        guard let daemonState else { return nil }
+        var lines: [String] = [strings.text(.operatorSummaryRail)]
+        lines.append("\(strings.fieldLabel("phase")): \(daemonState.operatorPhaseSummary.phase.map(strings.tokenLabel) ?? strings.text(.none))")
+        lines.append("\(strings.fieldLabel("status")): \(daemonState.operatorPhaseSummary.phaseStatus.map(strings.tokenLabel) ?? strings.text(.none))")
+        lines.append("\(strings.fieldLabel("readiness")): \(daemonState.operatorPhaseSummary.phaseReadiness.map(strings.tokenLabel) ?? strings.text(.none))")
+        if let blocker = daemonState.operatorPhaseSummary.blockingReasons.first {
+            lines.append("\(strings.text(.currentGate)): \(strings.tokenLabel(blocker))")
+        }
+        if let nextAction = daemonState.nextActions.first {
+            lines.append("\(strings.text(.nextCommand)): \(nextAction.command)")
+            if !nextAction.reason.isEmpty {
+                lines.append("\(strings.text(.reason)): \(nextAction.reason)")
+            }
+        }
+        let readSurfaces = Array(daemonState.operatorPhaseDetails.readSurfaces.prefix(3))
+        if !readSurfaces.isEmpty {
+            lines.append("")
+            lines.append(strings.text(.nextReadSurface))
+            lines.append(contentsOf: readSurfaces.map { "• \($0)" })
+        }
+        let implementationOrder = Array(daemonState.operatorPhaseDetails.recommendedImplementationOrder.prefix(3))
+        if !implementationOrder.isEmpty {
+            lines.append("")
+            lines.append(strings.text(.implementationOrder))
+            lines.append(contentsOf: implementationOrder.enumerated().map { "\($0.offset + 1). \(strings.summaryCardLabel($0.element))" })
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    func daemonPhaseGatesClipboardText() -> String? {
+        guard let checklist = daemonState?.operatorPhaseStatus?["phase_closure_checklist"]?.arrayValue, !checklist.isEmpty else {
+            return nil
+        }
+        var lines: [String] = [strings.text(.phaseClosureGates)]
+        for value in checklist {
+            guard let object = value.objectValue else { continue }
+            let item = object["item"]?.stringValue ?? strings.text(.none)
+            let status = object["status"]?.stringValue.map(strings.tokenLabel) ?? strings.text(.none)
+            lines.append("")
+            lines.append("\(item): \(status)")
+            let blockers = object["blocking_reasons"]?.arrayValue?.compactMap(\.stringValue) ?? []
+            if blockers.isEmpty {
+                lines.append("\(strings.text(.blockedBy)): \(strings.text(.none))")
+            } else {
+                lines.append("\(strings.text(.blockedBy)): \(strings.tokenLabel(blockers[0]))")
+                if blockers.count > 1 {
+                    lines.append(contentsOf: blockers.dropFirst().map { "• \(strings.tokenLabel($0))" })
+                }
+            }
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    func daemonReadSurfacesClipboardText() -> String? {
+        guard let daemonState else { return nil }
+        let readSurfaces = daemonState.operatorPhaseDetails.readSurfaces
+        guard !readSurfaces.isEmpty else { return nil }
+        var lines: [String] = [strings.text(.readSurfaces)]
+        lines.append(contentsOf: readSurfaces.enumerated().map { "\($0.offset + 1). \($0.element)" })
+        return lines.joined(separator: "\n")
+    }
+
+    func daemonSuggestedActionsClipboardText() -> String? {
+        guard let daemonState else { return nil }
+        let actions = daemonState.nextActions
+        guard !actions.isEmpty else { return nil }
+        var lines: [String] = [strings.text(.suggestedAction)]
+        for action in actions {
+            lines.append("")
+            lines.append(action.command)
+            if !action.reason.isEmpty {
+                lines.append("\(strings.text(.reason)): \(action.reason)")
+            }
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    func copyDaemonOperatorSummary() {
+        guard let value = daemonOperatorSummaryClipboardText() else { return }
+        copyToClipboard(value, message: strings.copiedCommandMessage(context: strings.text(.operatorSummaryRail)))
+    }
+
+    func copyDaemonPhaseGates() {
+        guard let value = daemonPhaseGatesClipboardText() else { return }
+        copyToClipboard(value, message: strings.copiedCommandMessage(context: strings.text(.phaseClosureGates)))
+    }
+
+    func copyDaemonReadSurfaces() {
+        guard let value = daemonReadSurfacesClipboardText() else { return }
+        copyToClipboard(value, message: strings.copiedCommandMessage(context: strings.text(.readSurfaces)))
+    }
+
+    func copyDaemonSuggestedActions() {
+        guard let value = daemonSuggestedActionsClipboardText() else { return }
+        copyToClipboard(value, message: strings.copiedCommandMessage(context: strings.text(.suggestedAction)))
+    }
+
+    func daemonHandoffExportText() -> String? {
+        guard let daemonState else { return nil }
+        var sections: [String] = []
+        sections.append(strings.text(.handoffSnapshot))
+        sections.append("")
+        sections.append("\(strings.text(.bridgeContext)):")
+        sections.append("\(strings.text(.generatedAt)): \(handoffExportTimestampText())")
+        sections.append("\(strings.text(.profile)): \(bridgeProfileID)")
+        sections.append("\(strings.text(.bridgeURL)): \(bridgeBaseURLText)")
+        sections.append("\(strings.text(.healthEndpoint)): \(bridgeHealthURLText)")
+        sections.append("\(strings.text(.debugShell)): \(bridgeDebugShellURLText)")
+        sections.append("\(strings.text(.tokenFile)): \(bridgeTokenFilePath)")
+        sections.append("\(strings.text(.logFile)): \(bridgeLogFilePath)")
+        sections.append("\(strings.text(.bridgeStatusPanel)): \(bridgeStatusHeadline)")
+        sections.append(bridgeStatusDetail)
+        if let health {
+            if let component = health.component, !component.isEmpty {
+                sections.append("\(strings.text(.component)): \(component)")
+            }
+            sections.append("\(strings.text(.bridgeVersion)): \(health.version ?? "-")")
+            if let sourceUpdatedAt = health.sourceUpdatedAt, !sourceUpdatedAt.isEmpty {
+                sections.append("\(strings.text(.sourceUpdatedAt)): \(sourceUpdatedAt)")
+            }
+        }
+        sections.append("")
+        sections.append("\(strings.fieldLabel("phase")): \(daemonState.operatorPhaseSummary.phase.map(strings.tokenLabel) ?? strings.text(.none))")
+        sections.append("\(strings.fieldLabel("status")): \(daemonState.operatorPhaseSummary.phaseStatus.map(strings.tokenLabel) ?? strings.text(.none))")
+        sections.append("\(strings.fieldLabel("readiness")): \(daemonState.operatorPhaseSummary.phaseReadiness.map(strings.tokenLabel) ?? strings.text(.none))")
+        sections.append("")
+        sections.append("\(strings.text(.statusDiagnostics)):")
+        if let firstAction = daemonState.nextActions.first {
+            sections.append("• \(strings.text(.nextCommand)): \(firstAction.command)")
+            if !firstAction.reason.isEmpty {
+                sections.append("• \(strings.text(.reason)): \(firstAction.reason)")
+            }
+        }
+        if let printCommand = daemonState.launchagentStatus?["print_command"]?.stringValue, !printCommand.isEmpty {
+            sections.append("• \(strings.text(.launchctlPrint)): \(printCommand)")
+        }
+        sections.append("")
+        sections.append("\(strings.text(.tailLogs)):")
+        if let stdoutTail = launchAgentLogTailCommand(kind: "stdout") {
+            sections.append("• \(strings.text(.stdoutTail)): \(stdoutTail)")
+        }
+        if let stderrTail = launchAgentLogTailCommand(kind: "stderr") {
+            sections.append("• \(strings.text(.stderrTail)): \(stderrTail)")
+        }
+        let preflight = preflightChecksForExport()
+        if !preflight.isEmpty {
+            sections.append("")
+            sections.append("\(strings.text(.preflightChecks)):")
+            sections.append(contentsOf: preflight.map { "• \($0)" })
+        }
+        let proof = proofDiagnosticCommandsForExport()
+        if !proof.isEmpty {
+            sections.append("")
+            sections.append("\(strings.text(.proofDiagnostics)):")
+            sections.append(contentsOf: proof.map { "• \($0)" })
+        }
+
+        if let operatorSummary = daemonOperatorSummaryClipboardText(), !operatorSummary.isEmpty {
+            sections.append("")
+            sections.append("\(strings.text(.operatorSummaryRail)):")
+            sections.append(operatorSummary)
+        }
+        if let actions = daemonSuggestedActionsClipboardText(), !actions.isEmpty {
+            sections.append("")
+            sections.append("\(strings.text(.suggestedAction)):")
+            sections.append(actions)
+        }
+        if let gates = daemonPhaseGatesClipboardText(), !gates.isEmpty {
+            sections.append("")
+            sections.append("\(strings.text(.phaseClosureGates)):")
+            sections.append(gates)
+        }
+        if let surfaces = daemonReadSurfacesClipboardText(), !surfaces.isEmpty {
+            sections.append("")
+            sections.append("\(strings.text(.readSurfaces)):")
+            sections.append(surfaces)
+        }
+        if let currentState = launchAgentCurrentStateClipboardText(), !currentState.isEmpty {
+            sections.append("")
+            sections.append("\(strings.text(.currentState)):")
+            sections.append(currentState)
+        }
+        if let recoveryPreview = launchAgentRecoveryPreviewClipboardText(), !recoveryPreview.isEmpty {
+            sections.append("")
+            sections.append("\(strings.text(.reviewPreviews)):")
+            sections.append(recoveryPreview)
+        }
+
+        return sections.joined(separator: "\n")
+    }
+
+    func daemonHandoffExportFilename() -> String {
+        "sayane-daemon-handoff-\(handoffExportFilenameTimestampText()).txt"
+    }
+
+    func exportDaemonHandoffNote() {
+        guard let value = daemonHandoffExportText(), !value.isEmpty else { return }
+        exportTextToFile(
+            value,
+            suggestedName: daemonHandoffExportFilename()
+        )
+    }
+
     func openQuickLink(_ link: QuickLink) {
         switch link.screen {
         case "candidate_queue":
@@ -662,6 +985,69 @@ final class AppModel: ObservableObject {
         actionTone = tone
     }
 
+    private func handoffExportTimestampText(now: Date = Date()) -> String {
+        ISO8601DateFormatter().string(from: now)
+    }
+
+    private func handoffExportFilenameTimestampText(now: Date = Date()) -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone.current
+        formatter.dateFormat = "yyyyMMdd-HHmmss"
+        return formatter.string(from: now)
+    }
+
+    private func launchAgentLogTailCommand(kind: String) -> String? {
+        let key = kind == "stderr" ? "stderr_path" : "stdout_path"
+        guard let path = daemonState?.launchagentPreview?[key]?.stringValue, !path.isEmpty else { return nil }
+        return "tail -f \(path)"
+    }
+
+    private func preflightChecksForExport() -> [String] {
+        [
+            "sayane init",
+            "sayane serve --host 127.0.0.1 --port 38741",
+            "curl -s http://127.0.0.1:38741/health",
+            "sayane app daemon-preflight --json",
+            "sayane app daemon-preflight --json --include-event-record",
+            "which sayane",
+        ]
+    }
+
+    private func proofDiagnosticCommandsForExport() -> [String] {
+        [
+            "sayane app daemon-identity-proof --json",
+            "sayane app daemon-readiness-proof --operation-class bridge_health --json",
+            "sayane app daemon-api-readiness-proof --operation-class bridge_health --json",
+            "sayane app daemon-proof-diagnostics --operation-class bridge_health --json",
+        ]
+    }
+
+    private func exportTextToFile(_ value: String, suggestedName: String) {
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = suggestedName
+        panel.allowedContentTypes = [.plainText]
+        panel.canCreateDirectories = true
+        panel.isExtensionHidden = false
+        if panel.runModal() == .OK, let url = panel.url {
+            do {
+                try value.write(to: url, atomically: true, encoding: .utf8)
+                showActionFeedback(
+                    title: strings.text(.savedFile),
+                    message: strings.savedFileMessage(path: url.path),
+                    tone: .positive
+                )
+            } catch {
+                showActionFeedback(
+                    title: strings.text(.actionFailed),
+                    message: error.localizedDescription,
+                    tone: .critical
+                )
+            }
+        }
+    }
+
     private func performMutation(_ operation: @escaping () async throws -> String?) async -> Bool {
         isLoading = true
         defer { isLoading = false }
@@ -700,4 +1086,44 @@ final class AppModel: ObservableObject {
     }
 
     private var pendingCandidateActionRecord: CandidateActionRecord?
+
+    private var runtimeInitReviewRequired: Bool {
+        daemonState?.runtimeInit["review_required"]?.boolValue ?? false
+    }
+
+    private var runtimeInitItemCount: Int {
+        daemonState?.runtimeInit["items"]?.arrayValue?.count ?? 0
+    }
+
+    private var cleanupRemoveCount: Int {
+        daemonState?.cleanupPreview["decision_report"]?.objectValue?["decisions"]?.arrayValue?.filter {
+            $0.objectValue?["recommended_action"]?.stringValue == "remove"
+        }.count ?? 0
+    }
+
+    private var cleanupTotalCount: Int {
+        daemonState?.cleanupPreview["decision_report"]?.objectValue?["decisions"]?.arrayValue?.count ?? 0
+    }
+
+    private var repairSummaryText: String {
+        let count = daemonState?.repairPreview["decisions"]?.objectValue?.count ?? 0
+        if count == 0 {
+            return strings.text(.none)
+        }
+        return strings.moreItemsMessage(count)
+    }
+
+    private var launchAgentDiagnosticMessages: [String] {
+        var lines: [String] = []
+        if let loaded = daemonState?.launchagentStatus?["loaded"]?.boolValue, loaded {
+            lines.append(strings.diagnosticMessage("launchagent_loaded"))
+        }
+        if let printCommand = daemonState?.launchagentStatus?["print_command"]?.stringValue, !printCommand.isEmpty {
+            lines.append(strings.diagnosticMessage("launchctl_print_available"))
+        }
+        if let stderr = daemonState?.launchagentStatus?["stderr"]?.stringValue, !stderr.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            lines.append(strings.diagnosticMessage("stderr_attention"))
+        }
+        return lines
+    }
 }

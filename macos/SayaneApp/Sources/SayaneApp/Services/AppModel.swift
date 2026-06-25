@@ -277,6 +277,41 @@ final class AppModel: ObservableObject {
         bridgeClient.configuration.debugShellURL.absoluteString
     }
 
+    var startupCommandText: String? {
+        let value = daemonState?.operatorPhaseDetails.currentSupportedOperatorPath.startupCommandText?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let value, !value.isEmpty else { return nil }
+        return value
+    }
+
+    var currentGateText: String? {
+        let token = daemonState?.operatorPhaseSummary.blockingReasons.first?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let token, !token.isEmpty else { return nil }
+        return strings.tokenLabel(token)
+    }
+
+    var nextDaemonCommandText: String? {
+        let value = daemonState?.nextActions.first?.command
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let value, !value.isEmpty else { return nil }
+        return value
+    }
+
+    var nextDaemonReasonText: String? {
+        let value = daemonState?.nextActions.first?.reason
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let value, !value.isEmpty else { return nil }
+        return value
+    }
+
+    var nextReadSurfaceText: String? {
+        let value = daemonState?.operatorPhaseDetails.readSurfaces.first?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let value, !value.isEmpty else { return nil }
+        return value
+    }
+
     var bridgeTokenFilePath: String {
         bridgeClient.configuration.tokenFileURL.path
     }
@@ -525,6 +560,21 @@ final class AppModel: ObservableObject {
         await bootstrapAndLoad()
     }
 
+    func performBridgeSuggestedAction() async {
+        guard let health else {
+            await startBridgeAndReload()
+            return
+        }
+        switch health.status {
+        case "ok", "healthy":
+            await refreshCurrentScreen()
+        case "starting", "bootstrapping":
+            await bootstrapAndLoad()
+        default:
+            await recoverSession()
+        }
+    }
+
     func startBridgeAndReload() async {
         isLoading = true
         defer { isLoading = false }
@@ -554,6 +604,14 @@ final class AppModel: ObservableObject {
         copyToClipboard(
             "curl -s \(bridgeHealthURLText)",
             message: strings.copiedCommandMessage(context: strings.text(.healthEndpoint))
+        )
+    }
+
+    func copyStartupCommand() {
+        guard let startupCommandText else { return }
+        copyToClipboard(
+            startupCommandText,
+            message: strings.copiedCommandMessage(context: strings.text(.startupCommand))
         )
     }
 

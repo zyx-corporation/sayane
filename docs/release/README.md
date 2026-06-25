@@ -26,6 +26,7 @@ This directory contains release notes, release closures, and release-prep docume
 ## Current resident app UI decision line
 
 - [ADR 0010 Resident App First Real UI Uses a Bridge-Hosted Local Web App Shell](../adr/0010-resident-app-first-real-ui-container.md) — accepted container decision for Issue 1 / the first real resident app UI shell
+- [ADR 0014 `/app/ui` Becomes a Debug-Only Compatibility Surface](../adr/0014-app-ui-debug-only-compatibility-surface.md) — accepted decision that native macOS is the primary operator UI while `/app/ui` remains a debug / smoke / fallback / handoff path
 - [v1.0.14 Home Screen Design Note](v1.0.14-home-screen-design-note.md) — implementation-ready direction for Issue 2 using `GET /app/screen-state/home`
 - [v1.0.14 Home Screen Implementation Skeleton](v1.0.14-home-screen-implementation-skeleton.md) — file-touch, acceptance, and test-plan skeleton for Issue 2
 - [v1.0.14 Candidate Queue Design Note](v1.0.14-candidate-queue-design-note.md) — implementation-ready direction for Issue 3 using `GET /app/screen-state/candidates`
@@ -155,4 +156,5 @@ Use these documents first:
 - [v1.0.62 Native Smoke Launcher Alignment Release Note](v1.0.62-native-smoke-launcher-alignment-release-note.md) — current native preview smoke now shares the same Bridge launcher path, stale-process cleanup, and timeout budget as the resident app shell
 - [v1.0.63 Resident App Full Release Smoke Release Note](v1.0.63-resident-app-full-release-smoke-release-note.md) — current one-command release smoke now covers API, UI session, and native preview together with launcher retry protection
 - [v1.0.64 Isolated Package Metadata Check Release Note](v1.0.64-isolated-package-metadata-check-release-note.md) — current local release-prep build path now verifies package metadata inside a short-lived isolated toolchain instead of depending on a damaged long-lived `nh3` install
+- [v1.0.65 Native Primary UI and Debug-Only Compatibility Release Note](v1.0.65-native-primary-ui-debug-only-compatibility-release-note.md) — current resident app line now states native macOS as the primary operator UI and `/app/ui` as debug-only compatibility, with fail-closed launcher/runtime checks
 - [v1.0.15 Post-App Follow-on Roadmap](v1.0.15-post-app-follow-on-roadmap.md) — current recommended order after the app-completion line

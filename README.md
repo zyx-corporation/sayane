@@ -140,10 +140,12 @@ Start here:
 ```bash
 git clone https://github.com/zyx-corporation/sayane.git
 cd sayane
-python -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
-pytest -q
+uv run --extra dev pytest -q
+# or keep a local venv explicitly:
+# python -m venv .venv
+# source .venv/bin/activate
+# pip install -e ".[dev]"
+# pytest -q
 ```
 
 Development references:

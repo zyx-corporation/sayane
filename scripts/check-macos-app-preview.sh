@@ -12,6 +12,7 @@ LOG_FILE="${SAYANE_MACOS_SMOKE_LOG_FILE:-$HOME/.sayane/macos-app-smoke.log}"
 START_LOCAL_SHELL=1
 RUN_BUILD=1
 RUN_TESTS=1
+WITH_DEBUG_SHELL=0
 VERBOSE=0
 TEST_TIMEOUT_SECONDS="${SAYANE_MACOS_SMOKE_TEST_TIMEOUT_SECONDS:-120}"
 CHECK_TIMEOUT_SECONDS="${SAYANE_MACOS_SMOKE_CHECK_TIMEOUT_SECONDS:-15}"
@@ -31,6 +32,7 @@ Options:
   --no-start   Use the existing Bridge instead of starting a fresh one
   --no-build   Skip swift build
   --no-tests   Skip swift test validation
+  --with-debug-shell  Also validate /app/ui compatibility shell flows
   --verbose    Print response-body and curl diagnostics on failure
   -h, --help   Show this help
 EOF
@@ -46,6 +48,9 @@ while [[ $# -gt 0 ]]; do
       ;;
     --no-tests)
       RUN_TESTS=0
+      ;;
+    --with-debug-shell)
+      WITH_DEBUG_SHELL=1
       ;;
     --verbose)
       VERBOSE=1
@@ -73,22 +78,60 @@ find_sayane() {
     return 0
   fi
   if command -v sayane >/dev/null 2>&1; then
-    command -v sayane
-    return 0
+    local sayane_bin
+    sayane_bin="$(command -v sayane)"
+    if sayane_supports_runtime "${sayane_bin}"; then
+      printf '%s\n' "${sayane_bin}"
+      return 0
+    fi
   fi
-  die "Could not find \`sayane\`."
+  die "Could not find a compatible \`sayane\` CLI. Run \`uv run --extra dev pytest -q\` once or create \`.venv\` with \`pip install -e \".[dev]\"\`."
 }
 
 find_python() {
-  if [[ -x "${ROOT}/.venv/bin/python" ]]; then
-    printf '%s\n' "${ROOT}/.venv/bin/python"
-    return 0
-  fi
-  if command -v python3 >/dev/null 2>&1; then
-    command -v python3
-    return 0
-  fi
-  die "Could not find \`python3\`."
+  local candidate
+  for candidate in "${ROOT}/.venv/bin/python" python3 python; do
+    if [[ "${candidate}" == *"/"* ]]; then
+      [[ -x "${candidate}" ]] || continue
+    elif ! command -v "${candidate}" >/dev/null 2>&1; then
+      continue
+    else
+      candidate="$(command -v "${candidate}")"
+    fi
+    if python_supports_sayane_runtime "${candidate}"; then
+      printf '%s\n' "${candidate}"
+      return 0
+    fi
+  done
+  die "Could not find a compatible Python runtime (>=3.11 with Sayane deps). Run \`uv run --extra dev pytest -q\` once or create \`.venv\` with \`pip install -e \".[dev]\"\`."
+}
+
+python_supports_sayane_runtime() {
+  local python_bin="$1"
+  "${python_bin}" - <<'PY' >/dev/null 2>&1
+import importlib
+import sys
+
+if sys.version_info < (3, 11):
+    raise SystemExit(1)
+
+required = [
+    "fastapi",
+    "pydantic",
+    "yaml",
+    "cryptography",
+    "typer",
+    "uvicorn",
+    "mcp",
+]
+for module_name in required:
+    importlib.import_module(module_name)
+PY
+}
+
+sayane_supports_runtime() {
+  local sayane_bin="$1"
+  "${sayane_bin}" --version >/dev/null 2>&1
 }
 
 capture_response_body() {
@@ -118,7 +161,9 @@ report_failure() {
   printf '  Cookie jar: %s\n' "${COOKIE_JAR}" >&2
   printf '  Log: %s\n' "${LOG_FILE}" >&2
   printf '  Hint: curl -s %s/health\n' "${BASE_URL}" >&2
-  printf '  Hint: open %s/app/ui?bootstrap_token=$(cat %s)\n' "${BASE_URL}" "${TOKEN_FILE}" >&2
+  if [[ "${WITH_DEBUG_SHELL}" == "1" ]]; then
+    printf '  Hint: open %s/app/ui?bootstrap_token=$(cat %s)\n' "${BASE_URL}" "${TOKEN_FILE}" >&2
+  fi
   if [[ -f "${LOG_FILE}" ]]; then
     printf '\nRecent Bridge log tail:\n' >&2
     tail -n 40 "${LOG_FILE}" >&2 || true
@@ -245,8 +290,8 @@ check_json_endpoint() {
 bootstrap_ui_session() {
   mkdir -p "$(dirname "${COOKIE_JAR}")"
   rm -f "${COOKIE_JAR}"
-  info "Bootstrapping resident app UI session"
-  CURRENT_STEP="bootstrapping ui session"
+  info "Bootstrapping resident app debug shell session"
+  CURRENT_STEP="bootstrapping debug shell session"
   capture_response_body \
     -fsS \
     -c "${COOKIE_JAR}" \
@@ -255,8 +300,8 @@ bootstrap_ui_session() {
 
 check_cookie_endpoint() {
   local path="$1"
-  info "Checking ${path} with UI session"
-  CURRENT_STEP="checking ${path} with ui session"
+  info "Checking ${path} with debug-shell session"
+  CURRENT_STEP="checking ${path} with debug-shell session"
   capture_response_body \
     -fsS \
     -b "${COOKIE_JAR}" \
@@ -291,14 +336,17 @@ main() {
   check_json_endpoint "/app/screen-state/candidates"
   check_json_endpoint "/app/screen-state/daemon"
 
-  bootstrap_ui_session
-  check_cookie_endpoint "/app/ui"
+  if [[ "${WITH_DEBUG_SHELL}" == "1" ]]; then
+    bootstrap_ui_session
+    check_cookie_endpoint "/app/ui"
+  fi
 
   cat <<EOF
 
 macOS app preview smoke check passed:
   Build: $( [[ "${RUN_BUILD}" == "1" ]] && printf 'yes' || printf 'skipped' )
   Tests: $( [[ "${RUN_TESTS}" == "1" ]] && printf 'yes' || printf 'skipped' )
+  Debug shell: $( [[ "${WITH_DEBUG_SHELL}" == "1" ]] && printf 'checked' || printf 'skipped' )
   Bridge: ${BASE_URL}
   Cookie jar: ${COOKIE_JAR}
   Log: ${LOG_FILE}

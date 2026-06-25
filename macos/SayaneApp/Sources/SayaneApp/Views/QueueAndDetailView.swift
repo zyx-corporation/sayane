@@ -69,24 +69,6 @@ struct QueueAndDetailView: View {
             queueStatusBar
             filterBar
             quickFilterBar
-            if let statusCounts = model.queueState?.statusCounts, !statusCounts.isEmpty {
-                GroupBox(model.strings.text(.statusCounts)) {
-                    ForEach(statusCounts.keys.sorted(), id: \.self) { key in
-                        HStack {
-                            Text(model.strings.statusValueLabel(key))
-                            Spacer()
-                            Text(String(statusCounts[key] ?? 0))
-                        }
-                    }
-                }
-            }
-            if let topSections = model.queueState?.topSections, !topSections.isEmpty {
-                GroupBox(model.strings.text(.topSections)) {
-                    ForEach(topSections) { section in
-                        HStack { Text(model.strings.residentValueLabel(section.section)); Spacer(); Text(String(section.count)) }
-                    }
-                }
-            }
             if model.isLoading && model.queueState == nil {
                 StateCardView(
                     icon: "arrow.triangle.2.circlepath",
@@ -175,12 +157,26 @@ struct QueueAndDetailView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     } else {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 6) {
-                                ForEach(activeFilterLabels, id: \.self) { label in
-                                    StatusBadge(text: label, tone: .caution)
-                                }
-                            }
+                        FlowLayout(activeFilterLabels, id: \.self, spacing: 6) { label in
+                            StatusBadge(text: label, tone: .caution)
+                        }
+                    }
+                }
+                if !statusCountBadges.isEmpty {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(model.strings.text(.statusCounts))
+                            .font(.caption.weight(.semibold))
+                        FlowLayout(statusCountBadges, id: \.self, spacing: 6) { label in
+                            StatusBadge(text: label, tone: .neutral)
+                        }
+                    }
+                }
+                if !topSectionBadges.isEmpty {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(model.strings.text(.topSections))
+                            .font(.caption.weight(.semibold))
+                        FlowLayout(topSectionBadges, id: \.self, spacing: 6) { label in
+                            StatusBadge(text: label, tone: .neutral)
                         }
                     }
                 }
@@ -195,18 +191,6 @@ struct QueueAndDetailView: View {
                 TextField(model.strings.text(.searchCandidates), text: $searchText)
                     .textFieldStyle(.roundedBorder)
                 HStack {
-                    Picker(model.strings.text(.status), selection: $selectedStatusFilter) {
-                        Text(model.strings.text(.allStatuses)).tag("")
-                        ForEach(availableStatuses, id: \.self) { status in
-                            Text(model.strings.statusValueLabel(status)).tag(status)
-                        }
-                    }
-                    Picker(model.strings.fieldLabel("section"), selection: $selectedSectionFilter) {
-                        Text(model.strings.text(.allSections)).tag("")
-                        ForEach(availableSections, id: \.self) { section in
-                            Text(model.strings.residentValueLabel(section)).tag(section)
-                        }
-                    }
                     Picker(model.strings.text(.sortOrder), selection: $sortMode) {
                         Text(model.strings.text(.sortNewest)).tag(SortMode.newest)
                         Text(model.strings.text(.sortStatus)).tag(SortMode.status)
@@ -227,6 +211,19 @@ struct QueueAndDetailView: View {
     private var quickFilterBar: some View {
         GroupBox(model.strings.text(.quickFilters)) {
             VStack(alignment: .leading, spacing: 8) {
+                if !selectedStatusFilter.isEmpty || !selectedSectionFilter.isEmpty {
+                    HStack {
+                        Text(model.strings.text(.activeFilters))
+                            .font(.caption.weight(.semibold))
+                        Spacer()
+                        Button(model.strings.text(.clearFilters)) {
+                            selectedStatusFilter = ""
+                            selectedSectionFilter = ""
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    }
+                }
                 if let statusCounts = model.queueState?.statusCounts, !statusCounts.isEmpty {
                     quickFilterChipGroup(
                         title: model.strings.text(.statusCounts),
@@ -262,7 +259,6 @@ struct QueueAndDetailView: View {
                 if let record = model.selectedCandidateActionRecord {
                     CandidateResultStrip(strings: model.strings, record: record)
                 }
-                detailCopyActions
                 if model.isLoading && model.detailState == nil && model.selectedCandidateID != nil {
                     StateCardView(
                         icon: "arrow.triangle.2.circlepath",
@@ -305,6 +301,7 @@ struct QueueAndDetailView: View {
                         detailSummary(summary)
                     }
                     reviewCommandDeck
+                    evidenceDrilldownSection
                     if let content = model.detailState?.content {
                         GroupBox(model.strings.text(.detail)) {
                             Text(content)
@@ -341,6 +338,30 @@ struct QueueAndDetailView: View {
             .disabled(model.lineageState == nil)
 
             Spacer()
+        }
+    }
+
+    private var evidenceDrilldownSection: some View {
+        GroupBox(model.strings.text(.evidenceDrilldown)) {
+            VStack(alignment: .leading, spacing: 10) {
+                Text(model.strings.text(.evidenceDrilldownSummary))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    if model.detailState != nil {
+                        StatusBadge(text: model.strings.text(.detail), tone: .positive)
+                    }
+                    if model.diffState != nil {
+                        StatusBadge(text: model.strings.text(.diff), tone: .caution)
+                    }
+                    if model.lineageState != nil {
+                        StatusBadge(text: model.strings.text(.lineage), tone: .neutral)
+                    }
+                    Spacer()
+                }
+                detailCopyActions
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -462,14 +483,6 @@ struct QueueAndDetailView: View {
         sortMode = .newest
     }
 
-    private var availableStatuses: [String] {
-        Array(Set((model.queueState?.items ?? []).compactMap(\.status))).sorted()
-    }
-
-    private var availableSections: [String] {
-        Array(Set((model.queueState?.items ?? []).compactMap(\.section))).sorted()
-    }
-
     private func formattedCapturedAt(_ rawValue: String?) -> String? {
         guard let rawValue, !rawValue.isEmpty else { return nil }
         guard let date = ISO8601DateFormatter().date(from: rawValue) else { return rawValue }
@@ -512,6 +525,26 @@ struct QueueAndDetailView: View {
             values.append("\"\(query)\"")
         }
         return values
+    }
+
+    private var statusCountBadges: [String] {
+        guard let statusCounts = model.queueState?.statusCounts else { return [] }
+        let sorted = statusCounts.keys.sorted {
+            let lhs = statusCounts[$0] ?? 0
+            let rhs = statusCounts[$1] ?? 0
+            if lhs != rhs { return lhs > rhs }
+            return $0 < $1
+        }
+        return Array(sorted.prefix(3)).map { key in
+            "\(model.strings.statusValueLabel(key)) (\(statusCounts[key] ?? 0))"
+        }
+    }
+
+    private var topSectionBadges: [String] {
+        guard let topSections = model.queueState?.topSections else { return [] }
+        return Array(topSections.prefix(3)).map { section in
+            "\(model.strings.residentValueLabel(section.section)) (\(section.count))"
+        }
     }
 
     private var actionReadinessItems: [ActionReadinessItem] {
@@ -594,18 +627,16 @@ struct QueueAndDetailView: View {
         if !items.isEmpty {
             VStack(alignment: .leading, spacing: 6) {
                 Text(title).bold()
-                HStack(spacing: 6) {
-                    ForEach(items, id: \.self) { item in
-                        Button {
-                            action(item)
-                        } label: {
-                            StatusBadge(
-                                text: label(item),
-                                tone: selection == item ? .caution : .neutral
-                            )
-                        }
-                        .buttonStyle(.plain)
+                FlowLayout(items, id: \.self, spacing: 6) { item in
+                    Button {
+                        action(item)
+                    } label: {
+                        StatusBadge(
+                            text: label(item),
+                            tone: selection == item ? .caution : .neutral
+                        )
                     }
+                    .buttonStyle(.plain)
                 }
             }
         }

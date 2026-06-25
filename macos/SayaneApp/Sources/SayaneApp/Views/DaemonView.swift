@@ -760,34 +760,78 @@ struct DaemonView: View {
                 GroupBox(model.strings.text(.supportedPath)) {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(details.currentSupportedOperatorPath.startupCommandText ?? model.strings.text(.none))
+                            .font(.subheadline.weight(.semibold))
                         if let bootstrapUI = details.currentSupportedOperatorPath.bootstrapUI {
+                            Text(model.strings.text(.debugShell))
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.secondary)
                             Text(bootstrapUI).foregroundStyle(.secondary)
                         }
-                        BulletListView(
-                            values: details.workstreams.map {
-                                "\(model.strings.summaryCardLabel($0.name)): \($0.status.map(model.strings.tokenLabel) ?? "-") · \($0.detail ?? "")"
+                        if let localOnly = details.currentSupportedOperatorPath.localOnly {
+                            DetailLabelValueRow(
+                                label: model.strings.text(.localOnly),
+                                value: model.strings.booleanValueLabel(localOnly)
+                            )
+                        }
+                        if !details.currentSupportedOperatorPath.notes.isEmpty {
+                            Text(model.strings.text(.notes))
+                                .font(.caption.weight(.semibold))
+                            BulletListView(values: Array(details.currentSupportedOperatorPath.notes.prefix(2)))
+                            if details.currentSupportedOperatorPath.notes.count > 2 {
+                                Text(model.strings.moreItemsMessage(details.currentSupportedOperatorPath.notes.count - 2))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
                             }
-                        )
+                        }
+                        if !details.workstreams.isEmpty {
+                            Text(model.strings.text(.workstreams))
+                                .font(.caption.weight(.semibold))
+                            BulletListView(
+                                values: Array(details.workstreams.prefix(3)).map {
+                                    "\(model.strings.summaryCardLabel($0.name)): \($0.status.map(model.strings.tokenLabel) ?? "-")"
+                                }
+                            )
+                            if details.workstreams.count > 3 {
+                                Text(model.strings.moreItemsMessage(details.workstreams.count - 3))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 GroupBox(model.strings.text(.exitCriteria)) {
                     VStack(alignment: .leading, spacing: 6) {
-                        BulletListView(values: details.exitCriteria)
+                        BulletListView(values: Array(details.exitCriteria.prefix(4)))
+                        if details.exitCriteria.count > 4 {
+                            Text(model.strings.moreItemsMessage(details.exitCriteria.count - 4))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 GroupBox(model.strings.text(.readSurfaces)) {
                     VStack(alignment: .leading, spacing: 6) {
-                        ForEach(details.readSurfaces, id: \.self) { surface in
+                        ForEach(Array(details.readSurfaces.prefix(3)), id: \.self) { surface in
                             commandRow(surface)
+                        }
+                        if details.readSurfaces.count > 3 {
+                            Text(model.strings.moreItemsMessage(details.readSurfaces.count - 3))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 GroupBox(model.strings.text(.notInScope)) {
                     VStack(alignment: .leading, spacing: 6) {
-                        BulletListView(values: details.notInScope)
+                        BulletListView(values: Array(details.notInScope.prefix(4)))
+                        if details.notInScope.count > 4 {
+                            Text(model.strings.moreItemsMessage(details.notInScope.count - 4))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -806,6 +850,9 @@ struct DaemonView: View {
                     if let bootstrapUI = startup["bootstrap_ui"]?.stringValue {
                         Text(model.strings.text(.bootstrapUI)).bold()
                         commandRow(bootstrapUI)
+                        Text(model.strings.text(.debugShellCompatibilitySummary))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                     if let localOnly = startup["local_only"]?.boolValue {
                         DetailLabelValueRow(
@@ -1285,14 +1332,6 @@ struct DaemonView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
-                HStack {
-                    Button(model.strings.text(.openPlist)) {
-                        model.openLaunchAgentPlist()
-                    }
-                    Button(model.strings.text(.openRuntime)) {
-                        model.openRuntimeDirectory()
-                    }
-                }
             }
         }
     }
@@ -1355,6 +1394,9 @@ struct DaemonView: View {
             isExpanded: $showLaunchAgentRunbook
         ) {
             VStack(alignment: .leading, spacing: 10) {
+                Text(model.strings.text(.proofDiagnosticsSummary))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 commandListGroup(
                     title: model.strings.text(.preflightChecks),
                     commands: preflightChecks
@@ -1386,14 +1428,6 @@ struct DaemonView: View {
                     title: model.strings.text(.tailLogs),
                     commands: logTailCommands
                 )
-                HStack {
-                    Button(model.strings.text(.copyStdoutTail)) {
-                        model.copyLaunchAgentLogTailCommand(kind: "stdout")
-                    }
-                    Button(model.strings.text(.copyStderrTail)) {
-                        model.copyLaunchAgentLogTailCommand(kind: "stderr")
-                    }
-                }
                 metadataGroup(
                     title: model.strings.text(.environmentAssumptions),
                     values: environmentAssumptions
@@ -2596,31 +2630,4 @@ struct DaemonView: View {
         model.strings.commandPriorityTitle(for: action.command)
     }
 
-}
-
-private struct FlowLayout<Data: RandomAccessCollection, ID: Hashable, Content: View>: View {
-    let data: Data
-    let id: KeyPath<Data.Element, ID>
-    let spacing: CGFloat
-    @ViewBuilder let content: (Data.Element) -> Content
-
-    init(
-        _ data: Data,
-        id: KeyPath<Data.Element, ID>,
-        spacing: CGFloat = 8,
-        @ViewBuilder content: @escaping (Data.Element) -> Content
-    ) {
-        self.data = data
-        self.id = id
-        self.spacing = spacing
-        self.content = content
-    }
-
-    var body: some View {
-        HStack(spacing: spacing) {
-            ForEach(Array(data), id: id) { element in
-                content(element)
-            }
-        }
-    }
 }

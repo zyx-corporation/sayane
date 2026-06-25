@@ -6,6 +6,38 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.0.14.post1] - 2026-06-25 Native-First Resident App Hardening
+
+### Summary
+
+Sayane `v1.0.14.post1` continues the resident app release line without changing
+the broader daemon / OS-service boundary. It makes the native macOS app the
+clear primary operator UI, keeps `/app/ui` as a debug-only compatibility
+surface, hardens local launcher/runtime checks, and fixes package build
+exclusions so local build artifacts do not leak into release archives.
+
+### Changed
+
+- Clarified the current resident app direction as native macOS first, with
+  `/app/ui` retained for debug / smoke / fallback / handoff only.
+- Reshaped native Bridge / queue / daemon / error surfaces so recovery,
+  startup guidance, next command, and evidence drill-down stay action-first.
+- Added wrapping badge/chip layout in the native app so narrower windows no
+  longer force horizontal scanning through filters and section badges.
+- Hardened local launcher and smoke scripts to fail closed unless they find a
+  compatible Python runtime (`>=3.11` with Sayane dependencies available).
+- Shifted local validation guidance toward `uv run --extra dev ...` so damaged
+  user-local `pytest` shims do not block reproducible verification.
+- Excluded local build outputs such as `macos/SayaneApp/.build/**` from the
+  packaged source distribution.
+
+### Validation
+
+- `uv run --extra dev pytest -q tests/test_resident_app_cli.py tests/test_resident_app_regression.py tests/test_bridge_api.py tests/test_resident_app_html.py`
+- `swift test --package-path macos/SayaneApp`
+- `bash scripts/check-resident-app-release-smoke.sh --start --with-native`
+- `bash scripts/build-wheel.sh`
+
 ## [1.0.14] - 2026-06-24 Resident App Release Reliability
 
 ### Summary

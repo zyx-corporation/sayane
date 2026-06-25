@@ -151,9 +151,30 @@ cd extension && npm install && npm run build
 
 → [Bridge マニュアル](bridge-manual.md) / [Extension マニュアル](extension-manual.md)
 
-### 5.4 resident app local shell（current app-first path）
+### 5.4 native macOS app（current primary UI path）
 
-現行の operator-facing growth path は、extension ではなく Bridge-hosted local shell である。
+現行の primary operator-facing growth path は、Bridge-hosted local shell ではなく
+**native macOS app** である。`/app/ui` は debug-only compatibility surface として残っている。
+
+```bash
+./scripts/run-macos-app-preview.sh
+# 必要なら:
+# ./scripts/run-macos-app-preview.sh --foreground
+# ./scripts/run-macos-app-preview.sh --no-build
+swift build --package-path macos/SayaneApp
+swift test --package-path macos/SayaneApp
+# Python 側の関連確認は:
+# uv run --extra dev pytest -q tests/test_bridge_api.py tests/test_resident_app_html.py
+```
+
+これらの launcher / smoke script は、`>=3.11` かつ Sayane 依存込みの Python を前提にする。
+`uv run --extra dev ...` を一度通すか、`.venv` を作って `pip install -e ".[dev]"` しておく。
+
+native app は bearer-backed app-facing resident surfaces を直接利用する。
+
+### 5.5 resident app debug shell（debug-only compatibility path）
+
+Bridge-hosted local shell は、debug / fallback / handoff / browser-local smoke 向けに維持する。
 
 ```bash
 ./scripts/run-app-local.sh
@@ -174,6 +195,9 @@ sayane app daemon-operator-phase-status --json
 sayane app daemon-preflight --json
 sayane app daemon-proof-diagnostics --operation-class bridge_health --json
 ```
+
+`run-app-local.sh` も同じ前提で動く。互換 Python が見つからない場合は fail-closed で止まるため、
+その場合は `uv run --extra dev pytest -q` か `.venv` 構築を先に行う。
 
 Bridge-hosted daemon shell では、UI session 確立後に次の read surface へそのまま drill-down できる:
 

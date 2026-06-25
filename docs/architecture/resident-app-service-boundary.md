@@ -287,7 +287,8 @@ of introducing a parallel profile-mutation path.
 
 ## Local Bootstrap HTML UI
 
-The current resident app phase also includes a local Bridge HTML bootstrap UI:
+The current resident app phase also includes a local Bridge HTML bootstrap UI retained as a
+debug-only compatibility surface:
 
 ```text
 GET /app/ui
@@ -299,7 +300,8 @@ GET /app/ui/daemon
 
 This HTML layer is a presentation seam over the existing app-facing resident surfaces.
 
-It is not the final GUI framework and does not add a new mutation boundary.
+It is not the final GUI framework, does not add a new mutation boundary, and is not the primary
+operator-facing UI path.
 
 The current bootstrap UI also includes:
 

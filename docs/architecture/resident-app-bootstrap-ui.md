@@ -1,16 +1,16 @@
 # Resident App Bootstrap UI
 
-Status: bridge_hosted_local_shell_mvp
+Status: debug_only_compatibility_shell
 
 ## Goal
 
-This document records the current local Bridge HTML bootstrap UI for the Resident App.
+This document records the current local Bridge HTML bootstrap UI retained for the Resident App.
 
-The bootstrap UI started as a server-rendered navigation layer and now also hosts the first real
-Bridge-local Sayane Resident App local shell.
+The bootstrap UI started as a server-rendered navigation layer and now also hosts the Bridge-local
+debug shell compatibility surface.
 
-It exists to make the current resident app surfaces human-navigable and interactable without
-choosing the final production packaging or desktop container.
+It exists to keep the current resident app surfaces human-navigable for debug, smoke, fallback,
+and handoff without changing the native-app-first packaging decision.
 
 ## Current local HTML surfaces
 
@@ -64,7 +64,7 @@ local HTML screen / form
         -> repository and review seams
 ```
 
-The retained server-rendered HTML layer remains presentation-only.
+The retained server-rendered HTML layer remains presentation-only and debug-only.
 
 The cookie-backed shell JSON layer must not become a parallel mutation model outside the existing
 resident app and review surfaces.
@@ -78,8 +78,8 @@ The bootstrap UI currently uses:
 3. local UI locale cookie for follow-up bootstrap HTML rendering after an explicit `?locale=` choice
 
 The JSON shell endpoints under `/app/ui-state/*` and `/app/ui-action/*` reuse that same local UI
-session cookie so a browser-local shell can fetch screen state and submit review actions without
-embedding the bearer token into page JavaScript.
+session cookie so the browser-local debug shell can fetch screen state and submit review actions
+without embedding the bearer token into page JavaScript.
 
 ## Feedback seam
 
@@ -161,6 +161,9 @@ This alignment is handoff-ready visibility, not post-app phase closure. The loca
 describe the same bounded operator path without claiming shipped background supervision across every
 target platform.
 
+The native macOS app is now the primary operator-facing UI path. The bootstrap shell is retained
+only as a debug-only compatibility surface and should not receive primary operator-flow expansion.
+
 ## Boundaries
 
 The bootstrap UI must not:
@@ -170,6 +173,7 @@ The bootstrap UI must not:
 - overclaim daemon or API readiness
 - claim process identity proof
 - commit to Tauri, React, webview, tray, or another final GUI framework
+- replace the native macOS app as the primary operator-facing UI path
 
 ## Related documents
 

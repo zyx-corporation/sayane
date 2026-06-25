@@ -219,9 +219,9 @@ BOOTSTRAP_COPY_DETAILS: dict[str, str] = {
     "detail.launchagent_assist_cleanup": "Review the cleanup preview before touching the local service line.",
     "detail.launchagent_assist_repair": "Review the repair preview before touching the local service line.",
     "detail.launchagent_assist_healthy": "Re-check the current LaunchAgent state from the inspection commands.",
-    "detail.evaluate_level_1": "Level 1 — Quick check (heuristics only)",
-    "detail.evaluate_level_2": "Level 2 — Local AI check (includes Level 1)",
-    "detail.evaluate_level_3": "Level 3 — External AI check (includes Level 1)",
+    "detail.evaluate_level_1": "Quick check (heuristics only)",
+    "detail.evaluate_level_2": "Local AI check (includes quick check)",
+    "detail.evaluate_level_3": "External AI check (includes local and quick checks)",
     "detail.evaluate_level_short_1": "Quick check",
     "detail.evaluate_level_short_2": "Local AI check",
     "detail.evaluate_level_short_3": "External AI check",
@@ -670,9 +670,9 @@ BOOTSTRAP_COPY_JA_DETAILS: dict[str, str] = {
     "detail.launchagent_assist_cleanup": "ローカル service line に触る前に cleanup preview を確認します。",
     "detail.launchagent_assist_repair": "ローカル service line に触る前に repair preview を確認します。",
     "detail.launchagent_assist_healthy": "確認系コマンドから現在の LaunchAgent 状態を再確認します。",
-    "detail.evaluate_level_1": "レベル1 — クイック確認（ヒューリスティックのみ）",
-    "detail.evaluate_level_2": "レベル2 — ローカルAI確認（レベル1を含む）",
-    "detail.evaluate_level_3": "レベル3 — 外部AI確認（レベル1を含む）",
+    "detail.evaluate_level_1": "クイック確認（ヒューリスティックのみ）",
+    "detail.evaluate_level_2": "ローカルAI確認（クイック確認を含む）",
+    "detail.evaluate_level_3": "外部AI確認（ローカルAI確認とクイック確認を含む）",
     "detail.evaluate_level_short_1": "クイック確認",
     "detail.evaluate_level_short_2": "ローカルAI確認",
     "detail.evaluate_level_short_3": "外部AI確認",
@@ -1065,6 +1065,25 @@ button:disabled {{ cursor:not-allowed; opacity:.55; }}
 .shell-meta {{ display:grid; gap:12px; grid-template-columns: minmax(0, 1fr) auto; align-items:start; }}
 .shell-session-panel {{ display:grid; gap:10px; justify-items:start; }}
 .shell-table-wrap {{ overflow-x:auto; }}
+.resident-queue-table {{ table-layout: fixed; min-width: 940px; }}
+.resident-queue-table th:nth-child(1), .resident-queue-table td:nth-child(1) {{ width: 17%; }}
+.resident-queue-table th:nth-child(2), .resident-queue-table td:nth-child(2) {{ width: 12%; }}
+.resident-queue-table th:nth-child(3), .resident-queue-table td:nth-child(3) {{ width: 14%; }}
+.resident-queue-table th:nth-child(4), .resident-queue-table td:nth-child(4) {{ width: 21%; }}
+.resident-queue-table th:nth-child(5), .resident-queue-table td:nth-child(5) {{ width: 36%; }}
+.queue-evaluation-cell strong {{ display:block; margin-bottom:4px; }}
+.queue-preview-cell {{ line-height: 1.45; }}
+.queue-preview-cell .detail {{ display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; font-size:.88rem; color:#334155; margin-top:0; }}
+.queue-actions-copy {{ margin: 0 0 12px 0; color:#475569; }}
+.action-form-section {{ display:grid; gap:8px; }}
+.action-form-section + .action-form-section {{ border-top:1px solid #e2e8f0; margin-top:16px; padding-top:16px; }}
+.action-form-section p {{ margin:0; }}
+.action-form-grid {{ display:grid; gap:10px; }}
+.action-form-grid label {{ font-weight:600; color:#334155; }}
+.action-form-help {{ font-size:.9rem; color:#64748b; }}
+.action-form-inline {{ display:grid; gap:10px; grid-template-columns:minmax(0,1fr) auto; align-items:end; }}
+select {{ font: inherit; border: 1px solid #cbd5e1; background: white; border-radius: 8px; padding: 8px 12px; }}
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {{ outline:none; box-shadow:0 0 0 3px rgba(37,99,235,.25); border-color:#2563eb; }}
 @media (min-width: 960px) {{
   .shell-grid.two-up {{ grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr); }}
 }}
@@ -2616,8 +2635,8 @@ def _render_resident_app_shell_bootstrap(
         <td><button type="button" class="link-button" data-open-detail="${{escapeHtml(item.id)}}">${{escapeHtml(item.id)}}</button></td>
         <td>${{escapeDisplayHtml(item.status)}}</td>
         <td>${{escapeDisplayHtml(item.section)}}</td>
-        <td>${{escapeHtml(formatEvaluationLevel(item.evaluation_level))}} / ${{escapeDisplayHtml(item.rde_class || "—")}}</td>
-        <td>${{escapeHtml(item.content_preview)}}</td>
+        <td class="queue-evaluation-cell"><strong>${{escapeHtml(formatEvaluationLevel(item.evaluation_level))}}</strong><div class="detail">${{escapeDisplayHtml(item.rde_class || strings.notEvaluatedShort || "—")}}</div></td>
+        <td class="queue-preview-cell"><div class="detail">${{escapeHtml(item.content_preview)}}</div></td>
       </tr>`).join("") || `<tr><td colspan="5" class="muted">${{escapeHtml(hasQueueState ? strings.emptyReviewableCandidates : strings.emptyPreview)}}</td></tr>`;
     root.innerHTML = `
       ${{shellHeader()}}
@@ -2635,7 +2654,7 @@ def _render_resident_app_shell_bootstrap(
       </div>
       <div class="panel">
         <p><a href="${{escapeHtml(legacyHref("queue"))}}">${{escapeHtml(strings.openLegacyPage)}}</a></p>
-        <div class="shell-table-wrap"><table>
+        <div class="shell-table-wrap"><table class="resident-queue-table">
           <thead><tr><th>${{escapeHtml(localizeTableLabel("id"))}}</th><th>${{escapeHtml(localizeTableLabel("status"))}}</th><th>${{escapeHtml(localizeTableLabel("section"))}}</th><th>${{escapeHtml(localizeTableLabel("evaluation"))}}</th><th>${{escapeHtml(localizeTableLabel("preview"))}}</th></tr></thead>
           <tbody>${{rows}}</tbody>
         </table></div>
@@ -3301,8 +3320,8 @@ def render_resident_app_candidate_queue(
             f'<td><a href="/app/ui/candidates/{escape(item["id"])}">{escape(item["id"])}</a></td>'
             f'<td><span class="pill pill-{escape(item.get("status", ""))}">{escape(_translate_display_token(item.get("status", ""), locale))}</span></td>'
             f'<td>{escape(_translate_display_token(item.get("section", ""), locale))}</td>'
-            f'<td>{escape(_evaluation_level_label(item.get("evaluation_level"), locale) if item.get("evaluation_level") is not None else "-")} / {escape(_translate_display_token(item.get("rde_class", ""), locale) if item.get("rde_class") else _copy("detail.not_evaluated_short", locale))}</td>'
-            f'<td>{escape(item.get("content_preview", ""))}</td>'
+            f'<td class="queue-evaluation-cell"><strong>{escape(_evaluation_level_label(item.get("evaluation_level"), locale) if item.get("evaluation_level") is not None else _copy("detail.not_evaluated_short", locale))}</strong><div class="detail">{escape(_translate_display_token(item.get("rde_class", ""), locale) if item.get("rde_class") else _copy("detail.not_evaluated_short", locale))}</div></td>'
+            f'<td class="queue-preview-cell"><div class="detail">{escape(item.get("content_preview", ""))}</div></td>'
             "</tr>"
         )
         for item in items
@@ -3318,10 +3337,10 @@ def render_resident_app_candidate_queue(
 <p><strong>{escape(_copy("label.reviewable_count", locale))}:</strong> {escape(str(payload.get("reviewable_count", 0)))}</p>
 <p><strong>{escape(_copy("label.pending", locale))}:</strong> {pending_count} · <strong>{escape(_copy("label.evaluated", locale))}:</strong> {evaluated_count}</p>
 {queue_summary_cards}
-<table>
+<div class="shell-table-wrap"><table class="resident-queue-table">
 <thead><tr><th>{escape(_copy("table.id", locale))}</th><th>{escape(_copy("table.status", locale))}</th><th>{escape(_copy("table.section", locale))}</th><th>{escape(_copy("table.evaluation", locale))}</th><th>{escape(_copy("table.preview", locale))}</th></tr></thead>
 <tbody>{item_html}</tbody>
-</table>
+</table></div>
 """
     return _page(_copy("title.queue", locale), body, locale=locale, notice=notice, error=error)
 
@@ -3372,29 +3391,43 @@ def render_resident_app_candidate_detail(
     actions_panel = _render_panel(
         _copy("label.actions", locale),
         f"""
-<form method="post" action="/app/ui/candidates/{escape(candidate.get("id", ""))}/evaluate">
-<p><label for="evaluate-level">{escape(_copy("label.evaluate_level", locale))}</label> <select id="evaluate-level" name="level">{_evaluation_level_options(1, locale)}</select></p>
-<p><button type="submit">{escape(_copy("action.evaluate", locale))}</button></p>
+<p class="queue-actions-copy">{escape(_copy("detail.action_guidance_pending", locale))}</p>
+<section class="action-form-section">
+<form class="action-form-grid" method="post" action="/app/ui/candidates/{escape(candidate.get("id", ""))}/evaluate">
+<label for="evaluate-level">{escape(_copy("label.evaluate_level", locale))}</label>
+<p class="action-form-help">{escape(_copy("detail.action_guidance", locale))}</p>
+<div class="action-form-inline">
+<select id="evaluate-level" name="level">{_evaluation_level_options(1, locale)}</select>
+<button type="submit">{escape(_copy("action.evaluate", locale))}</button>
+</div>
 </form>
-<hr>
-<form method="post" action="/app/ui/candidates/{escape(candidate.get("id", ""))}/approve">
-<p><label for="approve-override">{escape(_copy("label.override_reason", locale))}</label> <input id="approve-override" name="override_reason"></p>
-<p><label><input type="checkbox" name="force_critical" value="true"> {escape(_copy("label.force_critical_approve", locale))}</label></p>
-<p><button type="submit">{escape(_copy("action.approve", locale))}</button></p>
+</section>
+<section class="action-form-section">
+<form class="action-form-grid" method="post" action="/app/ui/candidates/{escape(candidate.get("id", ""))}/approve">
+<label for="approve-override">{escape(_copy("label.override_reason", locale))}</label>
+<input id="approve-override" name="override_reason">
+<label><input type="checkbox" name="force_critical" value="true"> {escape(_copy("label.force_critical_approve", locale))}</label>
+<button type="submit">{escape(_copy("action.approve", locale))}</button>
 </form>
-<hr>
-<form method="post" action="/app/ui/candidates/{escape(candidate.get("id", ""))}/reject">
-<p><label for="reject-reason">{escape(_copy("label.reject_reason", locale))}</label> <input id="reject-reason" name="reason"></p>
-<p><button type="submit">{escape(_copy("action.reject", locale))}</button></p>
+</section>
+<section class="action-form-section">
+<form class="action-form-grid" method="post" action="/app/ui/candidates/{escape(candidate.get("id", ""))}/reject">
+<label for="reject-reason">{escape(_copy("label.reject_reason", locale))}</label>
+<input id="reject-reason" name="reason">
+<button type="submit">{escape(_copy("action.reject", locale))}</button>
 </form>
-<hr>
-<form method="post" action="/app/ui/candidates/{escape(candidate.get("id", ""))}/revise">
-<p><label for="revise-content"><strong>{escape(_copy("label.revised_content", locale))}</strong></label></p>
-<p><textarea id="revise-content" name="edited_text" rows="8" style="width:100%;">{escape(candidate.get("content", ""))}</textarea></p>
-<p><label for="revise-section">{escape(_copy("label.target_section", locale))}</label> <input id="revise-section" name="target_section" value="{escape(proposal.get("section", ""))}"></p>
-<p><label for="revise-reason">{escape(_copy("label.change_reason", locale))}</label> <input id="revise-reason" name="change_reason"></p>
-<p><button type="submit">{escape(_copy("action.create_revised_candidate", locale))}</button></p>
+</section>
+<section class="action-form-section">
+<form class="action-form-grid" method="post" action="/app/ui/candidates/{escape(candidate.get("id", ""))}/revise">
+<label for="revise-content">{escape(_copy("label.revised_content", locale))}</label>
+<textarea id="revise-content" name="edited_text" rows="8" style="width:100%;">{escape(candidate.get("content", ""))}</textarea>
+<label for="revise-section">{escape(_copy("label.target_section", locale))}</label>
+<input id="revise-section" name="target_section" value="{escape(proposal.get("section", ""))}">
+<label for="revise-reason">{escape(_copy("label.change_reason", locale))}</label>
+<input id="revise-reason" name="change_reason">
+<button type="submit">{escape(_copy("action.create_revised_candidate", locale))}</button>
 </form>
+</section>
 """
     )
     body = f"""

@@ -250,7 +250,8 @@ struct HomeView: View {
             ))
         }
 
-        if let daemonAction = model.homeState?.topDaemonActions.first {
+        if model.currentGateText == nil, model.nextDaemonCommandText == nil, model.nextReadSurfaceText == nil,
+           let daemonAction = model.homeState?.topDaemonActions.first {
             items.append((
                 model.strings.text(.reviewDaemonAction),
                 homeDaemonActionSummary(daemonAction),

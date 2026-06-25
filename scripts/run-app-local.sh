@@ -62,19 +62,44 @@ while [[ $# -gt 0 ]]; do
 done
 
 find_sayane_python() {
-  if [[ -x "${ROOT}/.venv/bin/python" ]]; then
-    printf '%s\n' "${ROOT}/.venv/bin/python"
-    return 0
-  fi
-  if command -v python >/dev/null 2>&1; then
-    command -v python
-    return 0
-  fi
-  if command -v python3 >/dev/null 2>&1; then
-    command -v python3
-    return 0
-  fi
-  die "Could not find \`python3\` for background Bridge startup."
+  local candidate
+  for candidate in "${ROOT}/.venv/bin/python" python3 python; do
+    if [[ "${candidate}" == *"/"* ]]; then
+      [[ -x "${candidate}" ]] || continue
+    elif ! command -v "${candidate}" >/dev/null 2>&1; then
+      continue
+    else
+      candidate="$(command -v "${candidate}")"
+    fi
+    if python_supports_sayane_runtime "${candidate}"; then
+      printf '%s\n' "${candidate}"
+      return 0
+    fi
+  done
+  die "Could not find a compatible Python runtime (>=3.11 with Sayane deps). Run \`uv run --extra dev pytest -q\` once or create \`.venv\` with \`pip install -e \".[dev]\"\`."
+}
+
+python_supports_sayane_runtime() {
+  local python_bin="$1"
+  "${python_bin}" - <<'PY' >/dev/null 2>&1
+import importlib
+import sys
+
+if sys.version_info < (3, 11):
+    raise SystemExit(1)
+
+required = [
+    "fastapi",
+    "pydantic",
+    "yaml",
+    "cryptography",
+    "typer",
+    "uvicorn",
+    "mcp",
+]
+for module_name in required:
+    importlib.import_module(module_name)
+PY
 }
 
 SAYANE_PYTHON_BIN="$(find_sayane_python)"

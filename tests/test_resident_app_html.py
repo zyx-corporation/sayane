@@ -137,7 +137,7 @@ def test_render_resident_app_home_supports_japanese_locale() -> None:
     assert "表示言語" in html
     assert "保留候補を作成" in html
     assert 'value="ja"' in html
-    assert "レベル1 — クイック確認（ヒューリスティックのみ）" in html
+    assert "クイック確認（ヒューリスティックのみ）" in html
     assert "概要" in html
     assert "停止中" in html
     assert "知識 / 概念" in html or "レビュー可能な候補はありません。" in html
@@ -480,7 +480,8 @@ def test_render_resident_app_candidate_queue_links_to_detail() -> None:
     assert "紗綾音 Resident App Candidate Queue" in html
     assert "/app/ui/candidates/cand-001" in html
     assert "Resident queue preview" in html
-    assert "Quick check / Preserved" in html
+    assert "Quick check" in html
+    assert "Preserved" in html
     assert "Pending:" in html
     assert "Evaluated:" in html
     assert "Queue Status Counts" in html
@@ -510,10 +511,12 @@ def test_render_resident_app_candidate_queue_supports_japanese_status_labels() -
 
     assert "保留:" in html
     assert "評価済み:" in html
-    assert "クイック確認 / 保存された要素" in html
+    assert "クイック確認" in html
+    assert "保存された要素" in html
     assert "<strong>保留</strong>: 1" in html
     assert "<strong>評価済み</strong>: 2" in html
-    assert "クイック確認 / 保存された要素" in html
+    assert "クイック確認" in html
+    assert "保存された要素" in html
 
 
 def test_render_resident_app_candidate_diff_supports_japanese_labels() -> None:
@@ -561,9 +564,9 @@ def test_render_resident_app_candidate_detail_links_to_diff() -> None:
     assert '/app/ui/candidates/cand-001/reject' in html
     assert "Evaluate before approve." in html
     assert '<select id="evaluate-level" name="level">' in html
-    assert "Level 1 — Quick check (heuristics only)" in html
-    assert "Level 2 — Local AI check (includes Level 1)" in html
-    assert "Level 3 — External AI check (includes Level 1)" in html
+    assert "Quick check (heuristics only)" in html
+    assert "Local AI check (includes quick check)" in html
+    assert "External AI check (includes local and quick checks)" in html
     assert 'type="number" min="1" max="3" name="level"' not in html
     assert "Action guidance" in html
     assert "Not evaluated yet" in html
@@ -723,7 +726,7 @@ def test_render_resident_app_candidate_detail_supports_japanese_locale() -> None
     assert "<dt>セクション</dt>" in html
     assert "<dt>操作</dt>" in html
     assert "<dt>レベル</dt>" in html
-    assert "レベル1 — クイック確認（ヒューリスティックのみ）" in html
+    assert "クイック確認（ヒューリスティックのみ）" in html
     assert "知識 / 概念" in html
     assert "クリップボード" in html
     assert ">追加<" in html

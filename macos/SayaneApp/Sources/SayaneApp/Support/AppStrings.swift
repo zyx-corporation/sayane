@@ -196,8 +196,8 @@ struct AppStrings {
         case (.en, .statusValue): return "Status"
         case (.ja, .startupCommand): return "起動コマンド"
         case (.en, .startupCommand): return "Startup Command"
-        case (.ja, .bootstrapUI): return "Bootstrap UI"
-        case (.en, .bootstrapUI): return "Bootstrap UI"
+        case (.ja, .bootstrapUI): return "デバッグ用 fallback URL"
+        case (.en, .bootstrapUI): return "Debug Fallback URL"
         case (.ja, .handoffSnapshot): return "Handoff Snapshot"
         case (.en, .handoffSnapshot): return "Handoff Snapshot"
         case (.ja, .workstreams): return "Workstreams"
@@ -424,12 +424,14 @@ struct AppStrings {
         case (.en, .bridgeStatusPanelSummary): return "Check connectivity here first, then start, reconnect, or inspect logs as needed"
         case (.ja, .connectionDiagnostics): return "接続診断"
         case (.en, .connectionDiagnostics): return "Connection Diagnostics"
+        case (.ja, .debugShellCompatibilitySummary): return "通常操作ではなく、ブラウザでのデバッグ / fallback / handoff 用の経路です"
+        case (.en, .debugShellCompatibilitySummary): return "Use this browser path only for debugging, fallback, or handoff"
         case (.ja, .bridgeURL): return "Bridge URL"
         case (.en, .bridgeURL): return "Bridge URL"
         case (.ja, .healthEndpoint): return "health エンドポイント"
         case (.en, .healthEndpoint): return "Health Endpoint"
-        case (.ja, .debugShell): return "デバッグシェル"
-        case (.en, .debugShell): return "Debug Shell"
+        case (.ja, .debugShell): return "ブラウザ fallback（デバッグ用）"
+        case (.en, .debugShell): return "Browser Fallback (Debug)"
         case (.ja, .tokenFile): return "トークンファイル"
         case (.en, .tokenFile): return "Token File"
         case (.ja, .logFile): return "ログファイル"
@@ -442,6 +444,8 @@ struct AppStrings {
         case (.en, .openDebugShell): return "Open Debug Shell"
         case (.ja, .copyHealthCommand): return "health command をコピー"
         case (.en, .copyHealthCommand): return "Copy Health Command"
+        case (.ja, .copyStartupCommand): return "起動コマンドをコピー"
+        case (.en, .copyStartupCommand): return "Copy Startup Command"
         case (.ja, .copyDebugShellURL): return "debug shell URL をコピー"
         case (.en, .copyDebugShellURL): return "Copy Debug Shell URL"
         case (.ja, .openScreen): return "画面を開く"
@@ -1039,12 +1043,12 @@ struct AppStrings {
 
     func evaluationLevelLabel(_ level: Int, detailed: Bool = false) -> String {
         switch (language, level, detailed) {
-        case (.ja, 1, true): return "レベル1 — クイック確認（ヒューリスティックのみ）"
-        case (.ja, 2, true): return "レベル2 — ローカルAI確認（レベル1を含む）"
-        case (.ja, 3, true): return "レベル3 — 外部AI確認（レベル1を含む）"
-        case (.en, 1, true): return "Level 1 — Quick check (heuristics only)"
-        case (.en, 2, true): return "Level 2 — Local AI check (includes Level 1)"
-        case (.en, 3, true): return "Level 3 — External AI check (includes Level 1)"
+        case (.ja, 1, true): return "クイック確認（ヒューリスティックのみ）"
+        case (.ja, 2, true): return "ローカルAI確認（クイック確認を含む）"
+        case (.ja, 3, true): return "外部AI確認（ローカルAI確認とクイック確認を含む）"
+        case (.en, 1, true): return "Quick check (heuristics only)"
+        case (.en, 2, true): return "Local AI check (includes quick check)"
+        case (.en, 3, true): return "External AI check (includes local and quick checks)"
         case (.ja, 1, false): return "クイック確認"
         case (.ja, 2, false): return "ローカルAI確認"
         case (.ja, 3, false): return "外部AI確認"
@@ -1154,8 +1158,8 @@ struct AppStrings {
         case loadingState, screenOverview, bridgeConnected, bridgeAttention
         case bridgeStatusPanel, bridgeReady, bridgeStarting, bridgeNotConnected, bridgeStatusDetailDisconnected
         case bridgeVersion, sourceUpdatedAt, bridgeStatusPanelSummary
-        case connectionDiagnostics, bridgeURL, healthEndpoint, debugShell, tokenFile, logFile, profile
-        case openToken, openDebugShell, copyHealthCommand, copyDebugShellURL, openScreen
+        case connectionDiagnostics, bridgeURL, healthEndpoint, debugShellCompatibilitySummary, debugShell, tokenFile, logFile, profile
+        case openToken, openDebugShell, copyHealthCommand, copyStartupCommand, copyDebugShellURL, openScreen
         case noQuickLinks, noReviewItems, noDaemonActions, noCandidates, noCandidatesMatchingFilters
         case selectCandidatePrompt, detailUnavailable, loadingCandidates
         case sectionNavigator, expandAll, collapseAll, noNextActions

@@ -88,9 +88,12 @@ import Testing
     #expect(strings.text(.bridgeReady) == "Bridge は利用可能です")
     #expect(strings.text(.bridgeStarting) == "Bridge は起動中です")
     #expect(strings.text(.bridgeNotConnected) == "Bridge に未接続です")
-    #expect(strings.text(.debugShell) == "デバッグシェル")
+    #expect(strings.text(.debugShell) == "ブラウザ fallback（デバッグ用）")
+    #expect(strings.text(.debugShellCompatibilitySummary) == "通常操作ではなく、ブラウザでのデバッグ / fallback / handoff 用の経路です")
+    #expect(strings.text(.bootstrapUI) == "デバッグ用 fallback URL")
     #expect(strings.text(.openToken) == "token を開く")
     #expect(strings.text(.copyHealthCommand) == "health command をコピー")
+    #expect(strings.text(.copyStartupCommand) == "起動コマンドをコピー")
     #expect(strings.text(.copyDetail) == "詳細をコピー")
     #expect(strings.text(.copyDiff) == "差分をコピー")
     #expect(strings.text(.copyLineage) == "来歴をコピー")
@@ -187,7 +190,7 @@ import Testing
     #expect(strings.residentValueLabel("Preserved") == "保存された要素")
     #expect(strings.evaluationLevelLabel(1) == "クイック確認")
     #expect(strings.evaluationLevelLabel(2) == "ローカルAI確認")
-    #expect(strings.evaluationLevelLabel(3, detailed: true) == "レベル3 — 外部AI確認（レベル1を含む）")
+    #expect(strings.evaluationLevelLabel(3, detailed: true) == "外部AI確認（ローカルAI確認とクイック確認を含む）")
     #expect(strings.evaluateActionMessage(id: "cand-001", level: 2) == "評価完了: cand-001（ローカルAI確認）")
     #expect(strings.approveActionMessage(id: "cand-001") == "承認完了: cand-001")
     #expect(strings.rejectActionMessage(id: "cand-001") == "却下完了: cand-001")
@@ -234,6 +237,104 @@ import Testing
     #expect(model.bridgeStatusHeadline == "Bridge は利用可能です")
     #expect(model.bridgeStatusDetail.contains("1.0.1"))
     #expect(model.bridgeSuggestedActionText == "更新")
+}
+
+@MainActor
+@Test func appModelExposesStartupCommandFromDaemonState() throws {
+    let model = AppModel()
+    let daemonData = Data(#"""
+    {
+      "kind": "resident_app_daemon_panel_screen_state",
+      "summary_cards": [],
+      "operator_panels": [],
+      "service_target_summary": {"current_platform": null, "recommended_target": null, "targets": []},
+      "launchagent_summary": {"preview_available": false, "status_available": false, "plist_path": null, "loaded_status": null, "launchctl_commands": {}},
+      "operator_phase_summary": {"phase": null, "phase_status": null, "phase_readiness": "review_required", "blocking_reasons": [], "checklist": []},
+      "operator_phase_details": {
+        "current_supported_operator_path": {"startup_command_text": "sayane resident-app bridge", "bootstrap_ui": "http://127.0.0.1:38741/app/ui", "local_only": true, "notes": []},
+        "workstreams": [],
+        "recommended_implementation_order": [],
+        "read_surfaces": [],
+        "exit_criteria": [],
+        "not_in_scope": []
+      },
+      "next_actions": [],
+      "runtime_init": {},
+      "cleanup_preview": {},
+      "repair_preview": {}
+    }
+    """#.utf8)
+    model.daemonState = try JSONDecoder().decode(DaemonPanelScreenState.self, from: daemonData)
+
+    #expect(model.startupCommandText == "sayane resident-app bridge")
+    #expect(model.currentGateText == nil)
+    #expect(model.nextDaemonCommandText == nil)
+    #expect(model.nextReadSurfaceText == nil)
+}
+
+@MainActor
+@Test func appModelExposesCurrentGateAndNextDaemonAction() throws {
+    let model = AppModel()
+    let daemonData = Data(#"""
+    {
+      "kind": "resident_app_daemon_panel_screen_state",
+      "summary_cards": [],
+      "operator_panels": [],
+      "service_target_summary": {"current_platform": null, "recommended_target": null, "targets": []},
+      "launchagent_summary": {"preview_available": false, "status_available": false, "plist_path": null, "loaded_status": null, "launchctl_commands": {}},
+      "operator_phase_summary": {"phase": "current_supported_line", "phase_status": "in_progress", "phase_readiness": "review_required", "blocking_reasons": ["separate_plan_required"], "checklist": []},
+      "operator_phase_details": {
+        "current_supported_operator_path": {"startup_command_text": "sayane resident-app bridge", "bootstrap_ui": null, "local_only": true, "notes": []},
+        "workstreams": [],
+        "recommended_implementation_order": [],
+        "read_surfaces": [],
+        "exit_criteria": [],
+        "not_in_scope": []
+      },
+      "next_actions": [
+        {"command": "sayane app daemon-operator-phase-status --json", "reason": "Confirm phase closure blockers."}
+      ],
+      "runtime_init": {},
+      "cleanup_preview": {},
+      "repair_preview": {}
+    }
+    """#.utf8)
+    model.daemonState = try JSONDecoder().decode(DaemonPanelScreenState.self, from: daemonData)
+
+    #expect(model.currentGateText == "別計画が必要")
+    #expect(model.nextDaemonCommandText == "sayane app daemon-operator-phase-status --json")
+    #expect(model.nextDaemonReasonText == "Confirm phase closure blockers.")
+    #expect(model.nextReadSurfaceText == nil)
+}
+
+@MainActor
+@Test func appModelExposesNextReadSurface() throws {
+    let model = AppModel()
+    let daemonData = Data(#"""
+    {
+      "kind": "resident_app_daemon_panel_screen_state",
+      "summary_cards": [],
+      "operator_panels": [],
+      "service_target_summary": {"current_platform": null, "recommended_target": null, "targets": []},
+      "launchagent_summary": {"preview_available": false, "status_available": false, "plist_path": null, "loaded_status": null, "launchctl_commands": {}},
+      "operator_phase_summary": {"phase": "current_supported_line", "phase_status": "in_progress", "phase_readiness": "review_required", "blocking_reasons": [], "checklist": []},
+      "operator_phase_details": {
+        "current_supported_operator_path": {"startup_command_text": "sayane resident-app bridge", "bootstrap_ui": null, "local_only": true, "notes": []},
+        "workstreams": [],
+        "recommended_implementation_order": [],
+        "read_surfaces": ["sayane app daemon-service-targets-status --json"],
+        "exit_criteria": [],
+        "not_in_scope": []
+      },
+      "next_actions": [],
+      "runtime_init": {},
+      "cleanup_preview": {},
+      "repair_preview": {}
+    }
+    """#.utf8)
+    model.daemonState = try JSONDecoder().decode(DaemonPanelScreenState.self, from: daemonData)
+
+    #expect(model.nextReadSurfaceText == "sayane app daemon-service-targets-status --json")
 }
 
 @MainActor
@@ -379,7 +480,7 @@ import Testing
     #expect(handoff.contains("プロファイル: default"))
     #expect(handoff.contains("Bridge URL: http://127.0.0.1:38741"))
     #expect(handoff.contains("health エンドポイント: http://127.0.0.1:38741/health"))
-    #expect(handoff.contains("デバッグシェル: http://127.0.0.1:38741/app/ui"))
+    #expect(handoff.contains("ブラウザ fallback（デバッグ用）: http://127.0.0.1:38741/app/ui"))
     #expect(handoff.contains("トークンファイル: "))
     #expect(handoff.contains(".sayane/bridge.token"))
     #expect(handoff.contains("ログファイル: "))

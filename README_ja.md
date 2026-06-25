@@ -280,11 +280,14 @@ loaded status / return code / stderr summary も先に確認できます。
 ```bash
 git clone https://github.com/zyx-corporation/sayane.git
 cd sayane
-python -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
-sayane init
-pytest -q
+uv run --extra dev sayane init
+uv run --extra dev pytest -q
+# もしくは明示的な local venv を維持する:
+# python -m venv .venv
+# source .venv/bin/activate
+# pip install -e ".[dev]"
+# sayane init
+# pytest -q
 ```
 
 ---

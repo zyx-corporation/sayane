@@ -29,7 +29,7 @@ sayane serve --port 38741 --host 127.0.0.1
 
 - `~/.sayane/bridge.token` を生成
 - コンソールに pairing code（表示用ヒント）と token ファイルパスを出力
-- resident app browser session は `/app/ui` bootstrap 後に dedicated local UI session へ切り替わる
+- resident app debug shell は `/app/ui` bootstrap 後に dedicated local UI session へ切り替わる
 
 ## 3. エンドポイント
 
@@ -186,15 +186,15 @@ curl -s -H "$AUTH" \
 
 #### `GET /app/ui`
 
-Resident app の最初のローカル HTML bootstrap screen。
+Resident app の debug-only local HTML compatibility shell。
 
 ```bash
 curl -s -H "$AUTH" \
   "http://127.0.0.1:38741/app/ui"
 ```
 
-ブラウザで直接開く場合も entrypoint は同じで、`http://127.0.0.1:38741/app/ui` を使う。
-`http://127.0.0.1:8008/index.html` のような別静的配信前提の URL は現行 resident app bootstrap では使わない。
+ブラウザで直接開く場合の debug shell entrypoint も同じで、`http://127.0.0.1:38741/app/ui` を使う。
+`http://127.0.0.1:8008/index.html` のような別静的配信前提の URL は現行 debug shell では使わない。
 
 この endpoint は server-rendered HTML として以下を束ねて表示する:
 
@@ -204,6 +204,8 @@ curl -s -H "$AUTH" \
 - contract bootstrap guidance
 
 これは local presentation surface であり、final GUI framework の確定ではない。
+native macOS app の代替 primary UI ではなく、debug / smoke / fallback / handoff 用の
+compatibility surface として残している。
 
 daemon panel では runtime / cleanup / repair preview に加えて、service target status と
 macOS LaunchAgent preview も表示する。

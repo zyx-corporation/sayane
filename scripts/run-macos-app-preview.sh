@@ -73,68 +73,53 @@ bridge_healthy() {
 }
 
 find_python() {
-  if [[ -x "${ROOT}/.venv/bin/python" ]]; then
-    printf '%s\n' "${ROOT}/.venv/bin/python"
-    return 0
-  fi
-  if command -v python3 >/dev/null 2>&1; then
-    command -v python3
-    return 0
-  fi
-  if command -v python >/dev/null 2>&1; then
-    command -v python
-    return 0
-  fi
-  die "Could not find python for Bridge startup"
+  local candidate
+  for candidate in "${ROOT}/.venv/bin/python" python3 python; do
+    if [[ "${candidate}" == *"/"* ]]; then
+      [[ -x "${candidate}" ]] || continue
+    elif ! command -v "${candidate}" >/dev/null 2>&1; then
+      continue
+    else
+      candidate="$(command -v "${candidate}")"
+    fi
+    if python_supports_sayane_runtime "${candidate}"; then
+      printf '%s\n' "${candidate}"
+      return 0
+    fi
+  done
+  die "Could not find a compatible Python runtime (>=3.11 with Sayane deps). Run \`uv run --extra dev pytest -q\` once or create \`.venv\` with \`pip install -e \".[dev]\"\`."
+}
+
+python_supports_sayane_runtime() {
+  local python_bin="$1"
+  "${python_bin}" - <<'PY' >/dev/null 2>&1
+import importlib
+import sys
+
+if sys.version_info < (3, 11):
+    raise SystemExit(1)
+
+required = [
+    "fastapi",
+    "pydantic",
+    "yaml",
+    "cryptography",
+    "typer",
+    "uvicorn",
+    "mcp",
+]
+for module_name in required:
+    importlib.import_module(module_name)
+PY
 }
 
 spawn_detached() {
   local log_file="$1"
   shift
-  env DETACH_LOG_FILE="${log_file}" DETACH_ROOT="${ROOT}" DETACH_ARGV="$(printf '%s\n' "$@")" \
-    python3 - <<'PY'
-import os
-import sys
-
-log_path = os.environ["DETACH_LOG_FILE"]
-argv_blob = os.environ["DETACH_ARGV"]
-argv = [part for part in argv_blob.splitlines() if part]
-root = os.environ["DETACH_ROOT"]
-
-pid = os.fork()
-if pid > 0:
-    os.waitpid(pid, 0)
-    raise SystemExit(0)
-
-os.setsid()
-
-pid = os.fork()
-if pid > 0:
-    os._exit(0)
-
-os.chdir(root)
-os.umask(0)
-
-with open(log_path, "ab", buffering=0) as log:
-    fd = log.fileno()
-    devnull = os.open(os.devnull, os.O_RDONLY)
-    os.dup2(devnull, 0)
-    os.dup2(fd, 1)
-    os.dup2(fd, 2)
-    try:
-        max_fd = os.sysconf("SC_OPEN_MAX")
-    except (AttributeError, ValueError):
-        max_fd = 256
-    for extra_fd in range(3, int(max_fd)):
-        try:
-            if extra_fd != fd:
-                os.close(extra_fd)
-        except OSError:
-            pass
-    if devnull > 2:
-        os.close(devnull)
-    os.execvp(argv[0], argv)
-PY
+  (
+    cd "${ROOT}"
+    nohup "$@" >>"${log_file}" 2>&1 </dev/null &
+  ) >/dev/null 2>&1
 }
 
 run_init_if_needed() {
@@ -244,6 +229,19 @@ launch_background() {
   [[ -n "${pids}" ]] || die "SayaneApp did not stay running. Check ${APP_LOG_FILE}"
 }
 
+activate_preview_window() {
+  command -v osascript >/dev/null 2>&1 || return 0
+  osascript <<'APPLESCRIPT' >/dev/null 2>&1 || true
+tell application "System Events"
+  if exists process "SayaneApp" then
+    tell process "SayaneApp"
+      set frontmost to true
+    end tell
+  end if
+end tell
+APPLESCRIPT
+}
+
 print_summary() {
   cat <<EOF
 
@@ -280,6 +278,7 @@ main() {
   fi
 
   launch_background
+  activate_preview_window
   print_summary
   exit 0
 }

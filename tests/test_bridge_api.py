@@ -373,9 +373,9 @@ def test_app_ui_candidate_queue_detail_and_diff_html(
     assert "<dt>Section</dt>" in detail.text
     assert "<dt>Operation</dt>" in detail.text
     assert '<select id="evaluate-level" name="level">' in detail.text
-    assert "Level 1 — Quick check (heuristics only)" in detail.text
-    assert "Level 2 — Local AI check (includes Level 1)" in detail.text
-    assert "Level 3 — External AI check (includes Level 1)" in detail.text
+    assert "Quick check (heuristics only)" in detail.text
+    assert "Local AI check (includes quick check)" in detail.text
+    assert "External AI check (includes local and quick checks)" in detail.text
     assert 'type="number" min="1" max="3" name="level"' not in detail.text
 
     diff = client.get(f"/app/ui/candidates/{candidate_id}/diff")

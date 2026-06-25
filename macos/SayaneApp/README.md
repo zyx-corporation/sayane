@@ -77,34 +77,36 @@ swift build --package-path macos/SayaneApp
 ```
 
 This runs the local Bridge shell, builds the Swift package, runs package tests,
-and verifies the native app backend surfaces (`/health`, bearer-backed screen-state
-routes, and cookie-backed `/app/ui` for the debug shell).
+and verifies the native app backend surfaces (`/health` and bearer-backed screen-state
+routes). Debug-shell compatibility checks are optional.
 
 Useful options:
 
 ```bash
 ./scripts/check-macos-app-preview.sh --no-start
 ./scripts/check-macos-app-preview.sh --no-build --no-tests
+./scripts/check-macos-app-preview.sh --with-debug-shell
 ./scripts/check-macos-app-preview.sh --verbose
 ```
 
 - `--no-start` keeps a manually started Bridge and only checks the native-app surfaces
 - `--no-build --no-tests` is useful when iterating on Bridge/session behavior only
 - default behavior runs the full `swift test --package-path macos/SayaneApp --disable-xctest` suite during smoke validation
+- `--with-debug-shell` additionally validates `/app/ui` bootstrap and cookie-backed compatibility flows
 - `--verbose` prints the last response body when a bootstrap or screen-state check fails
 
-If the smoke check fails, inspect:
+If the native-first smoke check fails, inspect:
 
 - Bridge log: `~/.sayane/macos-app-smoke.log`
 - Cookie jar: `~/.sayane/macos-app-smoke.cookies.txt`
 - Health check: `curl -s http://127.0.0.1:38741/health`
-- Manual bootstrap: `open -a "Google Chrome" "http://127.0.0.1:38741/app/ui?bootstrap_token=$(cat ~/.sayane/bridge.token)"`
+- Debug-shell bootstrap: `open -a "Google Chrome" "http://127.0.0.1:38741/app/ui?bootstrap_token=$(cat ~/.sayane/bridge.token)"`
 
 Common failure hints:
 
 - `ERR_CONNECTION_REFUSED`: the Bridge is not listening; rerun the smoke script or start the Bridge first
-- `Missing bootstrap bearer or valid resident app UI session`: the UI was opened without the bootstrap hop; reopen `/app/ui?bootstrap_token=...`
-- `Missing or invalid resident app UI session`: the session cookie is stale; rerun the bootstrap URL or remove the cookie jar and retry
+- `Missing bootstrap bearer or valid resident app UI session`: the debug shell was opened without the bootstrap hop; reopen `/app/ui?bootstrap_token=...`
+- `Missing or invalid resident app UI session`: the debug-shell session cookie is stale; rerun the bootstrap URL or remove the cookie jar and retry
 
 ## Run from Xcode
 
@@ -140,15 +142,42 @@ Useful options:
 - `--no-build` reuses the current debug executable when iterating on launch behavior
 - `--foreground` keeps the native process attached to the current terminal
 - `--xcode` falls back to the old Package.swift-in-Xcode path when manual IDE inspection is needed
+- the launcher now fails closed unless it finds a compatible Python (`>=3.11` + Sayane deps); run
+  `uv run --extra dev pytest -q` once or prepare `.venv` first if the local machine is not primed yet
 
 If the app loses the Bridge connection after launch, use the native `Start Bridge` or `Reconnect` buttons from the error view.
 The Home and error surfaces also expose one shared connection diagnostics card so the operator can
-inspect the Bridge URL, health endpoint, debug shell URL, token path, and log path without leaving
+inspect the Bridge URL, health endpoint, browser fallback URL, token path, and log path without leaving
 the native app.
+The error view now also keeps one compact recovery card first, so the operator can trigger the
+recommended recovery action, copy the startup command, and open logs before reading deeper diagnostics.
+That diagnostics card now stays reference-first: it keeps file paths, URLs, and debug/fallback-only
+utilities together, while the Bridge status panel carries the main recovery and navigation actions.
 The Home screen also keeps a compact Bridge status panel above the rest of the content so initial
 launch, reconnect, and log-first troubleshooting stay visible before drilling into Queue or Daemon.
 Queue and Daemon also keep the same Bridge status surface in compact form so the operator can
 recover connectivity without navigating back to Home first.
+When daemon state is available, the same native recovery surfaces now also show the current startup
+command directly, so the operator can copy the local restart path without opening the browser fallback.
+The same Bridge status area now also surfaces the current gate and first next command from daemon
+state, so phase-closure blockers and the next local CLI step stay visible before opening the deeper
+Daemon workspace.
+It now also keeps the first next read surface nearby, so the operator can see which local evidence
+command to inspect next without scanning the longer daemon sections.
+Because that daemon guidance now lives in the Bridge status area, `Start Here` on Home can stay
+focused on review and quick-link entry points instead of repeating the same daemon summary twice.
+The deeper daemon detail groups now also trim long lists down to short previews plus remaining-count
+markers, so the lower half reads more like supporting evidence than a second summary rail.
+Within LaunchAgent detail, the command deck now stays action-first while the runbook keeps the
+proof/preflight/log-reference material, reducing repeated open/copy controls across both sections.
+The queue detail screen now follows the same pattern: the review command deck stays action-first,
+while a separate evidence drill-down block groups the detail / diff / lineage copy surfaces.
+The queue left pane now also folds status counts and top sections into one compact status bar, so
+the quick filters stay interactive without repeating the same aggregate lists underneath.
+The search/filter split is now clearer too: `Filters` handles search and sort, while `Quick Filters`
+owns the immediate status/section narrowing path plus its local reset action.
+Those badge groups now wrap inside the native window as well, so narrower app widths no longer
+force the operator to horizontally pan through active filters or top status chips.
 Capture / evaluate / approve / reject / revise / copy actions now report through one shared feedback
 banner, and mutation sheets stay open on failure so the operator can retry without re-entering input.
 The evaluate sheet uses a meaning-bearing pull-down (`Quick check` / `Local AI check` / `External AI check`)
@@ -235,7 +264,7 @@ directly from the daemon screen-state payload:
 - background-surface candidates that remain deferred
 - recommended recovery flow and app-UI guardrails
 - cross-platform target context with the macOS LaunchAgent line kept explicit
-- supported startup command, bootstrap UI, and phase-closure checklist visibility
+- supported startup command, debug fallback URL, and phase-closure checklist visibility
 - operator handoff snapshot with workstream states and recommended implementation order
 - service lifecycle operations, policy gates, app-UI exposure limits, and governing rules
 - LaunchAgent-specific runbook guidance: preflight, verification, log paths, security boundary, troubleshooting

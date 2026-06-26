@@ -59,7 +59,8 @@ import Testing
         "packaging_decision": {
           "candidate_models": [
             {"model": "cli_first_local_bridge", "status": "current_supported_line", "operator_value": "lowest change", "blocked_by": []},
-            {"model": "hybrid_local_bridge_plus_service_targets", "status": "candidate_requires_phase_closure", "operator_value": "hybrid", "blocked_by": ["service lifecycle implementation"]}
+            {"model": "hybrid_local_bridge_plus_service_targets", "status": "candidate_requires_phase_closure", "operator_value": "hybrid", "blocked_by": ["service lifecycle implementation"]},
+            {"model": "service_first_resident_runtime", "status": "candidate_requires_larger_architecture_change", "operator_value": "service-first", "blocked_by": ["auth/runtime model redesign"]}
           ],
           "decision_guardrails": ["do not smuggle service-first commitments into app-shell polish"]
         }
@@ -140,6 +141,8 @@ import Testing
     #expect(payload.packagingStatus?["operator_surface"]?.objectValue?["primary_ui"]?.stringValue == "native_macos_app_primary")
     #expect(payload.packagingStatus?["operator_surface"]?.objectValue?["debug_ui"]?.stringValue == "bridge_hosted_debug_shell")
     #expect(payload.packagingStatus?["operator_surface"]?.objectValue?["recommended_launcher"]?.objectValue?["command_text"]?.stringValue == "./scripts/run-macos-app-preview.sh")
+    #expect(payload.packagingStatus?["packaging_decision"]?.objectValue?["candidate_models"]?.arrayValue?.count == 3)
+    #expect(payload.packagingStatus?["packaging_decision"]?.objectValue?["candidate_models"]?.arrayValue?[2].objectValue?["model"]?.stringValue == "service_first_resident_runtime")
     #expect(payload.supervisionStatus?["supervision_mode"]?.stringValue == "passive_local_observation_with_cli_recovery")
     #expect(payload.recoveryConsentStatus?["consent_model"]?.stringValue == "explicit_cli_confirmation_for_mutation")
     #expect(payload.operatorPhaseStatus?["current_supported_operator_path"]?.objectValue?["local_only"]?.boolValue == true)

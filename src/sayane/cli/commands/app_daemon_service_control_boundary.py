@@ -50,8 +50,16 @@ def register_daemon_service_control_boundary_command(app_group: typer.Typer) -> 
             [item.get("command") for item in payload["control_plane"].get("allowed_commands", [])],
         )
         echo_list_section(
+            "control_plane_recovery_policy",
+            payload["control_plane"].get("recovery_policy", []),
+        )
+        echo_list_section(
             "service_plane_allowed_commands",
             [item.get("command") for item in payload["service_plane"].get("allowed_commands", [])],
+        )
+        echo_list_section(
+            "service_plane_platform_targets",
+            payload["service_plane"].get("platform_targets", []),
         )
         echo_list_section(
             "deferred_commands",
@@ -63,6 +71,10 @@ def register_daemon_service_control_boundary_command(app_group: typer.Typer) -> 
             lambda item: f"{item.get('operation')}: {item.get('status')} [{item.get('command')}]",
         )
         echo_list_section("allowed_reads", payload["app_ui_policy"].get("allowed_reads", []))
+        echo_list_section(
+            "allowed_control_exposure",
+            payload["app_ui_policy"].get("allowed_control_exposure", []),
+        )
         echo_list_section(
             "forbidden_control_exposure",
             payload["app_ui_policy"].get("forbidden_control_exposure", []),

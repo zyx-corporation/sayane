@@ -226,8 +226,14 @@ struct AppStrings {
         case (.en, .appUIPolicy): return "App UI Policy"
         case (.ja, .allowedReads): return "許可Read"
         case (.en, .allowedReads): return "Allowed Reads"
+        case (.ja, .allowedWrites): return "許可Write"
+        case (.en, .allowedWrites): return "Allowed Writes"
+        case (.ja, .allowedControlExposure): return "許可Control Exposure"
+        case (.en, .allowedControlExposure): return "Allowed Control Exposure"
         case (.ja, .forbiddenExposure): return "禁止Exposure"
         case (.en, .forbiddenExposure): return "Forbidden Exposure"
+        case (.ja, .platformTargets): return "対象サービス"
+        case (.en, .platformTargets): return "Platform Targets"
         case (.ja, .rollbackRequired): return "Rollback 必須"
         case (.en, .rollbackRequired): return "Rollback Required"
         case (.ja, .policyRequired): return "Policy 必須"
@@ -1152,7 +1158,7 @@ struct AppStrings {
         case localOnly, statusValue, startupCommand, bootstrapUI
         case handoffSnapshot, workstreams, platformScope, operatorValue, implementationOrder
         case serviceLifecycle, policyGates, governingRules, appUIPolicy, allowedReads
-        case forbiddenExposure, rollbackRequired, policyRequired
+        case allowedWrites, allowedControlExposure, forbiddenExposure, platformTargets, rollbackRequired, policyRequired
         case launchAgentRunbook, preflightChecks, verification, securityBoundary, troubleshooting
         case logPaths, plistPreview, environmentAssumptions, programArguments, copyPlist
         case previewMetadata, operationId, previewHash

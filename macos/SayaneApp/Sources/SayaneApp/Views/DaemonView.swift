@@ -997,6 +997,10 @@ struct DaemonView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
+                stringList(
+                    title: model.strings.text(.recoveryPolicy),
+                    values: model.daemonState?.serviceControlBoundary?["control_plane"]?.objectValue?["recovery_policy"]?.arrayValue?.compactMap(\.stringValue) ?? []
+                )
                 if let deferredCommands = model.daemonState?.serviceControlBoundary?["service_plane"]?.objectValue?["deferred_commands"]?.arrayValue?.compactMap(\.stringValue),
                    !deferredCommands.isEmpty {
                     GroupBox(model.strings.text(.deferredCommands)) {
@@ -1008,6 +1012,10 @@ struct DaemonView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
+                stringList(
+                    title: model.strings.text(.platformTargets),
+                    values: model.daemonState?.serviceControlBoundary?["service_plane"]?.objectValue?["platform_targets"]?.arrayValue?.compactMap(\.stringValue) ?? []
+                )
                 if let lifecycle = model.daemonState?.serviceControlBoundary?["service_plane"]?.objectValue?["lifecycle_operations"]?.arrayValue {
                     ForEach(Array(lifecycle.enumerated()), id: \.offset) { _, value in
                         if let object = value.objectValue {
@@ -1048,6 +1056,8 @@ struct DaemonView: View {
                     GroupBox(model.strings.text(.appUIPolicy)) {
                         VStack(alignment: .leading, spacing: 8) {
                             stringList(title: model.strings.text(.allowedReads), values: appPolicy["allowed_reads"]?.arrayValue?.compactMap(\.stringValue) ?? [])
+                            stringList(title: model.strings.text(.allowedWrites), values: appPolicy["allowed_writes"]?.arrayValue?.compactMap(\.stringValue) ?? [])
+                            stringList(title: model.strings.text(.allowedControlExposure), values: appPolicy["allowed_control_exposure"]?.arrayValue?.compactMap(\.stringValue) ?? [])
                             stringList(title: model.strings.text(.forbiddenExposure), values: appPolicy["forbidden_control_exposure"]?.arrayValue?.compactMap(\.stringValue) ?? [])
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)

@@ -24,7 +24,9 @@ def test_daemon_service_control_boundary_exposes_allowed_control_and_deferred_se
     assert "daemon-service-install" in payload["service_plane"]["deferred_commands"]
     assert "daemon-service-update" in payload["service_plane"]["deferred_commands"]
     assert "macos_launchagent" in payload["service_plane"]["platform_targets"]
+    assert "windows_service" in payload["service_plane"]["platform_targets"]
     assert payload["service_plane"]["update_strategy"] == "separate_plan_required"
+    assert payload["control_plane"]["recovery_policy"]
     lifecycle_operations = payload["service_plane"]["lifecycle_operations"]
     assert lifecycle_operations[0]["operation"] == "install"
     assert lifecycle_operations[-1]["operation"] == "update"
@@ -32,6 +34,7 @@ def test_daemon_service_control_boundary_exposes_allowed_control_and_deferred_se
     allowed_commands = payload["control_plane"]["allowed_commands"]
     assert allowed_commands[0]["app_ui_exposure"] == "next_action_only"
     assert "daemon-start --host localhost --port 39000 --json" in allowed_commands[0]["command"]
+    assert payload["app_ui_policy"]["allowed_control_exposure"]
     if payload["service_plane"]["status"] == "macos_explicit_cli_only":
         assert any(
             item["command"] == "sayane app daemon-launchagent-bootstrap --json"

@@ -42,9 +42,12 @@ def test_daemon_service_control_boundary_text_exposes_post_app_detail_surface(
     assert "rollback_required: True" in result.stdout
     assert "platform_policy_required: True" in result.stdout
     assert "control_plane_allowed_commands:" in result.stdout
+    assert "control_plane_recovery_policy:" in result.stdout
     assert "service_plane_allowed_commands:" in result.stdout
+    assert "service_plane_platform_targets:" in result.stdout
     assert "deferred_commands:" in result.stdout
     assert "daemon-service-install" in result.stdout
     assert "lifecycle_operations:" in result.stdout
     assert "allowed_reads:" in result.stdout
+    assert "allowed_control_exposure:" in result.stdout
     assert "forbidden_control_exposure:" in result.stdout

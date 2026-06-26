@@ -66,15 +66,21 @@ import Testing
         }
       },
       "service_control_boundary": {
-        "control_plane": {"allowed_commands": [{"command": "sayane app daemon-start --json"}]},
+        "control_plane": {
+          "allowed_commands": [{"command": "sayane app daemon-start --json"}],
+          "recovery_policy": ["review status and logs first"]
+        },
         "service_plane": {
           "deferred_commands": ["daemon-service-install"],
+          "platform_targets": ["macos_launchagent", "linux_systemd_user", "windows_service"],
           "lifecycle_operations": [
             {"operation": "install", "command": "daemon-service-install", "status": "separate_plan_required", "platform_scope": ["macos_launchagent"], "rollback_required": true, "policy_required": true}
           ]
         },
         "app_ui_policy": {
           "allowed_reads": ["/app/overview"],
+          "allowed_writes": [],
+          "allowed_control_exposure": ["daemon-start may appear as a next action"],
           "forbidden_control_exposure": ["direct OS service install/enable/disable actions"]
         },
         "governing_rules": ["service commands remain deferred until platform-specific rollback policy exists"]
@@ -143,6 +149,9 @@ import Testing
     #expect(payload.packagingStatus?["operator_surface"]?.objectValue?["recommended_launcher"]?.objectValue?["command_text"]?.stringValue == "./scripts/run-macos-app-preview.sh")
     #expect(payload.packagingStatus?["packaging_decision"]?.objectValue?["candidate_models"]?.arrayValue?.count == 3)
     #expect(payload.packagingStatus?["packaging_decision"]?.objectValue?["candidate_models"]?.arrayValue?[2].objectValue?["model"]?.stringValue == "service_first_resident_runtime")
+    #expect(payload.serviceControlBoundary?["control_plane"]?.objectValue?["recovery_policy"]?.arrayValue?.first?.stringValue == "review status and logs first")
+    #expect(payload.serviceControlBoundary?["service_plane"]?.objectValue?["platform_targets"]?.arrayValue?.count == 3)
+    #expect(payload.serviceControlBoundary?["app_ui_policy"]?.objectValue?["allowed_control_exposure"]?.arrayValue?.first?.stringValue == "daemon-start may appear as a next action")
     #expect(payload.supervisionStatus?["supervision_mode"]?.stringValue == "passive_local_observation_with_cli_recovery")
     #expect(payload.recoveryConsentStatus?["consent_model"]?.stringValue == "explicit_cli_confirmation_for_mutation")
     #expect(payload.operatorPhaseStatus?["current_supported_operator_path"]?.objectValue?["local_only"]?.boolValue == true)

@@ -6,6 +6,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- clarified the current supported operator packaging model as
+  `cli_first_local_bridge` while keeping native macOS as the primary operator
+  UI on macOS and `/app/ui` as a debug-only compatibility surface
+- exposed `primary_operator_ui`, `recommended_launcher`, and operator-surface
+  notes through `sayane app daemon-packaging-status`
+- added native macOS daemon-panel shortcuts for launcher files, startup-command
+  copy, and debug-shell open/copy actions so operator startup guidance is
+  actionable directly from the app
+- propagated the same startup/debug shortcuts into supported-path and operator
+  summary surfaces so the first-priority daemon views no longer require manual
+  copying before navigation
+- aligned the home bridge-status and start-here surfaces with the same startup
+  and debug-shell shortcuts so launch guidance stays consistent outside the
+  daemon panel
+- aligned the fallback error view with the same launcher and debug-shell
+  shortcuts so recovery no longer depends on manual command copying there
+
 ## [1.0.14.post1] - 2026-06-25 Native-First Resident App Hardening
 
 ### Summary

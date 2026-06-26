@@ -31,6 +31,16 @@ struct ErrorView: View {
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.secondary)
                         CommandRowView(command: startupCommand, lineLimit: 2)
+                        StartupShortcutButtons(model: model, command: startupCommand)
+                    }
+                }
+                if let bootstrapUI = model.daemonState?.operatorPhaseDetails.currentSupportedOperatorPath.bootstrapUI {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(model.strings.text(.bootstrapUI))
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                        CommandRowView(command: bootstrapUI, lineLimit: 2)
+                        DebugShellShortcutButtons(model: model, bootstrapUI: bootstrapUI)
                     }
                 }
                 if let currentGate = model.currentGateText {
@@ -55,12 +65,6 @@ struct ErrorView: View {
                         Task { await model.performBridgeSuggestedAction() }
                     }
                     .buttonStyle(.borderedProminent)
-                    if model.startupCommandText != nil {
-                        Button(model.strings.text(.copyStartupCommand)) {
-                            model.copyStartupCommand()
-                        }
-                        .buttonStyle(.bordered)
-                    }
                     Button(model.strings.text(.openLogs)) {
                         model.openLogFile()
                     }

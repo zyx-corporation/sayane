@@ -21,6 +21,7 @@ def test_daemon_packaging_status_exposes_cli_first_local_boundary(tmp_path: Path
     assert payload["supervision_model"] == "manual_cli_with_bridge_delegation"
     assert payload["service_integration"]["status"] in {"contract_only", "macos_launchagent_preview_apply_control"}
     assert payload["background_supervision"]["status"] == "not_supported"
+    assert payload["operator_surface"]["debug_ui"] == "bridge_hosted_debug_shell"
     assert payload["packaging_decision"]["current_supported_model"] == "cli_first_local_bridge"
     assert payload["packaging_decision"]["candidate_models"][0]["model"] == "cli_first_local_bridge"
     assert payload["packaging_decision"]["candidate_models"][1]["model"] == "hybrid_local_bridge_plus_service_targets"
@@ -36,3 +37,11 @@ def test_daemon_packaging_status_exposes_cli_first_local_boundary(tmp_path: Path
     assert "sayane app daemon-start --host localhost --port 39000 --json" in payload[
         "local_daemon_control"
     ]["commands"]
+    if payload["service_integration"]["status"] == "macos_launchagent_preview_apply_control":
+        assert payload["operator_surface"]["primary_ui"] == "native_macos_app_primary"
+        assert payload["operator_surface"]["recommended_launcher"]["command_text"] == "./scripts/run-macos-app-preview.sh"
+    else:
+        assert payload["operator_surface"]["primary_ui"] == "local_bridge_shell_primary"
+        assert payload["operator_surface"]["recommended_launcher"]["command_text"] == (
+            "sayane serve --host localhost --port 39000"
+        )

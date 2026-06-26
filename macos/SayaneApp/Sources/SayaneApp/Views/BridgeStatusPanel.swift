@@ -52,12 +52,18 @@ struct BridgeStatusPanel: View {
                             .foregroundStyle(.secondary)
                         CommandRowView(command: startupCommand, lineLimit: compact ? 1 : 2)
                         if !compact {
-                            Button(model.strings.text(.copyStartupCommand)) {
-                                model.copyStartupCommand()
-                            }
-                            .buttonStyle(.bordered)
-                            .controlSize(.small)
+                            StartupShortcutButtons(model: model, command: startupCommand, controlSize: .small)
                         }
+                    }
+                }
+
+                if !compact, let daemonState = model.daemonState, let bootstrapUI = daemonState.operatorPhaseDetails.currentSupportedOperatorPath.bootstrapUI {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(model.strings.text(.bootstrapUI))
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                        CommandRowView(command: bootstrapUI, lineLimit: 2)
+                        DebugShellShortcutButtons(model: model, bootstrapUI: bootstrapUI, controlSize: .small)
                     }
                 }
 

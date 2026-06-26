@@ -59,6 +59,8 @@ GET /app/ui-state/home
 - show whether daemon/runtime attention is needed
 - show the first likely actions without extra fetches
 - expose quick links that can open queue and daemon panels without round-tripping through legacy HTML
+- keep the current supported startup path and debug-shell fallback visible from the same first-pass
+  operator surface, with the same launcher/debug actions used by the daemon and fallback screens
 
 ## Screen 2: Candidate Queue
 

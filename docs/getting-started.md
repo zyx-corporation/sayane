@@ -172,6 +172,11 @@ swift test --package-path macos/SayaneApp
 
 native app は bearer-backed app-facing resident surfaces を直接利用する。
 
+native app 上では、`Home` / `Bridge Status` / `Daemon` / fallback `Error` view から同じ
+起動導線を辿れる。local script path が見えている面では `Open Launcher` と
+`Copy Startup Command`、debug compatibility path が見えている面では
+`Open Debug Shell` と `Copy Debug Shell URL` を使う。
+
 ### 5.5 resident app debug shell（debug-only compatibility path）
 
 Bridge-hosted local shell は、debug / fallback / handoff / browser-local smoke 向けに維持する。
@@ -218,6 +223,8 @@ supervision / LaunchAgent の各判断について、次に確認すべき comma
 加えて implementation gate preflight も同じ drill-down stack に統合され、daemon 実装前の
 schema-only gate 状態を browser 上から直接確認できる。
 さらに current gate / next command / next read surface を 1 つにまとめた operator summary rail が
+native app 側にも mirrored されており、同じ startup/debug shortcut を保ったまま deeper daemon
+workspace に入れる。
 bridge-hosted shell に追加され、長い panel を読む前に優先確認ポイントを先に揃えられる。
 
 package line を local で release 確認したい場合は、長寿命の開発用 `.venv` に依存せず

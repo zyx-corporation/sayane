@@ -43,6 +43,10 @@ import Testing
     #expect(strings.text(.loadedStatus) == "読み込み状態")
     #expect(strings.text(.currentState) == "現在状態")
     #expect(strings.text(.currentValue) == "現在")
+    #expect(strings.text(.primaryOperatorUI) == "主要オペレーターUI")
+    #expect(strings.text(.recommendedLauncher) == "推奨ランチャー")
+    #expect(strings.text(.operatorSurfaceNotes) == "運用サーフェス補足")
+    #expect(strings.text(.openLauncher) == "ランチャーを開く")
     #expect(strings.text(.mode) == "モード")
     #expect(strings.text(.consent) == "同意")
     #expect(strings.text(.recovery) == "復旧")
@@ -180,6 +184,8 @@ import Testing
     #expect(strings.summaryCardLabel("supported_packaging_model_finalized") == "サポートするパッケージング判断")
     #expect(strings.tokenLabel("baseline_contract_implemented") == "契約ベースライン実装済み")
     #expect(strings.tokenLabel("blocked") == "ブロック中")
+    #expect(strings.tokenLabel("native_macos_app_primary") == "macOSネイティブアプリ")
+    #expect(strings.tokenLabel("bridge_hosted_debug_shell") == "Bridge上のデバッグshell")
     #expect(strings.operatorPanelPriority("packaging_status") < strings.operatorPanelPriority("service_targets"))
     #expect(strings.operatorPanelPriority("service_targets") < strings.operatorPanelPriority("operator_phase_status"))
     #expect(strings.highlightPriority("separate_plan_required") < strings.highlightPriority("review_required"))
@@ -195,6 +201,20 @@ import Testing
     #expect(strings.approveActionMessage(id: "cand-001") == "承認完了: cand-001")
     #expect(strings.rejectActionMessage(id: "cand-001") == "却下完了: cand-001")
     #expect(strings.reviseActionMessage(id: "cand-002", originalID: "cand-001") == "修正版を作成: cand-001 → cand-002")
+}
+
+@MainActor
+@Test func appModelResolvesLocalCommandPaths() {
+    let model = AppModel()
+
+    let relative = model.resolvedLocalCommandPath("./scripts/run-macos-app-preview.sh")
+    #expect(relative?.hasSuffix("/scripts/run-macos-app-preview.sh") == true)
+
+    let absolute = model.resolvedLocalCommandPath("/Users/tomyuk/Projects/Sayane/sayane/scripts/run-app-local.sh")
+    #expect(absolute == "/Users/tomyuk/Projects/Sayane/sayane/scripts/run-app-local.sh")
+
+    #expect(model.resolvedLocalCommandPath("sayane serve --host 127.0.0.1 --port 38741") == nil)
+    #expect(model.resolvedLocalCommandPath("./scripts/not-found.sh") == nil)
 }
 
 @MainActor

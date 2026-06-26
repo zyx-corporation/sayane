@@ -28,6 +28,7 @@ class ResidentDaemonPackagingStatus:
             else "other"
         )
         serve_command = ["sayane", "serve", "--host", self.host, "--port", str(self.port)]
+        native_launcher_command = ["./scripts/run-macos-app-preview.sh"]
         start_command = [
             "sayane",
             "app",
@@ -99,6 +100,35 @@ class ResidentDaemonPackagingStatus:
                 "command": serve_command,
                 "command_text": " ".join(shlex.quote(part) for part in serve_command),
                 "purpose": "primary local operator entrypoint",
+            },
+            "operator_surface": {
+                "primary_ui": (
+                    "native_macos_app_primary"
+                    if platform_family == "macos"
+                    else "local_bridge_shell_primary"
+                ),
+                "debug_ui": "bridge_hosted_debug_shell",
+                "recommended_launcher": {
+                    "command": native_launcher_command if platform_family == "macos" else serve_command,
+                    "command_text": (
+                        " ".join(shlex.quote(part) for part in native_launcher_command)
+                        if platform_family == "macos"
+                        else " ".join(shlex.quote(part) for part in serve_command)
+                    ),
+                    "purpose": (
+                        "primary native operator entrypoint"
+                        if platform_family == "macos"
+                        else "primary local operator entrypoint"
+                    ),
+                },
+                "notes": [
+                    (
+                        "native macOS app is the primary operator-facing UI; "
+                        "/app/ui remains debug-only compatibility"
+                        if platform_family == "macos"
+                        else "Bridge-hosted local shell remains the primary operator-facing UI on this platform"
+                    ),
+                ],
             },
             "packaging_decision": {
                 "status": "current_line_explicit_final_next_phase_not_closed",

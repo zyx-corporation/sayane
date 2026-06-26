@@ -39,6 +39,9 @@ def test_daemon_packaging_status_text_exposes_post_app_detail_surface(
     assert result.exit_code == 0
     assert "phase_status: next_up_after_proof_phase" in result.stdout
     assert "current_entrypoint: sayane serve --host 127.0.0.1 --port 38741" in result.stdout
+    assert "primary_operator_ui:" in result.stdout
+    assert "recommended_launcher:" in result.stdout
+    assert "operator_surface_notes:" in result.stdout
     assert "candidate_models:" in result.stdout
     assert "cli_first_local_bridge: current_supported_line" in result.stdout
     assert "decision_guardrails:" in result.stdout

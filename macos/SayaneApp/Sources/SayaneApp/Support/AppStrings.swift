@@ -138,6 +138,8 @@ struct AppStrings {
         case (.en, .openPlist): return "Open Plist"
         case (.ja, .openRuntime): return "runtime を開く"
         case (.en, .openRuntime): return "Open Runtime"
+        case (.ja, .openLauncher): return "ランチャーを開く"
+        case (.en, .openLauncher): return "Open Launcher"
         case (.ja, .reviewPreviews): return "復旧プレビュー"
         case (.en, .reviewPreviews): return "Recovery Previews"
         case (.ja, .generatedAt): return "生成日時"
@@ -160,6 +162,12 @@ struct AppStrings {
         case (.en, .loadedStatus): return "Loaded Status"
         case (.ja, .packagingModels): return "パッケージング候補"
         case (.en, .packagingModels): return "Packaging Models"
+        case (.ja, .primaryOperatorUI): return "主要オペレーターUI"
+        case (.en, .primaryOperatorUI): return "Primary Operator UI"
+        case (.ja, .recommendedLauncher): return "推奨ランチャー"
+        case (.en, .recommendedLauncher): return "Recommended Launcher"
+        case (.ja, .operatorSurfaceNotes): return "運用サーフェス補足"
+        case (.en, .operatorSurfaceNotes): return "Operator Surface Notes"
         case (.ja, .supervision): return "監視UX"
         case (.en, .supervision): return "Supervision UX"
         case (.ja, .recoveryPolicy): return "復旧ポリシー"
@@ -744,6 +752,10 @@ struct AppStrings {
         case (.en, "not_supported"): return "Not Supported"
         case (.ja, "cli_first_local_bridge"): return "CLI先行 + Local Bridge"
         case (.en, "cli_first_local_bridge"): return "CLI First + Local Bridge"
+        case (.ja, "native_macos_app_primary"): return "macOSネイティブアプリ"
+        case (.en, "native_macos_app_primary"): return "Native macOS App"
+        case (.ja, "bridge_hosted_debug_shell"): return "Bridge上のデバッグshell"
+        case (.en, "bridge_hosted_debug_shell"): return "Bridge-hosted Debug Shell"
         case (.ja, "hybrid_local_bridge_plus_service_targets"): return "Local Bridge + Service Target 併用候補"
         case (.en, "hybrid_local_bridge_plus_service_targets"): return "Hybrid Local Bridge Plus Service Targets"
         case (.ja, "macos_launchagent"): return "macOS LaunchAgent"
@@ -1126,9 +1138,9 @@ struct AppStrings {
         case operatorPhase, serviceTargets, launchAgent, clipboardEmpty, connectionProblem
         case sessionProblem, loading, none, error, bridgeHealthy, currentCandidate, editedText
         case changeReason, rejectReason, evaluateLevel, submit, cancel, supportedPath
-        case exitCriteria, notInScope, copyCommand, copyDetail, copyDiff, copyLineage, copyCurrentState, copyRecoveryPreview, copyOperatorSummary, copyPhaseGates, copyReadSurfaces, copySuggestedActions, exportHandoffNote, copiedCommand, actionCompleted, savedFile, actionFailed, openPlist, openRuntime
+        case exitCriteria, notInScope, copyCommand, copyDetail, copyDiff, copyLineage, copyCurrentState, copyRecoveryPreview, copyOperatorSummary, copyPhaseGates, copyReadSurfaces, copySuggestedActions, exportHandoffNote, copiedCommand, actionCompleted, savedFile, actionFailed, openPlist, openRuntime, openLauncher
         case reviewPreviews, generatedAt, bridgeContext, component, currentState, reason, notes, recommended, currentPlatform, loadedStatus
-        case packagingModels, supervision, recoveryPolicy, backgroundSurfaces, guardrails
+        case packagingModels, primaryOperatorUI, recommendedLauncher, operatorSurfaceNotes, supervision, recoveryPolicy, backgroundSurfaces, guardrails
         case blockedBy, nextCommand, additionalBlockers, allowedCommands, deferredCommands, recoveryFlow, passiveVisibility
         case activeSupervision, startupVisibility, phaseChecklist, readSurfaces
         case localOnly, statusValue, startupCommand, bootstrapUI

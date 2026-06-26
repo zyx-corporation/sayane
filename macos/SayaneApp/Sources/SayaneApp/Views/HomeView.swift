@@ -230,6 +230,16 @@ struct HomeView: View {
     private var priorityItems: [(title: String, summary: String, badge: String, tone: StatusTone, action: () -> Void)] {
         var items: [(String, String, String, StatusTone, () -> Void)] = []
 
+        if let startupCommand = model.startupCommandText {
+            items.append((
+                model.strings.text(.supportedPath),
+                startupCommand,
+                model.strings.text(.recommended),
+                .positive,
+                { model.choose(screen: .daemon) }
+            ))
+        }
+
         if let review = model.homeState?.topReviewItems.first {
             items.append((
                 model.strings.text(.reviewNextCandidate),

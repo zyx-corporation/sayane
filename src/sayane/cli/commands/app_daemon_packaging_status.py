@@ -45,6 +45,12 @@ def register_daemon_packaging_status_command(app_group: typer.Typer) -> None:
         typer.echo(f"supervision_model: {payload['supervision_model']}")
         typer.echo(f"phase_status: {payload['phase_status']}")
         typer.echo(f"current_entrypoint: {payload['current_entrypoint']['command_text']}")
+        typer.echo(f"primary_operator_ui: {payload['operator_surface']['primary_ui']}")
+        typer.echo(
+            "recommended_launcher: "
+            + payload["operator_surface"]["recommended_launcher"]["command_text"]
+        )
+        echo_list_section("operator_surface_notes", payload["operator_surface"].get("notes", []))
         typer.echo(f"service_integration_status: {payload['service_integration']['status']}")
         typer.echo(
             "service_integration_targets: "

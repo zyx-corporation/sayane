@@ -149,12 +149,17 @@ If the app loses the Bridge connection after launch, use the native `Start Bridg
 The Home and error surfaces also expose one shared connection diagnostics card so the operator can
 inspect the Bridge URL, health endpoint, browser fallback URL, token path, and log path without leaving
 the native app.
+Where the startup command resolves to a local script path, the native recovery surfaces now also expose
+`Open Launcher` beside `Copy Startup Command`. Where the browser compatibility path is visible, the same
+surfaces now also expose `Open Debug Shell` and `Copy Debug Shell URL`.
 The error view now also keeps one compact recovery card first, so the operator can trigger the
 recommended recovery action, copy the startup command, and open logs before reading deeper diagnostics.
 That diagnostics card now stays reference-first: it keeps file paths, URLs, and debug/fallback-only
 utilities together, while the Bridge status panel carries the main recovery and navigation actions.
 The Home screen also keeps a compact Bridge status panel above the rest of the content so initial
 launch, reconnect, and log-first troubleshooting stay visible before drilling into Queue or Daemon.
+That same Home/Bridge Status surface now uses the same startup/debug actions as the Daemon supported-path
+and fallback error surfaces, so operators do not need to remember a separate recovery path per screen.
 Queue and Daemon also keep the same Bridge status surface in compact form so the operator can
 recover connectivity without navigating back to Home first.
 When daemon state is available, the same native recovery surfaces now also show the current startup

@@ -48,6 +48,14 @@ import Testing
       },
       "packaging_status": {
         "packaging_model": "cli_first_local_bridge",
+        "operator_surface": {
+          "primary_ui": "native_macos_app_primary",
+          "debug_ui": "bridge_hosted_debug_shell",
+          "recommended_launcher": {
+            "command_text": "./scripts/run-macos-app-preview.sh"
+          },
+          "notes": ["native macOS app is the primary operator-facing UI on macOS"]
+        },
         "packaging_decision": {
           "candidate_models": [
             {"model": "cli_first_local_bridge", "status": "current_supported_line", "operator_value": "lowest change", "blocked_by": []},
@@ -129,6 +137,9 @@ import Testing
     #expect(payload.launchagentPreview?["operation_id"]?.stringValue == "launchagent-123456")
     #expect(payload.launchagentPreview?["preview_hash"]?.stringValue == "abc123def456")
     #expect(payload.packagingStatus?["packaging_model"]?.stringValue == "cli_first_local_bridge")
+    #expect(payload.packagingStatus?["operator_surface"]?.objectValue?["primary_ui"]?.stringValue == "native_macos_app_primary")
+    #expect(payload.packagingStatus?["operator_surface"]?.objectValue?["debug_ui"]?.stringValue == "bridge_hosted_debug_shell")
+    #expect(payload.packagingStatus?["operator_surface"]?.objectValue?["recommended_launcher"]?.objectValue?["command_text"]?.stringValue == "./scripts/run-macos-app-preview.sh")
     #expect(payload.supervisionStatus?["supervision_mode"]?.stringValue == "passive_local_observation_with_cli_recovery")
     #expect(payload.recoveryConsentStatus?["consent_model"]?.stringValue == "explicit_cli_confirmation_for_mutation")
     #expect(payload.operatorPhaseStatus?["current_supported_operator_path"]?.objectValue?["local_only"]?.boolValue == true)

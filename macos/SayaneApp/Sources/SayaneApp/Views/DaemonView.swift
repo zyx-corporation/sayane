@@ -759,13 +759,22 @@ struct DaemonView: View {
             if let details = model.daemonState?.operatorPhaseDetails {
                 GroupBox(model.strings.text(.supportedPath)) {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text(details.currentSupportedOperatorPath.startupCommandText ?? model.strings.text(.none))
-                            .font(.subheadline.weight(.semibold))
+                        if let startupCommand = details.currentSupportedOperatorPath.startupCommandText,
+                           !startupCommand.isEmpty {
+                            Text(model.strings.text(.startupCommand))
+                                .font(.caption.weight(.semibold))
+                            commandRow(startupCommand)
+                            StartupShortcutButtons(model: model, command: startupCommand)
+                        } else {
+                            Text(model.strings.text(.none))
+                                .font(.subheadline.weight(.semibold))
+                        }
                         if let bootstrapUI = details.currentSupportedOperatorPath.bootstrapUI {
                             Text(model.strings.text(.debugShell))
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(.secondary)
-                            Text(bootstrapUI).foregroundStyle(.secondary)
+                            commandRow(bootstrapUI)
+                            DebugShellShortcutButtons(model: model, bootstrapUI: bootstrapUI)
                         }
                         if let localOnly = details.currentSupportedOperatorPath.localOnly {
                             DetailLabelValueRow(
@@ -846,10 +855,12 @@ struct DaemonView: View {
                     if let command = startup["startup_command_text"]?.stringValue {
                         Text(model.strings.text(.startupCommand)).bold()
                         commandRow(command)
+                        StartupShortcutButtons(model: model, command: command)
                     }
                     if let bootstrapUI = startup["bootstrap_ui"]?.stringValue {
                         Text(model.strings.text(.bootstrapUI)).bold()
                         commandRow(bootstrapUI)
+                        DebugShellShortcutButtons(model: model, bootstrapUI: bootstrapUI)
                         Text(model.strings.text(.debugShellCompatibilitySummary))
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -1058,6 +1069,28 @@ struct DaemonView: View {
                         label: model.strings.text(.currentValue),
                         badgeText: model.strings.tokenLabel(current),
                         tone: model.strings.tone(forToken: current)
+                    )
+                }
+                if let operatorSurface = model.daemonState?.packagingStatus?["operator_surface"]?.objectValue {
+                    if let primaryUI = operatorSurface["primary_ui"]?.stringValue {
+                        DetailLabelValueRow(
+                            label: model.strings.text(.primaryOperatorUI),
+                            value: model.strings.tokenLabel(primaryUI)
+                        )
+                    }
+                    if let recommendedLauncher = operatorSurface["recommended_launcher"]?.objectValue?["command_text"]?.stringValue,
+                       !recommendedLauncher.isEmpty {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(model.strings.text(.recommendedLauncher))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            commandRow(recommendedLauncher)
+                            StartupShortcutButtons(model: model, command: recommendedLauncher)
+                        }
+                    }
+                    stringList(
+                        title: model.strings.text(.operatorSurfaceNotes),
+                        values: operatorSurface["notes"]?.arrayValue?.compactMap(\.stringValue) ?? []
                     )
                 }
                 if let candidates = model.daemonState?.packagingStatus?["packaging_decision"]?.objectValue?["candidate_models"]?.arrayValue {
@@ -1673,6 +1706,19 @@ struct DaemonView: View {
 
     private var daemonFocusItems: [FocusItem] {
         var items: [FocusItem] = []
+
+        if let startupCommand = model.startupCommandText {
+            items.append(
+                FocusItem(
+                    id: "supported-path",
+                    title: model.strings.text(.supportedPath),
+                    summary: startupCommand,
+                    badge: model.strings.text(.recommended),
+                    tone: .positive,
+                    anchor: .operatorPhase
+                )
+            )
+        }
 
         if let action = model.daemonState?.nextActions.first {
             items.append(
@@ -2566,6 +2612,20 @@ struct DaemonView: View {
 
     private var operatorSummaryRailItems: [OperatorSummaryRailItem] {
         var items: [OperatorSummaryRailItem] = []
+
+        if let startupCommand = model.startupCommandText {
+            items.append(
+                OperatorSummaryRailItem(
+                    id: "supported-path",
+                    title: model.strings.text(.supportedPath),
+                    summary: model.daemonState?.operatorPhaseDetails.currentSupportedOperatorPath.notes.first ?? model.strings.text(.recommended),
+                    badge: model.strings.text(.startupCommand),
+                    command: startupCommand,
+                    anchor: .operatorPhase,
+                    tone: .positive
+                )
+            )
+        }
 
         if let gate = phaseClosureGateItems.first {
             let summary = gate.blockers.first.map { blocker in

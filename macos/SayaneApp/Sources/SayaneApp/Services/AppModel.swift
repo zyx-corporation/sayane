@@ -622,6 +622,35 @@ final class AppModel: ObservableObject {
         )
     }
 
+    func resolvedLocalCommandPath(_ command: String) -> String? {
+        let trimmed = command.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        guard let token = trimmed.split(whereSeparator: \.isWhitespace).first else { return nil }
+        let pathToken = String(token)
+        if pathToken.hasPrefix("/") {
+            let path = URL(fileURLWithPath: pathToken).standardizedFileURL.path
+            return FileManager.default.fileExists(atPath: path) ? path : nil
+        }
+        if pathToken.hasPrefix("./"), let repoRoot = BridgeLauncher.resolveRepoRoot() {
+            let relativePath = String(pathToken.dropFirst(2))
+            let path = repoRoot.appendingPathComponent(relativePath).standardizedFileURL.path
+            return FileManager.default.fileExists(atPath: path) ? path : nil
+        }
+        return nil
+    }
+
+    func openCommandPath(_ command: String) {
+        openPath(resolvedLocalCommandPath(command))
+    }
+
+    func openURLString(_ value: String?) {
+        guard let rawValue = value else { return }
+        let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        guard let url = URL(string: trimmed) else { return }
+        NSWorkspace.shared.open(url)
+    }
+
     func openPath(_ path: String?) {
         guard let path, !path.isEmpty else { return }
         NSWorkspace.shared.open(URL(fileURLWithPath: path))

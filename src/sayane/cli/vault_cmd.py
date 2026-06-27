@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Annotated
 
@@ -29,21 +30,43 @@ def register_vault_cli(app: typer.Typer) -> None:
     @vault_app.command("status")
     def vault_status(
         profile_id: Annotated[str, typer.Option("--profile-id", help="Profile id.")] = "default",
+        macos_keychain: Annotated[
+            bool,
+            typer.Option("--macos-keychain", help="Open explicit macOS keychain-backed production runtime."),
+        ] = False,
+        development_mode: Annotated[
+            bool,
+            typer.Option("--development", help="Open explicit lower-assurance development runtime."),
+        ] = False,
         test_mode: Annotated[
             bool,
             typer.Option("--test", help="Open explicit test-only runtime."),
         ] = False,
         sqlite_path: Annotated[
             Path | None,
-            typer.Option("--sqlite", help="Open explicit test-only SQLite runtime at path."),
+            typer.Option("--sqlite", help="Open explicit SQLite runtime at path."),
+        ] = None,
+        passphrase_env: Annotated[
+            str | None,
+            typer.Option("--passphrase-env", help="Environment variable holding development vault passphrase."),
         ] = None,
         json_out: Annotated[bool, typer.Option("--json", help="Emit JSON.")] = False,
     ) -> None:
         """Show Local Vault runtime status without exposing plaintext records."""
-        if sqlite_path is not None and not test_mode:
-            typer.echo("--sqlite requires --test")
+        if sum(int(flag) for flag in (macos_keychain, development_mode, test_mode)) > 1:
+            typer.echo("--macos-keychain, --development, and --test are mutually exclusive")
             raise typer.Exit(2)
-        mode = "test" if test_mode else "production"
+        if sqlite_path is not None and not (test_mode or development_mode):
+            if not macos_keychain:
+                typer.echo("--sqlite requires --test, --development, or --macos-keychain")
+                raise typer.Exit(2)
+        if macos_keychain and sqlite_path is None:
+            typer.echo("--macos-keychain requires --sqlite")
+            raise typer.Exit(2)
+        if passphrase_env is not None and not development_mode:
+            typer.echo("--passphrase-env requires --development")
+            raise typer.Exit(2)
+        mode = "test" if test_mode else "development" if development_mode else "production"
         payload: dict[str, object] = {
             "profile_id": profile_id,
             "requested_mode": mode,
@@ -54,7 +77,22 @@ def register_vault_cli(app: typer.Typer) -> None:
         }
         try:
             if sqlite_path is not None:
-                runtime = build_sqlite_test_vault_runtime(path=sqlite_path, profile_id=profile_id)
+                if test_mode:
+                    runtime = build_sqlite_test_vault_runtime(path=sqlite_path, profile_id=profile_id)
+                elif macos_keychain:
+                    runtime = open_vault_runtime(
+                        mode="production",
+                        profile_id=profile_id,
+                        sqlite_path=sqlite_path,
+                        keychain_backend="macos-keychain",
+                    )
+                else:
+                    runtime = open_vault_runtime(
+                        mode="development",
+                        profile_id=profile_id,
+                        sqlite_path=sqlite_path,
+                        passphrase=_read_passphrase(passphrase_env),
+                    )
             else:
                 runtime = open_vault_runtime(mode=mode, profile_id=profile_id)  # type: ignore[arg-type]
             caps = runtime.keychain.capabilities()
@@ -67,11 +105,13 @@ def register_vault_cli(app: typer.Typer) -> None:
                     "keychain_assurance": caps.assurance.value,
                     "supports_biometric_unlock": caps.supports_biometric_unlock,
                     "supports_os_password_unlock": caps.supports_os_password_unlock,
+                    "supports_scoped_unlock_sessions": True,
                     "repositories": [
                         "candidate",
                         "review_decision",
                         "lineage",
                     ],
+                    "production_ready": runtime.mode.value == "production",
                 },
             )
             if sqlite_path is not None:
@@ -79,6 +119,8 @@ def register_vault_cli(app: typer.Typer) -> None:
                 payload["sqlite_schema_errors"] = validate_sqlite_vault_schema(
                     inspect_sqlite_tables(sqlite_path),
                 )
+            if development_mode:
+                payload["lower_assurance"] = True
         except VaultStoreError as exc:
             payload.update(
                 {
@@ -104,9 +146,104 @@ def register_vault_cli(app: typer.Typer) -> None:
                 typer.echo(f"  SQLite: {sqlite_path}")
             if test_mode:
                 typer.echo("  Warning: test-only runtime; not production cryptographic assurance")
+            if development_mode:
+                typer.echo("  Warning: explicit passphrase runtime; lower assurance than OS-backed keychain")
         else:
             typer.echo(f"  Reason: {payload['reason']}")
             typer.echo("  Production Local Vault backend is intentionally fail-closed until implemented.")
+
+    @vault_app.command("session")
+    def vault_session(
+        level: Annotated[
+            UnlockLevel,
+            typer.Option("--level", help="normal | sensitive | deep_private"),
+        ] = UnlockLevel.SENSITIVE,
+        purpose: Annotated[str, typer.Option("--purpose", help="Unlock purpose label.")] = "vault-session",
+        macos_keychain: Annotated[
+            bool,
+            typer.Option("--macos-keychain", help="Open explicit macOS keychain-backed production runtime."),
+        ] = False,
+        development_mode: Annotated[
+            bool,
+            typer.Option("--development", help="Open explicit lower-assurance development runtime."),
+        ] = False,
+        test_mode: Annotated[
+            bool,
+            typer.Option("--test", help="Open explicit test-only runtime."),
+        ] = False,
+        sqlite_path: Annotated[
+            Path | None,
+            typer.Option("--sqlite", help="Open explicit SQLite runtime at path."),
+        ] = None,
+        passphrase_env: Annotated[
+            str | None,
+            typer.Option("--passphrase-env", help="Environment variable holding development vault passphrase."),
+        ] = None,
+        json_out: Annotated[bool, typer.Option("--json", help="Emit JSON.")] = False,
+    ) -> None:
+        """Open one scoped unlock session and show non-secret metadata."""
+        if sum(int(flag) for flag in (macos_keychain, development_mode, test_mode)) > 1:
+            typer.echo("--macos-keychain, --development, and --test are mutually exclusive")
+            raise typer.Exit(2)
+        if sqlite_path is not None and not (test_mode or development_mode):
+            if not macos_keychain:
+                typer.echo("--sqlite requires --test, --development, or --macos-keychain")
+                raise typer.Exit(2)
+        if macos_keychain and sqlite_path is None:
+            typer.echo("--macos-keychain requires --sqlite")
+            raise typer.Exit(2)
+        if passphrase_env is not None and not development_mode:
+            typer.echo("--passphrase-env requires --development")
+            raise typer.Exit(2)
+
+        if test_mode and sqlite_path is not None:
+            runtime = build_sqlite_test_vault_runtime(path=sqlite_path, profile_id="default")
+        elif test_mode:
+            runtime = open_vault_runtime(mode="test", profile_id="default")
+        elif macos_keychain:
+            runtime = open_vault_runtime(
+                mode="production",
+                profile_id="default",
+                sqlite_path=sqlite_path,
+                keychain_backend="macos-keychain",
+            )
+        elif development_mode:
+            runtime = open_vault_runtime(
+                mode="development",
+                profile_id="default",
+                sqlite_path=sqlite_path,
+                passphrase=_read_passphrase(passphrase_env),
+            )
+        else:
+            raise typer.BadParameter("session requires --test or --development")
+
+        opener = getattr(runtime.session_manager, "open_policy_session", None)
+        if opener is None:
+            raise typer.BadParameter("runtime does not support policy-based sessions")
+        session = opener(purpose, level)
+        payload = {
+            "kind": "local_vault_unlock_session",
+            "runtime_mode": runtime.mode.value,
+            "level": level.value,
+            "purpose": session.purpose,
+            "session_id": session.session_id,
+            "assurance": session.assurance.value,
+            "scopes": list(session.scopes),
+            "unlocked_at": session.unlocked_at.isoformat(),
+            "idle_expires_at": session.idle_expires_at.isoformat() if session.idle_expires_at else None,
+            "expires_at": session.expires_at.isoformat(),
+            "process_local": True,
+            "reusable_across_processes": False,
+        }
+        if json_out:
+            typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+            return
+        typer.echo(f"Session: {payload['session_id']}")
+        typer.echo(f"  Level: {payload['level']}")
+        typer.echo(f"  Assurance: {payload['assurance']}")
+        typer.echo(f"  Expires: {payload['expires_at']}")
+        typer.echo(f"  Idle expires: {payload['idle_expires_at']}")
+        typer.echo("  Process local: true")
 
     @vault_app.command("policy")
     def vault_policy(
@@ -199,6 +336,17 @@ def _policy_payload(level: UnlockLevel) -> dict[str, object]:
         "requires_explicit_unlock": policy.requires_explicit_unlock,
         "scopes": list(policy.default_scopes),
     }
+
+
+def _read_passphrase(passphrase_env: str | None) -> str:
+    if not passphrase_env:
+        raise VaultStoreError("development Local Vault backend requires --passphrase-env")
+    value = os.environ.get(passphrase_env)
+    if not value:
+        raise VaultStoreError(
+            f"development Local Vault backend requires non-empty environment variable: {passphrase_env}"
+        )
+    return value
 
 
 def _schema_payload(*, include_ddl: bool = False) -> dict[str, object]:

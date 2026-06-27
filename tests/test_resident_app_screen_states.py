@@ -18,15 +18,44 @@ def test_build_home_screen_state_exposes_cards_and_links() -> None:
                 "blocked_context_count": 1,
                 "daemon_state": "stopped",
                 "next_action_count": 2,
+                "vault_status": "available",
+                "vault_backend": "sqlite_macos_keychain_vault",
+                "vault_assurance": "os_backed",
+                "vault_session_count": 1,
             },
             "review_summary": {"top_items": [{"candidate_id": "c1"}]},
             "daemon_summary": {"top_next_actions": [{"command": "x"}]},
+            "vault_status": {
+                "status": "available",
+                "backend": "sqlite_macos_keychain_vault",
+                "keychain_assurance": "os_backed",
+                "vault_path": "/tmp/main.sqlite",
+                "supports_scoped_unlock_sessions": True,
+                "recommended_setup": {},
+                "unlock_policies": [],
+                "session_status": {
+                    "kind": "resident_app_vault_session_status",
+                    "status": "available",
+                    "active_session_count": 1,
+                    "has_active_sessions": True,
+                    "active_sessions": [
+                        {"session_id": "sess-1", "level": "sensitive", "purpose": "candidate-review"}
+                    ],
+                    "available_levels": [],
+                    "notes": [],
+                },
+                "notes": ["note"],
+            },
         }
     )
 
     assert payload["kind"] == "resident_app_home_screen_state"
     assert payload["summary_cards"][0]["key"] == "repository"
+    assert payload["summary_cards"][6]["key"] == "vault_status"
+    assert payload["summary_cards"][9]["key"] == "vault_session_count"
     assert payload["top_review_items"][0]["candidate_id"] == "c1"
+    assert payload["vault_summary"]["backend"] == "sqlite_macos_keychain_vault"
+    assert payload["vault_summary"]["session_status"]["active_session_count"] == 1
     assert payload["quick_links"][0]["screen"] == "candidate_queue"
 
 

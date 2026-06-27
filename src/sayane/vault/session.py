@@ -18,6 +18,7 @@ from sayane.vault.contracts import (
 )
 from sayane.vault.unlock_policy import (
     UnlockLevel,
+    UnlockPolicy,
     build_unlock_session_from_policy,
     default_unlock_policy,
 )
@@ -33,6 +34,8 @@ class InMemoryUnlockSessionManager(UnlockSessionManager):
 
     keychain: PlatformKeychainProvider
     sessions: dict[str, UnlockSession] = field(default_factory=dict)
+    policy_levels: dict[str, UnlockLevel] = field(default_factory=dict)
+    policy_presets: dict[str, UnlockPolicy] = field(default_factory=dict)
 
     def open_session(self, purpose: str, scopes: list[str]) -> UnlockSession:
         """Open and track a new scoped unlock session."""
@@ -58,6 +61,8 @@ class InMemoryUnlockSessionManager(UnlockSessionManager):
             scopes=scopes,
         )
         self.sessions[session.session_id] = session
+        self.policy_levels[session.session_id] = level
+        self.policy_presets[session.session_id] = policy
         return session
 
     def require_scope(self, session_id: str, scope: str) -> UnlockSession:
@@ -75,6 +80,8 @@ class InMemoryUnlockSessionManager(UnlockSessionManager):
     def close_session(self, session_id: str) -> None:
         """Close a session and ask the keychain to release it as well."""
         self.sessions.pop(session_id, None)
+        self.policy_levels.pop(session_id, None)
+        self.policy_presets.pop(session_id, None)
         self.keychain.lock(session_id)
 
     def close_all(self) -> None:

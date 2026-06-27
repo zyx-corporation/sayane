@@ -10,9 +10,15 @@ from sayane.app.runtime import (
     ResidentRepositoryBackend,
     ResidentRuntime,
     build_resident_runtime,
+    clear_resident_runtime_cache,
     select_resident_repositories,
 )
 from sayane.storage.repositories import build_test_repository_bundle
+
+
+@pytest.fixture(autouse=True)
+def _clear_runtime_cache() -> None:
+    clear_resident_runtime_cache()
 
 
 def test_resident_runtime_describes_service_and_bridge_config(tmp_path) -> None:
@@ -133,6 +139,38 @@ def test_sqlite_test_local_vault_selects_repository_bundle(tmp_path) -> None:
     assert runtime.describe()["has_repositories"] is True
     assert runtime.describe()["repository_backend"] == "sqlite_test_local_vault"
     assert runtime.describe()["storage_boundary"] == "sqlite_test_local_vault"
+
+
+def test_resident_runtime_can_select_test_vault_from_environment(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("SAYANE_APP_VAULT_MODE", "test")
+    runtime = build_resident_runtime(home=tmp_path / "sayane")
+
+    assert runtime.describe()["repository_backend"] == "sqlite_test_local_vault"
+    assert runtime.describe()["has_repositories"] is True
+
+
+def test_resident_runtime_can_select_development_vault_from_environment(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("SAYANE_APP_VAULT_MODE", "development")
+    monkeypatch.setenv("SAYANE_VAULT_PASSPHRASE", "dev-passphrase")
+    runtime = build_resident_runtime(home=tmp_path / "sayane")
+
+    assert runtime.describe()["repository_backend"] == "sqlite_development_local_vault"
+    assert runtime.describe()["has_repositories"] is True
+
+
+def test_resident_runtime_reuses_process_local_vault_runtime(tmp_path) -> None:
+    first = build_resident_runtime(
+        repository_backend=ResidentRepositoryBackend.SQLITE_TEST_LOCAL_VAULT,
+        vault_path=tmp_path / "sayane.sqlite3",
+        allow_test_vault=True,
+    )
+    second = build_resident_runtime(
+        repository_backend=ResidentRepositoryBackend.SQLITE_TEST_LOCAL_VAULT,
+        vault_path=tmp_path / "sayane.sqlite3",
+        allow_test_vault=True,
+    )
+
+    assert first.repository_selection.vault_runtime is second.repository_selection.vault_runtime
 
 
 def test_future_pro_backend_is_reserved() -> None:

@@ -489,6 +489,52 @@ final class AppModel: ObservableObject {
         }
     }
 
+    func openVaultSession(level: String) async {
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            _ = try await bridgeClient.openVaultSession(
+                level: level,
+                purpose: "resident-app-\(level)",
+                profileID: bridgeProfileID
+            )
+            await loadHome()
+            showActionFeedback(
+                title: strings.text(.actionCompleted),
+                message: strings.vaultSessionOpenedMessage(level: level),
+                tone: .positive
+            )
+            errorMessage = nil
+        } catch {
+            showActionFeedback(
+                title: strings.text(.actionFailed),
+                message: error.localizedDescription,
+                tone: .critical
+            )
+        }
+    }
+
+    func lockAllVaultSessions() async {
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            _ = try await bridgeClient.lockVaultSessions(closeAll: true)
+            await loadHome()
+            showActionFeedback(
+                title: strings.text(.actionCompleted),
+                message: strings.vaultSessionsLockedMessage(),
+                tone: .positive
+            )
+            errorMessage = nil
+        } catch {
+            showActionFeedback(
+                title: strings.text(.actionFailed),
+                message: error.localizedDescription,
+                tone: .critical
+            )
+        }
+    }
+
     @discardableResult
     func evaluateSelected(level: Int) async -> Bool {
         guard let candidateID = selectedCandidateID else { return false }

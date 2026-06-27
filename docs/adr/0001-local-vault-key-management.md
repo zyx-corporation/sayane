@@ -248,6 +248,43 @@ Implemented session management:
 
 `InMemoryUnlockSessionManager.open_policy_session()` can open sessions using the ADR 0001 unlock presets. This makes timeout and scope policy executable without treating unlock as a global process state.
 
+Implemented explicit lower-assurance development runtime:
+
+- `src/sayane/vault/development.py`
+  - `PassphraseKeychainProvider`
+  - `SQLiteKeyringKeyManager`
+  - `AesGcmCryptoProvider`
+  - `build_sqlite_development_vault_runtime()`
+
+This adds a concrete encrypted SQLite path for explicit development use:
+
+- passphrase-derived wrapping secret
+- persisted wrapped DEKs in the `keyring` table
+- AES-256-GCM encrypted records with canonicalized AAD binding
+- scoped unlock sessions over the same vault boundary
+
+It remains intentionally lower assurance than future OS-backed production keychain integrations and
+does not change the fail-closed production default.
+
+Implemented explicit macOS keychain-backed runtime:
+
+- `src/sayane/vault/macos_keychain.py`
+  - `MacOSKeychainProvider`
+  - `build_sqlite_macos_vault_runtime()`
+
+This adds the first concrete OS-backed keychain path for Local Vault:
+
+- wrapping secret stored in macOS Keychain generic-password item storage
+- persisted wrapped DEKs in SQLite `keyring`
+- AES-256-GCM encrypted records over the same record/key boundary
+- explicit opt-in runtime opening rather than silent production default selection
+
+The current macOS path is production-shaped but still intentionally explicit:
+
+- callers must provide a vault SQLite path
+- callers must request the macOS keychain backend directly
+- production default remains fail-closed until broader backend selection is accepted
+
 Implemented SQLite schema contract:
 
 - `src/sayane/vault/sqlite_schema.py`
@@ -352,10 +389,10 @@ Current AAD binding includes profile identity, record type, schema version, and 
 
 Current limitations:
 
-- No production OS-backed keychain provider exists yet.
-- No production cryptographic provider exists yet.
+- No cross-platform production-default keychain selection exists yet.
+- The explicit macOS keychain-backed runtime is opt-in and does not by itself define the final production-default backend selection policy.
 - SQLite-backed encrypted persistence exists only as a store seam, not as the default production Local Vault backend.
-- SQLite-backed runtime construction exists only as an explicit test-only seam.
+- SQLite-backed runtime construction has explicit development, explicit macOS keychain, and explicit test-only seams, but no implicit production-default selection.
 - Test-only providers must not be selected by production defaults.
 - Existing FileSystem stores remain transitional local working stores until the Local Vault backend is production-ready.
 

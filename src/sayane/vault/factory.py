@@ -8,6 +8,7 @@ defaults while production Local Vault backends are still unimplemented.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Literal
 
 from sayane.storage.vault_bundle import VaultRepositoryBundle, build_vault_repository_bundle
@@ -25,6 +26,7 @@ from sayane.vault.test_store import (
     CryptoBackedInMemoryTestVaultStore,
     TestOnlyKeychainProvider,
 )
+from sayane.vault.unlock_policy import UnlockLevel
 
 VaultRuntimeMode = Literal["production", "development", "test"]
 
@@ -51,6 +53,13 @@ class VaultRuntime:
     def lock(self, session_id: str) -> None:
         """Close one unlock session."""
         self.session_manager.close_session(session_id)
+
+    def open_policy_session(self, purpose: str, level: UnlockLevel) -> UnlockSession:
+        """Open a policy-based session when supported by the session manager."""
+        opener = getattr(self.session_manager, "open_policy_session", None)
+        if opener is None:
+            raise VaultStoreError("policy-based unlock sessions are not supported by this runtime")
+        return opener(purpose, level)
 
     def require_not_test_only_for_production(self) -> None:
         """Raise if a production runtime uses a test-only keychain or store."""
@@ -90,6 +99,9 @@ def open_vault_runtime(
     *,
     mode: VaultRuntimeMode = "production",
     profile_id: str = "default",
+    sqlite_path: Path | None = None,
+    passphrase: str | None = None,
+    keychain_backend: str | None = None,
 ) -> VaultRuntime:
     """Open a VaultRuntime.
 
@@ -99,5 +111,25 @@ def open_vault_runtime(
     if mode == "test":
         return build_test_vault_runtime(profile_id=profile_id)
     if mode == "development":
-        raise VaultStoreError("development Local Vault backend is not implemented")
+        if sqlite_path is None:
+            raise VaultStoreError("development Local Vault backend requires explicit sqlite_path")
+        if not passphrase:
+            raise VaultStoreError("development Local Vault backend requires explicit passphrase")
+        from sayane.vault.development import build_sqlite_development_vault_runtime
+
+        return build_sqlite_development_vault_runtime(
+            path=sqlite_path,
+            passphrase=passphrase,
+            profile_id=profile_id,
+        )
+    if mode == "production":
+        if keychain_backend == "macos-keychain":
+            if sqlite_path is None:
+                raise VaultStoreError("macOS production Local Vault backend requires explicit sqlite_path")
+            from sayane.vault.macos_keychain import build_sqlite_macos_vault_runtime
+
+            return build_sqlite_macos_vault_runtime(
+                path=sqlite_path,
+                profile_id=profile_id,
+            )
     raise VaultStoreError("production Local Vault backend is not implemented")

@@ -128,6 +128,7 @@ struct HomeScreenState: Codable, Sendable {
     let summaryCards: [SummaryCard]
     let topReviewItems: [TopReviewItem]
     let topDaemonActions: [String]
+    let vaultSummary: VaultSummary?
     let quickLinks: [QuickLink]
 
     private enum CodingKeys: String, CodingKey {
@@ -135,7 +136,137 @@ struct HomeScreenState: Codable, Sendable {
         case summaryCards = "summary_cards"
         case topReviewItems = "top_review_items"
         case topDaemonActions = "top_daemon_actions"
+        case vaultSummary = "vault_summary"
         case quickLinks = "quick_links"
+    }
+}
+
+struct VaultSummary: Codable, Sendable {
+    let status: String?
+    let backend: String?
+    let assurance: String?
+    let vaultPath: String?
+    let supportsScopedUnlockSessions: Bool?
+    let recommendedSetup: [String: String]?
+    let unlockPolicies: [VaultUnlockPolicy]
+    let sessionStatus: VaultSessionStatus?
+    let notes: [String]
+
+    private enum CodingKeys: String, CodingKey {
+        case status, backend, assurance, notes
+        case vaultPath = "vault_path"
+        case supportsScopedUnlockSessions = "supports_scoped_unlock_sessions"
+        case recommendedSetup = "recommended_setup"
+        case unlockPolicies = "unlock_policies"
+        case sessionStatus = "session_status"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        status = try container.decodeIfPresent(String.self, forKey: .status)
+        backend = try container.decodeIfPresent(String.self, forKey: .backend)
+        assurance = try container.decodeIfPresent(String.self, forKey: .assurance)
+        vaultPath = try container.decodeIfPresent(String.self, forKey: .vaultPath)
+        supportsScopedUnlockSessions = try container.decodeIfPresent(Bool.self, forKey: .supportsScopedUnlockSessions)
+        recommendedSetup = try container.decodeIfPresent([String: String].self, forKey: .recommendedSetup)
+        unlockPolicies = try container.decodeIfPresent([VaultUnlockPolicy].self, forKey: .unlockPolicies) ?? []
+        sessionStatus = try container.decodeIfPresent(VaultSessionStatus.self, forKey: .sessionStatus)
+        notes = try container.decodeIfPresent([String].self, forKey: .notes) ?? []
+    }
+}
+
+struct VaultUnlockPolicy: Codable, Hashable, Sendable, Identifiable {
+    var id: String { level }
+    let level: String
+    let idleTimeoutSeconds: Int
+    let absoluteTimeoutSeconds: Int
+    let requiresExplicitUnlock: Bool
+    let scopes: [String]
+
+    private enum CodingKeys: String, CodingKey {
+        case level, scopes
+        case idleTimeoutSeconds = "idle_timeout_seconds"
+        case absoluteTimeoutSeconds = "absolute_timeout_seconds"
+        case requiresExplicitUnlock = "requires_explicit_unlock"
+    }
+}
+
+struct VaultSessionStatus: Codable, Sendable {
+    let kind: String
+    let status: String?
+    let backend: String?
+    let runtimeMode: String?
+    let keychainAssurance: String?
+    let supportsScopedUnlockSessions: Bool?
+    let activeSessionCount: Int
+    let hasActiveSessions: Bool
+    let activeSessions: [VaultSessionEntry]
+    let availableLevels: [VaultSessionLevel]
+    let notes: [String]
+
+    private enum CodingKeys: String, CodingKey {
+        case kind, status, backend, notes
+        case runtimeMode = "runtime_mode"
+        case keychainAssurance = "keychain_assurance"
+        case supportsScopedUnlockSessions = "supports_scoped_unlock_sessions"
+        case activeSessionCount = "active_session_count"
+        case hasActiveSessions = "has_active_sessions"
+        case activeSessions = "active_sessions"
+        case availableLevels = "available_levels"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        kind = try container.decode(String.self, forKey: .kind)
+        status = try container.decodeIfPresent(String.self, forKey: .status)
+        backend = try container.decodeIfPresent(String.self, forKey: .backend)
+        runtimeMode = try container.decodeIfPresent(String.self, forKey: .runtimeMode)
+        keychainAssurance = try container.decodeIfPresent(String.self, forKey: .keychainAssurance)
+        supportsScopedUnlockSessions = try container.decodeIfPresent(Bool.self, forKey: .supportsScopedUnlockSessions)
+        activeSessionCount = try container.decodeIfPresent(Int.self, forKey: .activeSessionCount) ?? 0
+        hasActiveSessions = try container.decodeIfPresent(Bool.self, forKey: .hasActiveSessions) ?? false
+        activeSessions = try container.decodeIfPresent([VaultSessionEntry].self, forKey: .activeSessions) ?? []
+        availableLevels = try container.decodeIfPresent([VaultSessionLevel].self, forKey: .availableLevels) ?? []
+        notes = try container.decodeIfPresent([String].self, forKey: .notes) ?? []
+    }
+}
+
+struct VaultSessionEntry: Codable, Hashable, Sendable, Identifiable {
+    var id: String { sessionID }
+    let sessionID: String
+    let purpose: String?
+    let level: String?
+    let assurance: String?
+    let scopes: [String]
+    let unlockedAt: String?
+    let idleExpiresAt: String?
+    let expiresAt: String?
+    let isExpired: Bool?
+
+    private enum CodingKeys: String, CodingKey {
+        case purpose, level, assurance, scopes
+        case sessionID = "session_id"
+        case unlockedAt = "unlocked_at"
+        case idleExpiresAt = "idle_expires_at"
+        case expiresAt = "expires_at"
+        case isExpired = "is_expired"
+    }
+}
+
+struct VaultSessionLevel: Codable, Hashable, Sendable, Identifiable {
+    var id: String { level }
+    let level: String
+    let idleTimeoutSeconds: Int
+    let absoluteTimeoutSeconds: Int
+    let defaultScopes: [String]
+    let requiresExplicitUnlock: Bool
+
+    private enum CodingKeys: String, CodingKey {
+        case level
+        case idleTimeoutSeconds = "idle_timeout_seconds"
+        case absoluteTimeoutSeconds = "absolute_timeout_seconds"
+        case defaultScopes = "default_scopes"
+        case requiresExplicitUnlock = "requires_explicit_unlock"
     }
 }
 
@@ -503,5 +634,31 @@ struct ReviseRequestBody: Codable, Sendable {
         case editedText = "edited_text"
         case targetSection = "target_section"
         case changeReason = "change_reason"
+    }
+}
+
+struct VaultSessionOpenRequestBody: Codable, Sendable {
+    let level: String
+    let purpose: String
+    let profileId: String
+
+    private enum CodingKeys: String, CodingKey {
+        case level, purpose
+        case profileId = "profile_id"
+    }
+}
+
+struct VaultSessionLockRequestBody: Codable, Sendable {
+    let sessionID: String?
+    let closeAll: Bool
+
+    init(sessionID: String? = nil, closeAll: Bool = false) {
+        self.sessionID = sessionID
+        self.closeAll = closeAll
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case closeAll = "close_all"
+        case sessionID = "session_id"
     }
 }

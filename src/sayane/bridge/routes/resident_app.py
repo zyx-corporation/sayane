@@ -14,6 +14,8 @@ from sayane.bridge.candidate_api import CandidateOperationError
 from sayane.bridge.config import BridgeConfig
 from sayane.bridge.models import (
     AppCaptureClipboardRequest,
+    AppVaultSessionLockRequest,
+    AppVaultSessionOpenRequest,
     ApproveCandidateRequest,
     EvaluateCandidateRequest,
     RejectCandidateRequest,
@@ -142,6 +144,86 @@ def register_resident_app_routes(
         report = build_implementation_gate_preflight_report()
         payload = report.public_metadata()
         payload["event_record"] = build_preflight_event_record(report).public_metadata()
+        return payload
+
+    def _build_app_runtime(*, profile_id: str = "default"):
+        from sayane.app.runtime import build_resident_runtime
+
+        return build_resident_runtime(
+            home=cfg.home,
+            host=cfg.host,
+            port=cfg.port,
+            profile_id=profile_id,
+        )
+
+    def _vault_session_status_payload(*, profile_id: str = "default") -> dict[str, object]:
+        from sayane.app import build_app_vault_session_status
+
+        runtime = _build_app_runtime(profile_id=profile_id)
+        return build_app_vault_session_status(runtime)
+
+    def _require_vault_scope(
+        *,
+        profile_id: str,
+        scope: str,
+        error_message: str,
+    ) -> tuple[object, dict[str, object]]:
+        runtime = _build_app_runtime(profile_id=profile_id)
+        if runtime.vault_runtime is None:
+            return runtime, {}
+        session = runtime.first_vault_session_for_scope(scope)
+        if session is None:
+            raise HTTPException(status_code=409, detail=error_message)
+        return runtime, {"session": session}
+
+    def _open_vault_session(*, profile_id: str, level: str, purpose: str) -> dict[str, object]:
+        from sayane.app import build_app_vault_session_status
+        from sayane.vault.contracts import VaultStoreError
+        from sayane.vault.unlock_policy import UnlockLevel
+
+        runtime = _build_app_runtime(profile_id=profile_id)
+        vault_runtime = runtime.vault_runtime
+        if vault_runtime is None:
+            raise HTTPException(status_code=409, detail="resident runtime is not connected to a Local Vault backend")
+        try:
+            session = vault_runtime.open_policy_session(purpose, UnlockLevel(level))
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        except VaultStoreError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        payload = build_app_vault_session_status(runtime)
+        payload["last_action"] = {
+            "action": "open",
+            "session_id": session.session_id,
+            "level": level,
+            "purpose": purpose,
+            "status": "opened",
+        }
+        return payload
+
+    def _lock_vault_session(*, profile_id: str, session_id: str | None, close_all: bool) -> dict[str, object]:
+        from sayane.app import build_app_vault_session_status
+
+        runtime = _build_app_runtime(profile_id=profile_id)
+        vault_runtime = runtime.vault_runtime
+        if vault_runtime is None:
+            raise HTTPException(status_code=409, detail="resident runtime is not connected to a Local Vault backend")
+        manager = vault_runtime.session_manager
+        if close_all:
+            closer = getattr(manager, "close_all", None)
+            if closer is not None:
+                closer()
+            else:
+                for active_session_id in list(getattr(manager, "sessions", {})):
+                    vault_runtime.lock(active_session_id)
+            action = {"action": "lock_all", "status": "closed"}
+        else:
+            if not session_id:
+                raise HTTPException(status_code=400, detail="session_id is required unless close_all=true")
+            vault_runtime.lock(session_id)
+            action = {"action": "lock", "session_id": session_id, "status": "closed"}
+        payload = build_app_vault_session_status(runtime)
+        payload["last_action"] = action
         return payload
 
     def _redirect_url(path: str, *, notice: str | None = None, error: str | None = None) -> str:
@@ -304,6 +386,41 @@ def register_resident_app_routes(
         return _operator_phase_status_payload()
 
     @router.get(
+        "/app/vault-status",
+        dependencies=[Depends(require_bearer)],
+    )
+    def get_app_vault_status() -> dict[str, object]:
+        from sayane.app import build_app_vault_status, build_resident_runtime
+
+        runtime = build_resident_runtime(
+            home=cfg.home,
+            host=cfg.host,
+            port=cfg.port,
+        )
+        return build_app_vault_status(runtime)
+
+    @router.get(
+        "/app/vault-session",
+        dependencies=[Depends(require_bearer)],
+    )
+    def get_app_vault_session_status() -> dict[str, object]:
+        return _vault_session_status_payload()
+
+    @router.post(
+        "/app/vault-session/open",
+        dependencies=[Depends(require_bearer)],
+    )
+    def post_app_vault_session_open(body: AppVaultSessionOpenRequest) -> dict[str, object]:
+        return _open_vault_session(profile_id=body.profile_id, level=body.level, purpose=body.purpose)
+
+    @router.post(
+        "/app/vault-session/lock",
+        dependencies=[Depends(require_bearer)],
+    )
+    def post_app_vault_session_lock(body: AppVaultSessionLockRequest) -> dict[str, object]:
+        return _lock_vault_session(profile_id="default", session_id=body.session_id, close_all=body.close_all)
+
+    @router.get(
         "/app/daemon-packaging-status",
         dependencies=[Depends(require_bearer)],
     )
@@ -427,6 +544,39 @@ def register_resident_app_routes(
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
         return _operator_phase_status_payload()
+
+    @router.get("/app/ui-state/vault-status")
+    def get_app_ui_vault_status(
+        _token: str = Depends(require_ui_session),
+    ) -> dict[str, object]:
+        from sayane.app import build_app_vault_status, build_resident_runtime
+
+        runtime = build_resident_runtime(
+            home=cfg.home,
+            host=cfg.host,
+            port=cfg.port,
+        )
+        return build_app_vault_status(runtime)
+
+    @router.get("/app/ui-state/vault-session")
+    def get_app_ui_vault_session_status(
+        _token: str = Depends(require_ui_session),
+    ) -> dict[str, object]:
+        return _vault_session_status_payload()
+
+    @router.post("/app/ui-action/vault-session/open")
+    def post_app_ui_action_vault_session_open(
+        body: AppVaultSessionOpenRequest,
+        _token: str = Depends(require_ui_session),
+    ) -> dict[str, object]:
+        return _open_vault_session(profile_id=body.profile_id, level=body.level, purpose=body.purpose)
+
+    @router.post("/app/ui-action/vault-session/lock")
+    def post_app_ui_action_vault_session_lock(
+        body: AppVaultSessionLockRequest,
+        _token: str = Depends(require_ui_session),
+    ) -> dict[str, object]:
+        return _lock_vault_session(profile_id="default", session_id=body.session_id, close_all=body.close_all)
 
     @router.get("/app/ui-state/daemon-packaging-status")
     def get_app_ui_daemon_packaging_status(
@@ -628,13 +778,10 @@ def register_resident_app_routes(
         locale: str | None = Form(None),
         token: str = Depends(require_ui_session),
     ) -> RedirectResponse:
-        from sayane.app.runtime import build_resident_runtime
-
-        runtime = build_resident_runtime(
-            home=cfg.home,
-            host=cfg.host,
-            port=cfg.port,
+        runtime, repository_kwargs = _require_vault_scope(
             profile_id=profile_id,
+            scope="candidate:write",
+            error_message="Local Vault candidate write requires an active unlock session",
         )
         resolved_locale = locale or _resolve_ui_locale(request)
         candidate = runtime.service.capture_clipboard_as_candidate(
@@ -642,6 +789,7 @@ def register_resident_app_routes(
             capability=runtime.capabilities["capture"],
             config=cfg,
             locale=resolved_locale,
+            repository_kwargs=repository_kwargs,
         )
         return _redirect_response(
             f"/app/ui/candidates/{candidate.id}",
@@ -656,19 +804,17 @@ def register_resident_app_routes(
         body: AppCaptureClipboardRequest,
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
-        from sayane.app.runtime import build_resident_runtime
-
-        runtime = build_resident_runtime(
-            home=cfg.home,
-            host=cfg.host,
-            port=cfg.port,
+        runtime, repository_kwargs = _require_vault_scope(
             profile_id=body.profile_id,
+            scope="candidate:write",
+            error_message="Local Vault candidate write requires an active unlock session",
         )
         candidate = runtime.service.capture_clipboard_as_candidate(
             body.content,
             capability=runtime.capabilities["capture"],
             config=cfg,
             locale=body.locale or _resolve_ui_locale(request),
+            repository_kwargs=repository_kwargs,
         )
         payload = candidate.model_dump(mode="json")
         payload["capture_surface"] = "resident_app_bridge"
@@ -683,6 +829,11 @@ def register_resident_app_routes(
     ) -> RedirectResponse:
         locale = _resolve_ui_locale(request)
         try:
+            _require_vault_scope(
+                profile_id="default",
+                scope="review_decision:write",
+                error_message="Local Vault review actions require an active unlock session",
+            )
             candidate_api.post_evaluate(cfg, candidate_id, level=level)
         except FileNotFoundError as exc:
             return _redirect_response("/app/ui/candidates", token=token, locale=locale, error=str(exc))
@@ -707,6 +858,11 @@ def register_resident_app_routes(
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
         try:
+            _require_vault_scope(
+                profile_id="default",
+                scope="review_decision:write",
+                error_message="Local Vault review actions require an active unlock session",
+            )
             payload = candidate_api.post_evaluate(cfg, candidate_id, level=body.level)
             payload["review_surface"] = "resident_app_bridge"
             return payload
@@ -725,6 +881,11 @@ def register_resident_app_routes(
     ) -> RedirectResponse:
         locale = _resolve_ui_locale(request)
         try:
+            _require_vault_scope(
+                profile_id="default",
+                scope="review_decision:write",
+                error_message="Local Vault review actions require an active unlock session",
+            )
             candidate_api.post_approve(
                 cfg,
                 candidate_id,
@@ -756,6 +917,11 @@ def register_resident_app_routes(
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
         try:
+            _require_vault_scope(
+                profile_id="default",
+                scope="review_decision:write",
+                error_message="Local Vault review actions require an active unlock session",
+            )
             explicit = (
                 body.explicit_confirmation.model_dump(mode="json")
                 if body.explicit_confirmation
@@ -786,6 +952,11 @@ def register_resident_app_routes(
     ) -> RedirectResponse:
         locale = _resolve_ui_locale(request)
         try:
+            _require_vault_scope(
+                profile_id="default",
+                scope="review_decision:write",
+                error_message="Local Vault review actions require an active unlock session",
+            )
             candidate_api.post_reject(cfg, candidate_id, reason=reason or None)
         except FileNotFoundError as exc:
             return _redirect_response("/app/ui/candidates", token=token, locale=locale, error=str(exc))
@@ -805,6 +976,11 @@ def register_resident_app_routes(
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
         try:
+            _require_vault_scope(
+                profile_id="default",
+                scope="review_decision:write",
+                error_message="Local Vault review actions require an active unlock session",
+            )
             payload = candidate_api.post_reject(cfg, candidate_id, reason=body.reason)
             payload["review_surface"] = "resident_app_bridge"
             return payload
@@ -824,6 +1000,11 @@ def register_resident_app_routes(
     ) -> RedirectResponse:
         locale = _resolve_ui_locale(request)
         try:
+            _require_vault_scope(
+                profile_id="default",
+                scope="candidate:write",
+                error_message="Local Vault candidate revision requires an active unlock session",
+            )
             payload = candidate_api.post_revise(
                 cfg,
                 candidate_id,
@@ -847,6 +1028,11 @@ def register_resident_app_routes(
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
         try:
+            _require_vault_scope(
+                profile_id="default",
+                scope="candidate:write",
+                error_message="Local Vault candidate revision requires an active unlock session",
+            )
             payload = candidate_api.post_revise(
                 cfg,
                 candidate_id,
@@ -864,19 +1050,17 @@ def register_resident_app_routes(
         dependencies=[Depends(require_bearer)],
     )
     def post_capture_clipboard(body: AppCaptureClipboardRequest) -> dict[str, object]:
-        from sayane.app.runtime import build_resident_runtime
-
-        runtime = build_resident_runtime(
-            home=cfg.home,
-            host=cfg.host,
-            port=cfg.port,
+        runtime, repository_kwargs = _require_vault_scope(
             profile_id=body.profile_id,
+            scope="candidate:write",
+            error_message="Local Vault candidate write requires an active unlock session",
         )
         candidate = runtime.service.capture_clipboard_as_candidate(
             body.content,
             capability=runtime.capabilities["capture"],
             config=cfg,
             locale=body.locale,
+            repository_kwargs=repository_kwargs,
         )
         payload = candidate.model_dump(mode="json")
         payload["capture_surface"] = "resident_app_bridge"
@@ -947,6 +1131,11 @@ def register_resident_app_routes(
         body: EvaluateCandidateRequest,
     ) -> dict[str, object]:
         try:
+            _require_vault_scope(
+                profile_id="default",
+                scope="review_decision:write",
+                error_message="Local Vault review actions require an active unlock session",
+            )
             payload = candidate_api.post_evaluate(cfg, candidate_id, level=body.level)
             payload["review_surface"] = "resident_app_bridge"
             return payload
@@ -964,6 +1153,11 @@ def register_resident_app_routes(
         body: ApproveCandidateRequest,
     ) -> dict[str, object]:
         try:
+            _require_vault_scope(
+                profile_id="default",
+                scope="review_decision:write",
+                error_message="Local Vault review actions require an active unlock session",
+            )
             explicit = (
                 body.explicit_confirmation.model_dump(mode="json")
                 if body.explicit_confirmation
@@ -994,6 +1188,11 @@ def register_resident_app_routes(
         body: RejectCandidateRequest,
     ) -> dict[str, object]:
         try:
+            _require_vault_scope(
+                profile_id="default",
+                scope="review_decision:write",
+                error_message="Local Vault review actions require an active unlock session",
+            )
             payload = candidate_api.post_reject(cfg, candidate_id, reason=body.reason)
             payload["review_surface"] = "resident_app_bridge"
             return payload
@@ -1011,6 +1210,11 @@ def register_resident_app_routes(
         body: ReviseCandidateRequest,
     ) -> dict[str, object]:
         try:
+            _require_vault_scope(
+                profile_id="default",
+                scope="candidate:write",
+                error_message="Local Vault candidate revision requires an active unlock session",
+            )
             payload = candidate_api.post_revise(
                 cfg,
                 candidate_id,

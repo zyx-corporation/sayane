@@ -11,6 +11,7 @@ struct HomeView: View {
                 prioritySection
                 BridgeDiagnosticsCard(model: model, compact: false)
                 cardsSection
+                vaultSection
                 quickLinksSection
                 reviewSection
                 daemonSection
@@ -158,6 +159,154 @@ struct HomeView: View {
                     .buttonStyle(.plain)
                     .accessibilityLabel(model.strings.quickLinkLabel(screen: link.screen))
                 }
+            }
+        }
+    }
+
+    private var vaultSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionTitle(text: model.strings.text(.localVault))
+            if let summary = model.homeState?.vaultSummary {
+                SurfaceCard {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack {
+                            StatusBadge(
+                                text: model.strings.summaryValueLabel(key: "vault_status", value: summary.status ?? "unavailable"),
+                                tone: model.strings.tone(forToken: summary.status ?? "unavailable")
+                            )
+                            Spacer()
+                            if let assurance = summary.assurance, !assurance.isEmpty {
+                                StatusBadge(
+                                    text: model.strings.summaryValueLabel(key: "vault_assurance", value: assurance),
+                                    tone: model.strings.tone(forToken: assurance)
+                                )
+                            }
+                        }
+                        if let backend = summary.backend, !backend.isEmpty {
+                            DetailLabelValueRow(
+                                label: model.strings.text(.backend),
+                                value: model.strings.summaryValueLabel(key: "vault_backend", value: backend)
+                            )
+                        }
+                        if let path = summary.vaultPath, !path.isEmpty {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(model.strings.text(.vaultPath))
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.secondary)
+                                SelectableMonospaceText(text: path)
+                            }
+                        }
+                        if let supports = summary.supportsScopedUnlockSessions {
+                            DetailLabelValueRow(
+                                label: model.strings.text(.vaultSessions),
+                                value: supports ? model.strings.text(.supported) : model.strings.text(.notSupported)
+                            )
+                        }
+                        if let sessionStatus = summary.sessionStatus {
+                            DetailLabelValueRow(
+                                label: model.strings.text(.activeSessions),
+                                value: "\(sessionStatus.activeSessionCount)"
+                            )
+                            if !sessionStatus.activeSessions.isEmpty {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    ForEach(sessionStatus.activeSessions.prefix(2)) { session in
+                                        SurfaceCard(emphasis: 0.18) {
+                                            VStack(alignment: .leading, spacing: 6) {
+                                                HStack {
+                                                    if let level = session.level {
+                                                        StatusBadge(
+                                                            text: model.strings.tokenLabel(level),
+                                                            tone: model.strings.tone(forToken: level)
+                                                        )
+                                                    }
+                                                    if let assurance = session.assurance {
+                                                        StatusBadge(
+                                                            text: model.strings.tokenLabel(assurance),
+                                                            tone: model.strings.tone(forToken: assurance)
+                                                        )
+                                                    }
+                                                }
+                                                if let purpose = session.purpose, !purpose.isEmpty {
+                                                    DetailLabelValueRow(
+                                                        label: model.strings.text(.sessionPurpose),
+                                                        value: purpose
+                                                    )
+                                                }
+                                                if let expiresAt = session.expiresAt, !expiresAt.isEmpty {
+                                                    DetailLabelValueRow(
+                                                        label: model.strings.text(.expiresAt),
+                                                        value: expiresAt
+                                                    )
+                                                }
+                                                if let idleExpiresAt = session.idleExpiresAt, !idleExpiresAt.isEmpty {
+                                                    DetailLabelValueRow(
+                                                        label: model.strings.text(.idleExpiresAt),
+                                                        value: idleExpiresAt
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            if !sessionStatus.availableLevels.isEmpty {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack(spacing: 8) {
+                                        Button(model.strings.text(.unlockNormal)) {
+                                            Task { await model.openVaultSession(level: "normal") }
+                                        }
+                                        .buttonStyle(.bordered)
+                                        Button(model.strings.text(.unlockSensitive)) {
+                                            Task { await model.openVaultSession(level: "sensitive") }
+                                        }
+                                        .buttonStyle(.bordered)
+                                        Button(model.strings.text(.unlockDeepPrivate)) {
+                                            Task { await model.openVaultSession(level: "deep_private") }
+                                        }
+                                        .buttonStyle(.bordered)
+                                    }
+                                    Button(model.strings.text(.lockAll)) {
+                                        Task { await model.lockAllVaultSessions() }
+                                    }
+                                    .buttonStyle(.bordered)
+                                }
+                            }
+                        }
+                        if !summary.unlockPolicies.isEmpty {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(model.strings.text(.unlockPolicies))
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.secondary)
+                                ForEach(summary.unlockPolicies.prefix(2)) { policy in
+                                    Text("\(model.strings.tokenLabel(policy.level)) · idle \(policy.idleTimeoutSeconds)s / ttl \(policy.absoluteTimeoutSeconds)s")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                        if let setup = summary.recommendedSetup, !setup.isEmpty {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(model.strings.text(.recommendedSetup))
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.secondary)
+                                ForEach(setup.keys.sorted(), id: \.self) { key in
+                                    if let command = setup[key] {
+                                        CommandRowView(command: command, lineLimit: 2)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                StateCardView(
+                    icon: "lock.shield",
+                    title: model.strings.text(.localVault),
+                    message: model.strings.text(.vaultUnavailable),
+                    tone: .neutral,
+                    actionTitle: model.strings.text(.refresh),
+                    action: { Task { await model.refreshCurrentScreen() } }
+                )
             }
         }
     }

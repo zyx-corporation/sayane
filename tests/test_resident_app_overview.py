@@ -43,6 +43,11 @@ def test_app_overview_aggregates_runtime_review_mcp_and_daemon(tmp_path) -> None
     assert payload["summary"]["service_target_platform"] in {"macos", "linux", "windows", "other"}
     assert payload["summary"]["supervision_mode"] == "passive_local_observation_with_cli_recovery"
     assert payload["summary"]["consent_model"] == "explicit_cli_confirmation_for_mutation"
+    assert payload["vault_status"]["kind"] == "resident_app_vault_status"
+    assert payload["vault_session_status"]["kind"] == "resident_app_vault_session_status"
+    assert payload["summary"]["vault_status"] == "unavailable"
+    assert payload["summary"]["vault_backend"] == "legacy_process_local"
+    assert payload["summary"]["vault_session_count"] == 0
 
 
 def test_app_overview_exposes_ui_friendly_summary_with_repositories(tmp_path) -> None:
@@ -97,6 +102,22 @@ def test_app_overview_exposes_ui_friendly_summary_with_repositories(tmp_path) ->
     assert payload["service_control_boundary"]["service_plane"]["status"] in {
         "contract_only",
         "macos_explicit_cli_only",
+        "mvp_macos_launchagent_preview_apply_cli_only",
     }
     assert payload["supervision_status"]["background_surfaces"]["status"] == "not_supported"
     assert payload["recovery_consent_status"]["mutating_recovery_actions"][0]["consent_required"] is True
+    assert payload["vault_status"]["status"] == "unavailable"
+    assert payload["vault_session_status"]["active_session_count"] == 0
+
+
+def test_app_overview_degrades_when_vault_runtime_has_no_read_session(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("SAYANE_APP_VAULT_MODE", "development")
+    monkeypatch.setenv("SAYANE_VAULT_PASSPHRASE", "dev-passphrase")
+    runtime = build_resident_runtime(home=tmp_path / "sayane")
+
+    payload = build_app_overview(runtime)
+
+    assert payload["runtime"]["has_repositories"] is True
+    assert payload["summary"]["repository_available"] is False
+    assert payload["review_queue"]["repository_available"] is False
+    assert payload["mcp_preview"]["repository_available"] is False

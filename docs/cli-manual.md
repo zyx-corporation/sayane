@@ -46,6 +46,7 @@ sayane candidate --help          # グループ単位（Typer 標準）
 | `sayane export` | Prompt IR とコンパイル結果を Markdown で出力する |
 | `sayane serve` | Local Bridge API を起動する（Phase 2） |
 | `sayane app …` | resident app / daemon local-shell 向け app-facing CLI 群 |
+| `sayane vault …` | Local Vault の runtime / policy / schema / session diagnostics |
 | `sayane mcp serve` | MCP Server（stdio）起動（Phase 2.5） |
 | `sayane mcp list-profiles` など | MCP Tools と同等の CLI 操作 |
 | `sayane candidate …` | Candidate 評価・approve（Phase 4） |
@@ -65,6 +66,7 @@ Bridge HTTP API の詳細は [Bridge マニュアル](bridge-manual.md)。reside
 | `SAYANE_JUDGE_BASE_URL` | Level 2/3 LLM judge の API ベース URL（任意） |
 | `SAYANE_JUDGE_API_KEY` | Level 2/3 judge の API キー（任意） |
 | `SAYANE_JUDGE_MODEL` | Level 2/3 judge のモデル名（任意） |
+| `SAYANE_VAULT_PASSPHRASE` | `sayane vault --development` 用の明示 passphrase 例 |
 
 Extension の表示言語（`displayLanguage`）は CLI とは独立し、Chrome Options で設定する（[Extension マニュアル](extension-manual.md)）。
 
@@ -218,6 +220,41 @@ sayane compile --target chatgpt --instruction "今週の優先タスクを整理
 | `--instruction` | いいえ | — | タスク指示（Prompt IR の `instruction` に入る） |
 
 **出力**: UTF-8 JSON（`indent=2`）。パイプやファイルリダイレクトに適する。
+
+---
+
+### 5.x `sayane vault`
+
+Local Vault の暗号化・unlock policy・SQLite schema 契約を診断する。
+
+```bash
+sayane vault status --json
+sayane vault status --test --json
+SAYANE_VAULT_PASSPHRASE='example-passphrase' \
+  sayane vault status --development --sqlite ~/.sayane/vault/dev.sqlite \
+  --passphrase-env SAYANE_VAULT_PASSPHRASE --json
+sayane vault status --macos-keychain --sqlite ~/.sayane/vault/main.sqlite --json
+sayane vault policy --level sensitive --json
+sayane vault session --test --level sensitive --json
+sayane vault session --macos-keychain --sqlite ~/.sayane/vault/main.sqlite \
+  --level sensitive --json
+```
+
+主な考え方:
+
+- `production` は fail-closed のまま
+- `--test` は test-only runtime
+- `--development` は **明示 passphrase + SQLite** の lower-assurance runtime
+- `--macos-keychain` は **明示 opt-in の macOS Keychain + SQLite** runtime
+- `vault session` は **process-local** な scoped unlock session metadata を返す
+
+注意:
+
+- `--development` は OS keychain 実装の代替ではない
+- `--macos-keychain` は現時点で macOS 専用の explicit path
+- `vault session` の session は CLI プロセスをまたいで再利用できない
+- resident app / native macOS app とは別の process-local unlock session である
+- production default が plaintext に落ちることはない
 
 ```bash
 sayane compile --target chatgpt --profile examples/profiles/minimal.yaml \

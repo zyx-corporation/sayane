@@ -32,17 +32,19 @@ def build_review_queue(
     *,
     capability: CapabilityToken,
     include_statuses: tuple[str, ...] = ("pending", "evaluated"),
+    repository_kwargs: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build a minimal Candidate review queue payload for resident UI.
 
     This is a review surface, not an MCP context export path.
     """
     capability.require("ui")
-    decisions = repositories.review_decisions.list()
+    kwargs = repository_kwargs or {}
+    decisions = repositories.review_decisions.list(**kwargs)
     latest_decisions = _latest_decision_by_candidate(decisions)
     candidates = [
         candidate
-        for candidate in repositories.candidates.list()
+        for candidate in repositories.candidates.list(**kwargs)
         if candidate.status in include_statuses
     ]
     candidates.sort(key=lambda candidate: candidate.source.captured_at.isoformat())
@@ -63,6 +65,7 @@ def build_mcp_preview(
     *,
     capability: CapabilityToken,
     mode: str = "full",
+    repository_kwargs: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build an explicit resident UI preview of MCP compiled context.
 
@@ -70,7 +73,8 @@ def build_mcp_preview(
     Pending Candidate content remains blocked from normal context.
     """
     capability.require("mcp")
-    decisions = repositories.review_decisions.list()
+    kwargs = repository_kwargs or {}
+    decisions = repositories.review_decisions.list(**kwargs)
     compiled = build_compiled_context(
         profile_id=repositories.profile_id,
         mode=mode,
@@ -79,7 +83,7 @@ def build_mcp_preview(
     decided_candidate_ids = {decision.candidate_id for decision in decisions}
     pending_candidates = [
         candidate
-        for candidate in repositories.candidates.list()
+        for candidate in repositories.candidates.list(**kwargs)
         if candidate.id not in decided_candidate_ids
     ]
     for candidate in pending_candidates:

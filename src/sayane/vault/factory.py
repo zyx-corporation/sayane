@@ -101,6 +101,7 @@ def open_vault_runtime(
     profile_id: str = "default",
     sqlite_path: Path | None = None,
     passphrase: str | None = None,
+    keychain_backend: str | None = None,
 ) -> VaultRuntime:
     """Open a VaultRuntime.
 
@@ -121,4 +122,14 @@ def open_vault_runtime(
             passphrase=passphrase,
             profile_id=profile_id,
         )
+    if mode == "production":
+        if keychain_backend == "macos-keychain":
+            if sqlite_path is None:
+                raise VaultStoreError("macOS production Local Vault backend requires explicit sqlite_path")
+            from sayane.vault.macos_keychain import build_sqlite_macos_vault_runtime
+
+            return build_sqlite_macos_vault_runtime(
+                path=sqlite_path,
+                profile_id=profile_id,
+            )
     raise VaultStoreError("production Local Vault backend is not implemented")

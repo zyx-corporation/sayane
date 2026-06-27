@@ -48,6 +48,16 @@ def test_vault_status_development_mode_requires_passphrase_env(tmp_path) -> None
     assert "requires --passphrase-env" in payload["reason"]
 
 
+def test_vault_status_macos_keychain_requires_sqlite(tmp_path) -> None:
+    result = CliRunner().invoke(
+        build_app(),
+        ["vault", "status", "--macos-keychain", "--json"],
+    )
+
+    assert result.exit_code != 0
+    assert "--macos-keychain requires --sqlite" in result.output
+
+
 def test_vault_status_development_mode_reports_passphrase_runtime(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("SAYANE_VAULT_PASSPHRASE", "dev-passphrase")
     db_path = tmp_path / "vault.sqlite"
@@ -84,7 +94,17 @@ def test_vault_status_sqlite_requires_test_flag(tmp_path) -> None:
     )
 
     assert result.exit_code != 0
-    assert "--sqlite requires --test or --development" in result.output
+    assert "--sqlite requires --test, --development, or --macos-keychain" in result.output
+
+
+def test_vault_session_macos_keychain_requires_sqlite() -> None:
+    result = CliRunner().invoke(
+        build_app(),
+        ["vault", "session", "--macos-keychain", "--json"],
+    )
+
+    assert result.exit_code != 0
+    assert "--macos-keychain requires --sqlite" in result.output
 
 
 def test_vault_status_sqlite_test_mode_is_explicit(tmp_path) -> None:

@@ -233,6 +233,7 @@ sayane vault status --test --json
 SAYANE_VAULT_PASSPHRASE='example-passphrase' \
   sayane vault status --development --sqlite ~/.sayane/vault/dev.sqlite \
   --passphrase-env SAYANE_VAULT_PASSPHRASE --json
+sayane vault status --macos-keychain --sqlite ~/.sayane/vault/main.sqlite --json
 sayane vault policy --level sensitive --json
 sayane vault session --test --level sensitive --json
 ```
@@ -242,11 +243,13 @@ sayane vault session --test --level sensitive --json
 - `production` は fail-closed のまま
 - `--test` は test-only runtime
 - `--development` は **明示 passphrase + SQLite** の lower-assurance runtime
+- `--macos-keychain` は **明示 opt-in の macOS Keychain + SQLite** runtime
 - `vault session` は **process-local** な scoped unlock session metadata を返す
 
 注意:
 
 - `--development` は OS keychain 実装の代替ではない
+- `--macos-keychain` は現時点で macOS 専用の explicit path
 - `vault session` の session は CLI プロセスをまたいで再利用できない
 - production default が plaintext に落ちることはない
 

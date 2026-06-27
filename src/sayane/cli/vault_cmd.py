@@ -30,6 +30,10 @@ def register_vault_cli(app: typer.Typer) -> None:
     @vault_app.command("status")
     def vault_status(
         profile_id: Annotated[str, typer.Option("--profile-id", help="Profile id.")] = "default",
+        macos_keychain: Annotated[
+            bool,
+            typer.Option("--macos-keychain", help="Open explicit macOS keychain-backed production runtime."),
+        ] = False,
         development_mode: Annotated[
             bool,
             typer.Option("--development", help="Open explicit lower-assurance development runtime."),
@@ -49,11 +53,15 @@ def register_vault_cli(app: typer.Typer) -> None:
         json_out: Annotated[bool, typer.Option("--json", help="Emit JSON.")] = False,
     ) -> None:
         """Show Local Vault runtime status without exposing plaintext records."""
-        if development_mode and test_mode:
-            typer.echo("--development and --test are mutually exclusive")
+        if sum(int(flag) for flag in (macos_keychain, development_mode, test_mode)) > 1:
+            typer.echo("--macos-keychain, --development, and --test are mutually exclusive")
             raise typer.Exit(2)
         if sqlite_path is not None and not (test_mode or development_mode):
-            typer.echo("--sqlite requires --test or --development")
+            if not macos_keychain:
+                typer.echo("--sqlite requires --test, --development, or --macos-keychain")
+                raise typer.Exit(2)
+        if macos_keychain and sqlite_path is None:
+            typer.echo("--macos-keychain requires --sqlite")
             raise typer.Exit(2)
         if passphrase_env is not None and not development_mode:
             typer.echo("--passphrase-env requires --development")
@@ -71,6 +79,13 @@ def register_vault_cli(app: typer.Typer) -> None:
             if sqlite_path is not None:
                 if test_mode:
                     runtime = build_sqlite_test_vault_runtime(path=sqlite_path, profile_id=profile_id)
+                elif macos_keychain:
+                    runtime = open_vault_runtime(
+                        mode="production",
+                        profile_id=profile_id,
+                        sqlite_path=sqlite_path,
+                        keychain_backend="macos-keychain",
+                    )
                 else:
                     runtime = open_vault_runtime(
                         mode="development",
@@ -96,6 +111,7 @@ def register_vault_cli(app: typer.Typer) -> None:
                         "review_decision",
                         "lineage",
                     ],
+                    "production_ready": runtime.mode.value == "production",
                 },
             )
             if sqlite_path is not None:
@@ -143,6 +159,10 @@ def register_vault_cli(app: typer.Typer) -> None:
             typer.Option("--level", help="normal | sensitive | deep_private"),
         ] = UnlockLevel.SENSITIVE,
         purpose: Annotated[str, typer.Option("--purpose", help="Unlock purpose label.")] = "vault-session",
+        macos_keychain: Annotated[
+            bool,
+            typer.Option("--macos-keychain", help="Open explicit macOS keychain-backed production runtime."),
+        ] = False,
         development_mode: Annotated[
             bool,
             typer.Option("--development", help="Open explicit lower-assurance development runtime."),
@@ -162,11 +182,15 @@ def register_vault_cli(app: typer.Typer) -> None:
         json_out: Annotated[bool, typer.Option("--json", help="Emit JSON.")] = False,
     ) -> None:
         """Open one scoped unlock session and show non-secret metadata."""
-        if development_mode and test_mode:
-            typer.echo("--development and --test are mutually exclusive")
+        if sum(int(flag) for flag in (macos_keychain, development_mode, test_mode)) > 1:
+            typer.echo("--macos-keychain, --development, and --test are mutually exclusive")
             raise typer.Exit(2)
         if sqlite_path is not None and not (test_mode or development_mode):
-            typer.echo("--sqlite requires --test or --development")
+            if not macos_keychain:
+                typer.echo("--sqlite requires --test, --development, or --macos-keychain")
+                raise typer.Exit(2)
+        if macos_keychain and sqlite_path is None:
+            typer.echo("--macos-keychain requires --sqlite")
             raise typer.Exit(2)
         if passphrase_env is not None and not development_mode:
             typer.echo("--passphrase-env requires --development")
@@ -176,6 +200,13 @@ def register_vault_cli(app: typer.Typer) -> None:
             runtime = build_sqlite_test_vault_runtime(path=sqlite_path, profile_id="default")
         elif test_mode:
             runtime = open_vault_runtime(mode="test", profile_id="default")
+        elif macos_keychain:
+            runtime = open_vault_runtime(
+                mode="production",
+                profile_id="default",
+                sqlite_path=sqlite_path,
+                keychain_backend="macos-keychain",
+            )
         elif development_mode:
             runtime = open_vault_runtime(
                 mode="development",

@@ -60,6 +60,15 @@ def test_open_vault_runtime_development_mode_builds_explicit_runtime(tmp_path) -
     assert runtime.vault.mode() == VaultStoreMode.DEVELOPMENT
 
 
+def test_open_vault_runtime_production_macos_backend_requires_sqlite_path() -> None:
+    with pytest.raises(VaultStoreError, match="requires explicit sqlite_path"):
+        open_vault_runtime(
+            mode="production",
+            profile_id="default",
+            keychain_backend="macos-keychain",
+        )
+
+
 def test_vault_runtime_uses_session_manager() -> None:
     runtime = build_test_vault_runtime(profile_id="default")
     session = runtime.unlock("factory-test", ["candidate:read"])

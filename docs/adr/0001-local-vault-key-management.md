@@ -266,6 +266,25 @@ This adds a concrete encrypted SQLite path for explicit development use:
 It remains intentionally lower assurance than future OS-backed production keychain integrations and
 does not change the fail-closed production default.
 
+Implemented explicit macOS keychain-backed runtime:
+
+- `src/sayane/vault/macos_keychain.py`
+  - `MacOSKeychainProvider`
+  - `build_sqlite_macos_vault_runtime()`
+
+This adds the first concrete OS-backed keychain path for Local Vault:
+
+- wrapping secret stored in macOS Keychain generic-password item storage
+- persisted wrapped DEKs in SQLite `keyring`
+- AES-256-GCM encrypted records over the same record/key boundary
+- explicit opt-in runtime opening rather than silent production default selection
+
+The current macOS path is production-shaped but still intentionally explicit:
+
+- callers must provide a vault SQLite path
+- callers must request the macOS keychain backend directly
+- production default remains fail-closed until broader backend selection is accepted
+
 Implemented SQLite schema contract:
 
 - `src/sayane/vault/sqlite_schema.py`

@@ -1,6 +1,7 @@
 """T-RDE tests for Package Import Preview (F-4)."""
 import json
 import tempfile
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from sayane.core.export_package import create_package, preview_package, render_preview_text
@@ -77,3 +78,31 @@ def test_package_preview_risks_include_warnings():
         create_package(out, {"bundle": f1})
         preview = preview_package(out)
         assert "risks" in preview
+
+
+def test_package_preview_shows_retention_metadata_and_expiry_warning():
+    with tempfile.TemporaryDirectory() as d:
+        td = Path(d)
+        f1 = td / "bundle.yml"
+        f1.write_text("identity:\n  name: Test\n")
+        out = td / "pkg"
+        create_package(
+            out,
+            {"bundle": f1},
+            package_kind="vault_aware_external_package",
+            boundary={"review_required_before_merge": True},
+        )
+        manifest_path = out / "manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["created_at"] = (datetime.now(UTC) - timedelta(days=45)).isoformat()
+        manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+        preview = preview_package(out)
+        assert preview["artifacts"][0]["retention"]["retention_class"] == "reviewable_context_bundle"
+        warning_codes = [item["code"] for item in preview["risks"]["warnings"]]
+        assert "package_retention_expired" in warning_codes
+        text = render_preview_text(preview)
+        assert "retention:" in text
+        assert "import_contract:" in text
+        assert "retention_expiry_mode:" in text
+        assert "supported:" in text
+        assert "forbidden:" in text

@@ -64,7 +64,7 @@ class ResidentAppService:
                 capture_confidence="high",
             ),
         )
-        if self.repositories is not None:
+        if self.repositories is not None and cfg.repositories is None:
             self.repositories.candidates.save(candidate, **(repository_kwargs or {}))
         return candidate
 

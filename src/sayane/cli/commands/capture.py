@@ -9,7 +9,8 @@ from typing import Annotated
 
 import typer
 
-from sayane.bridge.config import BridgeConfig
+from sayane.cli.runtime_config import CliVaultMode, resolve_cli_bridge_config
+from sayane.vault.unlock_policy import UnlockLevel
 
 
 def register_capture(app: typer.Typer) -> None:
@@ -27,6 +28,18 @@ def register_capture(app: typer.Typer) -> None:
         section: Annotated[
             str | None,
             typer.Option("--section", help="Target profile section (e.g. knowledge.concepts)."),
+        ] = None,
+        vault_mode: Annotated[
+            CliVaultMode | None,
+            typer.Option("--vault-mode", help="Explicit Local Vault mode: test | development | macos-keychain."),
+        ] = None,
+        vault_sqlite: Annotated[
+            Path | None,
+            typer.Option("--vault-sqlite", help="Explicit Local Vault SQLite path."),
+        ] = None,
+        unlock_level: Annotated[
+            UnlockLevel | None,
+            typer.Option("--unlock-level", help="Unlock level when using --vault-mode."),
         ] = None,
         json_out: Annotated[bool, typer.Option("--json", help="Emit JSON response.")] = False,
     ) -> None:
@@ -57,7 +70,12 @@ def register_capture(app: typer.Typer) -> None:
 
         try:
             response = save_capture(
-                BridgeConfig(),
+                resolve_cli_bridge_config(
+                    vault_mode=vault_mode,
+                    vault_sqlite=vault_sqlite,
+                    unlock_level=unlock_level,
+                    unlock_purpose="cli-capture",
+                ),
                 CaptureRequest(
                     content=content,
                     source=source or "cli",

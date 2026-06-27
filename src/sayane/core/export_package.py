@@ -10,14 +10,74 @@ from __future__ import annotations
 import hashlib
 import json
 import shutil
+import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
-from uuid import uuid4
 
+import yaml
+
+from sayane import __version__
+from sayane.core.audit_export import build_export
+from sayane.core.audit_trail import AuditStore
+from sayane.core.bundle_provenance import (
+    build_bundle_metadata,
+    compute_bundle_hash,
+    generate_bundle_id,
+)
+from sayane.core.export_scope import pick_profile_sections
+from sayane.core.models import SayaneProfile
 from sayane.core.signing import sign_data, verify_signature, canonical_payload
 
 SCHEMA_VERSION = "sayane-export-package-v1"
+DEFAULT_PACKAGE_KIND = "generic_export_package"
+VAULT_AWARE_PACKAGE_KIND = "vault_aware_external_package"
+DEFAULT_EXPORT_SCOPES = (
+    "identity",
+    "interaction",
+    "technical",
+    "knowledge",
+    "projects",
+    "terms",
+)
+RETENTION_CLASS_RULES: dict[str, dict[str, Any]] = {
+    "reviewable_context_bundle": {
+        "recommended_max_age": "30d",
+        "delete_after_import_or_review": True,
+        "review_required_before_merge": True,
+        "contains_canonical_profile_state": False,
+    },
+    "redacted_audit_export": {
+        "recommended_max_age": "14d",
+        "delete_after_import_or_review": True,
+        "review_required_before_merge": True,
+        "contains_canonical_profile_state": False,
+    },
+}
+VAULT_AWARE_BOUNDARY_DEFAULTS: dict[str, Any] = {
+    "storage_boundary": VAULT_AWARE_PACKAGE_KIND,
+    "canonical_profile_state": False,
+    "review_required_before_merge": True,
+    "legacy_compatibility_path": False,
+    "import_contract": "preview_only",
+    "profile_mutation_allowed": False,
+    "candidate_persistence_allowed": False,
+    "reserved_future_mutating_workflow": "separate_explicit_review_queue_import",
+    "retention_expiry_mode": "warning_only",
+    "supported_operator_actions": [
+        "offline_review",
+        "candidate_generation_preview",
+        "manual_redacted_handoff",
+    ],
+    "forbidden_workflows": [
+        "canonical_working_store",
+        "automatic_external_sync_promotion",
+        "automatic_bidirectional_sync",
+        "implicit_filesystem_git_auto_commit_as_primary_sync",
+        "direct_profile_merge_without_review",
+        "long_lived_unreviewed_archive",
+    ],
+}
 
 
 # --- Package manifest ---
@@ -26,10 +86,59 @@ def _hash_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _retention_policy_for_role(role: str) -> dict[str, Any] | None:
+    if role == "context_bundle":
+        return {
+            "retention_class": "reviewable_context_bundle",
+            **RETENTION_CLASS_RULES["reviewable_context_bundle"],
+        }
+    if role == "audit_export":
+        return {
+            "retention_class": "redacted_audit_export",
+            **RETENTION_CLASS_RULES["redacted_audit_export"],
+        }
+    return None
+
+
+def _parse_duration_days(raw: str) -> int | None:
+    value = raw.strip().lower()
+    if not value:
+        return None
+    if value.endswith("d") and value[:-1].isdigit():
+        return int(value[:-1])
+    return None
+
+
+def _is_retention_expired(created_at: str | None, recommended_max_age: str | None) -> bool:
+    if not created_at or not recommended_max_age:
+        return False
+    days = _parse_duration_days(recommended_max_age)
+    if days is None:
+        return False
+    try:
+        created = datetime.fromisoformat(created_at)
+    except ValueError:
+        return False
+    now = datetime.now(UTC)
+    if created.tzinfo is None:
+        created = created.replace(tzinfo=UTC)
+    return (now - created).days > days
+
+
+def _normalize_boundary(package_kind: str, boundary: dict[str, Any] | None) -> dict[str, Any]:
+    normalized = dict(boundary or {})
+    if package_kind == VAULT_AWARE_PACKAGE_KIND:
+        for key, value in VAULT_AWARE_BOUNDARY_DEFAULTS.items():
+            normalized.setdefault(key, value)
+    return normalized
+
+
 def build_package_manifest(
     artifacts: dict[str, Path],
     policy_profile: str = "standard",
     purpose: str = "audit_handoff",
+    package_kind: str = DEFAULT_PACKAGE_KIND,
+    boundary: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build a package manifest from artifact paths."""
     artifact_entries: list[dict[str, Any]] = []
@@ -65,6 +174,9 @@ def build_package_manifest(
             "hash": {"algorithm": "sha256", "value": h},
             "signature": sig_status,
         }
+        retention = _retention_policy_for_role(role)
+        if retention is not None:
+            entry["retention"] = retention
 
         # Try to extract provenance for bundles
         if role == "context_bundle":
@@ -83,14 +195,30 @@ def build_package_manifest(
 
         artifact_entries.append(entry)
 
+    normalized_boundary = _normalize_boundary(package_kind, boundary)
     manifest = {
         "schema_version": SCHEMA_VERSION,
         "package_id": "",  # filled after hash
+        "package_kind": package_kind,
         "created_at": datetime.now(UTC).isoformat(),
         "created_by": {"tool": "sayane", "version": None},
         "purpose": purpose,
+        "boundary": normalized_boundary,
         "artifacts": artifact_entries,
         "policy": {"profile": policy_profile},
+        "retention": {
+            "package_class": "reviewable_external_exchange",
+            "recommended_max_age": "30d",
+            "delete_after_import_or_review": True,
+            "artifact_classes": sorted(
+                {
+                    artifact["retention"]["retention_class"]
+                    for artifact in artifact_entries
+                    if isinstance(artifact.get("retention"), dict)
+                    and artifact["retention"].get("retention_class")
+                }
+            ),
+        },
         "summary": {
             "artifact_count": len(artifact_entries),
             "signed_artifacts": signed_count,
@@ -139,6 +267,9 @@ def create_package(
     output_dir: Path,
     artifacts: dict[str, Path],
     policy_profile: str = "standard",
+    purpose: str = "audit_handoff",
+    package_kind: str = DEFAULT_PACKAGE_KIND,
+    boundary: dict[str, Any] | None = None,
     sign: bool = False,
     key_id: str | None = None,
 ) -> dict[str, Any]:
@@ -162,7 +293,13 @@ def create_package(
         if sig.exists():
             shutil.copy2(sig, sigs_dir / sig.name)
 
-    manifest = build_package_manifest(copied, policy_profile=policy_profile)
+    manifest = build_package_manifest(
+        copied,
+        policy_profile=policy_profile,
+        purpose=purpose,
+        package_kind=package_kind,
+        boundary=boundary,
+    )
 
     # Sign manifest if requested
     if sign and key_id:
@@ -177,6 +314,115 @@ def create_package(
     (output_dir / "README.md").write_text(README_TEMPLATE, encoding="utf-8")
 
     return manifest
+
+
+def build_vault_aware_bundle_payload(
+    profile: SayaneProfile,
+    *,
+    scopes: list[str] | None = None,
+    profile_id: str = "default",
+) -> dict[str, Any]:
+    """Build one provenance-aware context bundle for external package exchange."""
+    selected_scopes = scopes or list(DEFAULT_EXPORT_SCOPES)
+    payload = pick_profile_sections(profile, selected_scopes)
+    metadata = build_bundle_metadata(
+        transfer_stage="vault_aware_external_package_export",
+        transfer_path=["Sayane", "ExternalPackage"],
+        profile_id=profile_id,
+        system_version=__version__,
+    )
+    metadata["source"] = "sayane_vault_aware_package"
+    metadata["uncertainty"] = "external package content is reviewable context, not canonical profile state"
+    metadata["retention"] = {
+        "retention_class": "reviewable_context_bundle",
+        **RETENTION_CLASS_RULES["reviewable_context_bundle"],
+    }
+    payload["metadata"] = metadata
+    content_hash = compute_bundle_hash(payload)
+    payload["content_hash"] = {
+        "algorithm": "sha256",
+        "value": content_hash,
+        "bundle_id": generate_bundle_id(content_hash),
+    }
+    payload["metadata"]["bundle_id"] = generate_bundle_id(content_hash)
+    return payload
+
+
+def write_vault_aware_bundle(
+    output_path: Path,
+    profile: SayaneProfile,
+    *,
+    scopes: list[str] | None = None,
+    profile_id: str = "default",
+) -> Path:
+    """Write one provenance-aware context bundle for package export."""
+    payload = build_vault_aware_bundle_payload(
+        profile,
+        scopes=scopes,
+        profile_id=profile_id,
+    )
+    output_path.write_text(
+        yaml.safe_dump(payload, allow_unicode=True, sort_keys=False),
+        encoding="utf-8",
+    )
+    return output_path
+
+
+def build_vault_aware_package(
+    output_dir: Path,
+    *,
+    profile: SayaneProfile,
+    profile_id: str = "default",
+    scopes: list[str] | None = None,
+    audit_store: AuditStore | None = None,
+    include_audit: bool = True,
+    sign: bool = False,
+    key_id: str | None = None,
+) -> dict[str, Any]:
+    """Create one reviewable external package from current local profile state."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        staging = Path(tmpdir)
+        artifacts: dict[str, Path] = {}
+        bundle_path = write_vault_aware_bundle(
+            staging / "bundle.yml",
+            profile,
+            scopes=scopes,
+            profile_id=profile_id,
+        )
+        artifacts["bundle"] = bundle_path
+
+        if include_audit and audit_store is not None:
+            audit_path = staging / "audit-export.json"
+            audit_path.write_text(
+                build_export(audit_store, format="json", redact=True),
+                encoding="utf-8",
+            )
+            artifacts["audit"] = audit_path
+
+        manifest = create_package(
+            output_dir=output_dir,
+            artifacts=artifacts,
+            policy_profile="vault-aware-external",
+            purpose="reviewable_external_exchange",
+            package_kind=VAULT_AWARE_PACKAGE_KIND,
+            boundary={
+                **VAULT_AWARE_BOUNDARY_DEFAULTS,
+            },
+            sign=sign,
+            key_id=key_id,
+        )
+    return manifest
+
+
+def locate_package_artifact(package_dir: Path, role: str) -> Path | None:
+    """Locate one package artifact by manifest role."""
+    manifest = inspect_package(package_dir)
+    if manifest is None:
+        return None
+    for artifact in manifest.get("artifacts", []):
+        if artifact.get("role") == role:
+            return package_dir / artifact.get("path", "")
+    return None
 
 
 # --- Package inspect ---
@@ -247,15 +493,18 @@ def preview_package(package_dir: Path) -> dict[str, Any]:
         "package": {
             "package_id": manifest.get("package_id") if manifest else None,
             "verification_status": verified["status"],
+            "package_kind": manifest.get("package_kind") if manifest else None,
             "artifact_count": len(manifest.get("artifacts", [])) if manifest else 0,
             "signed_artifacts": manifest.get("summary", {}).get("signed_artifacts", 0) if manifest else 0,
             "unsigned_artifacts": manifest.get("summary", {}).get("unsigned_artifacts", 0) if manifest else 0,
             "invalid_artifacts": manifest.get("summary", {}).get("invalid_artifacts", 0) if manifest else 0,
+            "retention": manifest.get("retention", {}) if manifest else {},
         },
         "artifacts": [],
         "scoped_contexts": [],
         "audit_summary": {"approve": 0, "reject": 0, "modify": 0, "defer": 0, "scoped_accept": 0},
         "policy": {"source": "built_in", "name": manifest.get("policy", {}).get("profile", "standard") if manifest else "unknown", "status": "UNKNOWN"},
+        "boundary": manifest.get("boundary", {}) if manifest else {},
         "risks": {"critical": [], "warnings": []},
         "errors": verified.get("errors", []),
         "warnings": verified.get("warnings", []),
@@ -273,6 +522,7 @@ def preview_package(package_dir: Path) -> dict[str, Any]:
             "path": art.get("path", ""),
             "hash_status": "verified" if (exists and hash_val and _hash_file(art_path) == hash_val) else ("unverified" if exists else "missing"),
             "signature_status": sig_status,
+            "retention": art.get("retention", {}),
         })
 
     # Scoped contexts from audit export
@@ -310,6 +560,17 @@ def preview_package(package_dir: Path) -> dict[str, Any]:
         preview["risks"]["warnings"].append({"code": "unsigned_artifact", "message": "Unsigned artifacts present."})
     if preview["scoped_contexts"]:
         preview["risks"]["warnings"].append({"code": "scoped_context_requires_review", "message": "Scoped context entries require review before reuse."})
+    package_retention = preview["package"].get("retention", {})
+    if _is_retention_expired(
+        manifest.get("created_at") if manifest else None,
+        package_retention.get("recommended_max_age") if isinstance(package_retention, dict) else None,
+    ):
+        preview["risks"]["warnings"].append(
+            {
+                "code": "package_retention_expired",
+                "message": "Package age exceeds the recommended review window.",
+            }
+        )
 
     return preview
 
@@ -327,12 +588,21 @@ def render_preview_text(preview: dict[str, Any]) -> str:
         f"  Signed: {pkg['signed_artifacts']}",
         f"  Unsigned: {pkg['unsigned_artifacts']}",
         f"  Invalid: {pkg['invalid_artifacts']}",
+        f"  Kind: {pkg['package_kind'] or 'N/A'}",
         "",
         "Artifacts:",
     ]
     for art in preview["artifacts"]:
         lines.append(f"  - {art['role']}: {art['path']}")
         lines.append(f"    hash: {art['hash_status']}, sig: {art['signature_status']}")
+        retention = art.get("retention", {})
+        if retention:
+            lines.append(
+                "    retention: "
+                f"{retention.get('retention_class', '?')} "
+                f"(max_age={retention.get('recommended_max_age', '?')}, "
+                f"delete_after_review={retention.get('delete_after_import_or_review', '?')})"
+            )
 
     lines.append("")
     lines.append("Scoped Context:")
@@ -356,6 +626,37 @@ def render_preview_text(preview: dict[str, Any]) -> str:
     lines.append("Policy:")
     pol = preview["policy"]
     lines.append(f"  active: {pol['name']}, result: {pol['status']}")
+    package_retention = pkg.get("retention", {})
+    if package_retention:
+        lines.append(
+            "  retention: "
+            f"{package_retention.get('package_class', '?')} "
+            f"(max_age={package_retention.get('recommended_max_age', '?')})"
+        )
+
+    lines.append("")
+    lines.append("Boundary:")
+    boundary = preview.get("boundary", {})
+    import_contract = boundary.get("import_contract")
+    if import_contract:
+        lines.append(
+            "  import_contract: "
+            f"{import_contract} "
+            f"(profile_mutation_allowed={boundary.get('profile_mutation_allowed', '?')}, "
+            f"candidate_persistence_allowed={boundary.get('candidate_persistence_allowed', '?')})"
+        )
+    retention_mode = boundary.get("retention_expiry_mode")
+    if retention_mode:
+        lines.append(f"  retention_expiry_mode: {retention_mode}")
+    supported = boundary.get("supported_operator_actions", [])
+    forbidden = boundary.get("forbidden_workflows", [])
+    if supported:
+        lines.append(f"  supported: {', '.join(str(item) for item in supported)}")
+    if forbidden:
+        lines.append(f"  forbidden: {', '.join(str(item) for item in forbidden)}")
+    reserved = boundary.get("reserved_future_mutating_workflow")
+    if reserved:
+        lines.append(f"  reserved_future_mutating_workflow: {reserved}")
 
     lines.append("")
     lines.append("Risk Summary:")
@@ -368,8 +669,6 @@ def render_preview_text(preview: dict[str, Any]) -> str:
         for w in preview["risks"]["warnings"]:
             lines.append(f"    - {w['message']}")
 
-    lines.append("")
-    lines.append("Boundary:")
     lines.append("  This is a preview only. No profile has been modified.")
     lines.append("  Verified packages are not automatically accepted.")
 

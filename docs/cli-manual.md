@@ -50,7 +50,7 @@ sayane candidate --help          # グループ単位（Typer 標準）
 | `sayane mcp serve` | MCP Server（stdio）起動（Phase 2.5） |
 | `sayane mcp list-profiles` など | MCP Tools と同等の CLI 操作 |
 | `sayane candidate …` | Candidate 評価・approve（Phase 4） |
-| `sayane storage …` | Obsidian import/export・index・Git commit（Phase 5） |
+| `sayane storage …` | Obsidian import/export・index・Git commit（legacy compatibility / P3 再設計中） |
 
 Bridge HTTP API の詳細は [Bridge マニュアル](bridge-manual.md)。resident app / daemon local-shell の app-facing contract と operator diagnostics は [Bridge マニュアル](bridge-manual.md) および [CLI コマンドリファレンス](reference/cli-command-reference.md) を参照。MCP Tools / Cursor 設定は [MCP マニュアル](mcp-manual.md)。Storage 詳細は [Storage マニュアル](storage-manual.md)。
 
@@ -238,6 +238,14 @@ sayane vault policy --level sensitive --json
 sayane vault session --test --level sensitive --json
 sayane vault session --macos-keychain --sqlite ~/.sayane/vault/main.sqlite \
   --level sensitive --json
+SAYANE_VAULT_PASSPHRASE='example-passphrase' \
+  sayane capture --text "Local Vault capture" --vault-mode development
+SAYANE_VAULT_PASSPHRASE='example-passphrase' \
+  sayane candidate --vault-mode development list
+SAYANE_VAULT_PASSPHRASE='example-passphrase' \
+  sayane review approve candidate-123 --reason "approved in local vault" --vault-mode development
+SAYANE_VAULT_PASSPHRASE='example-passphrase' \
+  sayane audit export --format json --vault-mode development
 ```
 
 主な考え方:
@@ -254,6 +262,7 @@ sayane vault session --macos-keychain --sqlite ~/.sayane/vault/main.sqlite \
 - `--macos-keychain` は現時点で macOS 専用の explicit path
 - `vault session` の session は CLI プロセスをまたいで再利用できない
 - resident app / native macOS app とは別の process-local unlock session である
+- `capture` / `candidate` / `review` / `context-compile` / `audit` の `--vault-mode` はコマンド実行中だけ process-local unlock session を開く
 - production default が plaintext に落ちることはない
 
 ```bash
@@ -404,22 +413,28 @@ Obsidian vault 連携と Git commit。詳細は [Storage マニュアル](storag
 
 ```bash
 export SAYANE_OBSIDIAN_VAULT="$HOME/Documents/MyVault"   # 任意
-sayane storage import          # または sayane storage import /path/to/vault
-sayane storage export
+sayane storage import /path/to/vault --legacy-compatible
+sayane storage export /path/to/vault --legacy-compatible
+sayane storage export-package --output ./sayane-external-package
+sayane storage import-package ./sayane-external-package
+sayane storage queue-package ./sayane-external-package
 sayane storage index
-sayane storage commit -m "sayane: sync context" --init
+sayane storage commit -m "sayane: sync context" --init --legacy-compatible
 ```
 
 | サブコマンド | 概要 |
 |-------------|------|
 | `import [vault]` | vault の `.md` を `context/` へ取り込む |
 | `export [vault]` | `context/` を vault 内 `sayane/` へ書き出す |
+| `export-package -o <dir>` | vault-aware external package を書き出す |
+| `import-package <dir>` | vault-aware external package を preview import する |
+| `queue-package <dir>` | vault-aware external package を pending candidate queue へ投入する |
 | `index` | `context_index.entries` を再生成 |
-| `commit -m "..."` | Profile + context を Git コミット |
+| `commit -m "..." --legacy-compatible` | Profile + context を Git コミット |
 
 `SAYANE_OBSIDIAN_VAULT` が存在するディレクトリを指す場合、`import` / `export` の vault 引数を省略できる。
 
-`import` / `index` 実行後、Profile Store に変更があれば **Git へ自動コミット**される（`filesystem` backend かつ SQLite 実装までの既定。`init` 時も同様）。
+`import` / `export` / `commit` は legacy compatibility path であり、実行には `--legacy-compatible` が必要である。`export-package` / `import-package` / `queue-package` は別系統の vault-aware external review package 系であり、`import-package` は preview-only 契約、`queue-package` は pending review queue への明示投入である。`init` や `storage index` は Git repository 作成や自動コミットを暗黙実行しない。
 
 ---
 

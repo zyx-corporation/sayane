@@ -411,10 +411,11 @@ tail -n 40 ~/.sayane/macos-app-smoke.log
 
 ```bash
 export SAYANE_OBSIDIAN_VAULT="$HOME/Documents/MyVault"   # 任意: 存在する vault
-sayane storage import          # または sayane storage import /path/to/vault
+sayane storage import /path/to/vault --legacy-compatible
 sayane storage index
 sayane compile --target chatgpt   # context 本文を Prompt IR に含める
 # Git / Obsidian は互換導線として残るが、現行方針では primary path ではない
+# mutating な import/export/commit は --legacy-compatible が必要
 ```
 
 → [Storage マニュアル](storage-manual.md)

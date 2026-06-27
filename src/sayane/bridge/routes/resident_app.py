@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import replace
 from urllib.parse import urlencode
 
 from fastapi import APIRouter, Depends, FastAPI, Form, HTTPException, Request, status
@@ -35,32 +36,77 @@ def register_resident_app_routes(
     ui_cookie_name = "sayane_bridge_ui_session"
     ui_locale_cookie_name = "sayane_bridge_ui_locale"
 
-    def _reviewable_candidate_queue() -> dict[str, object]:
+    def _config_for_runtime(
+        *,
+        profile_id: str,
+        read_scope: str | None = None,
+        write_scope: str | None = None,
+        error_message: str | None = None,
+    ) -> tuple[BridgeConfig, object | None, dict[str, object]]:
+        runtime = _build_app_runtime(profile_id=profile_id)
+        if runtime.service.repositories is None:
+            return cfg, runtime, {}
+        session_kwargs: dict[str, object] = {}
+        if runtime.vault_runtime is not None:
+            scope = write_scope or read_scope
+            if scope is not None:
+                session = runtime.first_vault_session_for_scope(scope)
+                if session is None:
+                    raise HTTPException(status_code=409, detail=error_message or "Local Vault access requires an active unlock session")
+                session_kwargs = {"session": session}
+            elif read_scope is not None:
+                session = runtime.first_vault_session_for_scope(read_scope)
+                if session is None:
+                    raise HTTPException(status_code=409, detail=error_message or "Local Vault access requires an active unlock session")
+                session_kwargs = {"session": session}
+        route_cfg = replace(
+            cfg,
+            repositories=runtime.service.repositories,
+            repository_session=session_kwargs.get("session"),
+        )
+        return route_cfg, runtime, session_kwargs
+
+    def _reviewable_candidate_queue(*, profile_id: str = "default") -> dict[str, object]:
         from sayane.app.app_candidate_views import build_app_candidate_queue
 
+        route_cfg, _, _ = _config_for_runtime(
+            profile_id=profile_id,
+            read_scope="candidate:read",
+            error_message="Local Vault candidate reads require an active unlock session",
+        )
         items = [
             item
-            for item in candidate_api.list_candidates(cfg)
+            for item in candidate_api.list_candidates(route_cfg)
             if item.get("status") in {"pending", "evaluated"}
         ]
         return build_app_candidate_queue(items)
 
-    def _candidate_detail_payload(candidate_id: str) -> dict[str, object]:
+    def _candidate_detail_payload(candidate_id: str, *, profile_id: str = "default") -> dict[str, object]:
         from sayane.app.app_candidate_views import build_app_candidate_detail
 
-        payload = candidate_api.get_candidate(cfg, candidate_id)
+        route_cfg, _, _ = _config_for_runtime(
+            profile_id=profile_id,
+            read_scope="candidate:read",
+            error_message="Local Vault candidate reads require an active unlock session",
+        )
+        payload = candidate_api.get_candidate(route_cfg, candidate_id)
         payload["review_surface"] = "resident_app_bridge"
         return build_app_candidate_detail(payload)
 
-    def _candidate_detail_screen_state(candidate_id: str) -> dict[str, object]:
+    def _candidate_detail_screen_state(candidate_id: str, *, profile_id: str = "default") -> dict[str, object]:
         from sayane.app import build_candidate_detail_screen_state
 
-        return build_candidate_detail_screen_state(_candidate_detail_payload(candidate_id))
+        return build_candidate_detail_screen_state(_candidate_detail_payload(candidate_id, profile_id=profile_id))
 
-    def _candidate_diff_payload(candidate_id: str) -> dict[str, object]:
+    def _candidate_diff_payload(candidate_id: str, *, profile_id: str = "default") -> dict[str, object]:
         from sayane.app.app_candidate_views import build_app_candidate_diff
 
-        payload = candidate_api.get_diff(cfg, candidate_id)
+        route_cfg, _, _ = _config_for_runtime(
+            profile_id=profile_id,
+            read_scope="candidate:read",
+            error_message="Local Vault candidate reads require an active unlock session",
+        )
+        payload = candidate_api.get_diff(route_cfg, candidate_id)
         payload["review_surface"] = "resident_app_bridge"
         return build_app_candidate_diff(payload)
 
@@ -167,14 +213,13 @@ def register_resident_app_routes(
         profile_id: str,
         scope: str,
         error_message: str,
-    ) -> tuple[object, dict[str, object]]:
-        runtime = _build_app_runtime(profile_id=profile_id)
-        if runtime.vault_runtime is None:
-            return runtime, {}
-        session = runtime.first_vault_session_for_scope(scope)
-        if session is None:
-            raise HTTPException(status_code=409, detail=error_message)
-        return runtime, {"session": session}
+    ) -> tuple[BridgeConfig, object, dict[str, object]]:
+        route_cfg, runtime, repository_kwargs = _config_for_runtime(
+            profile_id=profile_id,
+            write_scope=scope,
+            error_message=error_message,
+        )
+        return route_cfg, runtime, repository_kwargs
 
     def _open_vault_session(*, profile_id: str, level: str, purpose: str) -> dict[str, object]:
         from sayane.app import build_app_vault_session_status
@@ -648,7 +693,12 @@ def register_resident_app_routes(
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
         try:
-            return candidate_api.get_candidate_lineage(cfg, candidate_id)
+            route_cfg, _, _ = _config_for_runtime(
+                profile_id="default",
+                read_scope="lineage:read",
+                error_message="Local Vault lineage reads require an active unlock session",
+            )
+            return candidate_api.get_candidate_lineage(route_cfg, candidate_id)
         except FileNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
 
@@ -778,7 +828,7 @@ def register_resident_app_routes(
         locale: str | None = Form(None),
         token: str = Depends(require_ui_session),
     ) -> RedirectResponse:
-        runtime, repository_kwargs = _require_vault_scope(
+        route_cfg, runtime, repository_kwargs = _require_vault_scope(
             profile_id=profile_id,
             scope="candidate:write",
             error_message="Local Vault candidate write requires an active unlock session",
@@ -787,7 +837,7 @@ def register_resident_app_routes(
         candidate = runtime.service.capture_clipboard_as_candidate(
             content,
             capability=runtime.capabilities["capture"],
-            config=cfg,
+            config=route_cfg,
             locale=resolved_locale,
             repository_kwargs=repository_kwargs,
         )
@@ -804,7 +854,7 @@ def register_resident_app_routes(
         body: AppCaptureClipboardRequest,
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
-        runtime, repository_kwargs = _require_vault_scope(
+        route_cfg, runtime, repository_kwargs = _require_vault_scope(
             profile_id=body.profile_id,
             scope="candidate:write",
             error_message="Local Vault candidate write requires an active unlock session",
@@ -812,7 +862,7 @@ def register_resident_app_routes(
         candidate = runtime.service.capture_clipboard_as_candidate(
             body.content,
             capability=runtime.capabilities["capture"],
-            config=cfg,
+            config=route_cfg,
             locale=body.locale or _resolve_ui_locale(request),
             repository_kwargs=repository_kwargs,
         )
@@ -829,12 +879,12 @@ def register_resident_app_routes(
     ) -> RedirectResponse:
         locale = _resolve_ui_locale(request)
         try:
-            _require_vault_scope(
+            route_cfg, _, _ = _require_vault_scope(
                 profile_id="default",
                 scope="review_decision:write",
                 error_message="Local Vault review actions require an active unlock session",
             )
-            candidate_api.post_evaluate(cfg, candidate_id, level=level)
+            candidate_api.post_evaluate(route_cfg, candidate_id, level=level)
         except FileNotFoundError as exc:
             return _redirect_response("/app/ui/candidates", token=token, locale=locale, error=str(exc))
         except CandidateOperationError as exc:
@@ -858,12 +908,12 @@ def register_resident_app_routes(
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
         try:
-            _require_vault_scope(
+            route_cfg, _, _ = _require_vault_scope(
                 profile_id="default",
                 scope="review_decision:write",
                 error_message="Local Vault review actions require an active unlock session",
             )
-            payload = candidate_api.post_evaluate(cfg, candidate_id, level=body.level)
+            payload = candidate_api.post_evaluate(route_cfg, candidate_id, level=body.level)
             payload["review_surface"] = "resident_app_bridge"
             return payload
         except FileNotFoundError as exc:
@@ -881,13 +931,13 @@ def register_resident_app_routes(
     ) -> RedirectResponse:
         locale = _resolve_ui_locale(request)
         try:
-            _require_vault_scope(
+            route_cfg, _, _ = _require_vault_scope(
                 profile_id="default",
                 scope="review_decision:write",
                 error_message="Local Vault review actions require an active unlock session",
             )
             candidate_api.post_approve(
-                cfg,
+                route_cfg,
                 candidate_id,
                 force_critical=force_critical == "true",
                 override_reason=override_reason or None,
@@ -917,7 +967,7 @@ def register_resident_app_routes(
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
         try:
-            _require_vault_scope(
+            route_cfg, _, _ = _require_vault_scope(
                 profile_id="default",
                 scope="review_decision:write",
                 error_message="Local Vault review actions require an active unlock session",
@@ -928,7 +978,7 @@ def register_resident_app_routes(
                 else None
             )
             payload = candidate_api.post_approve(
-                cfg,
+                route_cfg,
                 candidate_id,
                 force_critical=body.force_critical,
                 override_reason=body.override_reason,
@@ -952,12 +1002,12 @@ def register_resident_app_routes(
     ) -> RedirectResponse:
         locale = _resolve_ui_locale(request)
         try:
-            _require_vault_scope(
+            route_cfg, _, _ = _require_vault_scope(
                 profile_id="default",
                 scope="review_decision:write",
                 error_message="Local Vault review actions require an active unlock session",
             )
-            candidate_api.post_reject(cfg, candidate_id, reason=reason or None)
+            candidate_api.post_reject(route_cfg, candidate_id, reason=reason or None)
         except FileNotFoundError as exc:
             return _redirect_response("/app/ui/candidates", token=token, locale=locale, error=str(exc))
         except CandidateOperationError as exc:
@@ -976,12 +1026,12 @@ def register_resident_app_routes(
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
         try:
-            _require_vault_scope(
+            route_cfg, _, _ = _require_vault_scope(
                 profile_id="default",
                 scope="review_decision:write",
                 error_message="Local Vault review actions require an active unlock session",
             )
-            payload = candidate_api.post_reject(cfg, candidate_id, reason=body.reason)
+            payload = candidate_api.post_reject(route_cfg, candidate_id, reason=body.reason)
             payload["review_surface"] = "resident_app_bridge"
             return payload
         except FileNotFoundError as exc:
@@ -1000,13 +1050,13 @@ def register_resident_app_routes(
     ) -> RedirectResponse:
         locale = _resolve_ui_locale(request)
         try:
-            _require_vault_scope(
+            route_cfg, _, _ = _require_vault_scope(
                 profile_id="default",
                 scope="candidate:write",
                 error_message="Local Vault candidate revision requires an active unlock session",
             )
             payload = candidate_api.post_revise(
-                cfg,
+                route_cfg,
                 candidate_id,
                 edited_text=edited_text,
                 target_section=target_section or None,
@@ -1028,13 +1078,13 @@ def register_resident_app_routes(
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
         try:
-            _require_vault_scope(
+            route_cfg, _, _ = _require_vault_scope(
                 profile_id="default",
                 scope="candidate:write",
                 error_message="Local Vault candidate revision requires an active unlock session",
             )
             payload = candidate_api.post_revise(
-                cfg,
+                route_cfg,
                 candidate_id,
                 edited_text=body.edited_text,
                 target_section=body.target_section,
@@ -1050,7 +1100,7 @@ def register_resident_app_routes(
         dependencies=[Depends(require_bearer)],
     )
     def post_capture_clipboard(body: AppCaptureClipboardRequest) -> dict[str, object]:
-        runtime, repository_kwargs = _require_vault_scope(
+        route_cfg, runtime, repository_kwargs = _require_vault_scope(
             profile_id=body.profile_id,
             scope="candidate:write",
             error_message="Local Vault candidate write requires an active unlock session",
@@ -1058,7 +1108,7 @@ def register_resident_app_routes(
         candidate = runtime.service.capture_clipboard_as_candidate(
             body.content,
             capability=runtime.capabilities["capture"],
-            config=cfg,
+            config=route_cfg,
             locale=body.locale,
             repository_kwargs=repository_kwargs,
         )
@@ -1118,7 +1168,12 @@ def register_resident_app_routes(
     )
     def get_app_candidate_lineage(candidate_id: str) -> dict[str, object]:
         try:
-            return candidate_api.get_candidate_lineage(cfg, candidate_id)
+            route_cfg, _, _ = _config_for_runtime(
+                profile_id="default",
+                read_scope="lineage:read",
+                error_message="Local Vault lineage reads require an active unlock session",
+            )
+            return candidate_api.get_candidate_lineage(route_cfg, candidate_id)
         except FileNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
 
@@ -1131,12 +1186,12 @@ def register_resident_app_routes(
         body: EvaluateCandidateRequest,
     ) -> dict[str, object]:
         try:
-            _require_vault_scope(
+            route_cfg, _, _ = _require_vault_scope(
                 profile_id="default",
                 scope="review_decision:write",
                 error_message="Local Vault review actions require an active unlock session",
             )
-            payload = candidate_api.post_evaluate(cfg, candidate_id, level=body.level)
+            payload = candidate_api.post_evaluate(route_cfg, candidate_id, level=body.level)
             payload["review_surface"] = "resident_app_bridge"
             return payload
         except FileNotFoundError as exc:
@@ -1153,7 +1208,7 @@ def register_resident_app_routes(
         body: ApproveCandidateRequest,
     ) -> dict[str, object]:
         try:
-            _require_vault_scope(
+            route_cfg, _, _ = _require_vault_scope(
                 profile_id="default",
                 scope="review_decision:write",
                 error_message="Local Vault review actions require an active unlock session",
@@ -1164,7 +1219,7 @@ def register_resident_app_routes(
                 else None
             )
             payload = candidate_api.post_approve(
-                cfg,
+                route_cfg,
                 candidate_id,
                 force_critical=body.force_critical,
                 override_reason=body.override_reason,
@@ -1188,12 +1243,12 @@ def register_resident_app_routes(
         body: RejectCandidateRequest,
     ) -> dict[str, object]:
         try:
-            _require_vault_scope(
+            route_cfg, _, _ = _require_vault_scope(
                 profile_id="default",
                 scope="review_decision:write",
                 error_message="Local Vault review actions require an active unlock session",
             )
-            payload = candidate_api.post_reject(cfg, candidate_id, reason=body.reason)
+            payload = candidate_api.post_reject(route_cfg, candidate_id, reason=body.reason)
             payload["review_surface"] = "resident_app_bridge"
             return payload
         except FileNotFoundError as exc:
@@ -1210,13 +1265,13 @@ def register_resident_app_routes(
         body: ReviseCandidateRequest,
     ) -> dict[str, object]:
         try:
-            _require_vault_scope(
+            route_cfg, _, _ = _require_vault_scope(
                 profile_id="default",
                 scope="candidate:write",
                 error_message="Local Vault candidate revision requires an active unlock session",
             )
             payload = candidate_api.post_revise(
-                cfg,
+                route_cfg,
                 candidate_id,
                 edited_text=body.edited_text,
                 target_section=body.target_section,

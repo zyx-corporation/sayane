@@ -371,17 +371,31 @@ def test_app_candidate_evaluate_requires_unlock_session_when_vault_backend_is_ac
     bridge_env: tuple[TestClient, BridgeConfig, str],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client, config, token = bridge_env
+    client, _, token = bridge_env
     monkeypatch.setenv("SAYANE_APP_VAULT_MODE", "development")
     monkeypatch.setenv("SAYANE_VAULT_PASSPHRASE", "bridge-dev-passphrase")
 
+    opened = client.post(
+        "/app/vault-session/open",
+        headers=_auth(token),
+        json={"level": "sensitive", "purpose": "evaluate-test", "profile_id": "default"},
+    )
+    assert opened.status_code == 200
+
     capture = client.post(
-        "/capture",
+        "/app/capture-clipboard",
         headers=_auth(token),
         json={"content": "important_terms:\n  - Sayane", "profile_id": "default"},
     )
     assert capture.status_code == 200
     candidate_id = capture.json()["id"]
+
+    locked = client.post(
+        "/app/vault-session/lock",
+        headers=_auth(token),
+        json={"close_all": True},
+    )
+    assert locked.status_code == 200
 
     denied = client.post(
         f"/app/candidates/{candidate_id}/evaluate",
@@ -405,6 +419,111 @@ def test_app_candidate_evaluate_requires_unlock_session_when_vault_backend_is_ac
     )
     assert allowed.status_code == 200
     assert allowed.json()["status"] == "evaluated"
+
+
+def test_app_vault_capture_and_read_surfaces_use_vault_backed_repository(
+    bridge_env: tuple[TestClient, BridgeConfig, str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client, config, token = bridge_env
+    monkeypatch.setenv("SAYANE_APP_VAULT_MODE", "development")
+    monkeypatch.setenv("SAYANE_VAULT_PASSPHRASE", "bridge-dev-passphrase")
+
+    opened = client.post(
+        "/app/vault-session/open",
+        headers=_auth(token),
+        json={"level": "sensitive", "purpose": "queue-read-test", "profile_id": "default"},
+    )
+    assert opened.status_code == 200
+
+    capture = client.post(
+        "/app/capture-clipboard",
+        headers=_auth(token),
+        json={"content": "vault resident candidate", "profile_id": "default"},
+    )
+    assert capture.status_code == 200
+    candidate_id = capture.json()["id"]
+
+    assert not (config.candidates_dir / f"{candidate_id}.json").exists()
+
+    queue = client.get("/app/candidates", headers=_auth(token))
+    assert queue.status_code == 200
+    assert any(item["id"] == candidate_id for item in queue.json()["items"])
+
+    detail = client.get(f"/app/candidates/{candidate_id}", headers=_auth(token))
+    assert detail.status_code == 200
+    assert detail.json()["id"] == candidate_id
+
+    lineage = client.get(f"/app/candidates/{candidate_id}/lineage", headers=_auth(token))
+    assert lineage.status_code == 200
+    assert lineage.json()["candidate_id"] == candidate_id
+
+    locked = client.post(
+        "/app/vault-session/lock",
+        headers=_auth(token),
+        json={"close_all": True},
+    )
+    assert locked.status_code == 200
+
+    denied = client.get("/app/candidates", headers=_auth(token))
+    assert denied.status_code == 409
+    assert "unlock session" in denied.json()["detail"].lower()
+
+
+def test_legacy_bridge_capture_and_candidate_surfaces_use_vault_backed_repository(
+    bridge_env: tuple[TestClient, BridgeConfig, str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client, config, token = bridge_env
+    monkeypatch.setenv("SAYANE_APP_VAULT_MODE", "development")
+    monkeypatch.setenv("SAYANE_VAULT_PASSPHRASE", "bridge-dev-passphrase")
+
+    denied_capture = client.post(
+        "/capture",
+        headers=_auth(token),
+        json={"content": "legacy vault candidate", "source": "test", "profile_id": "default"},
+    )
+    assert denied_capture.status_code == 409
+    assert "unlock session" in denied_capture.json()["detail"].lower()
+
+    opened = client.post(
+        "/app/vault-session/open",
+        headers=_auth(token),
+        json={"level": "sensitive", "purpose": "legacy-bridge-test", "profile_id": "default"},
+    )
+    assert opened.status_code == 200
+
+    capture = client.post(
+        "/capture",
+        headers=_auth(token),
+        json={"content": "legacy vault candidate", "source": "test", "profile_id": "default"},
+    )
+    assert capture.status_code == 200
+    candidate_id = capture.json()["id"]
+    assert not (config.candidates_dir / f"{candidate_id}.json").exists()
+
+    listed = client.get("/candidates", headers=_auth(token))
+    assert listed.status_code == 200
+    assert any(item["id"] == candidate_id for item in listed.json())
+
+    detail = client.get(f"/candidates/{candidate_id}", headers=_auth(token))
+    assert detail.status_code == 200
+    assert detail.json()["id"] == candidate_id
+
+    lineage = client.get(f"/candidates/{candidate_id}/lineage", headers=_auth(token))
+    assert lineage.status_code == 200
+    assert lineage.json()["candidate_id"] == candidate_id
+
+    locked = client.post(
+        "/app/vault-session/lock",
+        headers=_auth(token),
+        json={"close_all": True},
+    )
+    assert locked.status_code == 200
+
+    denied_list = client.get("/candidates", headers=_auth(token))
+    assert denied_list.status_code == 409
+    assert "unlock session" in denied_list.json()["detail"].lower()
 
 
 def test_app_ui_operator_drilldown_states_return_cookie_backed_payloads(

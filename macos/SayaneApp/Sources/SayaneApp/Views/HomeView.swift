@@ -22,10 +22,19 @@ struct HomeView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(model.strings.text(.appTitle)).font(.largeTitle).bold()
-            if let health = model.health {
-                Text("\(model.strings.text(.bridgeHealthy)): \(model.strings.summaryValueLabel(key: "state", value: health.status)) · \(health.version ?? "-")")
-                    .foregroundStyle(.secondary)
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(model.strings.text(.appTitle)).font(.largeTitle).bold()
+                    if let health = model.health {
+                        Text("\(model.strings.text(.bridgeHealthy)): \(model.strings.summaryValueLabel(key: "state", value: health.status)) · \(health.version ?? "-")")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                Spacer()
+                Button(model.strings.text(.captureClipboard)) {
+                    Task { await model.captureClipboard() }
+                }
+                .buttonStyle(.borderedProminent)
             }
         }
     }

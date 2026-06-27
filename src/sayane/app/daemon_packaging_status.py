@@ -91,7 +91,7 @@ class ResidentDaemonPackagingStatus:
             "kind": "resident_daemon_packaging_status",
             "packaging_model": "cli_first_local_bridge",
             "supervision_model": "manual_cli_with_bridge_delegation",
-            "phase_status": "next_up_after_proof_phase",
+            "phase_status": "mvp_supported_native_first_line",
             "runtime_root": str(self.runtime_root),
             "host": self.host,
             "port": self.port,
@@ -131,14 +131,13 @@ class ResidentDaemonPackagingStatus:
                 ],
             },
             "packaging_decision": {
-                "status": "current_line_explicit_final_next_phase_not_closed",
+                "status": "mvp_supported_model_finalized",
                 "current_supported_model": "cli_first_local_bridge",
                 "candidate_models": packaging_candidates,
                 "decision_guardrails": [
-                    "do not smuggle service-first commitments into app-shell polish",
-                    "do not imply background supervision support before explicit phase closure",
-                    "keep current local-only operator path explicit until "
-                    "packaging-model closure lands",
+                    "do not smuggle service-first commitments into MVP native-app polish",
+                    "do not imply background supervision support inside MVP",
+                    "keep the current local-only operator path explicit for the Community MVP",
                 ],
             },
             "local_daemon_control": {

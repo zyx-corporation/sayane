@@ -19,7 +19,7 @@ class ResidentDaemonSupervisionStatus:
         background_candidates = [
             {
                 "surface": "tray_supervision",
-                "status": "separate_plan_required",
+                "status": "not_supported_in_mvp",
                 "platform_scope": ["windows", "linux"],
                 "operator_value": (
                     "quick passive status visibility and bounded entry into recovery commands"
@@ -31,7 +31,7 @@ class ResidentDaemonSupervisionStatus:
             },
             {
                 "surface": "menu_bar_supervision",
-                "status": "separate_plan_required",
+                "status": "not_supported_in_mvp",
                 "platform_scope": ["macos"],
                 "operator_value": (
                     "local visibility for resident daemon state without "
@@ -44,7 +44,7 @@ class ResidentDaemonSupervisionStatus:
             },
             {
                 "surface": "login_item_or_background_agent_visibility",
-                "status": "separate_plan_required",
+                "status": "not_supported_in_mvp",
                 "platform_scope": ["macos", "windows", "linux"],
                 "operator_value": (
                     "startup visibility for the supported packaging model "
@@ -59,7 +59,7 @@ class ResidentDaemonSupervisionStatus:
         return {
             "kind": "resident_daemon_supervision_status",
             "supervision_mode": "passive_local_observation_with_cli_recovery",
-            "phase_status": "decision_line_partially_defined",
+            "phase_status": "mvp_boundary_finalized",
             "runtime_root": str(self.runtime_root),
             "host": self.host,
             "port": self.port,
@@ -98,8 +98,7 @@ class ResidentDaemonSupervisionStatus:
                     "explicit CLI-first control policy",
                     "background surfaces may not imply daemon proof, "
                     "readiness proof, or API readiness proof on their own",
-                    "background surfaces require packaging-model closure "
-                    "before becoming operator commitments",
+                    "background surfaces are post-MVP candidates unless a later packaging decision reopens them",
                 ],
             },
             "recovery_entrypoints": [
@@ -112,8 +111,7 @@ class ResidentDaemonSupervisionStatus:
                 "passive status visibility remains separate from unrestricted daemon control",
                 "current app shell does not expose tray or menu-bar supervision toggles",
                 "current supervision line stays local-only and CLI-compatible",
-                "candidate background surfaces remain decision inputs, not "
-                "current product commitments",
+                "candidate background surfaces remain post-MVP ideas, not current product commitments",
             ],
         }
 

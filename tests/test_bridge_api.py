@@ -188,7 +188,7 @@ def test_app_operator_phase_status_returns_aggregate_payload(
     payload = response.json()
     assert payload["kind"] == "resident_daemon_operator_phase_status"
     assert payload["runtime_root"] == str(config.home / "run")
-    assert payload["phase_readiness"] == "not_ready_for_phase_closure"
+    assert payload["phase_readiness"] == "ready_for_mvp_release_closure"
 
 
 def test_app_operator_drilldown_routes_return_payloads(
@@ -227,7 +227,7 @@ def test_app_ui_operator_phase_state_returns_cookie_backed_payload(
     assert response.status_code == 200
     payload = response.json()
     assert payload["kind"] == "resident_daemon_operator_phase_status"
-    assert payload["phase_readiness"] == "not_ready_for_phase_closure"
+    assert payload["phase_readiness"] == "ready_for_mvp_release_closure"
 
 
 def test_app_ui_operator_drilldown_states_return_cookie_backed_payloads(
@@ -549,7 +549,7 @@ def test_app_ui_state_endpoints_work_with_ui_cookie_session(
     assert daemon.status_code == 200
     assert daemon.json()["kind"] == "resident_app_daemon_panel_screen_state"
     assert daemon.json()["operator_panels"][0]["panel"] == "packaging_status"
-    assert daemon.json()["operator_phase_summary"]["phase_readiness"] == "not_ready_for_phase_closure"
+    assert daemon.json()["operator_phase_summary"]["phase_readiness"] == "ready_for_mvp_release_closure"
     assert daemon.json()["operator_phase_details"]["workstreams"][0]["name"] == "packaging_model_decision"
     assert daemon.json()["service_target_summary"]["current_platform"] in {"macos", "linux", "windows", "other"}
 

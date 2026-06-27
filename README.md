@@ -28,19 +28,20 @@ Sayane separates your context from any single vendor memory or chat service. It 
 | Avoid blind context merges | capture → candidate → evaluate → approve/reject |
 | Track accepted and rejected changes | lineage records |
 | Use local Markdown context | `context/`, storage index, optional Obsidian/Git workflows |
-| Connect tools and editors | CLI, Local Bridge, MCP server, Chrome Extension |
+| Connect tools and editors | CLI, Local Bridge, MCP server, native macOS app, Chrome Extension (legacy) |
 
 ## Current status
 
-Community Edition in this repository is now **v1.0.13** and supports the core local-first workflow.
+Community Edition in this repository is now **v1.0.14.post1** and supports the current native-first resident app workflow.
 
-Community Edition **v1.0.13** is now published on PyPI.
+Community Edition **v1.0.14.post1** is now published on PyPI.
 
 | Interface | Status | Primary use |
 |-----------|--------|-------------|
 | CLI | Available | init / compile / candidate / storage |
 | Local Bridge | Available | `sayane serve` + local HTTP API |
 | MCP Server | Available | Cursor / Claude Desktop integration |
+| Native macOS App | Available | primary operator-facing app workflow on macOS |
 | Chrome Extension | Frozen / deprecated | legacy capture / context insert / candidate actions during migration |
 | RDE/Candidate evaluation | Available | evaluate / approve / reject / lineage |
 | Storage | Available | local Markdown / filesystem-first workflows, with Obsidian/Git kept as legacy compatibility paths |
@@ -51,7 +52,7 @@ Install the CLI first. See [docs/install.md](docs/install.md) for detailed insta
 
 ```bash
 # PyPI (macOS / Linux / Windows with Python 3.11+)
-pip install "sayane==1.0.13"
+pip install "sayane==1.0.14.post1"
 ```
 
 ```bash
@@ -80,8 +81,9 @@ This verifies:
 
 Notes:
 
+- The native macOS app is the primary operator-facing path on macOS.
 - The Chrome Extension remains available for existing users, but it is frozen / deprecated and no longer the primary entry point.
-- The recommended stable integration surfaces are the CLI, Local Bridge, and MCP Server.
+- The recommended stable integration surfaces are the CLI, Local Bridge, MCP Server, and native macOS app.
 
 ## Core workflow
 

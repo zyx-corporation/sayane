@@ -20,7 +20,7 @@ class ResidentDaemonRecoveryConsentStatus:
             "kind": "resident_daemon_recovery_consent_status",
             "consent_model": "explicit_cli_confirmation_for_mutation",
             "recovery_model": "diagnose_then_operator_review_then_cli_action",
-            "phase_status": "baseline_contract_implemented",
+            "phase_status": "mvp_boundary_finalized",
             "runtime_root": str(self.runtime_root),
             "host": self.host,
             "port": self.port,
@@ -78,6 +78,7 @@ class ResidentDaemonRecoveryConsentStatus:
                 "not destructive consent bypasses",
                 "automation must not bypass explicit operator review for cleanup or repair apply",
                 "background supervision must not silently escalate into mutating recovery",
+                "MVP recovery keeps all stateful mutation inside explicit CLI confirmation paths",
             ],
             "recommended_recovery_flow": [
                 "inspect current status and proof-oriented diagnostics",

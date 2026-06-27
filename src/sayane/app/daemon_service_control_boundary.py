@@ -50,7 +50,7 @@ class ResidentDaemonServiceControlBoundary:
             {
                 "operation": "install",
                 "command": "daemon-service-install",
-                "status": "separate_plan_required",
+                "status": "not_supported_in_mvp",
                 "platform_scope": ["macos_launchagent", "linux_systemd_user", "windows_service"],
                 "rollback_required": True,
                 "policy_required": True,
@@ -58,7 +58,7 @@ class ResidentDaemonServiceControlBoundary:
             {
                 "operation": "enable",
                 "command": "daemon-service-enable",
-                "status": "separate_plan_required",
+                "status": "not_supported_in_mvp",
                 "platform_scope": ["macos_launchagent", "linux_systemd_user", "windows_service"],
                 "rollback_required": True,
                 "policy_required": True,
@@ -66,7 +66,7 @@ class ResidentDaemonServiceControlBoundary:
             {
                 "operation": "disable",
                 "command": "daemon-service-disable",
-                "status": "separate_plan_required",
+                "status": "not_supported_in_mvp",
                 "platform_scope": ["macos_launchagent", "linux_systemd_user", "windows_service"],
                 "rollback_required": True,
                 "policy_required": True,
@@ -74,7 +74,7 @@ class ResidentDaemonServiceControlBoundary:
             {
                 "operation": "remove",
                 "command": "daemon-service-remove",
-                "status": "separate_plan_required",
+                "status": "not_supported_in_mvp",
                 "platform_scope": ["macos_launchagent", "linux_systemd_user", "windows_service"],
                 "rollback_required": True,
                 "policy_required": True,
@@ -82,7 +82,7 @@ class ResidentDaemonServiceControlBoundary:
             {
                 "operation": "update",
                 "command": "daemon-service-update",
-                "status": "separate_plan_required",
+                "status": "not_supported_in_mvp",
                 "platform_scope": ["macos_launchagent", "linux_systemd_user", "windows_service"],
                 "rollback_required": True,
                 "policy_required": True,
@@ -123,7 +123,9 @@ class ResidentDaemonServiceControlBoundary:
                 ],
             },
             "service_plane": {
-                "status": "macos_explicit_cli_only" if is_macos else "contract_only",
+                "status": "mvp_macos_launchagent_preview_apply_cli_only"
+                if is_macos
+                else "mvp_contract_only_non_macos",
                 "allowed_commands": launchagent_commands if is_macos else [],
                 "deferred_commands": [
                     "daemon-service-install",
@@ -140,7 +142,7 @@ class ResidentDaemonServiceControlBoundary:
                 ],
                 "rollback_required": True,
                 "platform_policy_required": True,
-                "update_strategy": "separate_plan_required",
+                "update_strategy": "not_supported_in_mvp",
             },
             "app_ui_policy": {
                 "allowed_reads": [
@@ -163,11 +165,11 @@ class ResidentDaemonServiceControlBoundary:
                 "preview commands do not mutate",
                 "apply commands require explicit operator consent",
                 "control commands remain local-only and CLI-first in the current MVP",
-                "service commands remain deferred until platform-specific rollback policy exists",
+                "macOS LaunchAgent preview/apply/bootstrap/bootout/kickstart are the only MVP service-adjacent operator path",
+                "service install/enable/disable/remove/update are outside the MVP support boundary",
                 (
-                    "service lifecycle install/enable/disable/remove/update "
-                    "expectations remain contract-only until the operator "
-                    "packaging/supervision phase closes"
+                    "cross-platform service lifecycle and rollback-policy closure "
+                    "move to post-MVP operator packaging work"
                 ),
             ],
         }

@@ -38,7 +38,7 @@ def test_daemon_recovery_consent_status_text_exposes_post_app_detail_surface(
     result = runner.invoke(app, ["app", "daemon-recovery-consent-status"])
 
     assert result.exit_code == 0
-    assert "phase_status: baseline_contract_implemented" in result.stdout
+    assert "phase_status: mvp_boundary_finalized" in result.stdout
     assert "non_mutating_diagnostics:" in result.stdout
     assert "mutating_recovery_actions:" in result.stdout
     assert "sayane app daemon-cleanup-apply --json" in result.stdout

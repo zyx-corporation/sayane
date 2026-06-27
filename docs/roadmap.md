@@ -26,7 +26,7 @@ Obsidian import/export、Git 自動コミット、外部同期前提の長期保
 ```text
 Core / CLI / Bridge : Python
 MCP Server          : Python
-App / UI            : Tauri / Web UI / platform-specific wrapper（検討中）
+App / UI            : native macOS app（MVP primary path）+ debug Web UI compatibility surface
 Schema / IR         : JSON Schema + Pydantic
 Local Vault         : SQLite + encryption-ready abstraction
 将来の高速化部分     : Rust

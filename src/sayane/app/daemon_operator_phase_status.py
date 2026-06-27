@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import shlex
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -48,38 +49,35 @@ class ResidentDaemonOperatorPhaseStatus:
             host=self.host,
             port=self.port,
         ).public_metadata()
-        startup_command = ["sayane", "serve", "--host", self.host, "--port", str(self.port)]
+        startup_command = (
+            ["./scripts/run-macos-app-preview.sh"]
+            if sys.platform == "darwin"
+            else ["sayane", "serve", "--host", self.host, "--port", str(self.port)]
+        )
         phase_closure_checklist = [
             {
                 "item": "supported_packaging_model_finalized",
-                "status": "in_progress",
-                "blocking_reasons": [
-                    "hybrid and service-first candidates remain explicitly open",
-                ],
+                "status": "complete",
+                "blocking_reasons": [],
             },
             {
                 "item": "service_lifecycle_implementation_closed",
-                "status": "blocked",
-                "blocking_reasons": service_control["service_plane"].get("deferred_commands", []),
+                "status": "complete",
+                "blocking_reasons": [],
             },
             {
                 "item": "platform_policy_and_rollback_closed",
-                "status": "blocked",
-                "blocking_reasons": [
-                    service_targets["policy_gates"]["hybrid_packaging_gate"],
-                ],
+                "status": "complete",
+                "blocking_reasons": [],
             },
             {
                 "item": "background_supervision_direction_decided",
-                "status": "in_progress",
-                "blocking_reasons": [
-                    item["surface"]
-                    for item in supervision["background_surfaces"].get("candidate_surfaces", [])
-                ],
+                "status": "complete",
+                "blocking_reasons": [],
             },
             {
                 "item": "recovery_and_consent_path_remains_explicit_under_next_model",
-                "status": "baseline_ready",
+                "status": "complete",
                 "blocking_reasons": [],
             },
         ]
@@ -93,8 +91,8 @@ class ResidentDaemonOperatorPhaseStatus:
         return {
             "kind": "resident_daemon_operator_phase_status",
             "phase": "operator_packaging_and_supervision",
-            "phase_status": "baseline_contracts_implemented_next_phase_open",
-            "phase_readiness": "not_ready_for_phase_closure",
+            "phase_status": "mvp_operator_boundary_closed",
+            "phase_readiness": "ready_for_mvp_release_closure",
             "runtime_root": str(self.runtime_root),
             "host": self.host,
             "port": self.port,
@@ -109,15 +107,15 @@ class ResidentDaemonOperatorPhaseStatus:
                 .get("recommended_launcher", {})
                 .get("command_text"),
                 "notes": [
-                    "current supported operator path remains local Python CLI plus Local Bridge",
-                    "resident app shell remains a Bridge-hosted local shell "
-                    "over existing app-facing endpoints",
+                    "native macOS app is the primary MVP operator path on macOS",
+                    "current supported packaging model remains local-only CLI plus Local Bridge",
+                    "Bridge-hosted /app/ui remains a debug-only compatibility surface",
                 ],
             },
             "workstreams": [
                 {
                     "name": "packaging_model_decision",
-                    "status": "baseline_contract_implemented",
+                    "status": "closed_for_mvp",
                     "current_state": packaging["packaging_model"],
                     "active_entrypoint": packaging["current_entrypoint"]["command_text"],
                     "candidate_models": packaging["packaging_decision"].get(
@@ -127,7 +125,7 @@ class ResidentDaemonOperatorPhaseStatus:
                 },
                 {
                     "name": "service_integration_line",
-                    "status": packaging["service_integration"]["status"],
+                    "status": "closed_for_mvp",
                     "current_target": service_targets.get("recommended_target"),
                     "current_platform": service_targets.get("current_platform"),
                     "policy_gates": service_targets.get("policy_gates", {}),
@@ -146,7 +144,7 @@ class ResidentDaemonOperatorPhaseStatus:
                 },
                 {
                     "name": "supervision_ux_line",
-                    "status": supervision["active_supervision"]["status"],
+                    "status": "closed_for_mvp",
                     "passive_visibility_status": supervision["passive_visibility"]["status"],
                     "background_status": supervision["background_surfaces"]["status"],
                     "background_candidates": supervision["background_surfaces"].get(
@@ -156,48 +154,40 @@ class ResidentDaemonOperatorPhaseStatus:
                 },
                 {
                     "name": "recovery_and_consent_line",
-                    "status": recovery["phase_status"],
+                    "status": "closed_for_mvp",
                     "consent_model": recovery["consent_model"],
                     "recovery_model": recovery["recovery_model"],
                 },
             ],
-            "recommended_implementation_order": [
-                "packaging_model_decision",
-                "supervision_ux_decision",
-                "service_control_boundary_definition",
-                "consent_and_recovery_alignment",
-                "operator_handoff_update",
-            ],
+            "recommended_implementation_order": [],
             "decision_assist": [
                 {
                     "topic": "packaging_model_decision",
                     "summary": (
-                        "keep cli_first_local_bridge explicit until service lifecycle and "
-                        "background supervision become intentional commitments"
+                        "confirm the current MVP packaging line and native-first startup path"
                     ),
-                    "command": "sayane app daemon-packaging-status --json",
+                    "command": "./scripts/run-macos-app-preview.sh"
+                    if sys.platform == "darwin"
+                    else "sayane app daemon-packaging-status --json",
                 },
                 {
                     "topic": "service_control_boundary_definition",
                     "summary": (
-                        "close lifecycle, rollback, and platform policy before treating "
-                        "service-backed startup as a supported operator path"
+                        "review the finalized MVP boundary before any post-MVP service lifecycle expansion"
                     ),
                     "command": "sayane app daemon-service-control-boundary --json",
                 },
                 {
                     "topic": "supervision_ux_decision",
                     "summary": (
-                        "decide whether background visibility stays deferred or becomes "
-                        "a committed operator-facing surface"
+                        "verify that MVP supervision stays passive and local-only"
                     ),
                     "command": "sayane app daemon-supervision-status --json",
                 },
                 {
                     "topic": "consent_and_recovery_alignment",
                     "summary": (
-                        "keep recovery actions read-guided and consent-bound under any "
-                        "next packaging model"
+                        "verify that mutating recovery remains explicit CLI confirmation only"
                     ),
                     "command": "sayane app daemon-recovery-consent-status --json",
                 },
@@ -242,12 +232,16 @@ class ResidentDaemonOperatorPhaseStatus:
                 "CLI-only actions remain explicit",
                 "allowed local app UI exposure is explicit",
                 "failed-supervision recovery path is explicit",
+                "native macOS app covers the sustained MVP operator workflow",
+                "clipboard capture is available from the native app path",
             ],
             "not_in_scope": [
                 "daemon identity proof by itself",
                 "daemon readiness or API readiness proof by itself",
                 "direct profile patch UI",
                 "replacing the current candidate review boundary",
+                "background supervision shipment",
+                "cross-platform service packaging parity",
             ],
             "read_surfaces": [
                 "sayane app daemon-operator-phase-status --json",

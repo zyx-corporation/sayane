@@ -22,10 +22,10 @@ Sayane **Community Edition（OSS）** の受け入れ条件・テストシナリ
 | 層 | 目的 | 実施タイミング | 証拠 |
 |----|------|--------------|------|
 | **L1 自動（CI）** | 回帰・契約の機械検証 | 毎 PR / main push | `pytest`（本リポジトリ `tests/`） |
-| **L2 手動（Core）** | CLI / Bridge / MCP / Storage の結合 | リリース前・Core 変更時 | 本書 §4 · Issue [#88](https://github.com/zyx-corporation/sayane/issues/88) |
+| **L2 手動（Core）** | CLI / Bridge / MCP / Storage / native app の結合 | リリース前・Core 変更時 | 本書 §4 · Issue [#88](https://github.com/zyx-corporation/sayane/issues/88) |
 | **L3 手動（Extension）** | ブラウザ DOM・popup 結合 | Extension / Bridge 変更時 | [extension-acceptance-test.md](extension-acceptance-test.md) · Issue [#89](https://github.com/zyx-corporation/sayane/issues/89) |
 
-**リリース判定**: L1 が green、L2 の **必須シナリオがすべて Pass**、Extension に変更がある場合は L3 必須 Pass。
+**リリース判定**: L1 が green、L2 の **必須シナリオがすべて Pass**、Extension に変更がある場合だけ L3 必須 Pass。
 
 ### 1.1 自動化できる部分 / できない部分
 
@@ -34,7 +34,7 @@ Sayane **Community Edition（OSS）** の受け入れ条件・テストシナリ
 | **L1 済み** | Core schema、Adapter、Bridge TestClient 主要経路、Storage 契約、MCP operations、CLI Candidate フルフロー・エラー経路・Critical 拒否、Storage export/commit、PLG 境界 | 本書 §5.2 · `tests/test_acceptance_cli.py` |
 | **L1 レジストリ** | 受け入れ ID ↔ pytest 紐づけ | `tests/test_acceptance_coverage.py` |
 | **scheduled E2E** | ChatGPT / Claude Insert（モック DOM + Bridge） | `extension/e2e/` · [extension-e2e.md](extension-e2e.md) |
-| **手動のみ** | 実サイト Insert、Options UX、SERVE 常駐 smoke、サインオフ | [acceptance-manual-only.md](acceptance-manual-only.md) · [#93](https://github.com/zyx-corporation/sayane/issues/93) |
+| **手動のみ** | native app routine flow、実サイト Insert、Options UX、SERVE 常駐 smoke、サインオフ | [acceptance-manual-only.md](acceptance-manual-only.md) · [#93](https://github.com/zyx-corporation/sayane/issues/93) |
 
 [#92](https://github.com/zyx-corporation/sayane/issues/92) / [#91](https://github.com/zyx-corporation/sayane/issues/91) 完了済み。**L2 必須は §4.0 の縮小版**（多くの CLI-M / BRG-M / MCP-M / SEC-M は L1 のみ）。詳細境界は [acceptance-manual-only.md](acceptance-manual-only.md)。
 

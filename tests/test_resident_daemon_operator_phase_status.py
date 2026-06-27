@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 from sayane.app import build_daemon_operator_phase_status
@@ -20,11 +21,13 @@ def test_daemon_operator_phase_status_aggregates_post_app_workstreams(
 
     assert payload["kind"] == "resident_daemon_operator_phase_status"
     assert payload["phase"] == "operator_packaging_and_supervision"
-    assert payload["phase_status"] == "baseline_contracts_implemented_next_phase_open"
-    assert payload["phase_readiness"] == "not_ready_for_phase_closure"
+    assert payload["phase_status"] == "mvp_operator_boundary_closed"
+    assert payload["phase_readiness"] == "ready_for_mvp_release_closure"
     assert payload["runtime_root"] == str(runtime_root)
     assert payload["current_supported_operator_path"]["startup_command_text"] == (
-        "sayane serve --host localhost --port 39000"
+        "./scripts/run-macos-app-preview.sh"
+        if sys.platform == "darwin"
+        else "sayane serve --host localhost --port 39000"
     )
     assert payload["current_supported_operator_path"]["primary_operator_ui"] in {
         "native_macos_app_primary",
@@ -33,6 +36,7 @@ def test_daemon_operator_phase_status_aggregates_post_app_workstreams(
     assert payload["current_supported_operator_path"]["debug_operator_ui"] == "bridge_hosted_debug_shell"
     assert payload["current_supported_operator_path"]["recommended_launcher"]
     assert payload["workstreams"][0]["name"] == "packaging_model_decision"
+    assert payload["workstreams"][0]["status"] == "closed_for_mvp"
     assert payload["workstreams"][0]["candidate_models"][0]["model"] == "cli_first_local_bridge"
     assert payload["workstreams"][0]["candidate_models"][-1]["model"] == "service_first_resident_runtime"
     assert payload["workstreams"][1]["name"] == "service_integration_line"
@@ -44,10 +48,13 @@ def test_daemon_operator_phase_status_aggregates_post_app_workstreams(
     assert payload["workstreams"][3]["name"] == "recovery_and_consent_line"
     assert payload["phase_closure_checklist"][0]["item"] == "supported_packaging_model_finalized"
     assert payload["phase_closure_checklist"][1]["item"] == "service_lifecycle_implementation_closed"
-    assert "daemon-service-install" in payload["blocking_reasons"]
-    assert "tray_supervision" in payload["blocking_reasons"]
+    assert payload["blocking_reasons"] == []
     assert payload["decision_assist"][0]["topic"] == "packaging_model_decision"
-    assert payload["decision_assist"][0]["command"] == "sayane app daemon-packaging-status --json"
+    assert payload["decision_assist"][0]["command"] == (
+        "./scripts/run-macos-app-preview.sh"
+        if sys.platform == "darwin"
+        else "sayane app daemon-packaging-status --json"
+    )
     assert "sayane app daemon-operator-phase-status --json" in payload["read_surfaces"]
     assert payload["closure_evidence"][0]["surface"] == "operator_phase_status"
     assert payload["closure_evidence"][0]["command"] == "sayane app daemon-operator-phase-status --json"

@@ -45,6 +45,9 @@ def register_daemon_operator_phase_status_command(app_group: typer.Typer) -> Non
         typer.echo(f"phase_readiness: {payload['phase_readiness']}")
         operator_path = payload.get("current_supported_operator_path", {})
         typer.echo(f"startup_command: {operator_path.get('startup_command_text', '—')}")
+        typer.echo(f"primary_operator_ui: {operator_path.get('primary_operator_ui', '—')}")
+        typer.echo(f"debug_operator_ui: {operator_path.get('debug_operator_ui', '—')}")
+        typer.echo(f"recommended_launcher: {operator_path.get('recommended_launcher', '—')}")
         typer.echo(f"bootstrap_ui: {operator_path.get('bootstrap_ui', '—')}")
         typer.echo(f"local_only: {operator_path.get('local_only')}")
         blocking_reasons = payload.get("blocking_reasons", [])
@@ -60,9 +63,19 @@ def register_daemon_operator_phase_status_command(app_group: typer.Typer) -> Non
                 or "—"
             )
             typer.echo(f"  - {item.get('name')}: {item.get('status')} ({detail})")
+        typer.echo("decision_assist:")
+        for item in payload.get("decision_assist", []):
+            typer.echo(
+                f"  - {item.get('topic')}: {item.get('summary', '—')} [{item.get('command', '—')}]"
+            )
         typer.echo("read_surfaces:")
         for read_surface in payload.get("read_surfaces", []):
             typer.echo(f"  - {read_surface}")
+        typer.echo("closure_evidence:")
+        for item in payload.get("closure_evidence", []):
+            typer.echo(
+                f"  - {item.get('surface')}: {item.get('confirms', '—')} [{item.get('command', '—')}]"
+            )
         typer.echo("exit_criteria:")
         for item in payload.get("exit_criteria", []):
             typer.echo(f"  - {item}")

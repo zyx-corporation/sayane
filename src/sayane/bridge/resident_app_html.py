@@ -105,7 +105,9 @@ BOOTSTRAP_COPY_LABELS: dict[str, str] = {
     "label.operator_path": "Current Operator Path",
     "label.workstreams": "Workstreams",
     "label.recommended_implementation_order": "Recommended Implementation Order",
+    "label.decision_assist": "Decision Assist",
     "label.read_surfaces": "Read Surfaces",
+    "label.evidence_drilldown": "Evidence Drill-down",
     "label.exit_criteria": "Exit Criteria",
     "label.not_in_scope": "Not In Scope",
     "label.notes": "Notes",
@@ -556,7 +558,9 @@ BOOTSTRAP_COPY_JA_LABELS: dict[str, str] = {
     "label.operator_path": "現在の運用経路",
     "label.workstreams": "ワークストリーム",
     "label.recommended_implementation_order": "推奨実装順",
+    "label.decision_assist": "判断支援",
     "label.read_surfaces": "参照サーフェス",
+    "label.evidence_drilldown": "根拠ドリルダウン",
     "label.exit_criteria": "完了条件",
     "label.not_in_scope": "対象外",
     "label.notes": "補足",
@@ -1372,7 +1376,14 @@ def _render_operator_phase_status(locale: str, payload: dict[str, Any] | None) -
         + _render_kv_panel(
             locale,
             operator_path,
-            keys=["startup_command_text", "bootstrap_ui", "local_only"],
+            keys=[
+                "startup_command_text",
+                "primary_operator_ui",
+                "debug_operator_ui",
+                "recommended_launcher",
+                "bootstrap_ui",
+                "local_only",
+            ],
         )
         + f"<h3>{escape(_copy('label.notes', locale))}</h3>"
         + _render_text_list(
@@ -1393,9 +1404,27 @@ def _render_operator_phase_status(locale: str, payload: dict[str, Any] | None) -
             list(payload.get("recommended_implementation_order", [])),
             empty_label=_copy("empty.metadata", locale),
         )
+        + f"<h3>{escape(_copy('label.decision_assist', locale))}</h3>"
+        + _render_text_list(
+            locale,
+            [
+                f"{item.get('topic', '')}: {item.get('summary', '')} [{item.get('command', '')}]"
+                for item in payload.get("decision_assist", [])
+            ],
+            empty_label=_copy("empty.metadata", locale),
+        )
         + f"<h3>{escape(_copy('label.read_surfaces', locale))}</h3>"
         + _render_string_list(
             list(payload.get("read_surfaces", [])),
+            empty_label=_copy("empty.metadata", locale),
+        )
+        + f"<h3>{escape(_copy('label.evidence_drilldown', locale))}</h3>"
+        + _render_text_list(
+            locale,
+            [
+                f"{item.get('surface', '')}: {item.get('confirms', '')} [{item.get('command', '')}]"
+                for item in payload.get("closure_evidence", [])
+            ],
             empty_label=_copy("empty.metadata", locale),
         )
         + f"<h3>{escape(_copy('label.exit_criteria', locale))}</h3>"

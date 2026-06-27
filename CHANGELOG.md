@@ -24,6 +24,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   daemon panel
 - aligned the fallback error view with the same launcher and debug-shell
   shortcuts so recovery no longer depends on manual command copying there
+- added operator-phase decision-assist and closure-evidence summaries so CLI,
+  debug Web UI, and native macOS app surfaces expose the next judgment and
+  verification path without digging through multiple payloads first
 
 ## [1.0.14.post1] - 2026-06-25 Native-First Resident App Hardening
 

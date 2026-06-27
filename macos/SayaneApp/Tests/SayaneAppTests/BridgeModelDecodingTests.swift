@@ -123,10 +123,12 @@ import Testing
       },
       "operator_phase_summary": {"phase": "post_app", "phase_status": "in_progress", "phase_readiness": "not_ready_for_phase_closure", "blocking_reasons": ["service_integration"], "checklist": ["packaging"]},
       "operator_phase_details": {
-        "current_supported_operator_path": {"startup_command_text": "sayane serve", "bootstrap_ui": "http://127.0.0.1:38741/app/ui", "local_only": true, "notes": ["local only"]},
+        "current_supported_operator_path": {"startup_command_text": "sayane serve", "primary_operator_ui": "native_macos_app_primary", "debug_operator_ui": "bridge_hosted_debug_shell", "recommended_launcher": "./scripts/run-macos-app-preview.sh", "bootstrap_ui": "http://127.0.0.1:38741/app/ui", "local_only": true, "notes": ["local only"]},
         "workstreams": [{"name": "packaging_model_decision", "status": "in_progress", "detail": "cli_first_local_bridge"}],
         "recommended_implementation_order": ["packaging"],
+        "decision_assist": [{"topic": "packaging_model_decision", "summary": "keep current line explicit", "command": "sayane app daemon-packaging-status --json"}],
         "read_surfaces": ["/app/ui-state/daemon"],
+        "closure_evidence": [{"surface": "operator_phase_status", "command": "sayane app daemon-operator-phase-status --json", "confirms": "phase readiness"}],
         "exit_criteria": ["decide model"],
         "not_in_scope": ["windows app"]
       },
@@ -139,6 +141,10 @@ import Testing
     let payload = try JSONDecoder().decode(DaemonPanelScreenState.self, from: data)
     #expect(payload.operatorPhaseSummary.phaseReadiness == "not_ready_for_phase_closure")
     #expect(payload.operatorPhaseDetails.workstreams.first?.name == "packaging_model_decision")
+    #expect(payload.operatorPhaseDetails.currentSupportedOperatorPath.primaryOperatorUI == "native_macos_app_primary")
+    #expect(payload.operatorPhaseDetails.currentSupportedOperatorPath.recommendedLauncher == "./scripts/run-macos-app-preview.sh")
+    #expect(payload.operatorPhaseDetails.decisionAssist?.first?.topic == "packaging_model_decision")
+    #expect(payload.operatorPhaseDetails.closureEvidence?.first?.surface == "operator_phase_status")
     #expect(payload.serviceTargetSummary.currentPlatform == "macos")
     #expect(payload.nextActions.first?.command == "sayane app daemon-launchagent-status --json")
     #expect(payload.launchagentStatus?["loaded"]?.boolValue == true)

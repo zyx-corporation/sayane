@@ -769,12 +769,32 @@ struct DaemonView: View {
                             Text(model.strings.text(.none))
                                 .font(.subheadline.weight(.semibold))
                         }
+                        if let primaryOperatorUI = details.currentSupportedOperatorPath.primaryOperatorUI,
+                           !primaryOperatorUI.isEmpty {
+                            DetailLabelValueRow(
+                                label: model.strings.text(.primaryOperatorUI),
+                                value: model.strings.tokenLabel(primaryOperatorUI)
+                            )
+                        }
+                        if let recommendedLauncher = details.currentSupportedOperatorPath.recommendedLauncher,
+                           !recommendedLauncher.isEmpty {
+                            Text(model.strings.text(.recommendedLauncher))
+                                .font(.caption.weight(.semibold))
+                            commandRow(recommendedLauncher)
+                        }
                         if let bootstrapUI = details.currentSupportedOperatorPath.bootstrapUI {
                             Text(model.strings.text(.debugShell))
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(.secondary)
                             commandRow(bootstrapUI)
                             DebugShellShortcutButtons(model: model, bootstrapUI: bootstrapUI)
+                        }
+                        if let debugOperatorUI = details.currentSupportedOperatorPath.debugOperatorUI,
+                           !debugOperatorUI.isEmpty {
+                            DetailLabelValueRow(
+                                label: model.strings.text(.debugShell),
+                                value: model.strings.tokenLabel(debugOperatorUI)
+                            )
                         }
                         if let localOnly = details.currentSupportedOperatorPath.localOnly {
                             DetailLabelValueRow(
@@ -832,6 +852,40 @@ struct DaemonView: View {
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                if let decisionAssist = details.decisionAssist, !decisionAssist.isEmpty {
+                    GroupBox(model.strings.text(.decisionAssist)) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            ForEach(Array(decisionAssist.prefix(4))) { item in
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(model.strings.summaryCardLabel(item.topic))
+                                        .font(.caption.weight(.semibold))
+                                    Text(item.summary)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                    commandRow(item.command)
+                                }
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+                if let closureEvidence = details.closureEvidence, !closureEvidence.isEmpty {
+                    GroupBox(model.strings.text(.evidenceDrilldown)) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            ForEach(Array(closureEvidence.prefix(4))) { item in
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(model.strings.summaryCardLabel(item.surface))
+                                        .font(.caption.weight(.semibold))
+                                    Text(item.confirms)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                    commandRow(item.command)
+                                }
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                 }
                 GroupBox(model.strings.text(.notInScope)) {
                     VStack(alignment: .leading, spacing: 6) {

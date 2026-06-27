@@ -105,6 +105,9 @@ def test_build_daemon_panel_screen_state_exposes_cards_and_previews() -> None:
                 "blocking_reasons": ["daemon-service-install", "tray_supervision"],
                 "current_supported_operator_path": {
                     "startup_command_text": "sayane serve --host 127.0.0.1 --port 38741",
+                    "primary_operator_ui": "native_macos_app_primary",
+                    "debug_operator_ui": "bridge_hosted_debug_shell",
+                    "recommended_launcher": "./scripts/run-macos-app-preview.sh",
                     "bootstrap_ui": "http://127.0.0.1:38741/app/ui",
                     "local_only": True,
                     "notes": ["current supported operator path remains local Python CLI plus Local Bridge"],
@@ -117,7 +120,21 @@ def test_build_daemon_panel_screen_state_exposes_cards_and_previews() -> None:
                     }
                 ],
                 "recommended_implementation_order": ["packaging_model_decision", "operator_handoff_update"],
+                "decision_assist": [
+                    {
+                        "topic": "packaging_model_decision",
+                        "summary": "keep current line explicit",
+                        "command": "sayane app daemon-packaging-status --json",
+                    }
+                ],
                 "read_surfaces": ["sayane app daemon-operator-phase-status --json"],
+                "closure_evidence": [
+                    {
+                        "surface": "operator_phase_status",
+                        "command": "sayane app daemon-operator-phase-status --json",
+                        "confirms": "phase readiness",
+                    }
+                ],
                 "exit_criteria": ["supported operator packaging model is explicit"],
                 "not_in_scope": ["direct profile patch UI"],
                 "phase_closure_checklist": [
@@ -140,8 +157,11 @@ def test_build_daemon_panel_screen_state_exposes_cards_and_previews() -> None:
     assert payload["operator_phase_summary"]["phase_readiness"] == "not_ready_for_phase_closure"
     assert payload["operator_phase_summary"]["blocking_reasons"] == ["daemon-service-install", "tray_supervision"]
     assert payload["operator_phase_details"]["current_supported_operator_path"]["local_only"] is True
+    assert payload["operator_phase_details"]["current_supported_operator_path"]["primary_operator_ui"] == "native_macos_app_primary"
     assert payload["operator_phase_details"]["workstreams"][0]["detail"] == "cli_first_local_bridge"
+    assert payload["operator_phase_details"]["decision_assist"][0]["topic"] == "packaging_model_decision"
     assert payload["operator_phase_details"]["read_surfaces"] == ["sayane app daemon-operator-phase-status --json"]
+    assert payload["operator_phase_details"]["closure_evidence"][0]["surface"] == "operator_phase_status"
     assert payload["service_targets_status"]["kind"] == "resident_daemon_service_targets_status"
     assert payload["operator_phase_status"]["phase"] == "operator_packaging_and_supervision"
     assert payload["launchagent_preview"]["kind"] == "resident_daemon_launchagent_plan"

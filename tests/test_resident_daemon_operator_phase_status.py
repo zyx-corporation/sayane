@@ -26,6 +26,12 @@ def test_daemon_operator_phase_status_aggregates_post_app_workstreams(
     assert payload["current_supported_operator_path"]["startup_command_text"] == (
         "sayane serve --host localhost --port 39000"
     )
+    assert payload["current_supported_operator_path"]["primary_operator_ui"] in {
+        "native_macos_app_primary",
+        "local_bridge_shell_primary",
+    }
+    assert payload["current_supported_operator_path"]["debug_operator_ui"] == "bridge_hosted_debug_shell"
+    assert payload["current_supported_operator_path"]["recommended_launcher"]
     assert payload["workstreams"][0]["name"] == "packaging_model_decision"
     assert payload["workstreams"][0]["candidate_models"][0]["model"] == "cli_first_local_bridge"
     assert payload["workstreams"][0]["candidate_models"][-1]["model"] == "service_first_resident_runtime"
@@ -40,7 +46,11 @@ def test_daemon_operator_phase_status_aggregates_post_app_workstreams(
     assert payload["phase_closure_checklist"][1]["item"] == "service_lifecycle_implementation_closed"
     assert "daemon-service-install" in payload["blocking_reasons"]
     assert "tray_supervision" in payload["blocking_reasons"]
+    assert payload["decision_assist"][0]["topic"] == "packaging_model_decision"
+    assert payload["decision_assist"][0]["command"] == "sayane app daemon-packaging-status --json"
     assert "sayane app daemon-operator-phase-status --json" in payload["read_surfaces"]
+    assert payload["closure_evidence"][0]["surface"] == "operator_phase_status"
+    assert payload["closure_evidence"][0]["command"] == "sayane app daemon-operator-phase-status --json"
     assert payload["packaging_status"]["kind"] == "resident_daemon_packaging_status"
     assert payload["service_targets_status"]["kind"] == "resident_daemon_service_targets_status"
     assert payload["service_control_boundary"]["kind"] == "resident_daemon_service_control_boundary"

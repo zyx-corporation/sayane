@@ -148,6 +148,15 @@ def build_daemon_panel_screen_state(daemon_payload: dict[str, Any]) -> dict[str,
                 "startup_command_text": operator_phase_status.get(
                     "current_supported_operator_path", {}
                 ).get("startup_command_text"),
+                "primary_operator_ui": operator_phase_status.get(
+                    "current_supported_operator_path", {}
+                ).get("primary_operator_ui"),
+                "debug_operator_ui": operator_phase_status.get(
+                    "current_supported_operator_path", {}
+                ).get("debug_operator_ui"),
+                "recommended_launcher": operator_phase_status.get(
+                    "current_supported_operator_path", {}
+                ).get("recommended_launcher"),
                 "bootstrap_ui": operator_phase_status.get(
                     "current_supported_operator_path", {}
                 ).get("bootstrap_ui"),
@@ -175,7 +184,9 @@ def build_daemon_panel_screen_state(daemon_payload: dict[str, Any]) -> dict[str,
                 "recommended_implementation_order",
                 [],
             ),
+            "decision_assist": operator_phase_status.get("decision_assist", []),
             "read_surfaces": operator_phase_status.get("read_surfaces", []),
+            "closure_evidence": operator_phase_status.get("closure_evidence", []),
             "exit_criteria": operator_phase_status.get("exit_criteria", []),
             "not_in_scope": operator_phase_status.get("not_in_scope", []),
         },

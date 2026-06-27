@@ -103,6 +103,11 @@ class ResidentDaemonOperatorPhaseStatus:
                 "startup_command_text": " ".join(shlex.quote(part) for part in startup_command),
                 "bootstrap_ui": f"http://{self.host}:{self.port}/app/ui",
                 "local_only": True,
+                "primary_operator_ui": packaging["operator_surface"].get("primary_ui"),
+                "debug_operator_ui": packaging["operator_surface"].get("debug_ui"),
+                "recommended_launcher": packaging["operator_surface"]
+                .get("recommended_launcher", {})
+                .get("command_text"),
                 "notes": [
                     "current supported operator path remains local Python CLI plus Local Bridge",
                     "resident app shell remains a Bridge-hosted local shell "
@@ -163,8 +168,74 @@ class ResidentDaemonOperatorPhaseStatus:
                 "consent_and_recovery_alignment",
                 "operator_handoff_update",
             ],
+            "decision_assist": [
+                {
+                    "topic": "packaging_model_decision",
+                    "summary": (
+                        "keep cli_first_local_bridge explicit until service lifecycle and "
+                        "background supervision become intentional commitments"
+                    ),
+                    "command": "sayane app daemon-packaging-status --json",
+                },
+                {
+                    "topic": "service_control_boundary_definition",
+                    "summary": (
+                        "close lifecycle, rollback, and platform policy before treating "
+                        "service-backed startup as a supported operator path"
+                    ),
+                    "command": "sayane app daemon-service-control-boundary --json",
+                },
+                {
+                    "topic": "supervision_ux_decision",
+                    "summary": (
+                        "decide whether background visibility stays deferred or becomes "
+                        "a committed operator-facing surface"
+                    ),
+                    "command": "sayane app daemon-supervision-status --json",
+                },
+                {
+                    "topic": "consent_and_recovery_alignment",
+                    "summary": (
+                        "keep recovery actions read-guided and consent-bound under any "
+                        "next packaging model"
+                    ),
+                    "command": "sayane app daemon-recovery-consent-status --json",
+                },
+            ],
             "phase_closure_checklist": phase_closure_checklist,
             "blocking_reasons": blocking_reasons,
+            "closure_evidence": [
+                {
+                    "surface": "operator_phase_status",
+                    "command": "sayane app daemon-operator-phase-status --json",
+                    "confirms": "current phase readiness, blocking reasons, and closure checklist",
+                },
+                {
+                    "surface": "packaging_status",
+                    "command": "sayane app daemon-packaging-status --json",
+                    "confirms": "current supported model, candidate models, and operator launcher guidance",
+                },
+                {
+                    "surface": "service_targets_status",
+                    "command": "sayane app daemon-service-targets-status --json",
+                    "confirms": "platform targets, rollback policy gate, and hybrid packaging gate",
+                },
+                {
+                    "surface": "service_control_boundary",
+                    "command": "sayane app daemon-service-control-boundary --json",
+                    "confirms": "allowed local control path, deferred commands, and lifecycle operations",
+                },
+                {
+                    "surface": "supervision_status",
+                    "command": "sayane app daemon-supervision-status --json",
+                    "confirms": "background candidate surfaces and deferred supervision topics",
+                },
+                {
+                    "surface": "recovery_consent_status",
+                    "command": "sayane app daemon-recovery-consent-status --json",
+                    "confirms": "mutating recovery consent requirements and recovery guardrails",
+                },
+            ],
             "exit_criteria": [
                 "supported operator packaging model is explicit",
                 "allowed daemon control and supervision actions are explicit",

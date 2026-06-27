@@ -336,7 +336,9 @@ struct OperatorPhaseDetails: Codable, Sendable {
     let currentSupportedOperatorPath: CurrentSupportedOperatorPath
     let workstreams: [Workstream]
     let recommendedImplementationOrder: [String]
+    let decisionAssist: [DecisionAssistEntry]?
     let readSurfaces: [String]
+    let closureEvidence: [ClosureEvidenceEntry]?
     let exitCriteria: [String]
     let notInScope: [String]
 
@@ -344,7 +346,9 @@ struct OperatorPhaseDetails: Codable, Sendable {
         case currentSupportedOperatorPath = "current_supported_operator_path"
         case workstreams
         case recommendedImplementationOrder = "recommended_implementation_order"
+        case decisionAssist = "decision_assist"
         case readSurfaces = "read_surfaces"
+        case closureEvidence = "closure_evidence"
         case exitCriteria = "exit_criteria"
         case notInScope = "not_in_scope"
     }
@@ -352,12 +356,18 @@ struct OperatorPhaseDetails: Codable, Sendable {
 
 struct CurrentSupportedOperatorPath: Codable, Sendable {
     let startupCommandText: String?
+    let primaryOperatorUI: String?
+    let debugOperatorUI: String?
+    let recommendedLauncher: String?
     let bootstrapUI: String?
     let localOnly: Bool?
     let notes: [String]
 
     private enum CodingKeys: String, CodingKey {
         case startupCommandText = "startup_command_text"
+        case primaryOperatorUI = "primary_operator_ui"
+        case debugOperatorUI = "debug_operator_ui"
+        case recommendedLauncher = "recommended_launcher"
         case bootstrapUI = "bootstrap_ui"
         case localOnly = "local_only"
         case notes
@@ -369,6 +379,20 @@ struct Workstream: Codable, Hashable, Sendable, Identifiable {
     let name: String
     let status: String?
     let detail: String?
+}
+
+struct DecisionAssistEntry: Codable, Hashable, Sendable, Identifiable {
+    var id: String { topic }
+    let topic: String
+    let summary: String
+    let command: String
+}
+
+struct ClosureEvidenceEntry: Codable, Hashable, Sendable, Identifiable {
+    var id: String { surface }
+    let surface: String
+    let command: String
+    let confirms: String
 }
 
 struct CandidateLineagePayload: Codable, Sendable {

@@ -199,6 +199,9 @@ def test_render_resident_app_daemon_panel_includes_service_targets_and_launchage
                 "blocking_reasons": ["daemon-service-install", "tray_supervision"],
                 "current_supported_operator_path": {
                     "startup_command_text": "sayane serve --host 127.0.0.1 --port 38741",
+                    "primary_operator_ui": "native_macos_app_primary",
+                    "debug_operator_ui": "bridge_hosted_debug_shell",
+                    "recommended_launcher": "./scripts/run-macos-app-preview.sh",
                     "bootstrap_ui": "http://127.0.0.1:38741/app/ui",
                     "local_only": True,
                     "notes": ["current supported operator path remains local Python CLI plus Local Bridge"],
@@ -211,7 +214,21 @@ def test_render_resident_app_daemon_panel_includes_service_targets_and_launchage
                     }
                 ],
                 "recommended_implementation_order": ["packaging_model_decision", "operator_handoff_update"],
+                "decision_assist": [
+                    {
+                        "topic": "packaging_model_decision",
+                        "summary": "keep current line explicit",
+                        "command": "sayane app daemon-packaging-status --json",
+                    }
+                ],
                 "read_surfaces": ["sayane app daemon-operator-phase-status --json"],
+                "closure_evidence": [
+                    {
+                        "surface": "operator_phase_status",
+                        "command": "sayane app daemon-operator-phase-status --json",
+                        "confirms": "phase readiness",
+                    }
+                ],
                 "exit_criteria": ["supported operator packaging model is explicit"],
                 "not_in_scope": ["direct profile patch UI"],
                 "phase_closure_checklist": [
@@ -279,9 +296,13 @@ def test_render_resident_app_daemon_panel_includes_service_targets_and_launchage
     assert "Current Operator Path" in html
     assert "Workstreams" in html
     assert "Read Surfaces" in html
+    assert "Decision Assist" in html
+    assert "Evidence Drill-down" in html
     assert "sayane serve --host 127.0.0.1 --port 38741" in html
     assert "sayane app daemon-operator-phase-status --json" in html
     assert "sayane app daemon-packaging-status --json" in html
+    assert "./scripts/run-macos-app-preview.sh" in html
+    assert "phase readiness" in html
     assert "/app/ui-state/daemon-packaging-status" in html
     assert "/app/ui-state/daemon-service-targets-status" in html
     assert "/app/ui-state/daemon-service-control-boundary" in html

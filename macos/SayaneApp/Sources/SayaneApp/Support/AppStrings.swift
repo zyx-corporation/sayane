@@ -46,6 +46,24 @@ struct AppStrings {
         case (.en, .topDaemonActions): return "Top Daemon Actions"
         case (.ja, .reviewableCount): return "レビュー対象"
         case (.en, .reviewableCount): return "Reviewable"
+        case (.ja, .localVault): return "Local Vault"
+        case (.en, .localVault): return "Local Vault"
+        case (.ja, .vaultPath): return "Vault パス"
+        case (.en, .vaultPath): return "Vault Path"
+        case (.ja, .vaultSessions): return "Unlock session"
+        case (.en, .vaultSessions): return "Unlock Session"
+        case (.ja, .unlockPolicies): return "Unlock policy"
+        case (.en, .unlockPolicies): return "Unlock Policies"
+        case (.ja, .recommendedSetup): return "推奨セットアップ"
+        case (.en, .recommendedSetup): return "Recommended Setup"
+        case (.ja, .supported): return "対応"
+        case (.en, .supported): return "Supported"
+        case (.ja, .notSupported): return "未対応"
+        case (.en, .notSupported): return "Not Supported"
+        case (.ja, .vaultUnavailable): return "Local Vault はまだ常用 runtime に接続されていません"
+        case (.en, .vaultUnavailable): return "Local Vault is not connected to the routine runtime yet"
+        case (.ja, .backend): return "バックエンド"
+        case (.en, .backend): return "Backend"
         case (.ja, .statusCounts): return "状態集計"
         case (.en, .statusCounts): return "Status Counts"
         case (.ja, .topSections): return "上位セクション"
@@ -563,6 +581,12 @@ struct AppStrings {
         case (.en, "daemon_state"): return "Daemon State"
         case (.ja, "next_actions"): return "次のアクション"
         case (.en, "next_actions"): return "Next Actions"
+        case (.ja, "vault_status"): return "Vault 状態"
+        case (.en, "vault_status"): return "Vault Status"
+        case (.ja, "vault_backend"): return "Vault backend"
+        case (.en, "vault_backend"): return "Vault Backend"
+        case (.ja, "vault_assurance"): return "鍵保護"
+        case (.en, "vault_assurance"): return "Key Assurance"
         case (.ja, "packaging_model_decision"): return "パッケージング判断"
         case (.en, "packaging_model_decision"): return "Packaging Decision"
         case (.ja, "service_integration_line"): return "サービス統合"
@@ -645,6 +669,8 @@ struct AppStrings {
         case (.en, "current"): return "Current"
         case (.ja, "mode"): return "モード"
         case (.en, "mode"): return "Mode"
+        case (.ja, "backend"): return "バックエンド"
+        case (.en, "backend"): return "Backend"
         case (.ja, "consent"): return "同意"
         case (.en, "consent"): return "Consent"
         case (.ja, "recovery"): return "復旧"
@@ -784,6 +810,28 @@ struct AppStrings {
         case (.en, "blocked"): return "Blocked"
         case (.ja, "baseline_ready"): return "ベースライン準備済み"
         case (.en, "baseline_ready"): return "Baseline Ready"
+        case (.ja, "vault_unavailable"): return "Vault 未接続"
+        case (.en, "vault_unavailable"): return "Vault Unavailable"
+        case (.ja, "unavailable"): return "未利用"
+        case (.en, "unavailable"): return "Unavailable"
+        case (.ja, "sqlite_test_local_vault"): return "SQLite test local vault"
+        case (.en, "sqlite_test_local_vault"): return "SQLite Test Vault"
+        case (.ja, "sqlite_development_local_vault"): return "SQLite development local vault"
+        case (.en, "sqlite_development_local_vault"): return "SQLite Development Vault"
+        case (.ja, "sqlite_macos_keychain_vault"): return "SQLite macOS keychain vault"
+        case (.en, "sqlite_macos_keychain_vault"): return "macOS Keychain Vault"
+        case (.ja, "os_backed"): return "OS保護"
+        case (.en, "os_backed"): return "OS Backed"
+        case (.ja, "passphrase"): return "パスフレーズ"
+        case (.en, "passphrase"): return "Passphrase"
+        case (.ja, "test_only"): return "テスト限定"
+        case (.en, "test_only"): return "Test Only"
+        case (.ja, "deep_private"): return "厳重秘匿"
+        case (.en, "deep_private"): return "Deep Private"
+        case (.ja, "sensitive"): return "要保護"
+        case (.en, "sensitive"): return "Sensitive"
+        case (.ja, "normal"): return "通常"
+        case (.en, "normal"): return "Normal"
         default:
             return rawValue
                 .split(separator: "_")
@@ -811,11 +859,11 @@ struct AppStrings {
 
     func tone(forToken rawValue: String) -> StatusTone {
         switch rawValue {
-        case "running", "loaded", "available", "approved", "evaluated", "captured", "supported_preview_apply_control":
+        case "running", "loaded", "available", "approved", "evaluated", "captured", "supported_preview_apply_control", "os_backed":
             return .positive
-        case "in_progress", "manual", "pending", "limited_cli_only", "candidate_requires_phase_closure", "not_ready_for_phase_closure":
+        case "in_progress", "manual", "pending", "limited_cli_only", "candidate_requires_phase_closure", "not_ready_for_phase_closure", "passphrase":
             return .caution
-        case "rejected", "not_supported", "separate_plan_required", "missing":
+        case "rejected", "not_supported", "separate_plan_required", "missing", "unavailable", "vault_unavailable":
             return .critical
         default:
             return .neutral
@@ -1148,6 +1196,7 @@ struct AppStrings {
     enum Key {
         case appTitle, home, queue, daemon, refresh, retry, bootstrap, captureClipboard, openLogs, startBridge
         case status, nextActions, summaryCards, topReviewItems, topDaemonActions, reviewableCount
+        case localVault, vaultPath, vaultSessions, unlockPolicies, recommendedSetup, supported, notSupported, vaultUnavailable, backend
         case statusCounts, topSections, detail, diff, lineage, evaluate, approve, reject, revise
         case operatorPhase, serviceTargets, launchAgent, clipboardEmpty, connectionProblem
         case sessionProblem, loading, none, error, bridgeHealthy, currentCandidate, editedText

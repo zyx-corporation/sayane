@@ -198,6 +198,7 @@ from sayane.app.ui import (
     build_mcp_preview,
     build_review_queue,
 )
+from sayane.app.vault_status import build_app_vault_status
 
 __all__ = [
     "CapabilityIssuer",
@@ -277,6 +278,7 @@ __all__ = [
     "build_app_candidate_queue",
     "build_app_contract",
     "build_app_overview",
+    "build_app_vault_status",
     "build_candidate_detail_screen_state",
     "build_candidate_queue_screen_state",
     "build_cleanup_decision",

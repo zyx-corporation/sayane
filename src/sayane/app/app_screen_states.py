@@ -10,6 +10,7 @@ def build_home_screen_state(overview: dict[str, Any]) -> dict[str, Any]:
     summary = overview.get("summary", {})
     review_summary = overview.get("review_summary", {})
     daemon_summary = overview.get("daemon_summary", {})
+    vault_status = overview.get("vault_status", {})
     return {
         "kind": "resident_app_home_screen_state",
         "summary_cards": [
@@ -19,9 +20,22 @@ def build_home_screen_state(overview: dict[str, Any]) -> dict[str, Any]:
             {"key": "blocked_context", "value": summary.get("blocked_context_count")},
             {"key": "daemon_state", "value": summary.get("daemon_state")},
             {"key": "next_actions", "value": summary.get("next_action_count")},
+            {"key": "vault_status", "value": summary.get("vault_status")},
+            {"key": "vault_backend", "value": summary.get("vault_backend")},
+            {"key": "vault_assurance", "value": summary.get("vault_assurance")},
         ],
         "top_review_items": review_summary.get("top_items", []),
         "top_daemon_actions": daemon_summary.get("top_next_actions", []),
+        "vault_summary": {
+            "status": vault_status.get("status"),
+            "backend": vault_status.get("backend"),
+            "assurance": vault_status.get("keychain_assurance"),
+            "vault_path": vault_status.get("vault_path"),
+            "supports_scoped_unlock_sessions": vault_status.get("supports_scoped_unlock_sessions"),
+            "recommended_setup": vault_status.get("recommended_setup", {}),
+            "unlock_policies": vault_status.get("unlock_policies", []),
+            "notes": vault_status.get("notes", []),
+        },
         "quick_links": [
             {"screen": "candidate_queue", "path": "/app/candidates"},
             {"screen": "daemon_panel", "path": "/app/daemon-overview"},

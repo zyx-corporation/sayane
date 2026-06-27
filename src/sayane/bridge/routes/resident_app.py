@@ -304,6 +304,20 @@ def register_resident_app_routes(
         return _operator_phase_status_payload()
 
     @router.get(
+        "/app/vault-status",
+        dependencies=[Depends(require_bearer)],
+    )
+    def get_app_vault_status() -> dict[str, object]:
+        from sayane.app import build_app_vault_status, build_resident_runtime
+
+        runtime = build_resident_runtime(
+            home=cfg.home,
+            host=cfg.host,
+            port=cfg.port,
+        )
+        return build_app_vault_status(runtime)
+
+    @router.get(
         "/app/daemon-packaging-status",
         dependencies=[Depends(require_bearer)],
     )
@@ -427,6 +441,19 @@ def register_resident_app_routes(
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
         return _operator_phase_status_payload()
+
+    @router.get("/app/ui-state/vault-status")
+    def get_app_ui_vault_status(
+        _token: str = Depends(require_ui_session),
+    ) -> dict[str, object]:
+        from sayane.app import build_app_vault_status, build_resident_runtime
+
+        runtime = build_resident_runtime(
+            home=cfg.home,
+            host=cfg.host,
+            port=cfg.port,
+        )
+        return build_app_vault_status(runtime)
 
     @router.get("/app/ui-state/daemon-packaging-status")
     def get_app_ui_daemon_packaging_status(

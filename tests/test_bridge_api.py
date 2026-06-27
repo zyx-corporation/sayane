@@ -102,6 +102,7 @@ def test_app_overview_requires_auth(
     assert client.get("/app/overview").status_code == 401
     assert client.get("/app/operator-phase-status").status_code == 401
     assert client.get("/app/daemon-packaging-status").status_code == 401
+    assert client.get("/app/vault-status").status_code == 401
     assert client.get("/app/daemon-service-targets-status").status_code == 401
     assert client.get("/app/daemon-service-control-boundary").status_code == 401
     assert client.get("/app/daemon-supervision-status").status_code == 401
@@ -119,6 +120,7 @@ def test_app_ui_requires_auth(
     assert client.get("/app/ui/daemon").status_code == 401
     assert client.get("/app/ui-state/home").status_code == 401
     assert client.get("/app/ui-state/operator-phase-status").status_code == 401
+    assert client.get("/app/ui-state/vault-status").status_code == 401
     assert client.get("/app/ui-state/daemon-packaging-status").status_code == 401
     assert client.get("/app/ui-state/daemon-service-targets-status").status_code == 401
     assert client.get("/app/ui-state/daemon-service-control-boundary").status_code == 401
@@ -173,9 +175,11 @@ def test_app_overview_returns_aggregate_payload(
     assert payload["kind"] == "resident_app_overview"
     assert payload["runtime"]["profile_id"] == "default"
     assert payload["summary"]["repository_available"] is False
+    assert payload["summary"]["vault_status"] == "unavailable"
     assert payload["review_queue"]["kind"] == "resident_review_queue"
     assert payload["mcp_preview"]["preview"]["kind"] == "resident_mcp_preview"
     assert payload["daemon_overview"]["kind"] == "resident_daemon_overview_preview"
+    assert payload["vault_status"]["kind"] == "resident_app_vault_status"
 
 
 def test_app_operator_phase_status_returns_aggregate_payload(
@@ -189,6 +193,19 @@ def test_app_operator_phase_status_returns_aggregate_payload(
     assert payload["kind"] == "resident_daemon_operator_phase_status"
     assert payload["runtime_root"] == str(config.home / "run")
     assert payload["phase_readiness"] == "ready_for_mvp_release_closure"
+
+
+def test_app_vault_status_returns_app_facing_payload(
+    bridge_env: tuple[TestClient, BridgeConfig, str],
+) -> None:
+    client, _, token = bridge_env
+    response = client.get("/app/vault-status", headers=_auth(token))
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["kind"] == "resident_app_vault_status"
+    assert payload["status"] == "unavailable"
+    assert payload["backend"] == "legacy_process_local"
 
 
 def test_app_operator_drilldown_routes_return_payloads(
@@ -228,6 +245,20 @@ def test_app_ui_operator_phase_state_returns_cookie_backed_payload(
     payload = response.json()
     assert payload["kind"] == "resident_daemon_operator_phase_status"
     assert payload["phase_readiness"] == "ready_for_mvp_release_closure"
+
+
+def test_app_ui_vault_status_returns_cookie_backed_payload(
+    bridge_env: tuple[TestClient, BridgeConfig, str],
+) -> None:
+    client, _, token = bridge_env
+    bootstrap = client.get("/app/ui", headers=_auth(token))
+    assert bootstrap.status_code == 200
+
+    response = client.get("/app/ui-state/vault-status")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["kind"] == "resident_app_vault_status"
+    assert payload["status"] == "unavailable"
 
 
 def test_app_ui_operator_drilldown_states_return_cookie_backed_payloads(

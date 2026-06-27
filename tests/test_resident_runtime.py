@@ -135,6 +135,23 @@ def test_sqlite_test_local_vault_selects_repository_bundle(tmp_path) -> None:
     assert runtime.describe()["storage_boundary"] == "sqlite_test_local_vault"
 
 
+def test_resident_runtime_can_select_test_vault_from_environment(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("SAYANE_APP_VAULT_MODE", "test")
+    runtime = build_resident_runtime(home=tmp_path / "sayane")
+
+    assert runtime.describe()["repository_backend"] == "sqlite_test_local_vault"
+    assert runtime.describe()["has_repositories"] is True
+
+
+def test_resident_runtime_can_select_development_vault_from_environment(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("SAYANE_APP_VAULT_MODE", "development")
+    monkeypatch.setenv("SAYANE_VAULT_PASSPHRASE", "dev-passphrase")
+    runtime = build_resident_runtime(home=tmp_path / "sayane")
+
+    assert runtime.describe()["repository_backend"] == "sqlite_development_local_vault"
+    assert runtime.describe()["has_repositories"] is True
+
+
 def test_future_pro_backend_is_reserved() -> None:
     with pytest.raises(NotImplementedError, match="reserved"):
         build_resident_runtime(

@@ -167,3 +167,50 @@ import Testing
     #expect(payload.recoveryConsentStatus?["mutating_recovery_actions"]?.arrayValue?.first?.objectValue?["scope"]?.stringValue == "runtime initialization artifacts")
     #expect(payload.operatorPhaseStatus?["current_supported_operator_path"]?.objectValue?["local_only"]?.boolValue == true)
 }
+
+@Test func homeStateDecodesVaultSummaryPayload() throws {
+    let data = Data(#"""
+    {
+      "kind": "resident_app_home_screen_state",
+      "summary_cards": [
+        {"key": "vault_status", "value": "available"},
+        {"key": "vault_backend", "value": "sqlite_macos_keychain_vault"},
+        {"key": "vault_assurance", "value": "os_backed"}
+      ],
+      "top_review_items": [],
+      "top_daemon_actions": ["sayane app daemon-status --json"],
+      "vault_summary": {
+        "status": "available",
+        "backend": "sqlite_macos_keychain_vault",
+        "assurance": "os_backed",
+        "vault_path": "/tmp/sayane/vault/main.sqlite",
+        "supports_scoped_unlock_sessions": true,
+        "recommended_setup": {
+          "status": "sayane vault status --macos-keychain --sqlite /tmp/sayane/vault/main.sqlite --json"
+        },
+        "unlock_policies": [
+          {
+            "level": "normal",
+            "idle_timeout_seconds": 900,
+            "absolute_timeout_seconds": 28800,
+            "requires_explicit_unlock": true,
+            "scopes": ["candidate_review", "candidate_write"]
+          }
+        ],
+        "notes": ["Local Vault is available to the resident app runtime."]
+      },
+      "quick_links": [{"screen": "candidate_queue", "path": "/app/candidates"}]
+    }
+    """#.utf8)
+    let payload = try JSONDecoder().decode(HomeScreenState.self, from: data)
+    #expect(payload.vaultSummary?.status == "available")
+    #expect(payload.vaultSummary?.backend == "sqlite_macos_keychain_vault")
+    #expect(payload.vaultSummary?.assurance == "os_backed")
+    #expect(payload.vaultSummary?.vaultPath == "/tmp/sayane/vault/main.sqlite")
+    #expect(payload.vaultSummary?.supportsScopedUnlockSessions == true)
+    #expect(payload.vaultSummary?.recommendedSetup?["status"] == "sayane vault status --macos-keychain --sqlite /tmp/sayane/vault/main.sqlite --json")
+    #expect(payload.vaultSummary?.unlockPolicies.count == 1)
+    #expect(payload.vaultSummary?.unlockPolicies.first?.level == "normal")
+    #expect(payload.vaultSummary?.unlockPolicies.first?.scopes == ["candidate_review", "candidate_write"])
+    #expect(payload.quickLinks.first?.screen == "candidate_queue")
+}

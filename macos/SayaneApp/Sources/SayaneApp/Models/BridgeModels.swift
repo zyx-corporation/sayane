@@ -128,6 +128,7 @@ struct HomeScreenState: Codable, Sendable {
     let summaryCards: [SummaryCard]
     let topReviewItems: [TopReviewItem]
     let topDaemonActions: [String]
+    let vaultSummary: VaultSummary?
     let quickLinks: [QuickLink]
 
     private enum CodingKeys: String, CodingKey {
@@ -135,7 +136,55 @@ struct HomeScreenState: Codable, Sendable {
         case summaryCards = "summary_cards"
         case topReviewItems = "top_review_items"
         case topDaemonActions = "top_daemon_actions"
+        case vaultSummary = "vault_summary"
         case quickLinks = "quick_links"
+    }
+}
+
+struct VaultSummary: Codable, Sendable {
+    let status: String?
+    let backend: String?
+    let assurance: String?
+    let vaultPath: String?
+    let supportsScopedUnlockSessions: Bool?
+    let recommendedSetup: [String: String]?
+    let unlockPolicies: [VaultUnlockPolicy]
+    let notes: [String]
+
+    private enum CodingKeys: String, CodingKey {
+        case status, backend, assurance, notes
+        case vaultPath = "vault_path"
+        case supportsScopedUnlockSessions = "supports_scoped_unlock_sessions"
+        case recommendedSetup = "recommended_setup"
+        case unlockPolicies = "unlock_policies"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        status = try container.decodeIfPresent(String.self, forKey: .status)
+        backend = try container.decodeIfPresent(String.self, forKey: .backend)
+        assurance = try container.decodeIfPresent(String.self, forKey: .assurance)
+        vaultPath = try container.decodeIfPresent(String.self, forKey: .vaultPath)
+        supportsScopedUnlockSessions = try container.decodeIfPresent(Bool.self, forKey: .supportsScopedUnlockSessions)
+        recommendedSetup = try container.decodeIfPresent([String: String].self, forKey: .recommendedSetup)
+        unlockPolicies = try container.decodeIfPresent([VaultUnlockPolicy].self, forKey: .unlockPolicies) ?? []
+        notes = try container.decodeIfPresent([String].self, forKey: .notes) ?? []
+    }
+}
+
+struct VaultUnlockPolicy: Codable, Hashable, Sendable, Identifiable {
+    var id: String { level }
+    let level: String
+    let idleTimeoutSeconds: Int
+    let absoluteTimeoutSeconds: Int
+    let requiresExplicitUnlock: Bool
+    let scopes: [String]
+
+    private enum CodingKeys: String, CodingKey {
+        case level, scopes
+        case idleTimeoutSeconds = "idle_timeout_seconds"
+        case absoluteTimeoutSeconds = "absolute_timeout_seconds"
+        case requiresExplicitUnlock = "requires_explicit_unlock"
     }
 }
 

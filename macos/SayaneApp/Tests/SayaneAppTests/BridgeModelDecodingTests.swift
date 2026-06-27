@@ -92,8 +92,9 @@ import Testing
       "supervision_status": {
         "supervision_mode": "passive_local_observation_with_cli_recovery",
         "passive_visibility": {"surfaces": ["/app/overview"]},
-        "active_supervision": {"allowed_actions": ["sayane app daemon-start --json"]},
-        "background_surfaces": {"candidate_surfaces": [{"surface": "menu_bar_supervision", "status": "separate_plan_required", "platform_scope": ["macos"], "operator_value": "local visibility", "forbidden_capabilities": ["silent launchctl mutation"]}]},
+        "active_supervision": {"allowed_actions": ["sayane app daemon-start --json"], "app_ui_actions": []},
+        "background_surfaces": {"deferred_topics": ["menu_bar_supervision"], "candidate_surfaces": [{"surface": "menu_bar_supervision", "status": "separate_plan_required", "platform_scope": ["macos"], "operator_value": "local visibility", "forbidden_capabilities": ["silent launchctl mutation"]}]},
+        "recovery_entrypoints": ["sayane app daemon-status --json"],
         "ux_guardrails": ["current supervision line stays local-only and CLI-compatible"]
       },
       "recovery_consent_status": {
@@ -153,6 +154,8 @@ import Testing
     #expect(payload.serviceControlBoundary?["service_plane"]?.objectValue?["platform_targets"]?.arrayValue?.count == 3)
     #expect(payload.serviceControlBoundary?["app_ui_policy"]?.objectValue?["allowed_control_exposure"]?.arrayValue?.first?.stringValue == "daemon-start may appear as a next action")
     #expect(payload.supervisionStatus?["supervision_mode"]?.stringValue == "passive_local_observation_with_cli_recovery")
+    #expect(payload.supervisionStatus?["background_surfaces"]?.objectValue?["deferred_topics"]?.arrayValue?.first?.stringValue == "menu_bar_supervision")
+    #expect(payload.supervisionStatus?["recovery_entrypoints"]?.arrayValue?.first?.stringValue == "sayane app daemon-status --json")
     #expect(payload.recoveryConsentStatus?["consent_model"]?.stringValue == "explicit_cli_confirmation_for_mutation")
     #expect(payload.operatorPhaseStatus?["current_supported_operator_path"]?.objectValue?["local_only"]?.boolValue == true)
 }

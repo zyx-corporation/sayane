@@ -42,7 +42,10 @@ def test_daemon_supervision_status_text_exposes_post_app_detail_surface(
     assert "active_supervision_status: limited_cli_only" in result.stdout
     assert "passive_visibility_surfaces:" in result.stdout
     assert "active_supervision_actions:" in result.stdout
+    assert "active_supervision_app_ui_actions:" in result.stdout
     assert "deferred_background_topics:" in result.stdout
     assert "candidate_background_surfaces:" in result.stdout
     assert "tray_supervision: separate_plan_required" in result.stdout
     assert "decision_guardrails:" in result.stdout
+    assert "recovery_entrypoints:" in result.stdout
+    assert "ux_guardrails:" in result.stdout

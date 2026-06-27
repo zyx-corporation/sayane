@@ -1155,6 +1155,10 @@ struct DaemonView: View {
                     title: model.strings.text(.activeSupervision),
                     values: model.daemonState?.supervisionStatus?["active_supervision"]?.objectValue?["allowed_actions"]?.arrayValue?.compactMap(\.stringValue) ?? []
                 )
+                stringList(
+                    title: model.strings.text(.startupVisibility),
+                    values: model.daemonState?.supervisionStatus?["background_surfaces"]?.objectValue?["deferred_topics"]?.arrayValue?.compactMap(\.stringValue) ?? []
+                )
                 if let candidates = model.daemonState?.supervisionStatus?["background_surfaces"]?.objectValue?["candidate_surfaces"]?.arrayValue {
                     Text(model.strings.text(.backgroundSurfaces)).bold()
                     ForEach(Array(candidates.enumerated()), id: \.offset) { _, value in
@@ -1184,6 +1188,10 @@ struct DaemonView: View {
                         }
                     }
                 }
+                stringList(
+                    title: model.strings.text(.recoveryFlow),
+                    values: model.daemonState?.supervisionStatus?["recovery_entrypoints"]?.arrayValue?.compactMap(\.stringValue) ?? []
+                )
                 stringList(
                     title: model.strings.text(.guardrails),
                     values: model.daemonState?.supervisionStatus?["ux_guardrails"]?.arrayValue?.compactMap(\.stringValue) ?? []

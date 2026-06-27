@@ -54,6 +54,10 @@ def register_daemon_supervision_status_command(app_group: typer.Typer) -> None:
             payload["active_supervision"].get("allowed_actions", []),
         )
         echo_list_section(
+            "active_supervision_app_ui_actions",
+            payload["active_supervision"].get("app_ui_actions", []),
+        )
+        echo_list_section(
             "deferred_background_topics",
             payload["background_surfaces"].get("deferred_topics", []),
         )
@@ -67,3 +71,4 @@ def register_daemon_supervision_status_command(app_group: typer.Typer) -> None:
             payload["background_surfaces"].get("decision_guardrails", []),
         )
         echo_list_section("recovery_entrypoints", payload.get("recovery_entrypoints", []))
+        echo_list_section("ux_guardrails", payload.get("ux_guardrails", []))

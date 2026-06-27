@@ -44,8 +44,10 @@ def test_app_overview_aggregates_runtime_review_mcp_and_daemon(tmp_path) -> None
     assert payload["summary"]["supervision_mode"] == "passive_local_observation_with_cli_recovery"
     assert payload["summary"]["consent_model"] == "explicit_cli_confirmation_for_mutation"
     assert payload["vault_status"]["kind"] == "resident_app_vault_status"
+    assert payload["vault_session_status"]["kind"] == "resident_app_vault_session_status"
     assert payload["summary"]["vault_status"] == "unavailable"
     assert payload["summary"]["vault_backend"] == "legacy_process_local"
+    assert payload["summary"]["vault_session_count"] == 0
 
 
 def test_app_overview_exposes_ui_friendly_summary_with_repositories(tmp_path) -> None:
@@ -105,3 +107,4 @@ def test_app_overview_exposes_ui_friendly_summary_with_repositories(tmp_path) ->
     assert payload["supervision_status"]["background_surfaces"]["status"] == "not_supported"
     assert payload["recovery_consent_status"]["mutating_recovery_actions"][0]["consent_required"] is True
     assert payload["vault_status"]["status"] == "unavailable"
+    assert payload["vault_session_status"]["active_session_count"] == 0

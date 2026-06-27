@@ -10,6 +10,7 @@ from sayane.app.daemon_service_control_boundary import build_daemon_service_cont
 from sayane.app.daemon_service_targets_status import build_daemon_service_targets_status
 from sayane.app.daemon_supervision_status import build_daemon_supervision_status
 from sayane.app.runtime import ResidentRuntime
+from sayane.app.vault_session_status import build_app_vault_session_status
 from sayane.app.vault_status import build_app_vault_status
 from sayane.app.ui import (
     build_daemon_overview_preview,
@@ -90,6 +91,7 @@ def build_app_overview(runtime: ResidentRuntime) -> dict[str, Any]:
         port=runtime.bridge_config.port,
     ).public_metadata()
     vault_status = build_app_vault_status(runtime)
+    vault_session_status = build_app_vault_session_status(runtime)
     review_summary = _build_review_summary(review_queue)
     mcp_summary = _build_mcp_summary(mcp_preview)
     daemon_summary = _build_daemon_summary(daemon_overview)
@@ -114,6 +116,7 @@ def build_app_overview(runtime: ResidentRuntime) -> dict[str, Any]:
             "vault_status": vault_status["status"],
             "vault_backend": vault_status["backend"],
             "vault_assurance": vault_status["keychain_assurance"],
+            "vault_session_count": vault_session_status["active_session_count"],
         },
         "review_summary": review_summary,
         "mcp_summary": mcp_summary,
@@ -124,6 +127,7 @@ def build_app_overview(runtime: ResidentRuntime) -> dict[str, Any]:
         "supervision_status": supervision_status,
         "recovery_consent_status": recovery_consent_status,
         "vault_status": vault_status,
+        "vault_session_status": vault_session_status,
         "review_queue": review_queue,
         "mcp_preview": mcp_preview,
         "daemon_overview": daemon_overview,

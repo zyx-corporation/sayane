@@ -52,6 +52,22 @@ struct AppStrings {
         case (.en, .vaultPath): return "Vault Path"
         case (.ja, .vaultSessions): return "Unlock session"
         case (.en, .vaultSessions): return "Unlock Session"
+        case (.ja, .activeSessions): return "有効セッション"
+        case (.en, .activeSessions): return "Active Sessions"
+        case (.ja, .sessionPurpose): return "利用目的"
+        case (.en, .sessionPurpose): return "Purpose"
+        case (.ja, .expiresAt): return "有効期限"
+        case (.en, .expiresAt): return "Expires At"
+        case (.ja, .idleExpiresAt): return "アイドル期限"
+        case (.en, .idleExpiresAt): return "Idle Expires At"
+        case (.ja, .unlockNormal): return "通常を開く"
+        case (.en, .unlockNormal): return "Open Normal"
+        case (.ja, .unlockSensitive): return "要保護を開く"
+        case (.en, .unlockSensitive): return "Open Sensitive"
+        case (.ja, .unlockDeepPrivate): return "厳重秘匿を開く"
+        case (.en, .unlockDeepPrivate): return "Open Deep Private"
+        case (.ja, .lockAll): return "すべて lock"
+        case (.en, .lockAll): return "Lock All"
         case (.ja, .unlockPolicies): return "Unlock policy"
         case (.en, .unlockPolicies): return "Unlock Policies"
         case (.ja, .recommendedSetup): return "推奨セットアップ"
@@ -587,6 +603,8 @@ struct AppStrings {
         case (.en, "vault_backend"): return "Vault Backend"
         case (.ja, "vault_assurance"): return "鍵保護"
         case (.en, "vault_assurance"): return "Key Assurance"
+        case (.ja, "vault_session_count"): return "有効セッション数"
+        case (.en, "vault_session_count"): return "Active Session Count"
         case (.ja, "packaging_model_decision"): return "パッケージング判断"
         case (.en, "packaging_model_decision"): return "Packaging Decision"
         case (.ja, "service_integration_line"): return "サービス統合"
@@ -1115,6 +1133,20 @@ struct AppStrings {
         }
     }
 
+    func vaultSessionOpenedMessage(level: String) -> String {
+        switch language {
+        case .ja: return "unlock session を開始: \(tokenLabel(level))"
+        case .en: return "Opened unlock session: \(tokenLabel(level))"
+        }
+    }
+
+    func vaultSessionsLockedMessage() -> String {
+        switch language {
+        case .ja: return "unlock session を lock しました"
+        case .en: return "Locked Local Vault sessions"
+        }
+    }
+
     func evaluationLevelLabel(_ level: Int, detailed: Bool = false) -> String {
         switch (language, level, detailed) {
         case (.ja, 1, true): return "クイック確認（ヒューリスティックのみ）"
@@ -1196,7 +1228,7 @@ struct AppStrings {
     enum Key {
         case appTitle, home, queue, daemon, refresh, retry, bootstrap, captureClipboard, openLogs, startBridge
         case status, nextActions, summaryCards, topReviewItems, topDaemonActions, reviewableCount
-        case localVault, vaultPath, vaultSessions, unlockPolicies, recommendedSetup, supported, notSupported, vaultUnavailable, backend
+        case localVault, vaultPath, vaultSessions, activeSessions, sessionPurpose, expiresAt, idleExpiresAt, unlockNormal, unlockSensitive, unlockDeepPrivate, lockAll, unlockPolicies, recommendedSetup, supported, notSupported, vaultUnavailable, backend
         case statusCounts, topSections, detail, diff, lineage, evaluate, approve, reject, revise
         case operatorPhase, serviceTargets, launchAgent, clipboardEmpty, connectionProblem
         case sessionProblem, loading, none, error, bridgeHealthy, currentCandidate, editedText

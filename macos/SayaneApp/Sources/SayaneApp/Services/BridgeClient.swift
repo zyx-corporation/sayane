@@ -67,6 +67,26 @@ actor BridgeClient {
         return try await decode(DaemonPanelScreenState.self, request: request)
     }
 
+    func openVaultSession(level: String, purpose: String, profileID: String) async throws -> VaultSessionStatus {
+        var request = try authorizedRequest(path: "/app/vault-session/open", method: "POST")
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(
+            VaultSessionOpenRequestBody(level: level, purpose: purpose, profileId: profileID)
+        )
+        return try await decode(VaultSessionStatus.self, request: request)
+    }
+
+    func lockVaultSessions(sessionID: String? = nil, closeAll: Bool = false) async throws -> VaultSessionStatus {
+        var request = try authorizedRequest(path: "/app/vault-session/lock", method: "POST")
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(
+            VaultSessionLockRequestBody(sessionID: sessionID, closeAll: closeAll)
+        )
+        return try await decode(VaultSessionStatus.self, request: request)
+    }
+
     func captureClipboard(text: String, locale: String?) async throws -> CandidateMutationResponse {
         let body = CaptureRequestBody(content: text, profileId: configuration.profileID, locale: locale)
         var request = try authorizedRequest(path: "/app/capture-clipboard", method: "POST")

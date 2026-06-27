@@ -6,11 +6,17 @@ import sys
 import pytest
 from fastapi.testclient import TestClient
 
+from sayane.app.runtime import clear_resident_runtime_cache
 from sayane.bridge.app import create_app
 from sayane.bridge.auth import load_or_create_token
 from sayane.bridge.config import BridgeConfig
 from sayane.evaluators.judge_config import JudgeConfig
 from sayane.evaluators.llm_judge import LLMJudgeRequestError
+
+
+@pytest.fixture(autouse=True)
+def _clear_runtime_cache() -> None:
+    clear_resident_runtime_cache()
 
 
 @pytest.fixture
@@ -103,6 +109,7 @@ def test_app_overview_requires_auth(
     assert client.get("/app/operator-phase-status").status_code == 401
     assert client.get("/app/daemon-packaging-status").status_code == 401
     assert client.get("/app/vault-status").status_code == 401
+    assert client.get("/app/vault-session").status_code == 401
     assert client.get("/app/daemon-service-targets-status").status_code == 401
     assert client.get("/app/daemon-service-control-boundary").status_code == 401
     assert client.get("/app/daemon-supervision-status").status_code == 401
@@ -121,6 +128,7 @@ def test_app_ui_requires_auth(
     assert client.get("/app/ui-state/home").status_code == 401
     assert client.get("/app/ui-state/operator-phase-status").status_code == 401
     assert client.get("/app/ui-state/vault-status").status_code == 401
+    assert client.get("/app/ui-state/vault-session").status_code == 401
     assert client.get("/app/ui-state/daemon-packaging-status").status_code == 401
     assert client.get("/app/ui-state/daemon-service-targets-status").status_code == 401
     assert client.get("/app/ui-state/daemon-service-control-boundary").status_code == 401
@@ -180,6 +188,7 @@ def test_app_overview_returns_aggregate_payload(
     assert payload["mcp_preview"]["preview"]["kind"] == "resident_mcp_preview"
     assert payload["daemon_overview"]["kind"] == "resident_daemon_overview_preview"
     assert payload["vault_status"]["kind"] == "resident_app_vault_status"
+    assert payload["vault_session_status"]["kind"] == "resident_app_vault_session_status"
 
 
 def test_app_operator_phase_status_returns_aggregate_payload(
@@ -206,6 +215,19 @@ def test_app_vault_status_returns_app_facing_payload(
     assert payload["kind"] == "resident_app_vault_status"
     assert payload["status"] == "unavailable"
     assert payload["backend"] == "legacy_process_local"
+
+
+def test_app_vault_session_status_returns_app_facing_payload(
+    bridge_env: tuple[TestClient, BridgeConfig, str],
+) -> None:
+    client, _, token = bridge_env
+    response = client.get("/app/vault-session", headers=_auth(token))
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["kind"] == "resident_app_vault_session_status"
+    assert payload["status"] == "unavailable"
+    assert payload["active_session_count"] == 0
 
 
 def test_app_operator_drilldown_routes_return_payloads(
@@ -259,6 +281,58 @@ def test_app_ui_vault_status_returns_cookie_backed_payload(
     payload = response.json()
     assert payload["kind"] == "resident_app_vault_status"
     assert payload["status"] == "unavailable"
+
+
+def test_app_ui_vault_session_returns_cookie_backed_payload(
+    bridge_env: tuple[TestClient, BridgeConfig, str],
+) -> None:
+    client, _, token = bridge_env
+    bootstrap = client.get("/app/ui", headers=_auth(token))
+    assert bootstrap.status_code == 200
+
+    response = client.get("/app/ui-state/vault-session")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["kind"] == "resident_app_vault_session_status"
+    assert payload["status"] == "unavailable"
+
+
+def test_app_vault_session_open_and_lock_persist_within_bridge_process(
+    bridge_env: tuple[TestClient, BridgeConfig, str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client, config, token = bridge_env
+    monkeypatch.setenv("SAYANE_APP_VAULT_MODE", "development")
+    monkeypatch.setenv("SAYANE_VAULT_PASSPHRASE", "bridge-dev-passphrase")
+
+    status_response = client.get("/app/vault-session", headers=_auth(token))
+    assert status_response.status_code == 200
+    assert status_response.json()["active_session_count"] == 0
+
+    open_response = client.post(
+        "/app/vault-session/open",
+        headers=_auth(token),
+        json={"level": "sensitive", "purpose": "bridge-api-test", "profile_id": "default"},
+    )
+    assert open_response.status_code == 200
+    opened = open_response.json()
+    assert opened["status"] == "available"
+    assert opened["active_session_count"] == 1
+    assert opened["active_sessions"][0]["purpose"] == "bridge-api-test"
+    session_id = opened["active_sessions"][0]["session_id"]
+
+    status_response = client.get("/app/vault-session", headers=_auth(token))
+    assert status_response.status_code == 200
+    assert status_response.json()["active_session_count"] == 1
+
+    lock_response = client.post(
+        "/app/vault-session/lock",
+        headers=_auth(token),
+        json={"session_id": session_id},
+    )
+    assert lock_response.status_code == 200
+    assert lock_response.json()["active_session_count"] == 0
+    assert (config.home / "vault" / "main.sqlite").exists()
 
 
 def test_app_ui_operator_drilldown_states_return_cookie_backed_payloads(

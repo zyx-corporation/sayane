@@ -68,6 +68,14 @@ def test_app_contract_exposes_entrypoint_and_surfaces() -> None:
         for surface in payload["read_surfaces"]
     )
     assert any(
+        surface["path"] == "/app/vault-status"
+        for surface in payload["read_surfaces"]
+    )
+    assert any(
+        surface["path"] == "/app/vault-session"
+        for surface in payload["read_surfaces"]
+    )
+    assert any(
         surface["path"] == "/app/screen-state/home"
         for surface in payload["read_surfaces"]
     )
@@ -140,6 +148,10 @@ def test_app_contract_exposes_entrypoint_and_surfaces() -> None:
         for surface in payload["read_surfaces"]
     )
     assert any(
+        surface["path"] == "/app/ui-state/vault-session"
+        for surface in payload["read_surfaces"]
+    )
+    assert any(
         surface["path"] == "/app/ui-state/candidates/{id}/lineage"
         for surface in payload["read_surfaces"]
     )
@@ -149,6 +161,14 @@ def test_app_contract_exposes_entrypoint_and_surfaces() -> None:
     )
     assert any(
         surface["path"] == "/app/ui-action/candidates/{id}/approve"
+        for surface in payload["write_surfaces"]
+    )
+    assert any(
+        surface["path"] == "/app/vault-session/open"
+        for surface in payload["write_surfaces"]
+    )
+    assert any(
+        surface["path"] == "/app/ui-action/vault-session/open"
         for surface in payload["write_surfaces"]
     )
     assert any(
@@ -165,6 +185,9 @@ def test_app_contract_exposes_entrypoint_and_surfaces() -> None:
     assert "GET /app/ui-state/daemon-packaging-status" in payload["recommended_flow"]
     assert "GET /app/ui-state/daemon-service-targets-status" in payload["recommended_flow"]
     assert "GET /app/ui-state/daemon-preflight" in payload["recommended_flow"]
+    assert "GET /app/vault-session" in payload["recommended_flow"]
+    assert "POST /app/vault-session/open" in payload["recommended_flow"]
+    assert "POST /app/ui-action/vault-session/open" in payload["recommended_flow"]
     assert "POST /app/ui-action/candidates/{id}/approve or /reject" in payload["recommended_flow"]
     assert "POST /app/ui-action/session/logout" in payload["recommended_flow"]
 

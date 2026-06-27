@@ -70,6 +70,43 @@ class ResidentRuntime:
         payload["repository_selection"] = self.repository_selection.public_metadata()
         return payload
 
+    @property
+    def vault_runtime(self) -> Any | None:
+        return self.repository_selection.vault_runtime
+
+
+_repository_selection_cache: dict[tuple[object, ...], ResidentRepositorySelection] = {}
+
+
+def clear_resident_runtime_cache() -> None:
+    """Clear process-local resident runtime cache for tests and restart flows."""
+    _repository_selection_cache.clear()
+
+
+def _repository_selection_cache_key(
+    *,
+    backend: ResidentRepositoryBackend,
+    profile_id: str,
+    vault_path: Path | None,
+    allow_test_vault: bool,
+) -> tuple[object, ...] | None:
+    if backend not in {
+        ResidentRepositoryBackend.SQLITE_TEST_LOCAL_VAULT,
+        ResidentRepositoryBackend.SQLITE_DEVELOPMENT_LOCAL_VAULT,
+        ResidentRepositoryBackend.SQLITE_MACOS_KEYCHAIN_VAULT,
+    }:
+        return None
+    passphrase_marker: str | None = None
+    if backend is ResidentRepositoryBackend.SQLITE_DEVELOPMENT_LOCAL_VAULT:
+        passphrase_marker = os.environ.get("SAYANE_VAULT_PASSPHRASE")
+    return (
+        backend.value,
+        profile_id,
+        str(vault_path) if vault_path is not None else None,
+        allow_test_vault,
+        passphrase_marker,
+    )
+
 
 def _coerce_repository_backend(value: ResidentRepositoryBackend | str) -> ResidentRepositoryBackend:
     if isinstance(value, ResidentRepositoryBackend):
@@ -103,6 +140,15 @@ def select_resident_repositories(
         )
     else:
         backend = _coerce_repository_backend(repository_backend)
+
+    cache_key = _repository_selection_cache_key(
+        backend=backend,
+        profile_id=profile_id,
+        vault_path=vault_path,
+        allow_test_vault=allow_test_vault,
+    )
+    if cache_key is not None and cache_key in _repository_selection_cache:
+        return _repository_selection_cache[cache_key]
 
     if backend is ResidentRepositoryBackend.LEGACY_PROCESS_LOCAL:
         if repositories is not None:
@@ -139,7 +185,7 @@ def select_resident_repositories(
             path=vault_path,
             profile_id=profile_id,
         )
-        return ResidentRepositorySelection(
+        selection = ResidentRepositorySelection(
             backend=backend,
             repositories=cast(RepositoryBundle, vault_runtime.repositories),
             storage_boundary="sqlite_test_local_vault",
@@ -148,6 +194,8 @@ def select_resident_repositories(
                 "explicit test-only SQLite Local Vault runtime; not production auth or keychain",
             ),
         )
+        _repository_selection_cache[cache_key] = selection
+        return selection
 
     if backend is ResidentRepositoryBackend.SQLITE_DEVELOPMENT_LOCAL_VAULT:
         if repositories is not None:
@@ -165,7 +213,7 @@ def select_resident_repositories(
             sqlite_path=vault_path,
             passphrase=passphrase,
         )
-        return ResidentRepositorySelection(
+        selection = ResidentRepositorySelection(
             backend=backend,
             repositories=cast(RepositoryBundle, vault_runtime.repositories),
             storage_boundary="sqlite_development_local_vault",
@@ -174,6 +222,8 @@ def select_resident_repositories(
                 "explicit passphrase-backed SQLite Local Vault runtime",
             ),
         )
+        _repository_selection_cache[cache_key] = selection
+        return selection
 
     if backend is ResidentRepositoryBackend.SQLITE_MACOS_KEYCHAIN_VAULT:
         if repositories is not None:
@@ -188,7 +238,7 @@ def select_resident_repositories(
             sqlite_path=vault_path,
             keychain_backend="macos-keychain",
         )
-        return ResidentRepositorySelection(
+        selection = ResidentRepositorySelection(
             backend=backend,
             repositories=cast(RepositoryBundle, vault_runtime.repositories),
             storage_boundary="sqlite_macos_keychain_vault",
@@ -197,6 +247,8 @@ def select_resident_repositories(
                 "explicit macOS keychain-backed SQLite Local Vault runtime",
             ),
         )
+        _repository_selection_cache[cache_key] = selection
+        return selection
 
     if backend is ResidentRepositoryBackend.FUTURE_PRO_BACKEND:
         raise NotImplementedError(

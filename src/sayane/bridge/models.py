@@ -50,6 +50,17 @@ class AppCaptureClipboardRequest(BaseModel):
     locale: str | None = None
 
 
+class AppVaultSessionOpenRequest(BaseModel):
+    level: Literal["normal", "sensitive", "deep_private"] = "sensitive"
+    purpose: str = Field(default="resident-app", min_length=1)
+    profile_id: str = "default"
+
+
+class AppVaultSessionLockRequest(BaseModel):
+    session_id: str | None = None
+    close_all: bool = False
+
+
 class CompileRequest(BaseModel):
     target: str
     profile_id: str = "default"

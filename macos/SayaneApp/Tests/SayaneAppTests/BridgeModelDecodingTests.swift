@@ -185,6 +185,39 @@ import Testing
         "assurance": "os_backed",
         "vault_path": "/tmp/sayane/vault/main.sqlite",
         "supports_scoped_unlock_sessions": true,
+        "session_status": {
+          "kind": "resident_app_vault_session_status",
+          "status": "available",
+          "backend": "sqlite_macos_keychain_vault",
+          "runtime_mode": "production",
+          "keychain_assurance": "os_backed",
+          "supports_scoped_unlock_sessions": true,
+          "active_session_count": 1,
+          "has_active_sessions": true,
+          "active_sessions": [
+            {
+              "session_id": "sess-1",
+              "purpose": "resident-app-sensitive",
+              "level": "sensitive",
+              "assurance": "os_backed",
+              "scopes": ["candidate:read"],
+              "unlocked_at": "2026-06-27T08:00:00+00:00",
+              "idle_expires_at": "2026-06-27T08:05:00+00:00",
+              "expires_at": "2026-06-27T08:15:00+00:00",
+              "is_expired": false
+            }
+          ],
+          "available_levels": [
+            {
+              "level": "normal",
+              "idle_timeout_seconds": 900,
+              "absolute_timeout_seconds": 3600,
+              "default_scopes": ["profile:read"],
+              "requires_explicit_unlock": false
+            }
+          ],
+          "notes": ["process local"]
+        },
         "recommended_setup": {
           "status": "sayane vault status --macos-keychain --sqlite /tmp/sayane/vault/main.sqlite --json"
         },
@@ -208,6 +241,9 @@ import Testing
     #expect(payload.vaultSummary?.assurance == "os_backed")
     #expect(payload.vaultSummary?.vaultPath == "/tmp/sayane/vault/main.sqlite")
     #expect(payload.vaultSummary?.supportsScopedUnlockSessions == true)
+    #expect(payload.vaultSummary?.sessionStatus?.activeSessionCount == 1)
+    #expect(payload.vaultSummary?.sessionStatus?.activeSessions.first?.sessionID == "sess-1")
+    #expect(payload.vaultSummary?.sessionStatus?.availableLevels.first?.level == "normal")
     #expect(payload.vaultSummary?.recommendedSetup?["status"] == "sayane vault status --macos-keychain --sqlite /tmp/sayane/vault/main.sqlite --json")
     #expect(payload.vaultSummary?.unlockPolicies.count == 1)
     #expect(payload.vaultSummary?.unlockPolicies.first?.level == "normal")

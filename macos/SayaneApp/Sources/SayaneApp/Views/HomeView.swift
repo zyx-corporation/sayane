@@ -202,6 +202,76 @@ struct HomeView: View {
                                 value: supports ? model.strings.text(.supported) : model.strings.text(.notSupported)
                             )
                         }
+                        if let sessionStatus = summary.sessionStatus {
+                            DetailLabelValueRow(
+                                label: model.strings.text(.activeSessions),
+                                value: "\(sessionStatus.activeSessionCount)"
+                            )
+                            if !sessionStatus.activeSessions.isEmpty {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    ForEach(sessionStatus.activeSessions.prefix(2)) { session in
+                                        SurfaceCard(emphasis: 0.18) {
+                                            VStack(alignment: .leading, spacing: 6) {
+                                                HStack {
+                                                    if let level = session.level {
+                                                        StatusBadge(
+                                                            text: model.strings.tokenLabel(level),
+                                                            tone: model.strings.tone(forToken: level)
+                                                        )
+                                                    }
+                                                    if let assurance = session.assurance {
+                                                        StatusBadge(
+                                                            text: model.strings.tokenLabel(assurance),
+                                                            tone: model.strings.tone(forToken: assurance)
+                                                        )
+                                                    }
+                                                }
+                                                if let purpose = session.purpose, !purpose.isEmpty {
+                                                    DetailLabelValueRow(
+                                                        label: model.strings.text(.sessionPurpose),
+                                                        value: purpose
+                                                    )
+                                                }
+                                                if let expiresAt = session.expiresAt, !expiresAt.isEmpty {
+                                                    DetailLabelValueRow(
+                                                        label: model.strings.text(.expiresAt),
+                                                        value: expiresAt
+                                                    )
+                                                }
+                                                if let idleExpiresAt = session.idleExpiresAt, !idleExpiresAt.isEmpty {
+                                                    DetailLabelValueRow(
+                                                        label: model.strings.text(.idleExpiresAt),
+                                                        value: idleExpiresAt
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            if !sessionStatus.availableLevels.isEmpty {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack(spacing: 8) {
+                                        Button(model.strings.text(.unlockNormal)) {
+                                            Task { await model.openVaultSession(level: "normal") }
+                                        }
+                                        .buttonStyle(.bordered)
+                                        Button(model.strings.text(.unlockSensitive)) {
+                                            Task { await model.openVaultSession(level: "sensitive") }
+                                        }
+                                        .buttonStyle(.bordered)
+                                        Button(model.strings.text(.unlockDeepPrivate)) {
+                                            Task { await model.openVaultSession(level: "deep_private") }
+                                        }
+                                        .buttonStyle(.bordered)
+                                    }
+                                    Button(model.strings.text(.lockAll)) {
+                                        Task { await model.lockAllVaultSessions() }
+                                    }
+                                    .buttonStyle(.bordered)
+                                }
+                            }
+                        }
                         if !summary.unlockPolicies.isEmpty {
                             VStack(alignment: .leading, spacing: 6) {
                                 Text(model.strings.text(.unlockPolicies))

@@ -11,6 +11,7 @@ def build_home_screen_state(overview: dict[str, Any]) -> dict[str, Any]:
     review_summary = overview.get("review_summary", {})
     daemon_summary = overview.get("daemon_summary", {})
     vault_status = overview.get("vault_status", {})
+    vault_session_status = overview.get("vault_session_status") or vault_status.get("session_status", {})
     return {
         "kind": "resident_app_home_screen_state",
         "summary_cards": [
@@ -23,6 +24,7 @@ def build_home_screen_state(overview: dict[str, Any]) -> dict[str, Any]:
             {"key": "vault_status", "value": summary.get("vault_status")},
             {"key": "vault_backend", "value": summary.get("vault_backend")},
             {"key": "vault_assurance", "value": summary.get("vault_assurance")},
+            {"key": "vault_session_count", "value": summary.get("vault_session_count")},
         ],
         "top_review_items": review_summary.get("top_items", []),
         "top_daemon_actions": daemon_summary.get("top_next_actions", []),
@@ -34,6 +36,7 @@ def build_home_screen_state(overview: dict[str, Any]) -> dict[str, Any]:
             "supports_scoped_unlock_sessions": vault_status.get("supports_scoped_unlock_sessions"),
             "recommended_setup": vault_status.get("recommended_setup", {}),
             "unlock_policies": vault_status.get("unlock_policies", []),
+            "session_status": vault_session_status,
             "notes": vault_status.get("notes", []),
         },
         "quick_links": [

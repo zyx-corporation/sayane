@@ -154,6 +154,8 @@ struct AppStrings {
         case (.en, .reason): return "Reason"
         case (.ja, .notes): return "メモ"
         case (.en, .notes): return "Notes"
+        case (.ja, .scope): return "対象範囲"
+        case (.en, .scope): return "Scope"
         case (.ja, .recommended): return "推奨"
         case (.en, .recommended): return "Recommended"
         case (.ja, .currentPlatform): return "現在のプラットフォーム"
@@ -1151,7 +1153,7 @@ struct AppStrings {
         case sessionProblem, loading, none, error, bridgeHealthy, currentCandidate, editedText
         case changeReason, rejectReason, evaluateLevel, submit, cancel, supportedPath
         case exitCriteria, notInScope, copyCommand, copyDetail, copyDiff, copyLineage, copyCurrentState, copyRecoveryPreview, copyOperatorSummary, copyPhaseGates, copyReadSurfaces, copySuggestedActions, exportHandoffNote, copiedCommand, actionCompleted, savedFile, actionFailed, openPlist, openRuntime, openLauncher
-        case reviewPreviews, generatedAt, bridgeContext, component, currentState, reason, notes, recommended, currentPlatform, loadedStatus
+        case reviewPreviews, generatedAt, bridgeContext, component, currentState, reason, notes, scope, recommended, currentPlatform, loadedStatus
         case packagingModels, primaryOperatorUI, recommendedLauncher, operatorSurfaceNotes, supervision, recoveryPolicy, backgroundSurfaces, guardrails
         case blockedBy, nextCommand, additionalBlockers, allowedCommands, deferredCommands, recoveryFlow, passiveVisibility
         case activeSupervision, startupVisibility, phaseChecklist, readSurfaces

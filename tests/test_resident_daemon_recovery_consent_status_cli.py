@@ -44,5 +44,6 @@ def test_daemon_recovery_consent_status_text_exposes_post_app_detail_surface(
     assert "sayane app daemon-cleanup-apply --json" in result.stdout
     assert "control_recovery_actions:" in result.stdout
     assert "sayane app daemon-start --json" in result.stdout
+    assert "runtime init must already be complete" in result.stdout
     assert "app_ui_guardrails:" in result.stdout
     assert "recommended_recovery_flow:" in result.stdout

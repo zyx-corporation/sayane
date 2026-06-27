@@ -48,6 +48,7 @@ import Testing
     #expect(strings.text(.operatorSurfaceNotes) == "運用サーフェス補足")
     #expect(strings.text(.openLauncher) == "ランチャーを開く")
     #expect(strings.text(.mode) == "モード")
+    #expect(strings.text(.scope) == "対象範囲")
     #expect(strings.text(.consent) == "同意")
     #expect(strings.text(.recovery) == "復旧")
     #expect(strings.text(.allowedWrites) == "許可Write")

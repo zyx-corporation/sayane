@@ -101,6 +101,7 @@ import Testing
         "consent_model": "explicit_cli_confirmation_for_mutation",
         "recovery_model": "diagnose_then_operator_review_then_cli_action",
         "non_mutating_diagnostics": ["sayane app daemon-status --json"],
+        "mutating_recovery_actions": [{"command": "sayane app daemon-runtime-init --apply --json", "consent_required": true, "scope": "runtime initialization artifacts"}],
         "control_recovery_actions": [{"command": "sayane app daemon-start --json", "notes": ["runtime init must already be complete"]}],
         "recommended_recovery_flow": ["inspect current status and proof-oriented diagnostics"],
         "app_ui_guardrails": ["local app UI may expose read-only recovery guidance but not destructive consent bypasses"]
@@ -157,5 +158,6 @@ import Testing
     #expect(payload.supervisionStatus?["background_surfaces"]?.objectValue?["deferred_topics"]?.arrayValue?.first?.stringValue == "menu_bar_supervision")
     #expect(payload.supervisionStatus?["recovery_entrypoints"]?.arrayValue?.first?.stringValue == "sayane app daemon-status --json")
     #expect(payload.recoveryConsentStatus?["consent_model"]?.stringValue == "explicit_cli_confirmation_for_mutation")
+    #expect(payload.recoveryConsentStatus?["mutating_recovery_actions"]?.arrayValue?.first?.objectValue?["scope"]?.stringValue == "runtime initialization artifacts")
     #expect(payload.operatorPhaseStatus?["current_supported_operator_path"]?.objectValue?["local_only"]?.boolValue == true)
 }

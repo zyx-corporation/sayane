@@ -1225,6 +1225,34 @@ struct DaemonView: View {
                     title: model.strings.text(.allowedCommands),
                     values: model.daemonState?.recoveryConsentStatus?["non_mutating_diagnostics"]?.arrayValue?.compactMap(\.stringValue) ?? []
                 )
+                if let mutatingActions = model.daemonState?.recoveryConsentStatus?["mutating_recovery_actions"]?.arrayValue {
+                    Text(model.strings.text(.recoverActions)).bold()
+                    ForEach(Array(mutatingActions.enumerated()), id: \.offset) { _, value in
+                        if let object = value.objectValue, let command = object["command"]?.stringValue {
+                            SurfaceCard(emphasis: 0.25) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack {
+                                        StatusBadge(text: model.strings.text(.consent), tone: .critical)
+                                        Spacer()
+                                    }
+                                    commandRow(command)
+                                    if let scope = object["scope"]?.stringValue {
+                                        DetailLabelValueRow(
+                                            label: model.strings.text(.scope),
+                                            value: scope
+                                        )
+                                    }
+                                    if let consentRequired = object["consent_required"]?.boolValue {
+                                        DetailLabelValueRow(
+                                            label: model.strings.text(.policyRequired),
+                                            value: model.strings.booleanValueLabel(consentRequired)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
                 if let controlActions = model.daemonState?.recoveryConsentStatus?["control_recovery_actions"]?.arrayValue {
                     Text(model.strings.text(.activeSupervision)).bold()
                     ForEach(Array(controlActions.enumerated()), id: \.offset) { _, value in

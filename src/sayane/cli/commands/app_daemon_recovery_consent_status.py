@@ -55,7 +55,7 @@ def register_daemon_recovery_consent_status_command(app_group: typer.Typer) -> N
         echo_object_section(
             "control_recovery_actions",
             payload.get("control_recovery_actions", []),
-            lambda item: f"{item.get('command')}: consent_required={item.get('consent_required')}",
+            lambda item: f"{item.get('command')}: consent_required={item.get('consent_required')} [{', '.join(item.get('notes', []))}]",
         )
         echo_list_section("app_ui_guardrails", payload.get("app_ui_guardrails", []))
         echo_list_section("recommended_recovery_flow", payload.get("recommended_recovery_flow", []))

@@ -15,6 +15,7 @@ from sayane.bridge.models import (
     RejectCandidateRequest,
     ReviseCandidateRequest,
 )
+from sayane.bridge.runtime_config import resolve_runtime_backed_bridge_config
 from sayane.storage.candidates import load_candidate
 
 AuthDependency = Callable[..., None]
@@ -30,12 +31,22 @@ def register_candidate_routes(
 
     @router.get("/candidates", dependencies=[Depends(require_bearer)])
     def get_candidates() -> list[dict]:
-        return candidate_api.list_candidates(cfg)
+        route_cfg, _, _ = resolve_runtime_backed_bridge_config(
+            cfg,
+            required_scope="candidate:read",
+            error_message="Local Vault candidate reads require an active unlock session",
+        )
+        return candidate_api.list_candidates(route_cfg)
 
     @router.get("/candidates/{candidate_id}", dependencies=[Depends(require_bearer)])
     def get_candidate(candidate_id: str) -> dict:
         try:
-            return candidate_api.get_candidate(cfg, candidate_id)
+            route_cfg, _, _ = resolve_runtime_backed_bridge_config(
+                cfg,
+                required_scope="candidate:read",
+                error_message="Local Vault candidate reads require an active unlock session",
+            )
+            return candidate_api.get_candidate(route_cfg, candidate_id)
         except FileNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
 
@@ -48,7 +59,12 @@ def register_candidate_routes(
         body: EvaluateCandidateRequest,
     ) -> dict:
         try:
-            return candidate_api.post_evaluate(cfg, candidate_id, level=body.level)
+            route_cfg, _, _ = resolve_runtime_backed_bridge_config(
+                cfg,
+                required_scope="review_decision:write",
+                error_message="Local Vault review actions require an active unlock session",
+            )
+            return candidate_api.post_evaluate(route_cfg, candidate_id, level=body.level)
         except FileNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         except CandidateOperationError as exc:
@@ -66,13 +82,18 @@ def register_candidate_routes(
         body: ApproveCandidateRequest,
     ) -> dict:
         try:
+            route_cfg, _, _ = resolve_runtime_backed_bridge_config(
+                cfg,
+                required_scope="review_decision:write",
+                error_message="Local Vault review actions require an active unlock session",
+            )
             explicit = (
                 body.explicit_confirmation.model_dump(mode="json")
                 if body.explicit_confirmation
                 else None
             )
             return candidate_api.post_approve(
-                cfg,
+                route_cfg,
                 candidate_id,
                 force_critical=body.force_critical,
                 override_reason=body.override_reason,
@@ -97,7 +118,12 @@ def register_candidate_routes(
         body: RejectCandidateRequest,
     ) -> dict:
         try:
-            return candidate_api.post_reject(cfg, candidate_id, reason=body.reason)
+            route_cfg, _, _ = resolve_runtime_backed_bridge_config(
+                cfg,
+                required_scope="review_decision:write",
+                error_message="Local Vault review actions require an active unlock session",
+            )
+            return candidate_api.post_reject(route_cfg, candidate_id, reason=body.reason)
         except FileNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         except CandidateOperationError as exc:
@@ -115,8 +141,13 @@ def register_candidate_routes(
         body: ReviseCandidateRequest,
     ) -> dict:
         try:
-            return candidate_api.post_revise(
+            route_cfg, _, _ = resolve_runtime_backed_bridge_config(
                 cfg,
+                required_scope="candidate:write",
+                error_message="Local Vault candidate revision requires an active unlock session",
+            )
+            return candidate_api.post_revise(
+                route_cfg,
                 candidate_id,
                 edited_text=body.edited_text,
                 target_section=body.target_section,
@@ -128,8 +159,13 @@ def register_candidate_routes(
     @router.get("/candidates/{candidate_id}/diff", dependencies=[Depends(require_bearer)])
     def get_candidate_diff(candidate_id: str) -> dict:
         try:
-            load_candidate(cfg, candidate_id)
-            return candidate_api.get_diff(cfg, candidate_id)
+            route_cfg, _, _ = resolve_runtime_backed_bridge_config(
+                cfg,
+                required_scope="candidate:read",
+                error_message="Local Vault candidate reads require an active unlock session",
+            )
+            load_candidate(route_cfg, candidate_id)
+            return candidate_api.get_diff(route_cfg, candidate_id)
         except FileNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
 

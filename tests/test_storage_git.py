@@ -36,8 +36,8 @@ def test_init_creates_git_repo(tmp_path: Path, monkeypatch) -> None:
     result = runner.invoke(app, ["init"])
     assert result.exit_code == 0, result.stdout + result.stderr
     profile_dir = home / ".sayane" / "profiles" / "default"
-    assert is_git_repo(profile_dir)
-    assert "Committed" in result.stdout or "コミット" in result.stdout
+    assert is_git_repo(profile_dir) is False
+    assert "Committed" not in result.stdout and "コミット" not in result.stdout
 
 
 def test_storage_index_auto_commits(tmp_path: Path, monkeypatch) -> None:
@@ -51,12 +51,30 @@ def test_storage_index_auto_commits(tmp_path: Path, monkeypatch) -> None:
 
     result = runner.invoke(app, ["storage", "index"])
     assert result.exit_code == 0, result.stdout + result.stderr
+    assert is_git_repo(profile_dir) is False
 
-    log = subprocess.run(
-        ["git", "log", "-1", "--oneline"],
-        cwd=profile_dir,
-        capture_output=True,
-        text=True,
-        check=True,
+
+def test_storage_commit_requires_legacy_confirmation(tmp_path: Path, monkeypatch) -> None:
+    home = tmp_path / "home"
+    monkeypatch.setenv("HOME", str(home))
+    runner = CliRunner()
+    runner.invoke(app, ["init"])
+
+    result = runner.invoke(app, ["storage", "commit", "-m", "test commit", "--init"])
+    assert result.exit_code != 0
+    assert "--legacy-compatible" in (result.stdout + result.stderr)
+
+
+def test_storage_commit_with_legacy_confirmation_can_init_repo(tmp_path: Path, monkeypatch) -> None:
+    home = tmp_path / "home"
+    monkeypatch.setenv("HOME", str(home))
+    runner = CliRunner()
+    runner.invoke(app, ["init"])
+    profile_dir = home / ".sayane" / "profiles" / "default"
+
+    result = runner.invoke(
+        app,
+        ["storage", "commit", "-m", "test commit", "--init", "--legacy-compatible"],
     )
-    assert "storage index" in log.stdout
+    assert result.exit_code == 0, result.stdout + result.stderr
+    assert is_git_repo(profile_dir)

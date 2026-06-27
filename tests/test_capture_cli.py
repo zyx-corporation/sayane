@@ -52,6 +52,32 @@ def test_capture_from_file(tmp_path: Path, monkeypatch) -> None:
     assert "file capture content" in saved["content"]
 
 
+def test_capture_with_vault_mode_uses_vault_backed_store(tmp_path: Path, monkeypatch) -> None:
+    home = tmp_path / "home"
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("SAYANE_VAULT_PASSPHRASE", "cli-capture-passphrase")
+    config = BridgeConfig(home=home / ".sayane")
+
+    result = runner.invoke(
+        app,
+        [
+            "capture",
+            "--text",
+            "CLI vault capture",
+            "--vault-mode",
+            "development",
+        ],
+    )
+    assert result.exit_code == 0, result.stdout
+    cid = next(
+        line.split(":", 1)[1].strip()
+        for line in result.stdout.splitlines()
+        if line.startswith("id:")
+    )
+    assert not (config.candidates_dir / f"{cid}.json").exists()
+    assert (config.home / "vault" / "main.sqlite").exists()
+
+
 def test_capture_requires_input(tmp_path: Path, monkeypatch) -> None:
     home = tmp_path / "home"
     monkeypatch.setenv("HOME", str(home))

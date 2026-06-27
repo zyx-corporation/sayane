@@ -19,6 +19,13 @@ def append_record(
     event: str,
     payload: dict[str, Any],
 ) -> Path:
+    if config.repositories is not None:
+        config.repositories.lineage.append(
+            event,
+            payload,
+            **config.repository_kwargs(),
+        )
+        return lineage_path(config, profile_id)
     path = lineage_path(config, profile_id)
     require_local_working_store(path, record_class="lineage")
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -33,6 +40,11 @@ def append_record(
 
 
 def list_records(config: BridgeConfig, profile_id: str, limit: int = 50) -> list[dict[str, Any]]:
+    if config.repositories is not None:
+        return config.repositories.lineage.list(
+            limit=limit,
+            **config.repository_kwargs(),
+        )
     path = lineage_path(config, profile_id)
     if not path.exists():
         return []

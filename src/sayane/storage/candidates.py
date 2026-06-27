@@ -53,6 +53,14 @@ def from_legacy_capture(data: dict) -> CandidateUpdate:
 
 
 def load_candidate(config: BridgeConfig, candidate_id: str) -> CandidateUpdate:
+    if config.repositories is not None:
+        candidate = config.repositories.candidates.load(
+            candidate_id,
+            **config.repository_kwargs(),
+        )
+        if candidate is None:
+            raise FileNotFoundError(f"Candidate not found: {candidate_id}")
+        return candidate
     path = _candidate_path(config, candidate_id)
     if not path.exists():
         raise FileNotFoundError(f"Candidate not found: {candidate_id}")
@@ -63,6 +71,12 @@ def load_candidate(config: BridgeConfig, candidate_id: str) -> CandidateUpdate:
 
 
 def save_candidate(config: BridgeConfig, candidate: CandidateUpdate) -> Path:
+    if config.repositories is not None:
+        config.repositories.candidates.save(
+            candidate,
+            **config.repository_kwargs(),
+        )
+        return _candidate_path(config, candidate.id)
     path = _candidate_path(config, candidate.id)
     require_local_working_store(path, record_class="candidate")
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -78,6 +92,13 @@ def save_candidate(config: BridgeConfig, candidate: CandidateUpdate) -> Path:
 
 
 def list_candidate_ids(config: BridgeConfig) -> list[str]:
+    if config.repositories is not None:
+        return sorted(
+            candidate.id
+            for candidate in config.repositories.candidates.list(
+                **config.repository_kwargs(),
+            )
+        )
     directory = _candidates_dir(config)
     if not directory.exists():
         return []

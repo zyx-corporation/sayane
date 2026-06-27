@@ -2,8 +2,12 @@
 
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 from sayane.cli.paths import sayane_home
+
+if TYPE_CHECKING:
+    from sayane.storage.repositories import RepositoryBundle
 
 
 @dataclass
@@ -14,6 +18,8 @@ class BridgeConfig:
     port: int = 38741
     home: Path = field(default_factory=sayane_home)
     ui_session_ttl_seconds: int = 12 * 60 * 60
+    repositories: "RepositoryBundle | None" = None
+    repository_session: Any | None = None
 
     @property
     def token_file(self) -> Path:
@@ -30,3 +36,8 @@ class BridgeConfig:
     @property
     def candidates_dir(self) -> Path:
         return self.home / "candidates"
+
+    def repository_kwargs(self) -> dict[str, Any]:
+        if self.repository_session is None:
+            return {}
+        return {"session": self.repository_session}

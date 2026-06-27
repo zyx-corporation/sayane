@@ -27,6 +27,12 @@ def append_review_decision(
     decision: ReviewDecision,
 ) -> Path:
     """Append one ReviewDecision to the local working store."""
+    if config.repositories is not None:
+        config.repositories.review_decisions.append(
+            decision,
+            **config.repository_kwargs(),
+        )
+        return review_decisions_path(config, profile_id)
     path = review_decisions_path(config, profile_id)
     require_local_working_store(path, record_class="review_decision")
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -42,6 +48,13 @@ def list_review_decisions(
     limit: int | None = None,
 ) -> list[ReviewDecision]:
     """List persisted ReviewDecision records for a profile."""
+    if config.repositories is not None:
+        records = config.repositories.review_decisions.list(
+            **config.repository_kwargs(),
+        )
+        if limit is not None:
+            return records[-limit:]
+        return records
     path = review_decisions_path(config, profile_id)
     if not path.exists():
         return []

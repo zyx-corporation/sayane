@@ -17,6 +17,7 @@ from sayane.cli.app import build_app
 from sayane.cli.i18n import set_locale
 from sayane.cli.main import app
 from sayane.core.loader import load_profile
+from sayane.storage.obsidian import EXPORT_METADATA_FILENAME, EXPORT_NOTICE_FILENAME
 from sayane.storage.candidates import create_from_capture, load_candidate
 
 runner = CliRunner()
@@ -160,12 +161,19 @@ def test_storage_export_and_commit(isolated_home: Path) -> None:
     (ctx / "export-me.md").write_text("# Export\n", encoding="utf-8")
 
     export = runner.invoke(app, ["storage", "export", str(vault)])
+    assert export.exit_code != 0
+    assert "--legacy-compatible" in (export.stdout + export.stderr)
+
+    export = runner.invoke(app, ["storage", "export", str(vault), "--legacy-compatible"])
     assert export.exit_code == 0
     assert (vault / "sayane" / "export-me.md").exists()
+    metadata = json.loads((vault / "sayane" / EXPORT_METADATA_FILENAME).read_text(encoding="utf-8"))
+    assert metadata["is_canonical_profile"] is False
+    assert (vault / "sayane" / EXPORT_NOTICE_FILENAME).exists()
 
     commit = runner.invoke(
         app,
-        ["storage", "commit", "-m", "acceptance test commit"],
+        ["storage", "commit", "-m", "acceptance test commit", "--legacy-compatible", "--init"],
     )
     assert commit.exit_code == 0
     assert "Committed" in commit.stdout or "committed" in commit.stdout.lower()

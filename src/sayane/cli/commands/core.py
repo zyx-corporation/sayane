@@ -100,12 +100,7 @@ def register_core_commands(
         profile_file.write_text(init_template.format(now=now), encoding="utf-8")
         (ctx / "MyContext.md").write_text("# My Context\n", encoding="utf-8")
         (ctx / "AI_HANDOFF.md").write_text("# AI Handoff\n", encoding="utf-8")
-        from sayane.storage.git_integration import auto_commit_profile_store
-
-        commit_hash = auto_commit_profile_store(profile_dir, "sayane: initial profile")
         typer.echo(t("init.done", path=profile_dir))
-        if commit_hash:
-            typer.echo(t("storage.committed", hash=commit_hash[:8]))
 
     @app.command()
     def compile(

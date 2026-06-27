@@ -236,6 +236,8 @@ SAYANE_VAULT_PASSPHRASE='example-passphrase' \
 sayane vault status --macos-keychain --sqlite ~/.sayane/vault/main.sqlite --json
 sayane vault policy --level sensitive --json
 sayane vault session --test --level sensitive --json
+sayane vault session --macos-keychain --sqlite ~/.sayane/vault/main.sqlite \
+  --level sensitive --json
 ```
 
 主な考え方:
@@ -251,6 +253,7 @@ sayane vault session --test --level sensitive --json
 - `--development` は OS keychain 実装の代替ではない
 - `--macos-keychain` は現時点で macOS 専用の explicit path
 - `vault session` の session は CLI プロセスをまたいで再利用できない
+- resident app / native macOS app とは別の process-local unlock session である
 - production default が plaintext に落ちることはない
 
 ```bash

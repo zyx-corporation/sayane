@@ -151,6 +151,8 @@ curl -s -H "$AUTH" \
 レスポンスは以下を束ねる:
 
 - resident app runtime diagnostics
+- local vault backend / keychain summary
+- local vault unlock session summary
 - UI-friendly summary counts
 - review queue preview
 - MCP preview
@@ -165,6 +167,71 @@ Current post-app operator boundary review is also available through aligned CLI 
 - `sayane app daemon-supervision-status`
 - `sayane app daemon-recovery-consent-status`
 - `sayane app daemon-operator-phase-status`
+
+#### `GET /app/vault-status`
+
+Future resident UI / native app 向けの Local Vault backend summary。
+
+```bash
+curl -s -H "$AUTH" \
+  "http://127.0.0.1:38741/app/vault-status"
+```
+
+レスポンスは以下を返す:
+
+- current repository backend が Local Vault かどうか
+- runtime mode / vault mode
+- keychain platform / assurance
+- vault path と session support の有無
+
+これは status / boundary の read surface であり、unlock 自体は行わない。
+
+#### `GET /app/vault-session`
+
+Future resident UI / native app 向けの process-local unlock session summary。
+
+```bash
+curl -s -H "$AUTH" \
+  "http://127.0.0.1:38741/app/vault-session"
+```
+
+レスポンスは以下を返す:
+
+- active unlock session 一覧
+- `normal` / `sensitive` / `deep_private` policy preset
+- runtime-local session reuse 可否
+
+UI / app session と Local Vault unlock session は別物であり、自動継承しない。
+
+#### `POST /app/vault-session/open`
+
+Future resident UI / native app 向けの scoped unlock session open。
+
+```bash
+curl -s -X POST -H "$AUTH" -H "Content-Type: application/json" \
+  -d '{"level":"sensitive","purpose":"candidate-review"}' \
+  "http://127.0.0.1:38741/app/vault-session/open"
+```
+
+`level` は `normal` / `sensitive` / `deep_private` を取る。
+
+#### `POST /app/vault-session/lock`
+
+Future resident UI / native app 向けの unlock session lock。
+
+```bash
+curl -s -X POST -H "$AUTH" -H "Content-Type: application/json" \
+  -d '{"scope":"all"}' \
+  "http://127.0.0.1:38741/app/vault-session/lock"
+```
+
+現在の Local Vault integration では、vault backend が有効なとき:
+
+- clipboard capture は active unlock session が必要
+- candidate evaluate / approve / reject は active unlock session が必要
+- candidate revise は active unlock session が必要
+
+unlock session が無い場合、write surface は fail-closed で `409` を返す。
 
 #### `GET /app/contract`
 
@@ -352,6 +419,8 @@ curl -s -b cookie.txt -X POST -H "Content-Type: application/json" \
 | `POST` | `/app/ui-action/candidates/{id}/revise` | local shell 向け revised pending candidate 作成 |
 | `POST` | `/app/ui-action/candidates/{id}/approve` | local shell 向け candidate 承認 |
 | `POST` | `/app/ui-action/candidates/{id}/reject` | local shell 向け candidate 却下 |
+| `POST` | `/app/ui-action/vault-session/open` | local shell 向け Local Vault unlock session open |
+| `POST` | `/app/ui-action/vault-session/lock` | local shell 向け Local Vault unlock session lock |
 
 これらは local shell transport の違いであり、review policy 自体を増やすものではない。
 

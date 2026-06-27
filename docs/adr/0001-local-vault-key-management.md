@@ -389,10 +389,10 @@ Current AAD binding includes profile identity, record type, schema version, and 
 
 Current limitations:
 
-- No production OS-backed keychain provider exists yet.
-- No production cryptographic provider exists yet.
+- No cross-platform production-default keychain selection exists yet.
+- The explicit macOS keychain-backed runtime is opt-in and does not by itself define the final production-default backend selection policy.
 - SQLite-backed encrypted persistence exists only as a store seam, not as the default production Local Vault backend.
-- SQLite-backed runtime construction exists only as an explicit test-only seam.
+- SQLite-backed runtime construction has explicit development, explicit macOS keychain, and explicit test-only seams, but no implicit production-default selection.
 - Test-only providers must not be selected by production defaults.
 - Existing FileSystem stores remain transitional local working stores until the Local Vault backend is production-ready.
 

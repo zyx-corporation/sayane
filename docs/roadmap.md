@@ -327,6 +327,30 @@ Phase 6 は、Sayane を CLI / Bridge / MCP の集合から、常駐する local
 
 **ADR**: [ADR 0001: Local Vault Key Management](adr/0001-local-vault-key-management.md)
 
+### 本番完成向け Issue 分解
+
+Resident App MVP 完了後の production-completion line は、extension ではなく app / Local Vault を優先して進める。
+
+| Issue | 状態 | 概要 |
+|------|------|------|
+| P1 | 完了 | Local Vault foundation — 保存時暗号化、OS keychain 抽象、unlock session 導入、resident app/native app からの unlock/lock/gated action 連携 |
+| P2 | 次 | Sensitive working-store migration — `Candidate` / `ReviewDecision` / `Lineage` を vault-aware storage へ全面移行 |
+| P3 | 未着手 | External integration re-design — Obsidian / Git / external sync を security model 後の正式仕様へ更新 |
+| P4 | 未着手 | Linux operator packaging — Linux service / desktop packaging を shipped path へ進める |
+| P5 | 未着手 | Windows operator packaging — Windows service / installer / operator path を shipped path へ進める |
+| P6 | 未着手 | `/app/ui*` legacy retirement — debug-only compatibility surface の削減または廃止 |
+| P7 | 未着手 | Extension release/doc retirement — primary docs / release artifact から extension を外し切る |
+
+P1 完了時点の到達点:
+
+- `PlatformKeychainProvider` / `KeyManager` / `CryptoProvider` 抽象が実装済み
+- explicit development runtime と explicit macOS keychain runtime が実装済み
+- unlock policy / unlock session manager / scoped session metadata が実装済み
+- resident app API / debug shell / native macOS app から Local Vault status と session 状態が可視化済み
+- Local Vault backend 有効時の clipboard capture / review action / revise が active unlock session 必須で fail-closed 化済み
+
+P1 の次は、app-facing 操作が現在の FileSystem working store に残している高感度実体を、vault-aware repository へ移す P2 を優先する。
+
 ## 10. Phase 7: Commercial / Pro Extensions
 
 Commercial / Pro Edition は、Community で確立された Local Vault / App Service / UI 境界を前提に、配布・性能・運用機能を拡張する。

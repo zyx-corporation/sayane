@@ -335,6 +335,78 @@ def test_app_vault_session_open_and_lock_persist_within_bridge_process(
     assert (config.home / "vault" / "main.sqlite").exists()
 
 
+def test_app_capture_clipboard_requires_unlock_session_when_vault_backend_is_active(
+    bridge_env: tuple[TestClient, BridgeConfig, str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client, _, token = bridge_env
+    monkeypatch.setenv("SAYANE_APP_VAULT_MODE", "development")
+    monkeypatch.setenv("SAYANE_VAULT_PASSPHRASE", "bridge-dev-passphrase")
+
+    denied = client.post(
+        "/app/capture-clipboard",
+        headers=_auth(token),
+        json={"content": "hello vault", "profile_id": "default"},
+    )
+    assert denied.status_code == 409
+    assert "unlock session" in denied.json()["detail"].lower()
+
+    opened = client.post(
+        "/app/vault-session/open",
+        headers=_auth(token),
+        json={"level": "sensitive", "purpose": "capture-test", "profile_id": "default"},
+    )
+    assert opened.status_code == 200
+
+    allowed = client.post(
+        "/app/capture-clipboard",
+        headers=_auth(token),
+        json={"content": "hello vault", "profile_id": "default"},
+    )
+    assert allowed.status_code == 200
+    assert allowed.json()["status"] == "pending"
+
+
+def test_app_candidate_evaluate_requires_unlock_session_when_vault_backend_is_active(
+    bridge_env: tuple[TestClient, BridgeConfig, str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client, config, token = bridge_env
+    monkeypatch.setenv("SAYANE_APP_VAULT_MODE", "development")
+    monkeypatch.setenv("SAYANE_VAULT_PASSPHRASE", "bridge-dev-passphrase")
+
+    capture = client.post(
+        "/capture",
+        headers=_auth(token),
+        json={"content": "important_terms:\n  - Sayane", "profile_id": "default"},
+    )
+    assert capture.status_code == 200
+    candidate_id = capture.json()["id"]
+
+    denied = client.post(
+        f"/app/candidates/{candidate_id}/evaluate",
+        headers=_auth(token),
+        json={"level": 1},
+    )
+    assert denied.status_code == 409
+    assert "unlock session" in denied.json()["detail"].lower()
+
+    opened = client.post(
+        "/app/vault-session/open",
+        headers=_auth(token),
+        json={"level": "sensitive", "purpose": "evaluate-test", "profile_id": "default"},
+    )
+    assert opened.status_code == 200
+
+    allowed = client.post(
+        f"/app/candidates/{candidate_id}/evaluate",
+        headers=_auth(token),
+        json={"level": 1},
+    )
+    assert allowed.status_code == 200
+    assert allowed.json()["status"] == "evaluated"
+
+
 def test_app_ui_operator_drilldown_states_return_cookie_backed_payloads(
     bridge_env: tuple[TestClient, BridgeConfig, str],
 ) -> None:

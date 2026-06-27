@@ -108,3 +108,16 @@ def test_app_overview_exposes_ui_friendly_summary_with_repositories(tmp_path) ->
     assert payload["recovery_consent_status"]["mutating_recovery_actions"][0]["consent_required"] is True
     assert payload["vault_status"]["status"] == "unavailable"
     assert payload["vault_session_status"]["active_session_count"] == 0
+
+
+def test_app_overview_degrades_when_vault_runtime_has_no_read_session(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("SAYANE_APP_VAULT_MODE", "development")
+    monkeypatch.setenv("SAYANE_VAULT_PASSPHRASE", "dev-passphrase")
+    runtime = build_resident_runtime(home=tmp_path / "sayane")
+
+    payload = build_app_overview(runtime)
+
+    assert payload["runtime"]["has_repositories"] is True
+    assert payload["summary"]["repository_available"] is False
+    assert payload["review_queue"]["repository_available"] is False
+    assert payload["mcp_preview"]["repository_available"] is False

@@ -74,6 +74,19 @@ class ResidentRuntime:
     def vault_runtime(self) -> Any | None:
         return self.repository_selection.vault_runtime
 
+    def first_vault_session_for_scope(self, scope: str) -> Any | None:
+        """Return one active vault session that satisfies the requested scope."""
+        vault_runtime = self.vault_runtime
+        if vault_runtime is None:
+            return None
+        session_ids = list(getattr(vault_runtime.session_manager, "sessions", {}).keys())
+        for session_id in session_ids:
+            try:
+                return vault_runtime.require_scope(session_id, scope)
+            except Exception:
+                continue
+        return None
+
 
 _repository_selection_cache: dict[tuple[object, ...], ResidentRepositorySelection] = {}
 

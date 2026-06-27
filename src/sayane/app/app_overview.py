@@ -22,6 +22,7 @@ from sayane.app.ui import (
 def build_app_overview(runtime: ResidentRuntime) -> dict[str, Any]:
     """Build an aggregate resident app overview for future UI surfaces."""
     describe = runtime.describe()
+    repository_kwargs = _repository_kwargs_for_overview(runtime)
     if runtime.service.repositories is None:
         review_queue = {
             "profile_id": runtime.service.profile_id,
@@ -47,17 +48,44 @@ def build_app_overview(runtime: ResidentRuntime) -> dict[str, Any]:
             },
         }
     else:
-        review_queue = build_review_queue(
-            runtime.service.repositories,
-            capability=runtime.capabilities["ui"],
-        )
-        review_queue["repository_available"] = True
-        mcp_preview = build_mcp_preview(
-            runtime.service.repositories,
-            capability=runtime.capabilities["mcp"],
-            mode="full",
-        )
-        mcp_preview["repository_available"] = True
+        if repository_kwargs is None and runtime.vault_runtime is not None:
+            review_queue = {
+                "profile_id": runtime.service.profile_id,
+                "kind": "resident_review_queue",
+                "is_review_surface": True,
+                "is_mcp_context": False,
+                "items": [],
+                "repository_available": False,
+            }
+            mcp_preview = {
+                "profile_id": runtime.service.profile_id,
+                "mode": "full",
+                "is_derived_context": True,
+                "is_canonical_profile": False,
+                "included_approved_candidates": [],
+                "blocked_candidates": [],
+                "repository_available": False,
+                "preview": {
+                    "kind": "resident_mcp_preview",
+                    "is_preview": True,
+                    "is_derived_context": True,
+                    "is_canonical_profile": False,
+                },
+            }
+        else:
+            review_queue = build_review_queue(
+                runtime.service.repositories,
+                capability=runtime.capabilities["ui"],
+                repository_kwargs=repository_kwargs,
+            )
+            review_queue["repository_available"] = True
+            mcp_preview = build_mcp_preview(
+                runtime.service.repositories,
+                capability=runtime.capabilities["mcp"],
+                mode="full",
+                repository_kwargs=repository_kwargs,
+            )
+            mcp_preview["repository_available"] = True
 
     daemon_overview = build_daemon_overview_preview(
         runtime.bridge_config.home / "run",
@@ -177,3 +205,12 @@ def _build_daemon_summary(daemon_overview: dict[str, Any]) -> dict[str, Any]:
         "next_action_count": len(next_actions),
         "top_next_actions": next_actions[:3],
     }
+
+
+def _repository_kwargs_for_overview(runtime: ResidentRuntime) -> dict[str, Any] | None:
+    if runtime.vault_runtime is None:
+        return {}
+    session = runtime.first_vault_session_for_scope("candidate:read")
+    if session is None:
+        return None
+    return {"session": session}

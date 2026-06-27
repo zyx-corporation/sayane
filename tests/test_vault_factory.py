@@ -27,7 +27,7 @@ def test_open_vault_runtime_requires_explicit_test_mode() -> None:
     with pytest.raises(VaultStoreError, match="production Local Vault backend is not implemented"):
         open_vault_runtime()
 
-    with pytest.raises(VaultStoreError, match="development Local Vault backend is not implemented"):
+    with pytest.raises(VaultStoreError, match="requires explicit sqlite_path"):
         open_vault_runtime(mode="development")
 
 
@@ -37,6 +37,27 @@ def test_open_vault_runtime_test_mode_builds_test_runtime() -> None:
     assert runtime.profile_id == "default"
     assert runtime.keychain.capabilities().assurance.value == "test_only"
     assert runtime.vault.mode() == VaultStoreMode.TEST
+
+
+def test_open_vault_runtime_development_mode_requires_passphrase(tmp_path) -> None:
+    with pytest.raises(VaultStoreError, match="requires explicit passphrase"):
+        open_vault_runtime(
+            mode="development",
+            profile_id="default",
+            sqlite_path=tmp_path / "vault.sqlite",
+        )
+
+
+def test_open_vault_runtime_development_mode_builds_explicit_runtime(tmp_path) -> None:
+    runtime = open_vault_runtime(
+        mode="development",
+        profile_id="default",
+        sqlite_path=tmp_path / "vault.sqlite",
+        passphrase="dev-passphrase",
+    )
+    assert runtime.mode == VaultStoreMode.DEVELOPMENT
+    assert runtime.keychain.capabilities().assurance.value == "passphrase"
+    assert runtime.vault.mode() == VaultStoreMode.DEVELOPMENT
 
 
 def test_vault_runtime_uses_session_manager() -> None:

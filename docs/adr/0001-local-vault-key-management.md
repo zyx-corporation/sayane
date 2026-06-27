@@ -248,6 +248,24 @@ Implemented session management:
 
 `InMemoryUnlockSessionManager.open_policy_session()` can open sessions using the ADR 0001 unlock presets. This makes timeout and scope policy executable without treating unlock as a global process state.
 
+Implemented explicit lower-assurance development runtime:
+
+- `src/sayane/vault/development.py`
+  - `PassphraseKeychainProvider`
+  - `SQLiteKeyringKeyManager`
+  - `AesGcmCryptoProvider`
+  - `build_sqlite_development_vault_runtime()`
+
+This adds a concrete encrypted SQLite path for explicit development use:
+
+- passphrase-derived wrapping secret
+- persisted wrapped DEKs in the `keyring` table
+- AES-256-GCM encrypted records with canonicalized AAD binding
+- scoped unlock sessions over the same vault boundary
+
+It remains intentionally lower assurance than future OS-backed production keychain integrations and
+does not change the fail-closed production default.
+
 Implemented SQLite schema contract:
 
 - `src/sayane/vault/sqlite_schema.py`

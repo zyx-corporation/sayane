@@ -11,7 +11,7 @@ LOG_FILE="${SAYANE_APP_LOG_FILE:-$HOME/.sayane/run-app-local.log}"
 BOOTSTRAP_CHECK=1
 AUTO_OPEN=1
 AUTO_INIT=1
-START_MODE="auto"
+START_MODE="${SAYANE_BRIDGE_START_MODE:-auto}"
 
 info() { printf '==> %s\n' "$*"; }
 warn() { printf 'warning: %s\n' "$*" >&2; }
@@ -23,6 +23,8 @@ Usage: $(basename "$0") [options]
 
 Options:
   --foreground        Start \`sayane serve\` in the current terminal
+  --background        Start \`sayane serve\` in the background
+  --terminal          Start \`sayane serve\` in a new Terminal window (macOS)
   --no-open           Do not open the browser URL
   --no-init           Do not run \`sayane init\` automatically
   --no-bootstrap-check  Skip bearer-based \`/app/ui\` check
@@ -40,6 +42,12 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --foreground)
       START_MODE="foreground"
+      ;;
+    --background)
+      START_MODE="background"
+      ;;
+    --terminal)
+      START_MODE="terminal"
       ;;
     --no-open)
       AUTO_OPEN=0
@@ -186,6 +194,30 @@ start_bridge_foreground() {
   exec env PYTHONPATH="${SAYANE_PYTHONPATH}" "${SAYANE_PYTHON_BIN}" -m sayane.cli.main serve --host "${HOST}" --port "${PORT}"
 }
 
+shell_escape_single_quotes() {
+  printf "%s" "$1" | sed "s/'/'\\\\''/g"
+}
+
+start_bridge_terminal() {
+  command -v osascript >/dev/null 2>&1 || die "osascript is required for --terminal"
+  mkdir -p "$(dirname "${LOG_FILE}")"
+  local root_escaped python_escaped path_escaped host_escaped port_escaped log_escaped command
+  root_escaped="$(shell_escape_single_quotes "${ROOT}")"
+  python_escaped="$(shell_escape_single_quotes "${SAYANE_PYTHON_BIN}")"
+  path_escaped="$(shell_escape_single_quotes "${SAYANE_PYTHONPATH}")"
+  host_escaped="$(shell_escape_single_quotes "${HOST}")"
+  port_escaped="$(shell_escape_single_quotes "${PORT}")"
+  log_escaped="$(shell_escape_single_quotes "${LOG_FILE}")"
+  command="cd '${root_escaped}' && env PYTHONPATH='${path_escaped}' '${python_escaped}' -m sayane.cli.main serve --host '${host_escaped}' --port '${port_escaped}' 2>&1 | tee -a '${log_escaped}'"
+  info "Starting Bridge in a new Terminal window"
+  osascript >/dev/null <<APPLESCRIPT
+tell application "Terminal"
+  activate
+  do script "$(printf '%s' "${command}" | sed 's/\\/\\\\/g; s/"/\\"/g')"
+end tell
+APPLESCRIPT
+}
+
 ensure_token() {
   [[ -f "${TOKEN_FILE}" ]] || die "Missing token file: ${TOKEN_FILE}"
   TOKEN="$(<"${TOKEN_FILE}")"
@@ -257,18 +289,43 @@ EOF
 
 main() {
   run_init_if_needed
-  stop_existing_bridge
+  if bridge_healthy; then
+    info "Using existing Bridge at ${BRIDGE_URL}"
+    ensure_token
+    bootstrap_check
+    open_browser
+    print_summary
+    exit 0
+  fi
+
+  if [[ "${START_MODE}" == "auto" ]]; then
+    if [[ "$(uname -s)" == "Darwin" ]]; then
+      START_MODE="terminal"
+    else
+      START_MODE="background"
+    fi
+  fi
 
   if [[ "${START_MODE}" == "foreground" ]]; then
+    stop_existing_bridge
     start_bridge_foreground
   fi
 
-  start_bridge_background
+  stop_existing_bridge
+  if [[ "${START_MODE}" == "terminal" ]]; then
+    start_bridge_terminal
+  else
+    start_bridge_background
+  fi
   info "Waiting for Bridge"
   if ! wait_for_bridge; then
     warn "Initial Bridge launch did not become healthy; retrying once"
     stop_existing_bridge
-    start_bridge_background
+    if [[ "${START_MODE}" == "terminal" ]]; then
+      start_bridge_terminal
+    else
+      start_bridge_background
+    fi
     info "Waiting for Bridge"
     wait_for_bridge || die "Bridge did not become healthy. Check ${LOG_FILE}"
   fi

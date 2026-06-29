@@ -12,6 +12,16 @@ struct AppStrings {
         language: Locale.preferredLanguages.first?.lowercased().hasPrefix("ja") == true ? .ja : .en
     )
 
+    private static func lowercasedFirstLetter(_ value: String) -> String {
+        guard let first = value.first else { return value }
+        return String(first).lowercased() + value.dropFirst()
+    }
+
+    private static func removingPrefix(_ prefix: String, from value: String) -> String? {
+        guard value.hasPrefix(prefix) else { return nil }
+        return String(value.dropFirst(prefix.count))
+    }
+
     func text(_ key: Key) -> String {
         switch (language, key) {
         case (.ja, .appTitle): return "紗綾音 Resident App"
@@ -24,16 +34,22 @@ struct AppStrings {
         case (.en, .daemon): return "Daemon"
         case (.ja, .refresh): return "更新"
         case (.en, .refresh): return "Refresh"
+        case (.ja, .refreshInProgress): return "更新中…"
+        case (.en, .refreshInProgress): return "Refreshing…"
         case (.ja, .retry): return "再試行"
         case (.en, .retry): return "Retry"
         case (.ja, .bootstrap): return "再接続"
         case (.en, .bootstrap): return "Reconnect"
+        case (.ja, .bootstrapInProgress): return "再接続中…"
+        case (.en, .bootstrapInProgress): return "Reconnecting…"
         case (.ja, .captureClipboard): return "クリップボードを取り込む"
         case (.en, .captureClipboard): return "Capture Clipboard"
         case (.ja, .openLogs): return "ログを開く"
         case (.en, .openLogs): return "Open Logs"
         case (.ja, .startBridge): return "Bridge を起動"
         case (.en, .startBridge): return "Start Bridge"
+        case (.ja, .startBridgeInProgress): return "Bridge 起動中…"
+        case (.en, .startBridgeInProgress): return "Starting Bridge…"
         case (.ja, .status): return "状態"
         case (.en, .status): return "Status"
         case (.ja, .nextActions): return "次のアクション"
@@ -48,9 +64,9 @@ struct AppStrings {
         case (.en, .reviewableCount): return "Reviewable"
         case (.ja, .localVault): return "Local Vault"
         case (.en, .localVault): return "Local Vault"
-        case (.ja, .vaultPath): return "Vault パス"
+        case (.ja, .vaultPath): return "Vaultパス"
         case (.en, .vaultPath): return "Vault Path"
-        case (.ja, .vaultSessions): return "Unlock session"
+        case (.ja, .vaultSessions): return "アンロックセッション"
         case (.en, .vaultSessions): return "Unlock Session"
         case (.ja, .activeSessions): return "有効セッション"
         case (.en, .activeSessions): return "Active Sessions"
@@ -66,9 +82,9 @@ struct AppStrings {
         case (.en, .unlockSensitive): return "Open Sensitive"
         case (.ja, .unlockDeepPrivate): return "厳重秘匿を開く"
         case (.en, .unlockDeepPrivate): return "Open Deep Private"
-        case (.ja, .lockAll): return "すべて lock"
+        case (.ja, .lockAll): return "すべてロック"
         case (.en, .lockAll): return "Lock All"
-        case (.ja, .unlockPolicies): return "Unlock policy"
+        case (.ja, .unlockPolicies): return "アンロックポリシー"
         case (.en, .unlockPolicies): return "Unlock Policies"
         case (.ja, .recommendedSetup): return "推奨セットアップ"
         case (.en, .recommendedSetup): return "Recommended Setup"
@@ -76,7 +92,7 @@ struct AppStrings {
         case (.en, .supported): return "Supported"
         case (.ja, .notSupported): return "未対応"
         case (.en, .notSupported): return "Not Supported"
-        case (.ja, .vaultUnavailable): return "Local Vault はまだ常用 runtime に接続されていません"
+        case (.ja, .vaultUnavailable): return "Local Vault はまだ通常ランタイムに接続されていません"
         case (.en, .vaultUnavailable): return "Local Vault is not connected to the routine runtime yet"
         case (.ja, .backend): return "バックエンド"
         case (.en, .backend): return "Backend"
@@ -108,16 +124,24 @@ struct AppStrings {
         case (.en, .clipboardEmpty): return "No text is available in the clipboard."
         case (.ja, .connectionProblem): return "Bridge に接続できません。"
         case (.en, .connectionProblem): return "Could not connect to the Bridge."
-        case (.ja, .sessionProblem): return "Bridge との接続を復旧してください。"
-        case (.en, .sessionProblem): return "Reconnect to the local Bridge."
+        case (.ja, .sessionProblem): return "Bridge を復旧してください。起動後はターミナルウインドウを閉じず、そのまま再接続します。"
+        case (.en, .sessionProblem): return "Recover the local Bridge. After startup, keep the Bridge Terminal window open and then reconnect."
         case (.ja, .loading): return "読み込み中…"
         case (.en, .loading): return "Loading…"
         case (.ja, .none): return "なし"
         case (.en, .none): return "None"
         case (.ja, .error): return "エラー"
         case (.en, .error): return "Error"
-        case (.ja, .bridgeHealthy): return "Bridge 接続"
+        case (.ja, .bridgeHealthy): return "Bridge接続"
         case (.en, .bridgeHealthy): return "Bridge Health"
+        case (.ja, .bridgeStartupFocus): return "起動優先"
+        case (.en, .bridgeStartupFocus): return "Startup First"
+        case (.ja, .bridgeDisconnectedShort): return "Bridge 未接続"
+        case (.en, .bridgeDisconnectedShort): return "Bridge Disconnected"
+        case (.ja, .screenSummaryPending): return "起動後に読み込み"
+        case (.en, .screenSummaryPending): return "Loads after startup"
+        case (.ja, .homeStartupSummary): return "Bridge が未接続です。起動または再接続してから各画面を読み込みます。"
+        case (.en, .homeStartupSummary): return "The Bridge is disconnected. Start or reconnect first, then load the Home, Queue, and Daemon screens."
         case (.ja, .currentCandidate): return "選択中候補"
         case (.en, .currentCandidate): return "Selected Candidate"
         case (.ja, .editedText): return "修正文"
@@ -152,13 +176,13 @@ struct AppStrings {
         case (.en, .copyRecoveryPreview): return "Copy Recovery Preview"
         case (.ja, .copyOperatorSummary): return "運用サマリーをコピー"
         case (.en, .copyOperatorSummary): return "Copy Operator Summary"
-        case (.ja, .copyPhaseGates): return "Phaseゲートをコピー"
+        case (.ja, .copyPhaseGates): return "フェーズゲートをコピー"
         case (.en, .copyPhaseGates): return "Copy Phase Gates"
         case (.ja, .copyReadSurfaces): return "参照先をコピー"
         case (.en, .copyReadSurfaces): return "Copy Read Surfaces"
         case (.ja, .copySuggestedActions): return "推奨アクションをコピー"
         case (.en, .copySuggestedActions): return "Copy Suggested Actions"
-        case (.ja, .exportHandoffNote): return "handoff noteを書き出す"
+        case (.ja, .exportHandoffNote): return "引き継ぎノートを書き出す"
         case (.en, .exportHandoffNote): return "Export Handoff Note"
         case (.ja, .copiedCommand): return "コピーしました"
         case (.en, .copiedCommand): return "Copied"
@@ -168,9 +192,15 @@ struct AppStrings {
         case (.en, .savedFile): return "Saved"
         case (.ja, .actionFailed): return "失敗"
         case (.en, .actionFailed): return "Failed"
-        case (.ja, .openPlist): return "plist を開く"
+        case (.ja, .bridgeStartedMessage): return "Bridge を起動しました。ターミナルウインドウを開いたまま、このアプリで再接続します。"
+        case (.en, .bridgeStartedMessage): return "Started the Bridge. Keep the Terminal window open and reconnect from this app."
+        case (.ja, .bridgeReconnectedMessage): return "Bridge へ再接続しました。"
+        case (.en, .bridgeReconnectedMessage): return "Reconnected to the Bridge."
+        case (.ja, .bridgeRefreshedMessage): return "Bridge の状態を更新しました。"
+        case (.en, .bridgeRefreshedMessage): return "Refreshed the Bridge state."
+        case (.ja, .openPlist): return "plistファイルを開く"
         case (.en, .openPlist): return "Open Plist"
-        case (.ja, .openRuntime): return "runtime を開く"
+        case (.ja, .openRuntime): return "ランタイムを開く"
         case (.en, .openRuntime): return "Open Runtime"
         case (.ja, .openLauncher): return "ランチャーを開く"
         case (.en, .openLauncher): return "Open Launcher"
@@ -178,7 +208,7 @@ struct AppStrings {
         case (.en, .reviewPreviews): return "Recovery Previews"
         case (.ja, .generatedAt): return "生成日時"
         case (.en, .generatedAt): return "Generated At"
-        case (.ja, .bridgeContext): return "Bridgeコンテキスト"
+        case (.ja, .bridgeContext): return "Bridge コンテキスト"
         case (.en, .bridgeContext): return "Bridge Context"
         case (.ja, .component): return "コンポーネント"
         case (.en, .component): return "Component"
@@ -192,6 +222,12 @@ struct AppStrings {
         case (.en, .scope): return "Scope"
         case (.ja, .recommended): return "推奨"
         case (.en, .recommended): return "Recommended"
+        case (.ja, .errorDetails): return "エラー詳細"
+        case (.en, .errorDetails): return "Error Details"
+        case (.ja, .showErrorDetails): return "エラー詳細を表示"
+        case (.en, .showErrorDetails): return "Show Error Details"
+        case (.ja, .hideErrorDetails): return "エラー詳細を隠す"
+        case (.en, .hideErrorDetails): return "Hide Error Details"
         case (.ja, .currentPlatform): return "現在のプラットフォーム"
         case (.en, .currentPlatform): return "Current Platform"
         case (.ja, .loadedStatus): return "読み込み状態"
@@ -204,7 +240,7 @@ struct AppStrings {
         case (.en, .recommendedLauncher): return "Recommended Launcher"
         case (.ja, .operatorSurfaceNotes): return "運用サーフェス補足"
         case (.en, .operatorSurfaceNotes): return "Operator Surface Notes"
-        case (.ja, .supervision): return "監視UX"
+        case (.ja, .supervision): return "監視体験"
         case (.en, .supervision): return "Supervision UX"
         case (.ja, .recoveryPolicy): return "復旧ポリシー"
         case (.en, .recoveryPolicy): return "Recovery Policy"
@@ -230,7 +266,7 @@ struct AppStrings {
         case (.en, .activeSupervision): return "Active Supervision"
         case (.ja, .startupVisibility): return "起動可視化"
         case (.en, .startupVisibility): return "Startup Visibility"
-        case (.ja, .phaseChecklist): return "Phase完了チェック"
+        case (.ja, .phaseChecklist): return "フェーズ完了チェック"
         case (.en, .phaseChecklist): return "Phase Closure Checklist"
         case (.ja, .readSurfaces): return "参照サーフェス"
         case (.en, .readSurfaces): return "Read Surfaces"
@@ -240,11 +276,11 @@ struct AppStrings {
         case (.en, .statusValue): return "Status"
         case (.ja, .startupCommand): return "起動コマンド"
         case (.en, .startupCommand): return "Startup Command"
-        case (.ja, .bootstrapUI): return "デバッグ用 fallback URL"
-        case (.en, .bootstrapUI): return "Debug Fallback URL"
-        case (.ja, .handoffSnapshot): return "Handoff Snapshot"
+        case (.ja, .bootstrapUI): return "デバッグ用互換URL"
+        case (.en, .bootstrapUI): return "Debug Compatibility URL"
+        case (.ja, .handoffSnapshot): return "引き継ぎスナップショット"
         case (.en, .handoffSnapshot): return "Handoff Snapshot"
-        case (.ja, .workstreams): return "Workstreams"
+        case (.ja, .workstreams): return "ワークストリーム"
         case (.en, .workstreams): return "Workstreams"
         case (.ja, .platformScope): return "対象プラットフォーム"
         case (.en, .platformScope): return "Platform Scope"
@@ -252,29 +288,29 @@ struct AppStrings {
         case (.en, .operatorValue): return "Operator Value"
         case (.ja, .implementationOrder): return "推奨実装順"
         case (.en, .implementationOrder): return "Recommended Implementation Order"
-        case (.ja, .serviceLifecycle): return "Service Lifecycle"
+        case (.ja, .serviceLifecycle): return "サービスライフサイクル"
         case (.en, .serviceLifecycle): return "Service Lifecycle"
-        case (.ja, .policyGates): return "Policy Gates"
+        case (.ja, .policyGates): return "ポリシーゲート"
         case (.en, .policyGates): return "Policy Gates"
-        case (.ja, .governingRules): return "Governing Rules"
+        case (.ja, .governingRules): return "運用ルール"
         case (.en, .governingRules): return "Governing Rules"
-        case (.ja, .appUIPolicy): return "App UI Policy"
+        case (.ja, .appUIPolicy): return "アプリUIポリシー"
         case (.en, .appUIPolicy): return "App UI Policy"
-        case (.ja, .allowedReads): return "許可Read"
+        case (.ja, .allowedReads): return "許可された参照"
         case (.en, .allowedReads): return "Allowed Reads"
-        case (.ja, .allowedWrites): return "許可Write"
+        case (.ja, .allowedWrites): return "許可された書き込み"
         case (.en, .allowedWrites): return "Allowed Writes"
-        case (.ja, .allowedControlExposure): return "許可Control Exposure"
+        case (.ja, .allowedControlExposure): return "許可された制御公開"
         case (.en, .allowedControlExposure): return "Allowed Control Exposure"
-        case (.ja, .forbiddenExposure): return "禁止Exposure"
+        case (.ja, .forbiddenExposure): return "禁止された制御公開"
         case (.en, .forbiddenExposure): return "Forbidden Exposure"
         case (.ja, .platformTargets): return "対象サービス"
         case (.en, .platformTargets): return "Platform Targets"
-        case (.ja, .rollbackRequired): return "Rollback 必須"
+        case (.ja, .rollbackRequired): return "ロールバック必須"
         case (.en, .rollbackRequired): return "Rollback Required"
-        case (.ja, .policyRequired): return "Policy 必須"
+        case (.ja, .policyRequired): return "ポリシー必須"
         case (.en, .policyRequired): return "Policy Required"
-        case (.ja, .launchAgentRunbook): return "LaunchAgent Runbook"
+        case (.ja, .launchAgentRunbook): return "LaunchAgent 運用手順書"
         case (.en, .launchAgentRunbook): return "LaunchAgent Runbook"
         case (.ja, .preflightChecks): return "事前確認"
         case (.en, .preflightChecks): return "Preflight Checks"
@@ -286,43 +322,43 @@ struct AppStrings {
         case (.en, .troubleshooting): return "Troubleshooting"
         case (.ja, .logPaths): return "ログパス"
         case (.en, .logPaths): return "Log Paths"
-        case (.ja, .plistPreview): return "plist Preview"
+        case (.ja, .plistPreview): return "plist プレビュー"
         case (.en, .plistPreview): return "Plist Preview"
         case (.ja, .environmentAssumptions): return "環境前提"
         case (.en, .environmentAssumptions): return "Environment Assumptions"
         case (.ja, .programArguments): return "起動引数"
         case (.en, .programArguments): return "Program Arguments"
-        case (.ja, .copyPlist): return "plist をコピー"
+        case (.ja, .copyPlist): return "plistファイルをコピー"
         case (.en, .copyPlist): return "Copy Plist"
-        case (.ja, .previewMetadata): return "Preview Metadata"
+        case (.ja, .previewMetadata): return "プレビュー情報"
         case (.en, .previewMetadata): return "Preview Metadata"
-        case (.ja, .operationId): return "Operation ID"
+        case (.ja, .operationId): return "操作ID"
         case (.en, .operationId): return "Operation ID"
-        case (.ja, .previewHash): return "Preview Hash"
+        case (.ja, .previewHash): return "プレビューハッシュ"
         case (.en, .previewHash): return "Preview Hash"
-        case (.ja, .previewApplyBoundary): return "Preview / Apply Boundary"
+        case (.ja, .previewApplyBoundary): return "プレビュー / 適用境界"
         case (.en, .previewApplyBoundary): return "Preview / Apply Boundary"
         case (.ja, .tailLogs): return "ログ追跡コマンド"
         case (.en, .tailLogs): return "Tail Commands"
         case (.ja, .launchctlPrint): return "launchctl print"
         case (.en, .launchctlPrint): return "launchctl print"
-        case (.ja, .stdoutTail): return "stdout tail"
+        case (.ja, .stdoutTail): return "stdout 追跡"
         case (.en, .stdoutTail): return "stdout tail"
-        case (.ja, .stderrTail): return "stderr tail"
+        case (.ja, .stderrTail): return "stderr 追跡"
         case (.en, .stderrTail): return "stderr tail"
-        case (.ja, .copyStdoutTail): return "stdout tail をコピー"
+        case (.ja, .copyStdoutTail): return "stdout 追跡コマンドをコピー"
         case (.en, .copyStdoutTail): return "Copy stdout tail"
-        case (.ja, .copyStderrTail): return "stderr tail をコピー"
+        case (.ja, .copyStderrTail): return "stderr 追跡コマンドをコピー"
         case (.en, .copyStderrTail): return "Copy stderr tail"
         case (.ja, .statusDiagnostics): return "状態診断"
         case (.en, .statusDiagnostics): return "Status Diagnostics"
-        case (.ja, .proofDiagnostics): return "Proof診断"
+        case (.ja, .proofDiagnostics): return "根拠診断"
         case (.en, .proofDiagnostics): return "Proof Diagnostics"
-        case (.ja, .proofDiagnosticsSummary): return "identity / readiness / API readiness の proof-oriented 読み取りコマンドです"
+        case (.ja, .proofDiagnosticsSummary): return "identity / readiness / API readiness を根拠付きで確認する読み取りコマンドです"
         case (.en, .proofDiagnosticsSummary): return "Proof-oriented read commands for identity, readiness, and API readiness"
         case (.ja, .returnCode): return "リターンコード"
         case (.en, .returnCode): return "Return Code"
-        case (.ja, .stderrPreview): return "stderr Preview"
+        case (.ja, .stderrPreview): return "stderr プレビュー"
         case (.en, .stderrPreview): return "stderr Preview"
         case (.ja, .needsAttention): return "要対応"
         case (.en, .needsAttention): return "Needs Attention"
@@ -342,9 +378,9 @@ struct AppStrings {
         case (.en, .nextCandidate): return "Next Candidate"
         case (.ja, .queueActions): return "候補アクション"
         case (.en, .queueActions): return "Candidate Actions"
-        case (.ja, .candidateResult): return "候補結果"
+        case (.ja, .candidateResult): return "実行結果"
         case (.en, .candidateResult): return "Candidate Result"
-        case (.ja, .resultForCurrentCandidate): return "この候補の直近結果"
+        case (.ja, .resultForCurrentCandidate): return "この候補の最新結果"
         case (.en, .resultForCurrentCandidate): return "Latest result for this candidate"
         case (.ja, .targetSection): return "対象セクション"
         case (.en, .targetSection): return "Target Section"
@@ -358,7 +394,7 @@ struct AppStrings {
         case (.en, .logActions): return "Logs"
         case (.ja, .commandDeck): return "操作デッキ"
         case (.en, .commandDeck): return "Command Deck"
-        case (.ja, .searchCandidates): return "候補を検索"
+        case (.ja, .searchCandidates): return "候補を絞り込む"
         case (.en, .searchCandidates): return "Search Candidates"
         case (.ja, .quickLinks): return "クイックリンク"
         case (.en, .quickLinks): return "Quick Links"
@@ -366,83 +402,85 @@ struct AppStrings {
         case (.en, .startHere): return "Start Here"
         case (.ja, .noPriorityActions): return "今すぐ着手すべき項目はありません"
         case (.en, .noPriorityActions): return "There is nothing urgent to start right now"
+        case (.ja, .noPriorityActionsDisconnected): return "最初に Bridge を起動または再接続すると、この画面の優先項目を読み込めます"
+        case (.en, .noPriorityActionsDisconnected): return "Start or reconnect the Bridge first to load the priority items for this screen"
         case (.ja, .reviewNextCandidate): return "次の候補を確認"
         case (.en, .reviewNextCandidate): return "Review Next Candidate"
         case (.ja, .reviewDaemonAction): return "デーモンの次アクションを確認"
         case (.en, .reviewDaemonAction): return "Review Daemon Action"
-        case (.ja, .checkLaunchAgentStatus): return "LaunchAgent 状態を確認"
+        case (.ja, .checkLaunchAgentStatus): return "LaunchAgentの状態を確認"
         case (.en, .checkLaunchAgentStatus): return "Check LaunchAgent Status"
-        case (.ja, .openRunbook): return "Runbook を開く"
+        case (.ja, .openRunbook): return "運用手順書を開く"
         case (.en, .openRunbook): return "Open Runbook"
-        case (.ja, .launchAgentFocus): return "LaunchAgent Focus"
+        case (.ja, .launchAgentFocus): return "LaunchAgent 注目点"
         case (.en, .launchAgentFocus): return "LaunchAgent Focus"
-        case (.ja, .launchAgentFocusSummary): return "現在状態、復旧プレビュー、次コマンドを先にまとめて見ます"
+        case (.ja, .launchAgentFocusSummary): return "現在状態・復旧プレビュー・次コマンドをまとめて確認します"
         case (.en, .launchAgentFocusSummary): return "Review the current state, recovery previews, and next command first"
         case (.ja, .currentStateDetails): return "現在状態の詳細"
         case (.en, .currentStateDetails): return "Current State Details"
-        case (.ja, .currentStateDetailsSummary): return "LaunchAgent Focusで見た要約の根拠をここで確認します"
+        case (.ja, .currentStateDetailsSummary): return "注目点の根拠をここで確認します"
         case (.en, .currentStateDetailsSummary): return "Use this section to verify the details behind the LaunchAgent Focus summary"
         case (.ja, .recoveryPreviewDetails): return "復旧プレビューの詳細"
         case (.en, .recoveryPreviewDetails): return "Recovery Preview Details"
-        case (.ja, .recoveryPreviewDetailsSummary): return "Focusで見た復旧要約の内訳と注意点をここで確認します"
+        case (.ja, .recoveryPreviewDetailsSummary): return "復旧要約の内訳と注意点を確認します"
         case (.en, .recoveryPreviewDetailsSummary): return "Use this section to inspect the breakdown and cautions behind the focus recovery summary"
-        case (.ja, .nextEpicWorkspace): return "次のEpicワークスペース"
+        case (.ja, .nextEpicWorkspace): return "次のエピック作業面"
         case (.en, .nextEpicWorkspace): return "Next Epic Workspace"
         case (.ja, .operatorSummaryRail): return "運用サマリーレール"
         case (.en, .operatorSummaryRail): return "Operator Summary Rail"
-        case (.ja, .phaseClosureGates): return "Phase完了ゲート"
+        case (.ja, .phaseClosureGates): return "フェーズ完了ゲート"
         case (.en, .phaseClosureGates): return "Phase Closure Gates"
         case (.ja, .openSection): return "セクションを開く"
         case (.en, .openSection): return "Open Section"
-        case (.ja, .sectionNavigatorSummary): return "優先度の高いセクションへすぐ移動できます"
+        case (.ja, .sectionNavigatorSummary): return "優先セクションへすぐ移動できます"
         case (.en, .sectionNavigatorSummary): return "Jump directly to the highest-priority sections"
         case (.ja, .prioritySections): return "優先セクション"
         case (.en, .prioritySections): return "Priority Sections"
         case (.ja, .otherSections): return "その他のセクション"
         case (.en, .otherSections): return "Other Sections"
-        case (.ja, .nextEpicWorkspaceSummary): return "次の判断面とブロッカーをまとめて見ます"
+        case (.ja, .nextEpicWorkspaceSummary): return "次の判断面とブロッカーをまとめて確認します"
         case (.en, .nextEpicWorkspaceSummary): return "Review the next decision surfaces and blockers together"
         case (.ja, .remainingWorkstreams): return "残りの判断面"
         case (.en, .remainingWorkstreams): return "Remaining Workstreams"
-        case (.ja, .remainingWorkstreamsSummary): return "上の優先導線で触れていない判断面だけをここに残します"
+        case (.ja, .remainingWorkstreamsSummary): return "優先導線で触れていない判断面だけを残します"
         case (.en, .remainingWorkstreamsSummary): return "Keep only the workstreams not already covered by the priority path above"
         case (.ja, .priorityPathCoversCurrentWorkspace): return "現在の優先導線が主要な判断面をすでにカバーしています"
         case (.en, .priorityPathCoversCurrentWorkspace): return "The current priority path already covers the main decision surfaces"
-        case (.ja, .phaseClosureGatesSummary): return "未完了ゲートと確認先を対応づけて示します"
+        case (.ja, .phaseClosureGatesSummary): return "未完了ゲートと確認先を対応づけます"
         case (.en, .phaseClosureGatesSummary): return "Map unfinished gates to the surfaces that clarify them"
         case (.ja, .evidenceDrilldown): return "根拠ドリルダウン"
         case (.en, .evidenceDrilldown): return "Evidence Drill-down"
         case (.ja, .decisionAssist): return "判断支援"
         case (.en, .decisionAssist): return "Decision Assist"
-        case (.ja, .operatorSummaryRailSummary): return "現在のゲート、次コマンド、次の確認先を最初にひとまとめで見ます"
+        case (.ja, .operatorSummaryRailSummary): return "現在のゲート・次コマンド・次の確認先をまとめて見ます"
         case (.en, .operatorSummaryRailSummary): return "Keep the current gate, next command, and next read surface together first"
-        case (.ja, .evidenceDrilldownSummary): return "関連する read surface を見比べて確認先を絞ります"
+        case (.ja, .evidenceDrilldownSummary): return "関連する参照先を見比べて確認先を絞ります"
         case (.en, .evidenceDrilldownSummary): return "Compare related read surfaces to narrow the next check"
-        case (.ja, .decisionAssistSummary): return "次の一手を要約とコマンドで先に示します"
+        case (.ja, .decisionAssistSummary): return "次の一手を要約とコマンドで示します"
         case (.en, .decisionAssistSummary): return "Show the next action first with a short summary and command"
-        case (.ja, .statusSectionSummary): return "各運用面の状態・注目点・代表コマンドを短く見ます"
+        case (.ja, .statusSectionSummary): return "各運用面の状態・注目点・代表コマンドを確認します"
         case (.en, .statusSectionSummary): return "Review each operator surface through status, highlights, and commands"
-        case (.ja, .operatorWorkspaceCompactSummary): return "重要な判断面を優先順とブロッカー付きで見ます"
+        case (.ja, .operatorWorkspaceCompactSummary): return "重要な判断面を優先順とブロッカー付きで確認します"
         case (.en, .operatorWorkspaceCompactSummary): return "Review key decision surfaces with priority order and blockers"
         case (.ja, .currentGate): return "現在のゲート"
         case (.en, .currentGate): return "Current Gate"
         case (.ja, .nextReadSurface): return "次の確認先"
         case (.en, .nextReadSurface): return "Next Read Surface"
-        case (.ja, .serviceControlAssistSummary): return "まず service control boundary を確認して、許可された local control を見極めます"
+        case (.ja, .serviceControlAssistSummary): return "まずサービス制御境界を確認し、許可されたローカル制御を見極めます"
         case (.en, .serviceControlAssistSummary): return "Check the service control boundary first to confirm the allowed local control path"
-        case (.ja, .recoveryAssistSummary): return "復旧フローと consent boundary を先に確認します"
+        case (.ja, .recoveryAssistSummary): return "復旧フローと同意境界を確認します"
         case (.en, .recoveryAssistSummary): return "Review the recovery flow and consent boundary first"
-        case (.ja, .supervisionAssistSummary): return "現在の supervision mode と deferred background surface を確認します"
+        case (.ja, .supervisionAssistSummary): return "現在の監視モードと保留中の背景サーフェスを確認します"
         case (.en, .supervisionAssistSummary): return "Review the current supervision mode and deferred background surfaces"
-        case (.ja, .inspectActionsSummary): return "現在の launchd 状態と Bridge health を非破壊で確認します"
+        case (.ja, .inspectActionsSummary): return "現在の launchd 状態と Bridge のヘルスを非破壊で確認します"
         case (.en, .inspectActionsSummary): return "Check the current launchd state and Bridge health without mutating anything"
         case (.ja, .recoverActionsSummary): return "cleanup / repair / bootout の順で古い状態を解消します"
         case (.en, .recoverActionsSummary): return "Clear stale state through cleanup, repair, and then bootout"
-        case (.ja, .startActionsSummary): return "復旧確認後に bootstrap / kickstart で起動します"
+        case (.ja, .startActionsSummary): return "確認後に bootstrap / kickstart で起動します"
         case (.en, .startActionsSummary): return "Start with bootstrap or kickstart after the recovery checks"
         case (.ja, .logActionsSummary): return "ログの場所を確認してから tail で追跡します"
         case (.en, .logActionsSummary): return "Check the log locations first and then follow them with tail"
-        case (.ja, .launchAgentAssistRuntimeInit): return "runtime init preview を先に確認します"
+        case (.ja, .launchAgentAssistRuntimeInit): return "runtime-init プレビューを先に確認します"
         case (.en, .launchAgentAssistRuntimeInit): return "Review the runtime-init preview first"
         case (.ja, .launchAgentAssistHealthy): return "LaunchAgent の確認系コマンドから現在状態を再確認します"
         case (.en, .launchAgentAssistHealthy): return "Re-check the current LaunchAgent state from the inspection commands"
@@ -450,9 +488,9 @@ struct AppStrings {
         case (.en, .loadingState): return "Loading"
         case (.ja, .screenOverview): return "表示中"
         case (.en, .screenOverview): return "Viewing"
-        case (.ja, .bridgeConnected): return "Bridge接続中"
+        case (.ja, .bridgeConnected): return "Bridge 接続中"
         case (.en, .bridgeConnected): return "Bridge Connected"
-        case (.ja, .bridgeAttention): return "Bridge要確認"
+        case (.ja, .bridgeAttention): return "Bridge 要確認"
         case (.en, .bridgeAttention): return "Bridge Needs Attention"
         case (.ja, .bridgeStatusPanel): return "Bridge 状態"
         case (.en, .bridgeStatusPanel): return "Bridge Status"
@@ -462,42 +500,58 @@ struct AppStrings {
         case (.en, .bridgeStarting): return "Bridge is starting"
         case (.ja, .bridgeNotConnected): return "Bridge に未接続です"
         case (.en, .bridgeNotConnected): return "Bridge is not connected"
-        case (.ja, .bridgeStatusDetailDisconnected): return "Bridge を起動すると Home / Queue / Daemon の各面を読み込めます"
-        case (.en, .bridgeStatusDetailDisconnected): return "Start the Bridge to load the Home, Queue, and Daemon screens"
+        case (.ja, .bridgeStatusDetailDisconnected): return "Bridge を起動すると各画面を読み込めます。macOS ではターミナルウインドウを閉じずに保持します"
+        case (.en, .bridgeStatusDetailDisconnected): return "Start the Bridge to load the Home, Queue, and Daemon screens. On macOS, keep the opened Terminal window running."
         case (.ja, .moreItems): return "ほか %d 件"
         case (.en, .moreItems): return "%d more"
         case (.ja, .bridgeVersion): return "バージョン"
         case (.en, .bridgeVersion): return "Version"
         case (.ja, .sourceUpdatedAt): return "ソース更新時刻"
         case (.en, .sourceUpdatedAt): return "Source Updated"
-        case (.ja, .bridgeStatusPanelSummary): return "まずここで接続状態を確認し、必要なら起動・再接続・ログ確認へ進みます"
-        case (.en, .bridgeStatusPanelSummary): return "Check connectivity here first, then start, reconnect, or inspect logs as needed"
+        case (.ja, .bridgeStatusPanelSummary): return "ここで接続状態を確認し、必要なら起動・再接続・ログ確認へ進みます。macOS ではターミナルウインドウを開いたまま使います"
+        case (.en, .bridgeStatusPanelSummary): return "Check connectivity here first, then start, reconnect, or inspect logs as needed. On macOS, the startup path keeps a Bridge Terminal window open."
         case (.ja, .connectionDiagnostics): return "接続診断"
         case (.en, .connectionDiagnostics): return "Connection Diagnostics"
-        case (.ja, .debugShellCompatibilitySummary): return "通常操作ではなく、ブラウザでのデバッグ / fallback / handoff 用の経路です"
-        case (.en, .debugShellCompatibilitySummary): return "Use this browser path only for debugging, fallback, or handoff"
+        case (.ja, .debugShellCompatibilitySummary): return "通常操作ではなく、ブラウザでのデバッグ・互換確認・引き継ぎ用の経路です"
+        case (.en, .debugShellCompatibilitySummary): return "Use this browser path only for debugging, compatibility checks, or handoff"
+        case (.ja, .debugCompatibilityTools): return "デバッグ互換ツール"
+        case (.en, .debugCompatibilityTools): return "Debug Compatibility Tools"
+        case (.ja, .debugCompatibilityToolsSummary): return "通常の macOS 操作導線から外し、必要時だけ開くブラウザ互換経路です"
+        case (.en, .debugCompatibilityToolsSummary): return "A browser compatibility path kept out of the normal macOS workflow until needed"
         case (.ja, .bridgeURL): return "Bridge URL"
         case (.en, .bridgeURL): return "Bridge URL"
-        case (.ja, .healthEndpoint): return "health エンドポイント"
+        case (.ja, .healthEndpoint): return "ヘルスエンドポイント"
         case (.en, .healthEndpoint): return "Health Endpoint"
-        case (.ja, .debugShell): return "ブラウザ fallback（デバッグ用）"
-        case (.en, .debugShell): return "Browser Fallback (Debug)"
+        case (.ja, .debugShell): return "ブラウザ互換シェル（デバッグ用）"
+        case (.en, .debugShell): return "Browser Compatibility Shell (Debug)"
         case (.ja, .tokenFile): return "トークンファイル"
         case (.en, .tokenFile): return "Token File"
         case (.ja, .logFile): return "ログファイル"
         case (.en, .logFile): return "Log File"
         case (.ja, .profile): return "プロファイル"
         case (.en, .profile): return "Profile"
-        case (.ja, .openToken): return "token を開く"
+        case (.ja, .launchSource): return "起動ソース"
+        case (.en, .launchSource): return "Launch Source"
+        case (.ja, .lastLaunchFailure): return "直近の起動失敗"
+        case (.en, .lastLaunchFailure): return "Last Launch Failure"
+        case (.ja, .openToken): return "トークンを開く"
         case (.en, .openToken): return "Open Token"
-        case (.ja, .openDebugShell): return "debug shell を開く"
-        case (.en, .openDebugShell): return "Open Debug Shell"
-        case (.ja, .copyHealthCommand): return "health command をコピー"
+        case (.ja, .openLaunchSource): return "起動ソースを開く"
+        case (.en, .openLaunchSource): return "Open Launch Source"
+        case (.ja, .openDebugShell): return "互換シェルを開く"
+        case (.en, .openDebugShell): return "Open Compatibility Shell"
+        case (.ja, .showDebugCompatibilityTools): return "デバッグ互換ツールを表示"
+        case (.en, .showDebugCompatibilityTools): return "Show Debug Compatibility Tools"
+        case (.ja, .hideDebugCompatibilityTools): return "デバッグ互換ツールを隠す"
+        case (.en, .hideDebugCompatibilityTools): return "Hide Debug Compatibility Tools"
+        case (.ja, .copyHealthCommand): return "ヘルス確認コマンドをコピー"
         case (.en, .copyHealthCommand): return "Copy Health Command"
+        case (.ja, .copyLaunchSource): return "起動ソースをコピー"
+        case (.en, .copyLaunchSource): return "Copy Launch Source"
         case (.ja, .copyStartupCommand): return "起動コマンドをコピー"
         case (.en, .copyStartupCommand): return "Copy Startup Command"
-        case (.ja, .copyDebugShellURL): return "debug shell URL をコピー"
-        case (.en, .copyDebugShellURL): return "Copy Debug Shell URL"
+        case (.ja, .copyDebugShellURL): return "互換シェルURLをコピー"
+        case (.en, .copyDebugShellURL): return "Copy Compatibility Shell URL"
         case (.ja, .openScreen): return "画面を開く"
         case (.en, .openScreen): return "Open Screen"
         case (.ja, .noQuickLinks): return "利用できるクイックリンクはありません"
@@ -508,13 +562,13 @@ struct AppStrings {
         case (.en, .noDaemonActions): return "There are no daemon actions right now"
         case (.ja, .noCandidates): return "候補はまだありません"
         case (.en, .noCandidates): return "There are no candidates yet"
-        case (.ja, .noCandidatesMatchingFilters): return "現在のフィルタ条件に一致する候補はありません"
+        case (.ja, .noCandidatesMatchingFilters): return "条件に一致する候補はありません"
         case (.en, .noCandidatesMatchingFilters): return "No candidates match the current filters"
-        case (.ja, .selectCandidatePrompt): return "候補を選ぶと、詳細・差分・来歴をここに表示します"
+        case (.ja, .selectCandidatePrompt): return "候補を選ぶと、詳細・差分・来歴を表示します"
         case (.en, .selectCandidatePrompt): return "Select a candidate to show its detail, diff, and lineage here"
         case (.ja, .detailUnavailable): return "候補詳細をまだ取得できていません"
         case (.en, .detailUnavailable): return "Candidate detail is not available yet"
-        case (.ja, .loadingCandidates): return "候補と詳細を更新しています"
+        case (.ja, .loadingCandidates): return "候補と詳細を更新中です"
         case (.en, .loadingCandidates): return "Refreshing candidates and detail"
         case (.ja, .sectionNavigator): return "セクション移動"
         case (.en, .sectionNavigator): return "Section Navigator"
@@ -524,17 +578,17 @@ struct AppStrings {
         case (.en, .collapseAll): return "Collapse All"
         case (.ja, .noNextActions): return "次のアクションはありません"
         case (.en, .noNextActions): return "There are no next actions"
-        case (.ja, .filteredCandidates): return "表示候補"
+        case (.ja, .filteredCandidates): return "表示中の候補"
         case (.en, .filteredCandidates): return "Visible Candidates"
         case (.ja, .activeFilters): return "有効フィルタ"
         case (.en, .activeFilters): return "Active Filters"
         case (.ja, .noActiveFilters): return "フィルタなし"
         case (.en, .noActiveFilters): return "No Filters"
-        case (.ja, .actionReadiness): return "実行可能アクション"
+        case (.ja, .actionReadiness): return "実行できるアクション"
         case (.en, .actionReadiness): return "Available Actions"
         case (.ja, .shortcutLabel): return "ショートカット"
         case (.en, .shortcutLabel): return "Shortcut"
-        case (.ja, .shortcutGuide): return "ショートカット一覧"
+        case (.ja, .shortcutGuide): return "ショートカット"
         case (.en, .shortcutGuide): return "Shortcut Guide"
         case (.ja, .enabled): return "有効"
         case (.en, .enabled): return "Enabled"
@@ -552,7 +606,7 @@ struct AppStrings {
         case (.en, .filters): return "Filters"
         case (.ja, .clearFilters): return "解除"
         case (.en, .clearFilters): return "Clear"
-        case (.ja, .quickFilters): return "クイックフィルタ"
+        case (.ja, .quickFilters): return "絞り込み候補"
         case (.en, .quickFilters): return "Quick Filters"
         case (.ja, .sortOrder): return "並び順"
         case (.en, .sortOrder): return "Sort Order"
@@ -562,7 +616,7 @@ struct AppStrings {
         case (.en, .sortStatus): return "Status Order"
         case (.ja, .sortSection): return "セクション順"
         case (.en, .sortSection): return "Section Order"
-        case (.ja, .diffSummary): return "差分サマリー"
+        case (.ja, .diffSummary): return "差分の要約"
         case (.en, .diffSummary): return "Diff Summary"
         case (.ja, .addedItems): return "追加候補"
         case (.en, .addedItems): return "Added Items"
@@ -597,9 +651,9 @@ struct AppStrings {
         case (.en, "daemon_state"): return "Daemon State"
         case (.ja, "next_actions"): return "次のアクション"
         case (.en, "next_actions"): return "Next Actions"
-        case (.ja, "vault_status"): return "Vault 状態"
+        case (.ja, "vault_status"): return "Vault状態"
         case (.en, "vault_status"): return "Vault Status"
-        case (.ja, "vault_backend"): return "Vault backend"
+        case (.ja, "vault_backend"): return "Vault バックエンド"
         case (.en, "vault_backend"): return "Vault Backend"
         case (.ja, "vault_assurance"): return "鍵保護"
         case (.en, "vault_assurance"): return "Key Assurance"
@@ -609,11 +663,11 @@ struct AppStrings {
         case (.en, "packaging_model_decision"): return "Packaging Decision"
         case (.ja, "service_integration_line"): return "サービス統合"
         case (.en, "service_integration_line"): return "Service Integration"
-        case (.ja, "supervision_ux_line"): return "監視UX判断"
+        case (.ja, "supervision_ux_line"): return "監視体験判断"
         case (.en, "supervision_ux_line"): return "Supervision UX Decision"
         case (.ja, "recovery_and_consent_line"): return "復旧と同意"
         case (.en, "recovery_and_consent_line"): return "Recovery and Consent"
-        case (.ja, "supervision_ux_decision"): return "監視UX判断"
+        case (.ja, "supervision_ux_decision"): return "監視体験判断"
         case (.en, "supervision_ux_decision"): return "Supervision UX Decision"
         case (.ja, "service_control_boundary_definition"): return "サービス制御境界"
         case (.en, "service_control_boundary_definition"): return "Service Control Boundary"
@@ -708,6 +762,22 @@ struct AppStrings {
         }
     }
 
+    func operatorReasonLabel(_ rawValue: String) -> String {
+        switch (language, rawValue) {
+        case (.ja, "Confirm phase closure blockers."): return "フェーズ完了を妨げるブロッカーを確認します。"
+        case (.en, "Confirm phase closure blockers."): return "Confirm phase closure blockers."
+        default: return rawValue
+        }
+    }
+
+    func phaseChecklistItemLabel(_ rawValue: String) -> String {
+        switch (language, rawValue) {
+        case (.ja, "Packaging decision documented"): return "パッケージング判断が文書化されている"
+        case (.en, "Packaging decision documented"): return "Packaging decision documented"
+        default: return rawValue
+        }
+    }
+
     func booleanValueLabel(_ value: Bool) -> String {
         switch language {
         case .ja: return value ? "はい" : "いいえ"
@@ -790,7 +860,7 @@ struct AppStrings {
         case (.en, "candidate_requires_larger_architecture_change"): return "Requires Larger Architecture Change"
         case (.ja, "available"): return "利用可能"
         case (.en, "available"): return "Available"
-        case (.ja, "supported_preview_apply_control"): return "preview/apply 対応"
+        case (.ja, "supported_preview_apply_control"): return "プレビュー / 適用対応"
         case (.en, "supported_preview_apply_control"): return "Supported Preview/Apply Control"
         case (.ja, "separate_plan_required"): return "別計画が必要"
         case (.en, "separate_plan_required"): return "Separate Plan Required"
@@ -806,12 +876,12 @@ struct AppStrings {
         case (.en, "not_supported"): return "Not Supported"
         case (.ja, "cli_first_local_bridge"): return "CLI先行 + Local Bridge"
         case (.en, "cli_first_local_bridge"): return "CLI First + Local Bridge"
-        case (.ja, "native_macos_app_primary"): return "macOSネイティブアプリ"
+        case (.ja, "native_macos_app_primary"): return "macOS ネイティブアプリ"
         case (.en, "native_macos_app_primary"): return "Native macOS App"
-        case (.ja, "local_bridge_shell_primary"): return "Local Bridge shell"
+        case (.ja, "local_bridge_shell_primary"): return "Local Bridge シェル"
         case (.en, "local_bridge_shell_primary"): return "Local Bridge Shell"
-        case (.ja, "bridge_hosted_debug_shell"): return "Bridge上のデバッグshell"
-        case (.en, "bridge_hosted_debug_shell"): return "Bridge-hosted Debug Shell"
+        case (.ja, "bridge_hosted_debug_shell"): return "Bridge 上の互換シェル"
+        case (.en, "bridge_hosted_debug_shell"): return "Bridge-hosted Compatibility Shell"
         case (.ja, "hybrid_local_bridge_plus_service_targets"): return "Local Bridge + Service Target 併用候補"
         case (.en, "hybrid_local_bridge_plus_service_targets"): return "Hybrid Local Bridge Plus Service Targets"
         case (.ja, "service_first_resident_runtime"): return "service-first 常駐ランタイム候補"
@@ -828,15 +898,15 @@ struct AppStrings {
         case (.en, "blocked"): return "Blocked"
         case (.ja, "baseline_ready"): return "ベースライン準備済み"
         case (.en, "baseline_ready"): return "Baseline Ready"
-        case (.ja, "vault_unavailable"): return "Vault 未接続"
+        case (.ja, "vault_unavailable"): return "Vault未接続"
         case (.en, "vault_unavailable"): return "Vault Unavailable"
         case (.ja, "unavailable"): return "未利用"
         case (.en, "unavailable"): return "Unavailable"
-        case (.ja, "sqlite_test_local_vault"): return "SQLite test local vault"
+        case (.ja, "sqlite_test_local_vault"): return "SQLite テスト用 Local Vault"
         case (.en, "sqlite_test_local_vault"): return "SQLite Test Vault"
-        case (.ja, "sqlite_development_local_vault"): return "SQLite development local vault"
+        case (.ja, "sqlite_development_local_vault"): return "SQLite 開発用 Local Vault"
         case (.en, "sqlite_development_local_vault"): return "SQLite Development Vault"
-        case (.ja, "sqlite_macos_keychain_vault"): return "SQLite macOS keychain vault"
+        case (.ja, "sqlite_macos_keychain_vault"): return "SQLite macOS keychain Vault"
         case (.en, "sqlite_macos_keychain_vault"): return "macOS Keychain Vault"
         case (.ja, "os_backed"): return "OS保護"
         case (.en, "os_backed"): return "OS Backed"
@@ -1043,7 +1113,7 @@ struct AppStrings {
         case (.en, "repair_missing_items"): return "Repair preview has \(count ?? 0) missing items."
         case (.ja, "stderr_attention"): return "launchagent stderr に要確認メッセージがあります。"
         case (.en, "stderr_attention"): return "LaunchAgent stderr contains messages that need review."
-        case (.ja, "launchagent_loaded"): return "launchagent は読み込み済みです。"
+        case (.ja, "launchagent_loaded"): return "LaunchAgent は読み込み済みです。"
         case (.en, "launchagent_loaded"): return "The LaunchAgent is loaded."
         case (.ja, "plist_exists"): return "plist は存在しています。"
         case (.en, "plist_exists"): return "The plist file exists."
@@ -1073,9 +1143,9 @@ struct AppStrings {
         switch language {
         case .ja:
             return [
-                "Already bootstrapped の場合は bootout 後に bootstrap します",
-                "health check が失敗したら stderr のログパスを確認します",
-                "sayane command not found の場合は which sayane と plist path を再確認します",
+                "Already bootstrapped の場合は bootout の後に bootstrap します",
+                "ヘルスチェックが失敗したら stderr のログパスを確認します",
+                "sayane command not found の場合は `which sayane` と plist のパスを再確認します",
                 "ログが空なら kickstart -k を実行します",
                 "ログイン後に落ちる場合は plist の KeepAlive=true を確認します",
             ]
@@ -1111,9 +1181,9 @@ struct AppStrings {
         switch language {
         case .ja:
             return [
-                "preview はファイル変更やサービス読み込みを行いません",
-                "plist 書き込みは、この native read-first surface の外で明示 apply 確認が必要です",
-                "apply は operation id と preview hash の一致が必要です",
+                "preview ではファイル変更やサービス読み込みを行いません",
+                "plist の書き込みは、このネイティブ read-first 画面の外で明示的な apply 確認が必要です",
+                "apply では 操作ID と プレビューハッシュ の一致が必要です",
                 "service bootstrap は明示的な local launchctl 手順のまま維持します",
             ]
         case .en:
@@ -1135,14 +1205,14 @@ struct AppStrings {
 
     func vaultSessionOpenedMessage(level: String) -> String {
         switch language {
-        case .ja: return "unlock session を開始: \(tokenLabel(level))"
+        case .ja: return "アンロックセッションを開始: \(tokenLabel(level))"
         case .en: return "Opened unlock session: \(tokenLabel(level))"
         }
     }
 
     func vaultSessionsLockedMessage() -> String {
         switch language {
-        case .ja: return "unlock session を lock しました"
+        case .ja: return "アンロックセッションをロックしました"
         case .en: return "Locked Local Vault sessions"
         }
     }
@@ -1193,6 +1263,267 @@ struct AppStrings {
         }
     }
 
+    func bridgeActionInProgressMessage(startingBridge: Bool) -> String {
+        switch (language, startingBridge) {
+        case (.ja, true):
+            return "Bridge を起動しています。macOS ではターミナルウインドウが開いたら閉じずに保持します。"
+        case (.en, true):
+            return "Starting the Bridge. On macOS, keep the opened Terminal window running."
+        case (.ja, false):
+            return "Bridge へ再接続しています。接続診断とログを確認しながら待機します。"
+        case (.en, false):
+            return "Reconnecting to the Bridge. Wait while checking the diagnostics and logs if needed."
+        }
+    }
+
+    func bridgeLaunchWarmupMessage() -> String {
+        switch language {
+        case .ja:
+            return "Bridge を起動しました。ローカル接続が応答するまで少し待ってから再接続します。"
+        case .en:
+            return "The Bridge has started. Wait briefly for the local endpoint to respond, then reconnect."
+        }
+    }
+
+    func bridgeStartupSummary() -> String {
+        switch language {
+        case .ja:
+            return "起動または再接続してから各画面を読み込みます。"
+        case .en:
+            return "Start or reconnect first, then load the Home, Queue, and Daemon screens."
+        }
+    }
+
+    func bridgeTerminalRetentionSummary() -> String {
+        switch language {
+        case .ja:
+            return "macOS では起動後にターミナルウインドウを閉じず、そのまま保持します。"
+        case .en:
+            return "On macOS, keep the Bridge Terminal window open after startup."
+        }
+    }
+
+    func bridgeStatusDetailText(
+        status: String?,
+        version: String?,
+        sourceUpdatedAt: String?
+    ) -> String {
+        let normalizedStatus = status?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        switch (language, normalizedStatus) {
+        case (.ja, nil):
+            return "Bridge を起動すると \(bridgeStartupSummary()) \(bridgeTerminalRetentionSummary())"
+        case (.en, nil):
+            return "Start the Bridge to \(Self.lowercasedFirstLetter(bridgeStartupSummary())) \(bridgeTerminalRetentionSummary())"
+        case (.ja, "starting"), (.ja, "bootstrapping"):
+            let versionLabel = version ?? "-"
+            return "Bridge は起動中です。\(bridgeTerminalRetentionSummary()) バージョン: \(versionLabel)"
+        case (.en, "starting"), (.en, "bootstrapping"):
+            let versionLabel = version ?? "-"
+            return "The Bridge is starting. \(bridgeTerminalRetentionSummary()) Version: \(versionLabel)"
+        default:
+            let versionLabel = version ?? "-"
+            if let sourceUpdatedAt, !sourceUpdatedAt.isEmpty {
+                return "\(text(.bridgeVersion)): \(versionLabel) · \(text(.sourceUpdatedAt)): \(sourceUpdatedAt)"
+            }
+            return "\(text(.bridgeVersion)): \(versionLabel)"
+        }
+    }
+
+    func bridgeStatusPanelSummaryText(status: String?) -> String {
+        let normalizedStatus = status?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        switch (language, normalizedStatus) {
+        case (.ja, nil):
+            return "まずここから \(bridgeStartupSummary()) \(bridgeTerminalRetentionSummary())"
+        case (.en, nil):
+            return "Start or reconnect the Bridge here first, then load the Home, Queue, and Daemon screens. \(bridgeTerminalRetentionSummary())"
+        case (.ja, "starting"), (.ja, "bootstrapping"):
+            return "Bridge は起動中です。まずローカル応答を待ち、必要なら再接続またはログ確認へ進みます。\(bridgeTerminalRetentionSummary())"
+        case (.en, "starting"), (.en, "bootstrapping"):
+            return "The Bridge is starting. Wait for the local endpoint first, then reconnect or inspect logs if needed. \(bridgeTerminalRetentionSummary())"
+        default:
+            return "ここで接続状態を確認し、必要なら起動・再接続・ログ確認へ進みます。\(bridgeTerminalRetentionSummary())"
+        }
+    }
+
+    func bridgeRecoveryFailureMessage(_ detail: String) -> String {
+        switch language {
+        case .ja:
+            return "\(detail)\n次はターミナルウインドウと ~/.sayane/run-app-local.log を確認してください。"
+        case .en:
+            return "\(detail)\nNext, inspect the Bridge Terminal window and ~/.sayane/run-app-local.log."
+        }
+    }
+
+    func localizedBridgeErrorMessage(_ rawValue: String) -> String {
+        let value = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !value.isEmpty else { return value }
+        switch language {
+        case .ja:
+            if let path = Self.removingPrefix("Missing bearer token at ", from: value) {
+                return "Bearer トークンが見つかりません: \(path)"
+            }
+            if value == "Invalid Bridge response" {
+                return "Bridge からの応答を解釈できません。"
+            }
+            if let detail = Self.removingPrefix("HTTP ", from: value), let separator = detail.firstIndex(of: ":") {
+                let status = String(detail[..<separator]).trimmingCharacters(in: .whitespaces)
+                let body = String(detail[detail.index(after: separator)...]).trimmingCharacters(in: .whitespaces)
+                return "Bridge から HTTP \(status) が返りました: \(localizedBridgeErrorDetail(body))"
+            }
+            if value == "Could not connect to local Bridge" {
+                return "ローカル Bridge に接続できません。"
+            }
+            if value == "Could not locate the Sayane repository root from the current working directory." {
+                return "現在の作業ディレクトリから Sayane リポジトリを見つけられません。"
+            }
+            if let path = Self.removingPrefix("Missing launcher script: ", from: value) {
+                return "Bridge の起動スクリプトが見つかりません: \(path)"
+            }
+            if let message = Self.removingPrefix("Bridge launch failed: ", from: value) {
+                let cleaned = message
+                    .replacingOccurrences(of: "\nCheck the opened Bridge Terminal window or ~/.sayane/run-app-local.log.", with: "")
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                return "Bridge の起動に失敗しました: \(localizedBridgeErrorDetail(cleaned))"
+            }
+            return localizedBridgeErrorDetail(value)
+        case .en:
+            return value
+        }
+    }
+
+    private func localizedBridgeErrorDetail(_ rawValue: String) -> String {
+        switch language {
+        case .ja:
+            return rawValue
+                .replacingOccurrences(of: "Missing or invalid resident app UI session", with: "Resident App の UI セッションが見つからないか無効です")
+                .replacingOccurrences(of: "Missing or invalid resident app UI セッション", with: "Resident App の UI セッションが見つからないか無効です")
+                .replacingOccurrences(of: "Missing or invalid UI session", with: "UI セッションが見つからないか無効です")
+                .replacingOccurrences(of: "Missing or invalid UI セッション", with: "UI セッションが見つからないか無効です")
+                .replacingOccurrences(of: "Missing bootstrap bearer or valid resident app UI session", with: "bootstrap bearer または有効な Resident App UI セッションがありません")
+                .replacingOccurrences(of: "Missing bootstrap bearer or valid resident app UI セッション", with: "bootstrap bearer または有効な Resident App UI セッションがありません")
+                .replacingOccurrences(of: "Unknown error", with: "不明なエラー")
+                .replacingOccurrences(of: "connection refused", with: "接続が拒否されました")
+                .replacingOccurrences(of: "Connection refused", with: "接続が拒否されました")
+                .replacingOccurrences(of: "failed to connect", with: "接続に失敗しました")
+                .replacingOccurrences(of: "Failed to connect", with: "接続に失敗しました")
+                .replacingOccurrences(of: "missing bootstrap bearer", with: "bootstrap bearer がありません")
+                .replacingOccurrences(of: "missing bearer token", with: "bearer トークンが見つかりません")
+        case .en:
+            return rawValue
+        }
+    }
+
+    func bridgeRecoveryHintTitle(issue: String) -> String {
+        switch (language, issue) {
+        case (.ja, "missing_token"):
+            return "Bridge トークンを確認"
+        case (.en, "missing_token"):
+            return "Check the Bridge token"
+        case (.ja, "ui_session"):
+            return "Bridge セッションを作り直す"
+        case (.en, "ui_session"):
+            return "Recreate the Bridge session"
+        case (.ja, "not_connected"):
+            return "Bridge を先に起動"
+        case (.en, "not_connected"):
+            return "Start the Bridge first"
+        default:
+            return text(.connectionDiagnostics)
+        }
+    }
+
+    func bridgeRecoveryIssueTitle(issue: String) -> String {
+        switch (language, issue) {
+        case (.ja, "missing_token"):
+            return "Bridge トークンが見つかりません"
+        case (.en, "missing_token"):
+            return "The Bridge token is missing"
+        case (.ja, "ui_session"):
+            return "Bridge セッションが無効です"
+        case (.en, "ui_session"):
+            return "The Bridge session is invalid"
+        case (.ja, "not_connected"):
+            return "Bridge がまだ起動していません"
+        case (.en, "not_connected"):
+            return "The Bridge is not running yet"
+        default:
+            return text(.connectionProblem)
+        }
+    }
+
+    func bridgeRecoveryIssueSummary(issue: String) -> String {
+        switch (language, issue) {
+        case (.ja, "missing_token"):
+            return "認証用トークンを読めないため、このアプリから Bridge API を呼び出せません。"
+        case (.en, "missing_token"):
+            return "This app cannot call the Bridge API because it cannot read the authentication token."
+        case (.ja, "ui_session"):
+            return "Bridge には到達していますが、Resident App の UI セッションが切れているため再接続が必要です。"
+        case (.en, "ui_session"):
+            return "The app can reach the Bridge, but the Resident App UI session has expired and must be refreshed."
+        case (.ja, "not_connected"):
+            return "Bridge の待受がまだ無いため、\(bridgeStartupSummary())"
+        case (.en, "not_connected"):
+            return "Home, Queue, and Daemon cannot load because the Bridge is not listening yet."
+        default:
+            return text(.sessionProblem)
+        }
+    }
+
+    func bridgeRecoveryStepMessages(issue: String, startupAvailable: Bool) -> [String] {
+        switch (language, issue) {
+        case (.ja, "missing_token"):
+            var steps = ["トークンファイルが読めるか確認します。"]
+            if startupAvailable {
+                steps.append("ランチャーから Bridge を起動し直してトークンを再生成します。")
+            }
+            steps.append("解決しない場合はログを開いて失敗理由を確認します。")
+            return steps
+        case (.en, "missing_token"):
+            var steps = ["Check whether the token file can be read."]
+            if startupAvailable {
+                steps.append("Restart the Bridge from the launcher to regenerate the token.")
+            }
+            steps.append("If it still fails, open the logs and inspect the launch error.")
+            return steps
+        case (.ja, "ui_session"):
+            var steps = ["まず再接続を実行して UI セッションを更新します。"]
+            if startupAvailable {
+                steps.append("直らなければランチャーから Bridge を再起動し、開いたターミナルウインドウを閉じずに保持します。")
+            }
+            steps.append("その後にもう一度この画面で再接続します。")
+            return steps
+        case (.en, "ui_session"):
+            var steps = ["Reconnect first to refresh the UI session."]
+            if startupAvailable {
+                steps.append("If that does not fix it, restart the Bridge from the launcher and keep the opened Terminal window running.")
+            }
+            steps.append("Then reconnect again from this screen.")
+            return steps
+        case (.ja, "not_connected"):
+            var steps = ["Bridge がまだ待受していません。"]
+            if startupAvailable {
+                steps.append("ランチャーから Bridge を起動し、ターミナルウインドウを閉じずに保持します。")
+            }
+            steps.append("起動後にこの画面で再接続または更新します。")
+            return steps
+        case (.en, "not_connected"):
+            var steps = ["The Bridge is not listening yet."]
+            if startupAvailable {
+                steps.append("Start the Bridge from the launcher and keep the Terminal window open.")
+            }
+            steps.append("After it starts, reconnect or refresh from this screen.")
+            return steps
+        default:
+            var steps = ["Run the recovery action from this screen first."]
+            if startupAvailable {
+                steps.append("If needed, relaunch the Bridge from the launcher and keep the Terminal window open.")
+            }
+            steps.append("Use diagnostics and logs to inspect the next failure detail.")
+            return steps
+        }
+    }
+
     func savedFileMessage(path: String) -> String {
         switch language {
         case .ja: return "ファイル保存: \(path)"
@@ -1226,15 +1557,15 @@ struct AppStrings {
     }
 
     enum Key {
-        case appTitle, home, queue, daemon, refresh, retry, bootstrap, captureClipboard, openLogs, startBridge
+        case appTitle, home, queue, daemon, refresh, refreshInProgress, retry, bootstrap, bootstrapInProgress, captureClipboard, openLogs, startBridge, startBridgeInProgress
         case status, nextActions, summaryCards, topReviewItems, topDaemonActions, reviewableCount
         case localVault, vaultPath, vaultSessions, activeSessions, sessionPurpose, expiresAt, idleExpiresAt, unlockNormal, unlockSensitive, unlockDeepPrivate, lockAll, unlockPolicies, recommendedSetup, supported, notSupported, vaultUnavailable, backend
         case statusCounts, topSections, detail, diff, lineage, evaluate, approve, reject, revise
         case operatorPhase, serviceTargets, launchAgent, clipboardEmpty, connectionProblem
-        case sessionProblem, loading, none, error, bridgeHealthy, currentCandidate, editedText
+        case sessionProblem, loading, none, error, bridgeHealthy, bridgeStartupFocus, bridgeDisconnectedShort, screenSummaryPending, homeStartupSummary, currentCandidate, editedText
         case changeReason, rejectReason, evaluateLevel, submit, cancel, supportedPath
         case exitCriteria, notInScope, copyCommand, copyDetail, copyDiff, copyLineage, copyCurrentState, copyRecoveryPreview, copyOperatorSummary, copyPhaseGates, copyReadSurfaces, copySuggestedActions, exportHandoffNote, copiedCommand, actionCompleted, savedFile, actionFailed, openPlist, openRuntime, openLauncher
-        case reviewPreviews, generatedAt, bridgeContext, component, currentState, reason, notes, scope, recommended, currentPlatform, loadedStatus
+        case reviewPreviews, generatedAt, bridgeContext, component, currentState, reason, notes, scope, recommended, errorDetails, showErrorDetails, hideErrorDetails, currentPlatform, loadedStatus
         case packagingModels, primaryOperatorUI, recommendedLauncher, operatorSurfaceNotes, supervision, recoveryPolicy, backgroundSurfaces, guardrails
         case blockedBy, nextCommand, additionalBlockers, allowedCommands, deferredCommands, recoveryFlow, passiveVisibility
         case activeSupervision, startupVisibility, phaseChecklist, readSurfaces
@@ -1251,7 +1582,7 @@ struct AppStrings {
         case previousCandidate, nextCandidate, queueActions, targetSection
         case candidateResult, resultForCurrentCandidate
         case inspectActions, startActions, recoverActions, logActions, commandDeck
-        case searchCandidates, quickLinks, startHere, noPriorityActions, reviewNextCandidate, reviewDaemonAction
+        case searchCandidates, quickLinks, startHere, noPriorityActions, noPriorityActionsDisconnected, reviewNextCandidate, reviewDaemonAction
         case checkLaunchAgentStatus, openRunbook, launchAgentFocus, launchAgentFocusSummary
         case currentStateDetails, currentStateDetailsSummary, recoveryPreviewDetails, recoveryPreviewDetailsSummary
         case nextEpicWorkspace, operatorSummaryRail, phaseClosureGates, openSection, evidenceDrilldown, decisionAssist
@@ -1265,8 +1596,9 @@ struct AppStrings {
         case loadingState, screenOverview, bridgeConnected, bridgeAttention
         case bridgeStatusPanel, bridgeReady, bridgeStarting, bridgeNotConnected, bridgeStatusDetailDisconnected
         case bridgeVersion, sourceUpdatedAt, bridgeStatusPanelSummary
-        case connectionDiagnostics, bridgeURL, healthEndpoint, debugShellCompatibilitySummary, debugShell, tokenFile, logFile, profile
-        case openToken, openDebugShell, copyHealthCommand, copyStartupCommand, copyDebugShellURL, openScreen
+        case bridgeStartedMessage, bridgeReconnectedMessage, bridgeRefreshedMessage
+        case connectionDiagnostics, bridgeURL, healthEndpoint, debugShellCompatibilitySummary, debugShell, tokenFile, logFile, profile, launchSource, lastLaunchFailure
+        case debugCompatibilityTools, debugCompatibilityToolsSummary, openToken, openLaunchSource, openDebugShell, showDebugCompatibilityTools, hideDebugCompatibilityTools, copyHealthCommand, copyLaunchSource, copyStartupCommand, copyDebugShellURL, openScreen
         case noQuickLinks, noReviewItems, noDaemonActions, noCandidates, noCandidatesMatchingFilters
         case selectCandidatePrompt, detailUnavailable, loadingCandidates
         case sectionNavigator, expandAll, collapseAll, noNextActions

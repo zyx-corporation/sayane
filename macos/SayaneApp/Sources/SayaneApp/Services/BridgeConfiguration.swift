@@ -32,4 +32,11 @@ struct BridgeConfiguration: Sendable {
         components.queryItems = [URLQueryItem(name: "bootstrap_token", value: token)]
         return components.url!
     }
+
+    func debugShellEntryURL(token: String?) -> URL {
+        guard let token else { return debugShellURL }
+        let trimmed = token.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return debugShellURL }
+        return bootstrapURL(token: trimmed)
+    }
 }

@@ -31,7 +31,8 @@ def test_daemon_service_control_boundary_json_uses_default_runtime_root(
     assert payload["runtime_root"] == str(isolated_home / ".sayane" / "run")
     assert payload["service_plane"]["status"] in {
         "mvp_contract_only_non_macos",
-        "mvp_macos_launchagent_preview_apply_cli_only",
+        "post_mvp_macos_launchagent_preview_apply_cli_only",
+        "post_mvp_linux_systemd_user_preview_apply_cli_only",
     }
     assert payload["service_plane"]["lifecycle_operations"][0]["operation"] == "install"
 

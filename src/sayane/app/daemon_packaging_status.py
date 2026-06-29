@@ -152,14 +152,24 @@ class ResidentDaemonPackagingStatus:
                 ],
             },
             "service_integration": {
-                "status": "macos_launchagent_preview_apply_control"
-                if platform_family == "macos"
-                else "contract_only",
-                "supported_targets": ["macos_launchagent"] if platform_family == "macos" else [],
+                "status": (
+                    "macos_launchagent_preview_apply_control"
+                    if platform_family == "macos"
+                    else "linux_systemd_user_preview_apply_unit_write"
+                    if platform_family == "linux"
+                    else "contract_only"
+                ),
+                "supported_targets": (
+                    ["macos_launchagent"]
+                    if platform_family == "macos"
+                    else ["linux_systemd_user"]
+                    if platform_family == "linux"
+                    else []
+                ),
                 "reason": (
                     "Common cross-platform service targets are defined; "
-                    "concrete preview/apply plus explicit local launchctl "
-                    "control currently exists for macOS LaunchAgent only."
+                    "concrete preview/apply exists for macOS LaunchAgent and Linux systemd --user, "
+                    "while explicit install/update/remove closure remains deferred."
                 ),
             },
             "background_supervision": {

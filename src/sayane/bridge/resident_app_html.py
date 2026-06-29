@@ -89,6 +89,8 @@ BOOTSTRAP_COPY_LABELS: dict[str, str] = {
     "label.cleanup_preview": "Cleanup Preview",
     "label.repair_preview": "Repair Preview",
     "label.service_targets": "Service Targets",
+    "label.systemd_user_preview": "systemd User Preview",
+    "label.systemd_user_status": "systemd User Status",
     "label.launchagent_preview": "LaunchAgent Preview",
     "label.launchagent_status": "LaunchAgent Status",
     "label.packaging_status": "Packaging Status",
@@ -202,6 +204,8 @@ BOOTSTRAP_COPY_DETAILS: dict[str, str] = {
     "detail.empty_service_targets": "No service target entries.",
     "detail.empty_launchagent_preview": "No LaunchAgent preview is available on this platform.",
     "detail.empty_launchagent_status": "No LaunchAgent status is available on this platform.",
+    "detail.empty_systemd_user_preview": "No systemd --user preview is available on this platform.",
+    "detail.empty_systemd_user_status": "No systemd --user status is available on this platform.",
     "detail.proof_diagnostics_summary": "Proof-oriented read commands for identity, readiness, and API readiness.",
     "detail.empty_review_items": "No review items.",
     "detail.empty_quick_links": "No quick links.",
@@ -542,6 +546,8 @@ BOOTSTRAP_COPY_JA_LABELS: dict[str, str] = {
     "label.cleanup_preview": "クリーンアッププレビュー",
     "label.repair_preview": "修復プレビュー",
     "label.service_targets": "サービスターゲット",
+    "label.systemd_user_preview": "systemd ユーザープレビュー",
+    "label.systemd_user_status": "systemd ユーザー状態",
     "label.launchagent_preview": "LaunchAgent プレビュー",
     "label.launchagent_status": "LaunchAgent 状態",
     "label.packaging_status": "パッケージング状態",
@@ -655,6 +661,8 @@ BOOTSTRAP_COPY_JA_DETAILS: dict[str, str] = {
     "detail.empty_service_targets": "表示できるサービスターゲットはありません。",
     "detail.empty_launchagent_preview": "このプラットフォームでは LaunchAgent プレビューを利用できません。",
     "detail.empty_launchagent_status": "このプラットフォームでは LaunchAgent 状態を利用できません。",
+    "detail.empty_systemd_user_preview": "このプラットフォームでは systemd --user プレビューを利用できません。",
+    "detail.empty_systemd_user_status": "このプラットフォームでは systemd --user 状態を利用できません。",
     "detail.proof_diagnostics_summary": "identity / readiness / API readiness の proof-oriented 読み取りコマンドです。",
     "detail.empty_review_items": "表示できるレビュー項目はありません。",
     "detail.empty_quick_links": "表示できるクイックリンクはありません。",
@@ -1327,6 +1335,41 @@ def _render_launchagent_status(locale: str, payload: dict[str, Any] | None) -> s
             "plist_path",
             "plist_exists",
             "loaded_status",
+            "service_manager",
+        ],
+    )
+
+
+def _render_systemd_user_preview(locale: str, payload: dict[str, Any] | None) -> str:
+    if not payload:
+        return f'<p class="muted">{escape(_copy("detail.empty_systemd_user_preview", locale))}</p>'
+    metadata = {
+        "kind": payload.get("kind"),
+        "operation_id": payload.get("operation_id"),
+        "preview_hash": payload.get("preview_hash"),
+        "unit_name": payload.get("unit_name"),
+        "unit_path": payload.get("unit_path"),
+    }
+    command_items = "".join(
+        f"<li><strong>{escape(name)}</strong>: <code>{escape(command)}</code></li>"
+        for name, command in payload.get("systemctl_commands", {}).items()
+    ) or f'<li class="muted">{escape(_copy("detail.empty_preview", locale))}</li>'
+    return f"{_render_kv_panel(locale, metadata)}<ul>{command_items}</ul>"
+
+
+def _render_systemd_user_status(locale: str, payload: dict[str, Any] | None) -> str:
+    if not payload:
+        return f'<p class="muted">{escape(_copy("detail.empty_systemd_user_status", locale))}</p>'
+    return _render_kv_panel(
+        locale,
+        payload,
+        keys=[
+            "kind",
+            "unit_name",
+            "unit_path",
+            "unit_exists",
+            "active_status",
+            "enabled_status",
             "service_manager",
         ],
     )
@@ -3513,6 +3556,8 @@ def render_resident_app_daemon_panel(
     service_targets_status = payload.get("service_targets_status", {})
     launchagent_preview = payload.get("launchagent_preview")
     launchagent_status = payload.get("launchagent_status")
+    systemd_user_preview = payload.get("systemd_user_preview")
+    systemd_user_status = payload.get("systemd_user_status")
     next_actions = payload.get("next_actions", [])
     action_html = "".join(
         (
@@ -3619,6 +3664,8 @@ def render_resident_app_daemon_panel(
 {_render_panel(_copy("label.decision_assist", locale), _render_daemon_decision_assist(locale, payload))}
 {_render_panel(_copy("label.proof_diagnostics", locale), proof_panel_content)}
 {_render_panel(_copy("label.service_targets", locale), _render_service_targets_status(locale, service_targets_status) if service_targets_status else _render_json_fallback(service_targets_status))}
+{_render_panel(_copy("label.systemd_user_preview", locale), _render_systemd_user_preview(locale, systemd_user_preview))}
+{_render_panel(_copy("label.systemd_user_status", locale), _render_systemd_user_status(locale, systemd_user_status))}
 {_render_panel(_copy("label.launchagent_preview", locale), _render_launchagent_preview(locale, launchagent_preview))}
 {_render_panel(_copy("label.launchagent_status", locale), _render_launchagent_status(locale, launchagent_status))}
 <p class="muted">{escape(_copy("desc.daemon", locale))}</p>

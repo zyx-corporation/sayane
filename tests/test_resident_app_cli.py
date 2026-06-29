@@ -355,3 +355,44 @@ def test_resident_app_daemon_launchagent_preview_command_is_registered(
 
     assert result.exit_code == 0
     assert json.loads(result.stdout)["kind"] == "resident_daemon_launchagent_plan"
+
+
+def test_resident_app_daemon_systemd_user_preview_command_is_registered(
+    isolated_home: Path,
+) -> None:
+    result = runner.invoke(app, ["app", "daemon-systemd-user-preview", "--json"])
+
+    assert result.exit_code == 0
+    assert json.loads(result.stdout)["kind"] == "resident_daemon_systemd_user_plan"
+
+
+def test_resident_app_daemon_systemd_user_enable_now_command_is_registered(
+    isolated_home: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def _fake_run_systemd_user_command(plan, *, action):
+        return {
+            "kind": "resident_daemon_systemd_user_control_receipt",
+            "operation_id": plan.operation_id,
+            "preview_hash": plan.preview_hash(),
+            "unit_name": "sayane-resident-bridge.service",
+            "action": action,
+            "platform": "linux",
+            "unit_path": str(plan.unit_path),
+            "command": ["systemctl", "--user", "enable", "--now", "sayane-resident-bridge.service"],
+            "result": "completed",
+            "applied": True,
+            "returncode": 0,
+            "stdout": "",
+            "stderr": "",
+        }
+
+    monkeypatch.setattr(
+        "sayane.cli.commands.app_daemon_systemd_user.run_systemd_user_command",
+        _fake_run_systemd_user_command,
+    )
+
+    result = runner.invoke(app, ["app", "daemon-systemd-user-enable-now", "--json"])
+
+    assert result.exit_code == 0
+    assert json.loads(result.stdout)["kind"] == "resident_daemon_systemd_user_control_receipt"

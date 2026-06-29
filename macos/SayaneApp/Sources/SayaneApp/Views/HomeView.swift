@@ -9,7 +9,9 @@ struct HomeView: View {
                 header
                 BridgeStatusPanel(model: model)
                 prioritySection
-                BridgeDiagnosticsCard(model: model, compact: false)
+                if showsBridgeDiagnostics {
+                    BridgeDiagnosticsCard(model: model, compact: false)
+                }
                 cardsSection
                 vaultSection
                 quickLinksSection
@@ -26,10 +28,8 @@ struct HomeView: View {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(model.strings.text(.appTitle)).font(.largeTitle).bold()
-                    if let health = model.health {
-                        Text("\(model.strings.text(.bridgeHealthy)): \(model.strings.summaryValueLabel(key: "state", value: health.status)) · \(health.version ?? "-")")
-                            .foregroundStyle(.secondary)
-                    }
+                    Text(model.homeBridgeSummaryText)
+                        .foregroundStyle(.secondary)
                 }
                 Spacer()
                 Button(model.strings.text(.captureClipboard)) {
@@ -63,10 +63,11 @@ struct HomeView: View {
                 StateCardView(
                     icon: "sparkles",
                     title: model.strings.text(.startHere),
-                    message: model.strings.text(.noPriorityActions),
+                    message: model.homePriorityEmptyMessage,
                     tone: .neutral,
-                    badgeText: model.strings.text(.healthySignals),
-                    actionTitle: model.strings.text(.refresh),
+                    badgeText: model.homePriorityEmptyBadgeText,
+                    actionTitle: model.toolbarRefreshText,
+                    actionEnabled: !model.bridgeRecoveryActionDisabled,
                     action: { Task { await model.refreshCurrentScreen() } }
                 )
             } else {
@@ -98,11 +99,12 @@ struct HomeView: View {
                     title: model.strings.text(.topReviewItems),
                     message: model.strings.text(.noReviewItems),
                     tone: .neutral,
-                    actionTitle: model.strings.text(.refresh),
+                    actionTitle: model.toolbarRefreshText,
+                    actionEnabled: !model.bridgeRecoveryActionDisabled,
                     action: { Task { await model.refreshCurrentScreen() } }
                 )
             } else {
-                ForEach(model.homeState?.topReviewItems ?? []) { item in
+                ForEach(reviewPreviewItems) { item in
                     Button {
                         model.openCandidate(item.candidateId)
                     } label: {
@@ -123,6 +125,11 @@ struct HomeView: View {
                     .buttonStyle(.plain)
                     .accessibilityLabel("\(item.candidateId) \(homeReviewItemSummary(item))")
                 }
+                if reviewOverflowCount > 0 {
+                    Text(model.strings.moreItemsMessage(reviewOverflowCount))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
     }
@@ -136,11 +143,12 @@ struct HomeView: View {
                     title: model.strings.text(.quickLinks),
                     message: model.strings.text(.noQuickLinks),
                     tone: .neutral,
-                    actionTitle: model.strings.text(.refresh),
+                    actionTitle: model.toolbarRefreshText,
+                    actionEnabled: !model.bridgeRecoveryActionDisabled,
                     action: { Task { await model.refreshCurrentScreen() } }
                 )
             } else {
-                ForEach(model.homeState?.quickLinks ?? []) { link in
+                ForEach(quickLinkPreviewItems) { link in
                     Button {
                         model.openQuickLink(link)
                     } label: {
@@ -158,6 +166,11 @@ struct HomeView: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(model.strings.quickLinkLabel(screen: link.screen))
+                }
+                if quickLinkOverflowCount > 0 {
+                    Text(model.strings.moreItemsMessage(quickLinkOverflowCount))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
         }
@@ -304,7 +317,8 @@ struct HomeView: View {
                     title: model.strings.text(.localVault),
                     message: model.strings.text(.vaultUnavailable),
                     tone: .neutral,
-                    actionTitle: model.strings.text(.refresh),
+                    actionTitle: model.toolbarRefreshText,
+                    actionEnabled: !model.bridgeRecoveryActionDisabled,
                     action: { Task { await model.refreshCurrentScreen() } }
                 )
             }
@@ -324,7 +338,7 @@ struct HomeView: View {
                     action: { model.choose(screen: .daemon) }
                 )
             } else {
-                ForEach(model.homeState?.topDaemonActions ?? [], id: \.self) { action in
+                ForEach(daemonActionPreviewItems, id: \.self) { action in
                     Button {
                         model.choose(screen: .daemon)
                     } label: {
@@ -350,6 +364,11 @@ struct HomeView: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("\(homeDaemonActionTitle(action)) \(homeDaemonActionSummary(action))")
+                }
+                if daemonActionOverflowCount > 0 {
+                    Text(model.strings.moreItemsMessage(daemonActionOverflowCount))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
         }
@@ -383,6 +402,36 @@ struct HomeView: View {
         default:
             return "\(model.strings.text(.screenOverview)): \(link.path)"
         }
+    }
+
+    private var showsBridgeDiagnostics: Bool {
+        if model.errorMessage != nil { return true }
+        guard let status = model.health?.status.lowercased() else { return true }
+        return status != "ok" && status != "healthy"
+    }
+
+    private var reviewPreviewItems: [TopReviewItem] {
+        Array((model.homeState?.topReviewItems ?? []).prefix(2))
+    }
+
+    private var reviewOverflowCount: Int {
+        max((model.homeState?.topReviewItems.count ?? 0) - reviewPreviewItems.count, 0)
+    }
+
+    private var quickLinkPreviewItems: [QuickLink] {
+        Array((model.homeState?.quickLinks ?? []).prefix(3))
+    }
+
+    private var quickLinkOverflowCount: Int {
+        max((model.homeState?.quickLinks.count ?? 0) - quickLinkPreviewItems.count, 0)
+    }
+
+    private var daemonActionPreviewItems: [String] {
+        Array((model.homeState?.topDaemonActions ?? []).prefix(2))
+    }
+
+    private var daemonActionOverflowCount: Int {
+        max((model.homeState?.topDaemonActions.count ?? 0) - daemonActionPreviewItems.count, 0)
     }
 
     private var priorityItems: [(title: String, summary: String, badge: String, tone: StatusTone, action: () -> Void)] {

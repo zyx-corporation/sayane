@@ -99,29 +99,29 @@ struct DaemonView: View {
                     focusSection(proxy: proxy)
                     operatorSummaryRail(proxy: proxy)
                     sectionNavigator(proxy: proxy)
-                    launchAgent
-                        .id(SectionAnchor.launchAgent)
-                    launchAgentRunbook
-                        .id(SectionAnchor.launchAgentRunbook)
                     operatorWorkspace(proxy: proxy)
                         .id(SectionAnchor.operatorWorkspace)
+                    nextActions
+                        .id(SectionAnchor.nextActions)
+                    launchAgent
+                        .id(SectionAnchor.launchAgent)
+                    serviceTargets
                     cards
-                    packagingModels
-                        .id(SectionAnchor.packagingModels)
                     operatorPanels
                     operatorPhase
                         .id(SectionAnchor.operatorPhase)
-                    handoffSnapshot
-                    startupVisibility
-                    serviceTargets
+                    packagingModels
+                        .id(SectionAnchor.packagingModels)
                     serviceLifecycle
                         .id(SectionAnchor.serviceLifecycle)
                     supervision
                         .id(SectionAnchor.supervision)
                     recoveryPolicy
                         .id(SectionAnchor.recoveryPolicy)
-                    nextActions
-                        .id(SectionAnchor.nextActions)
+                    launchAgentRunbook
+                        .id(SectionAnchor.launchAgentRunbook)
+                    startupVisibility
+                    handoffSnapshot
                 }
                 .padding(24)
             }
@@ -164,12 +164,14 @@ struct DaemonView: View {
                     StateCardView(
                         icon: "rectangle.3.group",
                         title: model.strings.text(.operatorSummaryRail),
-                        message: model.strings.text(.noPriorityActions),
+                        message: model.daemonSummaryEmptyMessage,
                         tone: .neutral
+                        ,
+                        badgeText: model.daemonSummaryEmptyBadgeText
                     )
                 } else {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 240), spacing: 10)], spacing: 10) {
-                        ForEach(operatorSummaryRailItems) { item in
+                        ForEach(operatorSummaryRailPreviewItems) { item in
                             SurfaceCard(emphasis: 0.30) {
                                 VStack(alignment: .leading, spacing: 8) {
                                     HStack(alignment: .top, spacing: 8) {
@@ -187,6 +189,11 @@ struct DaemonView: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             }
                         }
+                    }
+                    if operatorSummaryRailOverflowCount > 0 {
+                        Text(model.strings.moreItemsMessage(operatorSummaryRailOverflowCount))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                 }
             }
@@ -253,9 +260,11 @@ struct DaemonView: View {
                 StateCardView(
                     icon: "square.grid.2x2",
                     title: model.strings.text(.nextEpicWorkspace),
-                    message: model.strings.text(.noPriorityActions),
+                    message: model.daemonWorkspaceEmptyMessage,
                     tone: .neutral,
-                    actionTitle: model.strings.text(.refresh),
+                    badgeText: model.daemonWorkspaceEmptyBadgeText,
+                    actionTitle: model.toolbarRefreshText,
+                    actionEnabled: !model.bridgeRecoveryActionDisabled,
                     action: { Task { await model.refreshCurrentScreen() } }
                 )
             } else {
@@ -291,7 +300,7 @@ struct DaemonView: View {
                         )
                     } else {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 240), spacing: 12)], spacing: 12) {
-                            ForEach(workspaceDisplayItems) { item in
+                            ForEach(workspaceDisplayPreviewItems) { item in
                                 SurfaceCard(emphasis: 0.3) {
                                     VStack(alignment: .leading, spacing: 10) {
                                         HStack(alignment: .top, spacing: 8) {
@@ -338,6 +347,11 @@ struct DaemonView: View {
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                 }
                             }
+                        }
+                        if workspaceDisplayOverflowCount > 0 {
+                            Text(model.strings.moreItemsMessage(workspaceDisplayOverflowCount))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
                     }
                 }
@@ -431,7 +445,7 @@ struct DaemonView: View {
                     )
                 } else {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 240), spacing: 10)], spacing: 10) {
-                        ForEach(orderedDecisionAssistItems) { item in
+                        ForEach(decisionAssistPreviewItems) { item in
                             SurfaceCard(emphasis: 0.28) {
                                 VStack(alignment: .leading, spacing: 8) {
                                     HStack(alignment: .top, spacing: 8) {
@@ -453,6 +467,11 @@ struct DaemonView: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             }
                         }
+                    }
+                    if decisionAssistOverflowCount > 0 {
+                        Text(model.strings.moreItemsMessage(decisionAssistOverflowCount))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                 }
             }
@@ -476,7 +495,7 @@ struct DaemonView: View {
                     .disabled(model.daemonReadSurfacesClipboardText() == nil)
                 }
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 240), spacing: 10)], spacing: 10) {
-                    ForEach(orderedEvidenceEntries) { entry in
+                    ForEach(evidencePreviewItems) { entry in
                         SurfaceCard(emphasis: 0.22) {
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack(alignment: .top, spacing: 8) {
@@ -499,6 +518,11 @@ struct DaemonView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
+                }
+                if evidenceOverflowCount > 0 {
+                    Text(model.strings.moreItemsMessage(evidenceOverflowCount))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -601,7 +625,8 @@ struct DaemonView: View {
                     message: model.strings.text(.noPriorityActions),
                     tone: .neutral,
                     badgeText: model.strings.text(.healthySignals),
-                    actionTitle: model.strings.text(.refresh),
+                    actionTitle: model.toolbarRefreshText,
+                    actionEnabled: !model.bridgeRecoveryActionDisabled,
                     action: { Task { await model.refreshCurrentScreen() } }
                 )
             } else {
@@ -782,19 +807,12 @@ struct DaemonView: View {
                                 .font(.caption.weight(.semibold))
                             commandRow(recommendedLauncher)
                         }
-                        if let bootstrapUI = details.currentSupportedOperatorPath.bootstrapUI {
-                            Text(model.strings.text(.debugShell))
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.secondary)
-                            commandRow(bootstrapUI)
-                            DebugShellShortcutButtons(model: model, bootstrapUI: bootstrapUI)
-                        }
-                        if let debugOperatorUI = details.currentSupportedOperatorPath.debugOperatorUI,
-                           !debugOperatorUI.isEmpty {
-                            DetailLabelValueRow(
-                                label: model.strings.text(.debugShell),
-                                value: model.strings.tokenLabel(debugOperatorUI)
-                            )
+                        if details.currentSupportedOperatorPath.bootstrapUI != nil {
+                            DebugCompatibilityDisclosure(model: model) {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    DebugShellShortcutButtons(model: model)
+                                }
+                            }
                         }
                         if let localOnly = details.currentSupportedOperatorPath.localOnly {
                             DetailLabelValueRow(
@@ -911,13 +929,12 @@ struct DaemonView: View {
                         commandRow(command)
                         StartupShortcutButtons(model: model, command: command)
                     }
-                    if let bootstrapUI = startup["bootstrap_ui"]?.stringValue {
-                        Text(model.strings.text(.bootstrapUI)).bold()
-                        commandRow(bootstrapUI)
-                        DebugShellShortcutButtons(model: model, bootstrapUI: bootstrapUI)
-                        Text(model.strings.text(.debugShellCompatibilitySummary))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                    if startup["bootstrap_ui"]?.stringValue != nil {
+                        DebugCompatibilityDisclosure(model: model) {
+                            VStack(alignment: .leading, spacing: 6) {
+                                DebugShellShortcutButtons(model: model)
+                            }
+                        }
                     }
                     if let localOnly = startup["local_only"]?.boolValue {
                         DetailLabelValueRow(
@@ -1669,7 +1686,8 @@ struct DaemonView: View {
                         message: model.strings.text(.noNextActions),
                         tone: .positive,
                         badgeText: model.strings.text(.healthySignals),
-                        actionTitle: model.strings.text(.refresh),
+                        actionTitle: model.toolbarRefreshText,
+                        actionEnabled: !model.bridgeRecoveryActionDisabled,
                         action: { Task { await model.refreshCurrentScreen() } }
                     )
                 } else {
@@ -2776,6 +2794,38 @@ struct DaemonView: View {
         }
 
         return items
+    }
+
+    private var operatorSummaryRailPreviewItems: [OperatorSummaryRailItem] {
+        Array(operatorSummaryRailItems.prefix(3))
+    }
+
+    private var operatorSummaryRailOverflowCount: Int {
+        max(operatorSummaryRailItems.count - operatorSummaryRailPreviewItems.count, 0)
+    }
+
+    private var decisionAssistPreviewItems: [DecisionAssistItem] {
+        Array(orderedDecisionAssistItems.prefix(2))
+    }
+
+    private var decisionAssistOverflowCount: Int {
+        max(orderedDecisionAssistItems.count - decisionAssistPreviewItems.count, 0)
+    }
+
+    private var evidencePreviewItems: [EvidenceEntry] {
+        Array(orderedEvidenceEntries.prefix(2))
+    }
+
+    private var evidenceOverflowCount: Int {
+        max(orderedEvidenceEntries.count - evidencePreviewItems.count, 0)
+    }
+
+    private var workspaceDisplayPreviewItems: [OperatorWorkspaceItem] {
+        Array(workspaceDisplayItems.prefix(4))
+    }
+
+    private var workspaceDisplayOverflowCount: Int {
+        max(workspaceDisplayItems.count - workspaceDisplayPreviewItems.count, 0)
     }
 
     private var troubleshootingNotes: [String] {

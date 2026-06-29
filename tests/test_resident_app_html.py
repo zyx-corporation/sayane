@@ -325,6 +325,53 @@ def test_render_resident_app_daemon_panel_includes_service_targets_and_launchage
     assert "com.sayane.resident.bridge" in html
 
 
+def test_render_resident_app_daemon_panel_includes_systemd_user_preview() -> None:
+    html = render_resident_app_daemon_panel(
+        {
+            "status": {"state": "stopped", "is_running_daemon": False, "runtime_initialized": True},
+            "readiness": {"readiness_status": "ready"},
+            "runtime_init": {"kind": "resident_daemon_runtime_init_plan", "items": []},
+            "cleanup_preview": {"kind": "resident_daemon_cleanup_apply_preview", "decision_report": {"decisions": []}},
+            "repair_preview": {"kind": "resident_daemon_repair_apply_preview", "decisions": {}},
+            "packaging_status": {"kind": "resident_daemon_packaging_status", "packaging_model": "cli_first_local_bridge"},
+            "service_control_boundary": {"kind": "resident_daemon_service_control_boundary", "control_plane": {"allowed_commands": []}, "service_plane": {"allowed_commands": [], "deferred_commands": []}},
+            "supervision_status": {"kind": "resident_daemon_supervision_status"},
+            "recovery_consent_status": {"kind": "resident_daemon_recovery_consent_status"},
+            "operator_phase_status": {"phase": "operator_packaging_and_supervision", "phase_closure_checklist": []},
+            "service_targets_status": {
+                "kind": "resident_daemon_service_targets_status",
+                "current_platform": "linux",
+                "recommended_target": "linux_systemd_user",
+                "policy_gates": {},
+                "targets": [{"target": "linux_systemd_user", "platform": "linux", "service_manager": "systemd --user", "status": "supported_preview_apply_unit_write"}],
+            },
+            "systemd_user_preview": {
+                "kind": "resident_daemon_systemd_user_plan",
+                "operation_id": "systemd-user-123",
+                "preview_hash": "abc123",
+                "unit_name": "sayane-resident-bridge.service",
+                "unit_path": "/tmp/sayane-resident-bridge.service",
+                "systemctl_commands": {"daemon_reload": "systemctl --user daemon-reload"},
+            },
+            "systemd_user_status": {
+                "kind": "resident_daemon_systemd_user_status",
+                "unit_name": "sayane-resident-bridge.service",
+                "unit_path": "/tmp/sayane-resident-bridge.service",
+                "unit_exists": True,
+                "active_status": "inactive",
+                "enabled_status": "disabled",
+                "service_manager": "systemd --user",
+            },
+            "next_actions": [{"command": "sayane app daemon-systemd-user-preview --json", "reason": "review it"}],
+        }
+    )
+
+    assert "systemd User Preview" in html
+    assert "systemd User Status" in html
+    assert "sayane-resident-bridge.service" in html
+    assert "systemctl --user daemon-reload" in html
+
+
 def test_resident_app_home_translates_read_surface_purposes_in_japanese() -> None:
     html = render_resident_app_home(
         {

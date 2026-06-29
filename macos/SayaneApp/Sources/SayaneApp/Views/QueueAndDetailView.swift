@@ -82,15 +82,18 @@ struct QueueAndDetailView: View {
                     icon: searchText.isEmpty && selectedStatusFilter.isEmpty && selectedSectionFilter.isEmpty ? "tray" : "line.3.horizontal.decrease.circle",
                     title: model.strings.text(.queue),
                     message: searchText.isEmpty && selectedStatusFilter.isEmpty && selectedSectionFilter.isEmpty
-                        ? model.strings.text(.noCandidates)
+                        ? model.queueEmptyMessage
                         : model.strings.text(.noCandidatesMatchingFilters),
                     tone: .neutral,
                     badgeText: searchText.isEmpty && selectedStatusFilter.isEmpty && selectedSectionFilter.isEmpty
-                        ? nil
+                        ? model.queueEmptyBadgeText
                         : model.strings.text(.activeFilters),
                     actionTitle: searchText.isEmpty && selectedStatusFilter.isEmpty && selectedSectionFilter.isEmpty
-                        ? model.strings.text(.refresh)
+                        ? model.toolbarRefreshText
                         : model.strings.text(.clearFilters),
+                    actionEnabled: searchText.isEmpty && selectedStatusFilter.isEmpty && selectedSectionFilter.isEmpty
+                        ? !model.bridgeRecoveryActionDisabled
+                        : true,
                     action: searchText.isEmpty && selectedStatusFilter.isEmpty && selectedSectionFilter.isEmpty
                         ? { Task { await model.refreshCurrentScreen() } }
                         : clearFilters
@@ -271,10 +274,11 @@ struct QueueAndDetailView: View {
                     StateCardView(
                         icon: "rectangle.and.text.magnifyingglass",
                         title: model.strings.text(.detail),
-                        message: model.strings.text(.selectCandidatePrompt),
+                        message: model.detailEmptyMessage,
                         tone: .neutral,
-                        badgeText: model.strings.text(.queue),
-                        actionTitle: model.strings.text(.refresh),
+                        badgeText: model.detailEmptyBadgeText,
+                        actionTitle: model.toolbarRefreshText,
+                        actionEnabled: !model.bridgeRecoveryActionDisabled,
                         action: { Task { await model.refreshCurrentScreen() } }
                     )
                 } else if model.detailState == nil {

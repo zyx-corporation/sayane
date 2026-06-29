@@ -35,6 +35,11 @@ def test_app_contract_exposes_entrypoint_and_surfaces() -> None:
         surface["path"] == "/app/ui-action/*"
         for surface in payload["human_surfaces"]
     )
+    assert all(
+        surface.get("compatibility_status") == "debug_only_legacy"
+        for surface in payload["human_surfaces"]
+        if surface["path"].startswith("/app/ui")
+    )
     assert any(
         surface["path"] == "/app/overview"
         for surface in payload["read_surfaces"]
@@ -112,6 +117,18 @@ def test_app_contract_exposes_entrypoint_and_surfaces() -> None:
         for surface in payload["read_surfaces"]
     )
     assert any(
+        surface["path"] == "cli:sayane app daemon-systemd-user-preview --json"
+        for surface in payload["read_surfaces"]
+    )
+    assert any(
+        surface["path"] == "cli:sayane app daemon-systemd-user-status --json"
+        for surface in payload["read_surfaces"]
+    )
+    assert any(
+        surface["path"] == "cli:sayane app daemon-systemd-user-enable-now --json"
+        for surface in payload["read_surfaces"]
+    )
+    assert any(
         surface["path"] == "cli:sayane app daemon-recovery-consent-status --json"
         for surface in payload["read_surfaces"]
     )
@@ -180,16 +197,17 @@ def test_app_contract_exposes_entrypoint_and_surfaces() -> None:
         for contract in payload["screen_state_contracts"]
     )
     assert "GET /app/overview" in payload["recommended_flow"]
-    assert "GET /app/ui-state/home" in payload["recommended_flow"]
-    assert "GET /app/ui-state/operator-phase-status" in payload["recommended_flow"]
-    assert "GET /app/ui-state/daemon-packaging-status" in payload["recommended_flow"]
-    assert "GET /app/ui-state/daemon-service-targets-status" in payload["recommended_flow"]
-    assert "GET /app/ui-state/daemon-preflight" in payload["recommended_flow"]
+    assert "GET /app/screen-state/home" in payload["recommended_flow"]
+    assert "GET /app/operator-phase-status" in payload["recommended_flow"]
+    assert "GET /app/daemon-packaging-status" in payload["recommended_flow"]
+    assert "GET /app/daemon-service-targets-status" in payload["recommended_flow"]
+    assert "GET /app/daemon-preflight" in payload["recommended_flow"]
     assert "GET /app/vault-session" in payload["recommended_flow"]
     assert "POST /app/vault-session/open" in payload["recommended_flow"]
-    assert "POST /app/ui-action/vault-session/open" in payload["recommended_flow"]
-    assert "POST /app/ui-action/candidates/{id}/approve or /reject" in payload["recommended_flow"]
-    assert "POST /app/ui-action/session/logout" in payload["recommended_flow"]
+    assert "GET /app/ui-state/home" in payload["legacy_compatibility_flow"]
+    assert "POST /app/ui-action/vault-session/open" in payload["legacy_compatibility_flow"]
+    assert "POST /app/ui-action/candidates/{id}/approve or /reject" in payload["legacy_compatibility_flow"]
+    assert "POST /app/ui-action/session/logout" in payload["legacy_compatibility_flow"]
 
 
 def test_app_contract_uses_local_shell_wording_for_cookie_backed_ui_surfaces() -> None:
@@ -291,6 +309,26 @@ def test_app_contract_exposes_surface_roles_and_shared_semantics() -> None:
     )
     assert any(
         item["command"] == "sayane app daemon-launchagent-kickstart --json"
+        for item in payload["operator_cli_surfaces"]
+    )
+    assert any(
+        item["command"] == "sayane app daemon-systemd-user-preview --json"
+        for item in payload["operator_cli_surfaces"]
+    )
+    assert any(
+        item["command"] == "sayane app daemon-systemd-user-status --json"
+        for item in payload["operator_cli_surfaces"]
+    )
+    assert any(
+        item["command"] == "sayane app daemon-systemd-user-apply --json"
+        for item in payload["operator_cli_surfaces"]
+    )
+    assert any(
+        item["command"] == "sayane app daemon-systemd-user-enable-now --json"
+        for item in payload["operator_cli_surfaces"]
+    )
+    assert any(
+        item["command"] == "sayane app daemon-systemd-user-disable-now --json"
         for item in payload["operator_cli_surfaces"]
     )
     assert any(

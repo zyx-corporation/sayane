@@ -34,11 +34,12 @@ struct RootView: View {
                         title: title,
                         message: message,
                         tone: model.actionTone,
+                        showsProgress: model.actionShowsProgress,
                         dismiss: model.dismissActionFeedback
                     )
                 }
                 Group {
-                    if let error = model.errorMessage {
+                    if model.shouldPresentBlockingErrorView, let error = model.errorMessage {
                         ErrorView(model: model, message: error)
                     } else {
                         switch model.selectedScreen {
@@ -74,9 +75,10 @@ struct RootView: View {
                         Task { await model.captureClipboard() }
                     }
                     .keyboardShortcut("v", modifiers: [.command, .shift])
-                    Button(model.strings.text(.refresh)) {
+                    Button(model.toolbarRefreshText) {
                         Task { await model.refreshCurrentScreen() }
                     }
+                    .disabled(model.bridgeRecoveryActionDisabled)
                     .keyboardShortcut("r", modifiers: [.command])
                     Button(model.strings.text(.openLogs)) {
                         model.openLogFile()
@@ -103,11 +105,15 @@ struct RootView: View {
                 Text(model.currentScreenSummary)
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Divider().frame(height: 16)
-                Text("\(model.strings.text(.navigationTrail)): \(model.navigationTrailText)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                if let selectedCandidate = model.selectedCandidateBadgeText {
+                if model.shouldShowNavigationTrailInStatusBar {
+                    Divider().frame(height: 16)
+                    Text("\(model.strings.text(.navigationTrail)): \(model.navigationTrailText)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                if model.shouldShowSelectedCandidateInStatusBar,
+                   let selectedCandidate = model.selectedCandidateBadgeText
+                {
                     Divider().frame(height: 16)
                     Text(selectedCandidate)
                         .font(.caption)

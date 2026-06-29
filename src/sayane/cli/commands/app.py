@@ -66,6 +66,9 @@ from sayane.cli.commands.app_daemon_runtime_init import (
 from sayane.cli.commands.app_daemon_service_control_boundary import (
     register_daemon_service_control_boundary_command,
 )
+from sayane.cli.commands.app_daemon_systemd_user import (
+    register_daemon_systemd_user_commands,
+)
 from sayane.cli.commands.app_daemon_service_targets_status import (
     register_daemon_service_targets_status_command,
 )
@@ -355,6 +358,7 @@ def register_app_commands(app: typer.Typer) -> None:
     register_daemon_packaging_status_command(app_group)
     register_daemon_service_targets_status_command(app_group)
     register_daemon_service_control_boundary_command(app_group)
+    register_daemon_systemd_user_commands(app_group)
     register_daemon_supervision_status_command(app_group)
     register_daemon_recovery_consent_status_command(app_group)
     register_daemon_launchagent_commands(app_group)

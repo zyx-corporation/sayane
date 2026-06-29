@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import replace
 from urllib.parse import urlencode
 
-from fastapi import APIRouter, Depends, FastAPI, Form, HTTPException, Request, status
+from fastapi import APIRouter, Depends, FastAPI, Form, HTTPException, Request, Response, status
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
 from sayane.bridge import candidate_api
@@ -318,8 +318,13 @@ def register_resident_app_routes(
         response.delete_cookie(ui_cookie_name)
         response.delete_cookie(ui_locale_cookie_name)
 
+    def _mark_legacy_compatibility_surface(response: Response) -> None:
+        response.headers["X-Sayane-Compatibility-Surface"] = "debug_only_legacy"
+        response.headers["X-Sayane-Compatibility-Mode"] = "bridge_hosted_local_shell"
+
     def _html_response(content: str, *, token: str, locale: str) -> HTMLResponse:
         response = HTMLResponse(content=content)
+        _mark_legacy_compatibility_surface(response)
         _set_ui_cookie(response, token, locale=locale)
         return response
 
@@ -335,6 +340,7 @@ def register_resident_app_routes(
             url=_redirect_url(path, notice=notice, error=error),
             status_code=status.HTTP_303_SEE_OTHER,
         )
+        _mark_legacy_compatibility_surface(response)
         _set_ui_cookie(response, token, locale=locale)
         return response
 
@@ -560,23 +566,28 @@ def register_resident_app_routes(
     ) -> JSONResponse:
         clear_ui_session(cfg)
         response = JSONResponse({"status": "logged_out"})
+        _mark_legacy_compatibility_surface(response)
         _clear_ui_cookies(response)
         return response
 
     @router.get("/app/ui-state/contract")
     def get_app_ui_contract_state(
+        response: Response,
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
         from sayane.app.app_contract import build_app_contract
 
+        _mark_legacy_compatibility_surface(response)
         return build_app_contract()
 
     @router.get("/app/ui-state/home")
     def get_app_ui_home_state(
+        response: Response,
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
         from sayane.app import build_app_overview, build_home_screen_state, build_resident_runtime
 
+        _mark_legacy_compatibility_surface(response)
         runtime = build_resident_runtime(
             home=cfg.home,
             host=cfg.host,
@@ -586,16 +597,20 @@ def register_resident_app_routes(
 
     @router.get("/app/ui-state/operator-phase-status")
     def get_app_ui_operator_phase_status(
+        response: Response,
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
+        _mark_legacy_compatibility_surface(response)
         return _operator_phase_status_payload()
 
     @router.get("/app/ui-state/vault-status")
     def get_app_ui_vault_status(
+        response: Response,
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
         from sayane.app import build_app_vault_status, build_resident_runtime
 
+        _mark_legacy_compatibility_surface(response)
         runtime = build_resident_runtime(
             home=cfg.home,
             host=cfg.host,
@@ -605,74 +620,96 @@ def register_resident_app_routes(
 
     @router.get("/app/ui-state/vault-session")
     def get_app_ui_vault_session_status(
+        response: Response,
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
+        _mark_legacy_compatibility_surface(response)
         return _vault_session_status_payload()
 
     @router.post("/app/ui-action/vault-session/open")
     def post_app_ui_action_vault_session_open(
+        response: Response,
         body: AppVaultSessionOpenRequest,
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
+        _mark_legacy_compatibility_surface(response)
         return _open_vault_session(profile_id=body.profile_id, level=body.level, purpose=body.purpose)
 
     @router.post("/app/ui-action/vault-session/lock")
     def post_app_ui_action_vault_session_lock(
+        response: Response,
         body: AppVaultSessionLockRequest,
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
+        _mark_legacy_compatibility_surface(response)
         return _lock_vault_session(profile_id="default", session_id=body.session_id, close_all=body.close_all)
 
     @router.get("/app/ui-state/daemon-packaging-status")
     def get_app_ui_daemon_packaging_status(
+        response: Response,
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
+        _mark_legacy_compatibility_surface(response)
         return _daemon_packaging_status_payload()
 
     @router.get("/app/ui-state/daemon-service-targets-status")
     def get_app_ui_daemon_service_targets_status(
+        response: Response,
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
+        _mark_legacy_compatibility_surface(response)
         return _daemon_service_targets_status_payload()
 
     @router.get("/app/ui-state/daemon-service-control-boundary")
     def get_app_ui_daemon_service_control_boundary(
+        response: Response,
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
+        _mark_legacy_compatibility_surface(response)
         return _daemon_service_control_boundary_payload()
 
     @router.get("/app/ui-state/daemon-supervision-status")
     def get_app_ui_daemon_supervision_status(
+        response: Response,
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
+        _mark_legacy_compatibility_surface(response)
         return _daemon_supervision_status_payload()
 
     @router.get("/app/ui-state/daemon-recovery-consent-status")
     def get_app_ui_daemon_recovery_consent_status(
+        response: Response,
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
+        _mark_legacy_compatibility_surface(response)
         return _daemon_recovery_consent_status_payload()
 
     @router.get("/app/ui-state/daemon-preflight")
     def get_app_ui_daemon_preflight(
+        response: Response,
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
+        _mark_legacy_compatibility_surface(response)
         return _daemon_preflight_payload()
 
     @router.get("/app/ui-state/candidates")
     def get_app_ui_candidate_queue_state(
+        response: Response,
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
         from sayane.app import build_candidate_queue_screen_state
 
+        _mark_legacy_compatibility_surface(response)
         return build_candidate_queue_screen_state(_reviewable_candidate_queue())
 
     @router.get("/app/ui-state/candidates/{candidate_id}")
     def get_app_ui_candidate_detail_state(
         candidate_id: str,
+        response: Response,
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
         try:
+            _mark_legacy_compatibility_surface(response)
             return _candidate_detail_screen_state(candidate_id)
         except FileNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -680,9 +717,11 @@ def register_resident_app_routes(
     @router.get("/app/ui-state/candidates/{candidate_id}/diff")
     def get_app_ui_candidate_diff_state(
         candidate_id: str,
+        response: Response,
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
         try:
+            _mark_legacy_compatibility_surface(response)
             return _candidate_diff_payload(candidate_id)
         except FileNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -690,9 +729,11 @@ def register_resident_app_routes(
     @router.get("/app/ui-state/candidates/{candidate_id}/lineage")
     def get_app_ui_candidate_lineage_state(
         candidate_id: str,
+        response: Response,
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
         try:
+            _mark_legacy_compatibility_surface(response)
             route_cfg, _, _ = _config_for_runtime(
                 profile_id="default",
                 read_scope="lineage:read",
@@ -704,8 +745,10 @@ def register_resident_app_routes(
 
     @router.get("/app/ui-state/daemon")
     def get_app_ui_daemon_state(
+        response: Response,
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
+        _mark_legacy_compatibility_surface(response)
         return _daemon_panel_screen_state()
 
     @router.get(
@@ -851,9 +894,11 @@ def register_resident_app_routes(
     @router.post("/app/ui-action/capture-clipboard")
     def post_app_ui_action_capture_clipboard(
         request: Request,
+        response: Response,
         body: AppCaptureClipboardRequest,
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
+        _mark_legacy_compatibility_surface(response)
         route_cfg, runtime, repository_kwargs = _require_vault_scope(
             profile_id=body.profile_id,
             scope="candidate:write",
@@ -904,10 +949,12 @@ def register_resident_app_routes(
     @router.post("/app/ui-action/candidates/{candidate_id}/evaluate")
     def post_app_ui_action_candidate_evaluate(
         candidate_id: str,
+        response: Response,
         body: EvaluateCandidateRequest,
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
         try:
+            _mark_legacy_compatibility_surface(response)
             route_cfg, _, _ = _require_vault_scope(
                 profile_id="default",
                 scope="review_decision:write",
@@ -963,10 +1010,12 @@ def register_resident_app_routes(
     @router.post("/app/ui-action/candidates/{candidate_id}/approve")
     def post_app_ui_action_candidate_approve(
         candidate_id: str,
+        response: Response,
         body: ApproveCandidateRequest,
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
         try:
+            _mark_legacy_compatibility_surface(response)
             route_cfg, _, _ = _require_vault_scope(
                 profile_id="default",
                 scope="review_decision:write",
@@ -1022,10 +1071,12 @@ def register_resident_app_routes(
     @router.post("/app/ui-action/candidates/{candidate_id}/reject")
     def post_app_ui_action_candidate_reject(
         candidate_id: str,
+        response: Response,
         body: RejectCandidateRequest,
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
         try:
+            _mark_legacy_compatibility_surface(response)
             route_cfg, _, _ = _require_vault_scope(
                 profile_id="default",
                 scope="review_decision:write",
@@ -1074,10 +1125,12 @@ def register_resident_app_routes(
     @router.post("/app/ui-action/candidates/{candidate_id}/revise")
     def post_app_ui_action_candidate_revise(
         candidate_id: str,
+        response: Response,
         body: ReviseCandidateRequest,
         _token: str = Depends(require_ui_session),
     ) -> dict[str, object]:
         try:
+            _mark_legacy_compatibility_surface(response)
             route_cfg, _, _ = _require_vault_scope(
                 profile_id="default",
                 scope="candidate:write",

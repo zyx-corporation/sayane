@@ -17,8 +17,14 @@ struct BridgeStatusPanel: View {
                         Text(model.strings.text(.bridgeStatusPanel))
                             .font(compact ? .headline : .title3)
                             .bold()
-                        Text(model.bridgeStatusHeadline)
-                            .font(compact ? .subheadline.weight(.semibold) : .headline)
+                        HStack(spacing: 8) {
+                            Text(model.bridgeStatusHeadline)
+                                .font(compact ? .subheadline.weight(.semibold) : .headline)
+                            if model.bridgeRecoveryInProgress {
+                                ProgressView()
+                                    .controlSize(compact ? .small : .regular)
+                            }
+                        }
                         Text(model.bridgeStatusDetail)
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -29,9 +35,38 @@ struct BridgeStatusPanel: View {
 
                 HStack(spacing: 8) {
                     primaryActionButton
+                    if model.bridgeRecoveryPrefersLauncherAction, let startupCommand = model.startupCommandText {
+                        Button(model.strings.text(.openLauncher)) {
+                            model.openCommandPath(startupCommand)
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(model.bridgeRecoveryActionDisabled)
+                    } else if model.bridgeRecoveryPrefersTokenAction {
+                        Button(model.strings.text(.openToken)) {
+                            model.openTokenFile()
+                        }
+                        .buttonStyle(.bordered)
+                    }
                     if !compact, model.daemonState != nil {
                         Button(model.strings.text(.daemon)) {
                             model.choose(screen: .daemon)
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(model.bridgeRecoveryActionDisabled)
+                    }
+                    if !model.bridgeRecoveryPrefersLauncherAction,
+                       model.bridgeRecoveryShowsLauncherAction,
+                       let startupCommand = model.startupCommandText
+                    {
+                        Button(model.strings.text(.openLauncher)) {
+                            model.openCommandPath(startupCommand)
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(model.bridgeRecoveryActionDisabled)
+                    }
+                    if !model.bridgeRecoveryPrefersTokenAction, model.bridgeRecoveryShowsTokenAction {
+                        Button(model.strings.text(.openToken)) {
+                            model.openTokenFile()
                         }
                         .buttonStyle(.bordered)
                     }
@@ -43,6 +78,7 @@ struct BridgeStatusPanel: View {
                         model.copyHealthCheckCommand()
                     }
                     .buttonStyle(.bordered)
+                    .disabled(model.bridgeRecoveryActionDisabled)
                 }
 
                 if let startupCommand = model.startupCommandText {
@@ -57,13 +93,11 @@ struct BridgeStatusPanel: View {
                     }
                 }
 
-                if !compact, let daemonState = model.daemonState, let bootstrapUI = daemonState.operatorPhaseDetails.currentSupportedOperatorPath.bootstrapUI {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(model.strings.text(.bootstrapUI))
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                        CommandRowView(command: bootstrapUI, lineLimit: 2)
-                        DebugShellShortcutButtons(model: model, bootstrapUI: bootstrapUI, controlSize: .small)
+                if !compact, let daemonState = model.daemonState, daemonState.operatorPhaseDetails.currentSupportedOperatorPath.bootstrapUI != nil {
+                    DebugCompatibilityDisclosure(model: model) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            DebugShellShortcutButtons(model: model, controlSize: .small)
+                        }
                     }
                 }
 
@@ -103,7 +137,7 @@ struct BridgeStatusPanel: View {
                 }
 
                 if !compact {
-                    Text(model.strings.text(.bridgeStatusPanelSummary))
+                    Text(model.bridgeStatusPanelSummaryText)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -113,24 +147,11 @@ struct BridgeStatusPanel: View {
 
     @ViewBuilder
     private var primaryActionButton: some View {
-        if model.health == nil {
-            Button(model.strings.text(.startBridge)) {
-                Task { await model.performBridgeSuggestedAction() }
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(compact ? .small : .regular)
-        } else if model.bridgeStatusTone == .positive {
-            Button(model.strings.text(.refresh)) {
-                Task { await model.performBridgeSuggestedAction() }
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(compact ? .small : .regular)
-        } else {
-            Button(model.strings.text(.bootstrap)) {
-                Task { await model.performBridgeSuggestedAction() }
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(compact ? .small : .regular)
+        Button(model.bridgeSuggestedActionText) {
+            Task { await model.performBridgeSuggestedAction() }
         }
+        .buttonStyle(.borderedProminent)
+        .controlSize(compact ? .small : .regular)
+        .disabled(model.bridgeRecoveryActionDisabled)
     }
 }

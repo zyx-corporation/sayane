@@ -7,6 +7,7 @@ struct StateCardView: View {
     let tone: StatusTone
     let badgeText: String?
     let actionTitle: String?
+    let actionEnabled: Bool
     let action: (() -> Void)?
 
     init(
@@ -16,6 +17,7 @@ struct StateCardView: View {
         tone: StatusTone,
         badgeText: String? = nil,
         actionTitle: String? = nil,
+        actionEnabled: Bool = true,
         action: (() -> Void)? = nil
     ) {
         self.icon = icon
@@ -24,6 +26,7 @@ struct StateCardView: View {
         self.tone = tone
         self.badgeText = badgeText
         self.actionTitle = actionTitle
+        self.actionEnabled = actionEnabled
         self.action = action
     }
 
@@ -46,6 +49,7 @@ struct StateCardView: View {
                 Button(actionTitle, action: action)
                     .buttonStyle(.borderedProminent)
                     .controlSize(.small)
+                    .disabled(!actionEnabled)
             }
         }
         .padding()

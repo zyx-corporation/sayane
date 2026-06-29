@@ -191,6 +191,18 @@ sayane app daemon-launchagent-bootstrap --json
 sayane app daemon-launchagent-bootout --json
 sayane app daemon-launchagent-kickstart --json
 
+# Preview and write a Linux systemd --user unit for the resident daemon line
+sayane app daemon-systemd-user-preview --json
+sayane app daemon-systemd-user-apply \
+  --operation-id systemd-user-... \
+  --confirm-operation-id systemd-user-... \
+  --confirm-preview-hash ... \
+  --json
+sayane app daemon-systemd-user-status --json
+sayane app daemon-systemd-user-daemon-reload --json
+sayane app daemon-systemd-user-enable-now --json
+sayane app daemon-systemd-user-disable-now --json
+
 # Preview conservative daemon identity-proof observations
 sayane app daemon-identity-proof --json
 

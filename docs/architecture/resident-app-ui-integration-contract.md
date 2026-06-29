@@ -52,7 +52,7 @@ GET /app/ui/daemon
 
 This is a presentation wrapper over the existing `GET /app/daemon-overview` style preview surface.
 
-The Bridge-hosted Sayane Resident App local shell also provides cookie-backed same-origin JSON reads and writes:
+The Bridge-hosted Sayane Resident App local shell also provides cookie-backed same-origin JSON reads and writes as a legacy debug-compatibility layer:
 
 ```text
 GET /app/ui-state/contract
@@ -196,7 +196,7 @@ These writes stay inside the candidate/review boundary.
 
 They do not directly patch profile state outside the existing approval flow.
 
-The Bridge-hosted Sayane Resident App local shell mirrors those same semantics through:
+The Bridge-hosted Sayane Resident App local shell mirrors those same semantics through the same legacy debug-compatibility layer:
 
 ```text
 POST /app/ui-action/capture-clipboard

@@ -19,6 +19,7 @@ struct StartupShortcutButtons: View {
                 }
                 .buttonStyle(.bordered)
                 .controlSize(controlSize)
+                .disabled(model.bridgeRecoveryActionDisabled)
             }
             Button(model.strings.text(.copyStartupCommand)) {
                 model.copyToClipboard(
@@ -34,30 +35,64 @@ struct StartupShortcutButtons: View {
 
 struct DebugShellShortcutButtons: View {
     @ObservedObject var model: AppModel
-    let bootstrapUI: String
     let controlSize: ControlSize
 
-    init(model: AppModel, bootstrapUI: String, controlSize: ControlSize = .regular) {
+    init(model: AppModel, controlSize: ControlSize = .regular) {
         self.model = model
-        self.bootstrapUI = bootstrapUI
         self.controlSize = controlSize
     }
 
     var body: some View {
         HStack {
             Button(model.strings.text(.openDebugShell)) {
-                model.openURLString(bootstrapUI)
+                model.openDebugShell()
             }
             .buttonStyle(.bordered)
             .controlSize(controlSize)
+            .disabled(model.bridgeRecoveryActionDisabled)
             Button(model.strings.text(.copyDebugShellURL)) {
-                model.copyToClipboard(
-                    bootstrapUI,
-                    message: model.strings.copiedCommandMessage(context: model.strings.text(.debugShell))
-                )
+                model.copyDebugShellURL()
             }
             .buttonStyle(.bordered)
             .controlSize(controlSize)
         }
+    }
+}
+
+struct DebugCompatibilityDisclosure<Content: View>: View {
+    @ObservedObject var model: AppModel
+    let content: () -> Content
+    @State private var isExpanded = false
+
+    init(model: AppModel, @ViewBuilder content: @escaping () -> Content) {
+        self._model = ObservedObject(wrappedValue: model)
+        self.content = content
+    }
+
+    var body: some View {
+        DisclosureGroup(
+            isExpanded: $isExpanded,
+            content: {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(model.strings.text(.debugCompatibilityToolsSummary))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(model.strings.text(.debugShellCompatibilitySummary))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    content()
+                }
+                .padding(.top, 4)
+            },
+            label: {
+                Label(
+                    isExpanded
+                        ? model.strings.text(.hideDebugCompatibilityTools)
+                        : model.strings.text(.showDebugCompatibilityTools),
+                    systemImage: "ladybug"
+                )
+                .font(.caption.weight(.semibold))
+            }
+        )
     }
 }

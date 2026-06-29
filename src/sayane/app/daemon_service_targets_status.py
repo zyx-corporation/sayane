@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from sayane.app.daemon_systemd_user import SYSTEMD_USER_UNIT_NAME
+
 
 def _platform_family() -> str:
     if sys.platform == "darwin":
@@ -31,6 +33,9 @@ class ResidentDaemonServiceTargetsStatus:
         macos_status = (
             "supported_preview_apply_control" if current_platform == "macos" else "contract_only"
         )
+        linux_status = (
+            "supported_preview_apply_unit_write" if current_platform == "linux" else "contract_only"
+        )
         return {
             "kind": "resident_daemon_service_targets_status",
             "current_platform": current_platform,
@@ -52,7 +57,7 @@ class ResidentDaemonServiceTargetsStatus:
                     "rollback_policy_status": "reviewed_local_control_only"
                     if current_platform == "macos"
                     else "not_defined",
-                    "packaging_gate_status": "post_mvp_candidate",
+                    "packaging_gate_status": "candidate_ready_after_service_lifecycle_closure",
                     "commands": [
                         "sayane app daemon-launchagent-preview --json",
                         "sayane app daemon-launchagent-apply --json",
@@ -69,15 +74,30 @@ class ResidentDaemonServiceTargetsStatus:
                     "target": "linux_systemd_user",
                     "platform": "linux",
                     "service_manager": "systemd --user",
-                    "status": "contract_only",
-                    "commands": [],
-                    "policy_status": "contract_only",
-                    "rollback_policy_status": "not_defined",
-                    "packaging_gate_status": "post_mvp_candidate",
+                    "status": linux_status,
+                    "commands": (
+                        [
+                            "sayane app daemon-systemd-user-preview --json",
+                            "sayane app daemon-systemd-user-apply --json",
+                            "sayane app daemon-systemd-user-status --json",
+                            "sayane app daemon-systemd-user-daemon-reload --json",
+                            "sayane app daemon-systemd-user-enable-now --json",
+                            "sayane app daemon-systemd-user-disable-now --json",
+                        ]
+                        if current_platform == "linux"
+                        else []
+                    ),
+                    "unit_name": SYSTEMD_USER_UNIT_NAME,
+                    "policy_status": "partial_preview_apply"
+                    if current_platform == "linux"
+                    else "contract_only",
+                    "rollback_policy_status": "reviewed_local_unit_write_only"
+                    if current_platform == "linux"
+                    else "not_defined",
+                    "packaging_gate_status": "candidate_ready_after_service_lifecycle_closure",
                     "blocked_by": [
-                        "service lifecycle implementation",
+                        "systemctl update/remove lifecycle implementation",
                         "platform rollback policy",
-                        "operator packaging decision closure",
                     ],
                 },
                 {
@@ -96,7 +116,13 @@ class ResidentDaemonServiceTargetsStatus:
                     ],
                 },
             ],
-            "recommended_target": "macos_launchagent" if current_platform == "macos" else None,
+            "recommended_target": (
+                "macos_launchagent"
+                if current_platform == "macos"
+                else "linux_systemd_user"
+                if current_platform == "linux"
+                else None
+            ),
         }
 
 

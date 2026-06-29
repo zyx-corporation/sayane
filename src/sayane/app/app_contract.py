@@ -16,21 +16,25 @@ def build_app_contract() -> dict[str, Any]:
                 "path": "/app/ui",
                 "format": "text/html",
                 "purpose": "local bootstrap home screen",
+                "compatibility_status": "debug_only_legacy",
             },
             {
                 "path": "/app/ui/candidates",
                 "format": "text/html",
                 "purpose": "local candidate queue screen",
+                "compatibility_status": "debug_only_legacy",
             },
             {
                 "path": "/app/ui/capture-clipboard",
                 "format": "form_post",
                 "purpose": "local HTML clipboard capture action",
+                "compatibility_status": "debug_only_legacy",
             },
             {
                 "path": "/app/ui/daemon",
                 "format": "text/html",
                 "purpose": "local daemon panel screen",
+                "compatibility_status": "debug_only_legacy",
             },
             {
                 "path": "/app/ui-state/*",
@@ -38,6 +42,7 @@ def build_app_contract() -> dict[str, Any]:
                 "purpose": (
                     "cookie-backed local UI screen-state reads for the Bridge-hosted local shell"
                 ),
+                "compatibility_status": "debug_only_legacy",
             },
             {
                 "path": "/app/ui-action/*",
@@ -45,6 +50,7 @@ def build_app_contract() -> dict[str, Any]:
                 "purpose": (
                     "cookie-backed local UI action writes for the Bridge-hosted local shell"
                 ),
+                "compatibility_status": "debug_only_legacy",
             },
         ],
         "read_surfaces": [
@@ -163,6 +169,31 @@ def build_app_contract() -> dict[str, Any]:
                     "macOS LaunchAgent status read for plist presence and "
                     "current launchd loaded state"
                 ),
+            },
+            {
+                "path": "cli:sayane app daemon-systemd-user-preview --json",
+                "payload_kind": "resident_daemon_systemd_user_plan",
+                "purpose": "Linux systemd --user preview for the current local daemon line",
+            },
+            {
+                "path": "cli:sayane app daemon-systemd-user-status --json",
+                "payload_kind": "resident_daemon_systemd_user_status",
+                "purpose": "Linux systemd --user status read for explicit local service observation",
+            },
+            {
+                "path": "cli:sayane app daemon-systemd-user-daemon-reload --json",
+                "payload_kind": "resident_daemon_systemd_user_control_receipt",
+                "purpose": "Linux systemd --user daemon-reload for a reviewed local service unit",
+            },
+            {
+                "path": "cli:sayane app daemon-systemd-user-enable-now --json",
+                "payload_kind": "resident_daemon_systemd_user_control_receipt",
+                "purpose": "Linux systemd --user enable-now for a reviewed local service unit",
+            },
+            {
+                "path": "cli:sayane app daemon-systemd-user-disable-now --json",
+                "payload_kind": "resident_daemon_systemd_user_control_receipt",
+                "purpose": "Linux systemd --user disable-now for a reviewed local service unit",
             },
             {
                 "path": "cli:sayane app daemon-recovery-consent-status --json",
@@ -390,14 +421,31 @@ def build_app_contract() -> dict[str, Any]:
         ],
         "recommended_flow": [
             "GET /app/overview",
+            "GET /app/screen-state/home",
             "POST /app/capture-clipboard",
             "GET /app/candidates",
+            "GET /app/screen-state/candidates",
             "GET /app/candidates/{id}",
+            "GET /app/screen-state/candidates/{id}",
             "GET /app/candidates/{id}/diff",
             "GET /app/candidates/{id}/lineage",
+            "GET /app/screen-state/daemon",
+            "GET /app/operator-phase-status",
+            "GET /app/daemon-packaging-status",
+            "GET /app/daemon-service-targets-status",
+            "GET /app/daemon-service-control-boundary",
+            "GET /app/daemon-supervision-status",
+            "GET /app/daemon-recovery-consent-status",
+            "GET /app/daemon-preflight",
+            "GET /app/vault-status",
+            "GET /app/vault-session",
+            "POST /app/vault-session/open",
+            "POST /app/vault-session/lock",
             "POST /app/candidates/{id}/evaluate",
             "POST /app/candidates/{id}/revise",
             "POST /app/candidates/{id}/approve or /reject",
+        ],
+        "legacy_compatibility_flow": [
             "GET /app/ui",
             "GET /app/ui-state/home",
             "GET /app/ui-state/operator-phase-status",
@@ -558,6 +606,30 @@ def build_app_contract() -> dict[str, Any]:
                 "purpose": (
                     "explicit local launchctl kickstart for the reviewed resident LaunchAgent label"
                 ),
+            },
+            {
+                "command": "sayane app daemon-systemd-user-preview --json",
+                "purpose": "Linux systemd --user preview for writing a local service unit",
+            },
+            {
+                "command": "sayane app daemon-systemd-user-status --json",
+                "purpose": "Linux systemd --user status read for explicit local service observation",
+            },
+            {
+                "command": "sayane app daemon-systemd-user-apply --json",
+                "purpose": "Linux systemd --user unit write after explicit preview confirmation",
+            },
+            {
+                "command": "sayane app daemon-systemd-user-daemon-reload --json",
+                "purpose": "Linux systemd --user daemon-reload for a reviewed local service unit",
+            },
+            {
+                "command": "sayane app daemon-systemd-user-enable-now --json",
+                "purpose": "Linux systemd --user enable-now for a reviewed local service unit",
+            },
+            {
+                "command": "sayane app daemon-systemd-user-disable-now --json",
+                "purpose": "Linux systemd --user disable-now for a reviewed local service unit",
             },
             {
                 "command": "sayane app daemon-recovery-consent-status --json",

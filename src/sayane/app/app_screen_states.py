@@ -87,6 +87,8 @@ def build_daemon_panel_screen_state(daemon_payload: dict[str, Any]) -> dict[str,
     operator_phase_status = daemon_payload.get("operator_phase_status", {})
     launchagent_preview = daemon_payload.get("launchagent_preview")
     launchagent_status = daemon_payload.get("launchagent_status")
+    systemd_user_preview = daemon_payload.get("systemd_user_preview")
+    systemd_user_status = daemon_payload.get("systemd_user_status")
     return {
         "kind": "resident_app_daemon_panel_screen_state",
         "summary_cards": [
@@ -153,6 +155,17 @@ def build_daemon_panel_screen_state(daemon_payload: dict[str, Any]) -> dict[str,
             "loaded_status": (launchagent_status or {}).get("loaded_status"),
             "launchctl_commands": (launchagent_preview or {}).get("launchctl_commands", {}),
         },
+        "systemd_user_summary": {
+            "preview_available": systemd_user_preview is not None,
+            "status_available": systemd_user_status is not None,
+            "unit_path": (systemd_user_preview or {}).get("unit_path")
+            or (systemd_user_status or {}).get("unit_path"),
+            "unit_name": (systemd_user_preview or {}).get("unit_name")
+            or (systemd_user_status or {}).get("unit_name"),
+            "active_status": (systemd_user_status or {}).get("active_status"),
+            "enabled_status": (systemd_user_status or {}).get("enabled_status"),
+            "systemctl_commands": (systemd_user_preview or {}).get("systemctl_commands", {}),
+        },
         "operator_phase_summary": {
             "phase": operator_phase_status.get("phase"),
             "phase_status": operator_phase_status.get("phase_status"),
@@ -215,6 +228,8 @@ def build_daemon_panel_screen_state(daemon_payload: dict[str, Any]) -> dict[str,
         "operator_phase_status": operator_phase_status,
         "launchagent_preview": launchagent_preview,
         "launchagent_status": launchagent_status,
+        "systemd_user_preview": systemd_user_preview,
+        "systemd_user_status": systemd_user_status,
         "next_actions": daemon_payload.get("next_actions", []),
         "runtime_init": daemon_payload.get("runtime_init", {}),
         "cleanup_preview": daemon_payload.get("cleanup_preview", {}),

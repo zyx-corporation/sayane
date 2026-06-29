@@ -138,8 +138,9 @@ It makes the current local-only commitment explicit:
 The current baseline is now more precise:
 
 - cross-platform service targets are recorded for macOS, Linux, and Windows
-- concrete preview/apply plus explicit local `launchctl` control currently exists for macOS LaunchAgent only
-- Linux and Windows remain contract-only targets for now
+- concrete preview/apply plus explicit local `launchctl` control currently exists for macOS LaunchAgent
+- Linux keeps a recorded `systemd --user` preview/apply/status shipped slice, but further lifecycle closure is paused while macOS is completed first
+- Windows remains a contract-only target for now
 
 ## daemon-service-targets-status
 
@@ -149,7 +150,7 @@ Windows.
 It keeps these points explicit:
 
 - macOS uses `launchd` / LaunchAgent as the first concrete packaging target
-- Linux is tracked as a future `systemd --user` target
+- Linux has an explicit recorded `systemd --user` preview/apply/status path, while full lifecycle closure remains deferred and currently paused
 - Windows is tracked as a future Windows Service target
 
 ## daemon-launchagent-preview / daemon-launchagent-apply / daemon-launchagent-status / daemon-launchagent-bootstrap / daemon-launchagent-bootout / daemon-launchagent-kickstart

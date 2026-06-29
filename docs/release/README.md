@@ -5,6 +5,10 @@ This directory contains release notes, release closures, and release-prep docume
 ## Current release line
 
 - [v1.0.14 Community Release Note](v1.0.14-community-release-note.md) — published package release note for the current resident app reliability line
+- [v1.0.75 macOS Local Distribution Prep Release Note](v1.0.75-macos-local-distribution-prep-release-note.md) — current local macOS bundle/install/verify/release-prep workflow before signing credentials are introduced
+- [v1.0.76 curl+bash Operator Quickstart](v1.0.76-curl-bash-operator-quickstart.md) — shortest supported operator path: curl+bash first, native macOS app only when needed
+- [v1.0.77 curl+bash Installer Source and Smoke Release Note](v1.0.77-curl-bash-installer-source-and-smoke-release-note.md) — PyPI-first installer auto-mode plus a local smoke check for the same primary path
+- [v1.0.78 Terminal-First Bridge Launch Release Note](v1.0.78-terminal-first-bridge-launch-release-note.md) — macOS launchers now prefer visible Terminal-backed Bridge startup and reuse healthy Bridge processes
 - [v1.0.13 Resident Daemon Preflight Schema Preview](v1.0.13-resident-daemon-preflight-schema-preview.md) — published release note
 - [v1.0.13 Release Prep Checklist](v1.0.13-release-prep-checklist.md) — operator checklist
 - [v1.0.13 Release Prep Issue Body](v1.0.13-release-prep-issue-body.md) — short reusable issue text

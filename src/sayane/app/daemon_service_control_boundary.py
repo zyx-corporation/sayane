@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from sayane.app.daemon_systemd_user import SYSTEMD_USER_UNIT_NAME
+
 
 @dataclass(frozen=True)
 class ResidentDaemonServiceControlBoundary:
@@ -45,7 +47,52 @@ class ResidentDaemonServiceControlBoundary:
                 "app_ui_exposure": "not_exposed",
             },
         ]
+        systemd_user_commands = [
+            {
+                "command": "sayane app daemon-systemd-user-preview --json",
+                "class": "service_preview",
+                "platform": "linux",
+                "requires_existing_unit": False,
+                "app_ui_exposure": "not_exposed",
+            },
+            {
+                "command": "sayane app daemon-systemd-user-apply --json",
+                "class": "service_apply",
+                "platform": "linux",
+                "requires_existing_unit": False,
+                "app_ui_exposure": "not_exposed",
+            },
+            {
+                "command": "sayane app daemon-systemd-user-status --json",
+                "class": "service_status",
+                "platform": "linux",
+                "requires_existing_unit": False,
+                "app_ui_exposure": "not_exposed",
+            },
+            {
+                "command": "sayane app daemon-systemd-user-daemon-reload --json",
+                "class": "service_control",
+                "platform": "linux",
+                "requires_existing_unit": False,
+                "app_ui_exposure": "not_exposed",
+            },
+            {
+                "command": "sayane app daemon-systemd-user-enable-now --json",
+                "class": "service_control",
+                "platform": "linux",
+                "requires_existing_unit": True,
+                "app_ui_exposure": "not_exposed",
+            },
+            {
+                "command": "sayane app daemon-systemd-user-disable-now --json",
+                "class": "service_control",
+                "platform": "linux",
+                "requires_existing_unit": True,
+                "app_ui_exposure": "not_exposed",
+            },
+        ]
         is_macos = sys.platform == "darwin"
+        is_linux = sys.platform.startswith("linux")
         lifecycle_operations = [
             {
                 "operation": "install",
@@ -123,10 +170,20 @@ class ResidentDaemonServiceControlBoundary:
                 ],
             },
             "service_plane": {
-                "status": "mvp_macos_launchagent_preview_apply_cli_only"
-                if is_macos
-                else "mvp_contract_only_non_macos",
-                "allowed_commands": launchagent_commands if is_macos else [],
+                "status": (
+                    "post_mvp_macos_launchagent_preview_apply_cli_only"
+                    if is_macos
+                    else "post_mvp_linux_systemd_user_preview_apply_cli_only"
+                    if is_linux
+                    else "mvp_contract_only_non_macos"
+                ),
+                "allowed_commands": (
+                    launchagent_commands
+                    if is_macos
+                    else systemd_user_commands
+                    if is_linux
+                    else []
+                ),
                 "deferred_commands": [
                     "daemon-service-install",
                     "daemon-service-enable",
@@ -143,6 +200,7 @@ class ResidentDaemonServiceControlBoundary:
                 "rollback_required": True,
                 "platform_policy_required": True,
                 "update_strategy": "not_supported_in_mvp",
+                "unit_name": SYSTEMD_USER_UNIT_NAME if is_linux else None,
             },
             "app_ui_policy": {
                 "allowed_reads": [
@@ -166,6 +224,8 @@ class ResidentDaemonServiceControlBoundary:
                 "apply commands require explicit operator consent",
                 "control commands remain local-only and CLI-first in the current MVP",
                 "macOS LaunchAgent preview/apply/bootstrap/bootout/kickstart are the only MVP service-adjacent operator path",
+                "Linux systemd --user preview/apply/status are a post-MVP explicit local unit-write path and not an automated lifecycle installer",
+                "Linux systemd --user daemon-reload and enable-now/disable-now are explicit local CLI operations over a reviewed unit file only",
                 "service install/enable/disable/remove/update are outside the MVP support boundary",
                 (
                     "cross-platform service lifecycle and rollback-policy closure "

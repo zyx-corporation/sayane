@@ -372,10 +372,11 @@ proof-oriented CLI surfaces are now available for the same local runtime line:
 また、packaging / service-control / supervision / recovery-consent contract は operator guidance
 surface であり、OS service integration や background control を有効化するものではない。
 
-#### `GET /app/ui-state/*`
+#### `GET /app/ui-state/*`（legacy debug compatibility）
 
 `GET /app/ui` が設定する local UI session cookie を使う、Bridge-hosted local shell 向けの
-JSON read surfaces です。
+JSON read surfaces です。native macOS app の routine path ではなく、debug / fallback /
+handoff 向けの legacy compatibility surface として維持しています。
 
 ```bash
 curl -s -b cookie.txt -c cookie.txt -H "$AUTH" \
@@ -399,10 +400,11 @@ curl -s -b cookie.txt \
 これは local browser shell の same-origin fetch 用 transport seam であり、Bearer ベース
 `/app/...` surface と同じ resident app semantics を再利用する。
 
-#### `POST /app/ui-action/*`
+#### `POST /app/ui-action/*`（legacy debug compatibility）
 
 `GET /app/ui` が設定する local UI session cookie を使う、Bridge-hosted local shell 向けの
-JSON write surfaces です。
+JSON write surfaces です。native macOS app の routine path ではなく、debug / fallback /
+handoff 向けの legacy compatibility surface として維持しています。
 
 ```bash
 curl -s -b cookie.txt -X POST -H "Content-Type: application/json" \

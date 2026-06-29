@@ -4,6 +4,13 @@ import SwiftUI
 
 @MainActor
 final class AppModel: ObservableObject {
+    private enum BridgeRecoveryIssue: String {
+        case missingToken = "missing_token"
+        case uiSession = "ui_session"
+        case notConnected = "not_connected"
+        case diagnostics = "diagnostics"
+    }
+
     enum Screen: Hashable {
         case home
         case queue
@@ -29,6 +36,13 @@ final class AppModel: ObservableObject {
         let tone: StatusTone
     }
 
+    struct DiagnosticRow: Equatable, Identifiable {
+        let label: String
+        let value: String
+
+        var id: String { label }
+    }
+
     @Published var selectedScreen: Screen = .home
     @Published var selectedCandidateID: String?
     @Published var health: HealthResponse?
@@ -44,14 +58,18 @@ final class AppModel: ObservableObject {
     @Published var actionMessage: String?
     @Published var actionTitle: String?
     @Published var actionTone: StatusTone = .positive
+    @Published var actionShowsProgress = false
     @Published var lastCandidateAction: CandidateActionRecord?
     @Published var showingReviseSheet = false
     @Published var showingRejectSheet = false
     @Published var showingEvaluateSheet = false
+    @Published var hasLoadedInitialData = false
+    @Published var lastBridgeLaunchFailure: String?
 
     let strings = AppStrings.current
     let bridgeClient: BridgeClient
     private var backStack: [NavigationState] = []
+    private var hasAttemptedAutomaticBridgeStart = false
 
     init(bridgeClient: BridgeClient = BridgeClient()) {
         self.bridgeClient = bridgeClient
@@ -77,8 +95,32 @@ final class AppModel: ObservableObject {
             if let candidateID = selectedCandidateID {
                 try await loadCandidate(candidateID: candidateID)
             }
+            hasLoadedInitialData = true
+            hasAttemptedAutomaticBridgeStart = false
+            lastBridgeLaunchFailure = nil
+            errorMessage = nil
+            if actionTitle == strings.text(.connectionProblem) {
+                dismissActionFeedback()
+            }
         } catch {
             errorMessage = error.localizedDescription
+            if !hasLoadedInitialData,
+               bridgeRecoveryIssue == .notConnected,
+               !hasAttemptedAutomaticBridgeStart,
+               BridgeLauncher.canLaunchBridge()
+            {
+                hasAttemptedAutomaticBridgeStart = true
+                await startBridgeAndReload()
+                isLoading = false
+                return
+            }
+            if !hasLoadedInitialData {
+                showActionFeedback(
+                    title: strings.text(.connectionProblem),
+                    message: bridgeRecoveryIssueSummary,
+                    tone: .caution
+                )
+            }
         }
         isLoading = false
     }
@@ -170,7 +212,27 @@ final class AppModel: ObservableObject {
         sidebarMetadata(for: selectedScreen).summary
     }
 
+    var shouldCondenseChromeMetadata: Bool {
+        health == nil && !hasLoadedInitialData
+    }
+
+    var shouldShowNavigationTrailInStatusBar: Bool {
+        !shouldCondenseChromeMetadata
+    }
+
+    var shouldShowSelectedCandidateInStatusBar: Bool {
+        !shouldCondenseChromeMetadata
+    }
+
     func sidebarMetadata(for screen: Screen) -> SidebarMetadata {
+        if shouldCondenseChromeMetadata {
+            return SidebarMetadata(
+                title: screenTitle(for: screen),
+                summary: strings.text(.screenSummaryPending),
+                badgeText: screen == .home ? strings.text(.bridgeDisconnectedShort) : nil,
+                badgeTone: .neutral
+            )
+        }
         switch screen {
         case .home:
             let reviewCount = homeState?.topReviewItems.count ?? 0
@@ -201,6 +263,17 @@ final class AppModel: ObservableObject {
                 badgeText: phase,
                 badgeTone: tone
             )
+        }
+    }
+
+    private func screenTitle(for screen: Screen) -> String {
+        switch screen {
+        case .home:
+            strings.text(.home)
+        case .queue:
+            strings.text(.queue)
+        case .daemon:
+            strings.text(.daemon)
         }
     }
 
@@ -241,17 +314,76 @@ final class AppModel: ObservableObject {
     }
 
     var bridgeStatusDetail: String {
+        strings.bridgeStatusDetailText(
+            status: health?.status,
+            version: health?.version,
+            sourceUpdatedAt: health?.sourceUpdatedAt
+        )
+    }
+
+    var homeBridgeSummaryText: String {
         guard let health else {
-            return strings.text(.bridgeStatusDetailDisconnected)
+            return strings.text(.homeStartupSummary)
         }
-        let versionText = health.version ?? "-"
-        if let sourceUpdatedAt = health.sourceUpdatedAt, !sourceUpdatedAt.isEmpty {
-            return "\(strings.text(.bridgeVersion)): \(versionText) · \(strings.text(.sourceUpdatedAt)): \(sourceUpdatedAt)"
-        }
-        return "\(strings.text(.bridgeVersion)): \(versionText)"
+        let normalizedHeadline = bridgeStatusHeadline
+            .replacingOccurrences(of: "\(strings.text(.bridgeAttention)): ", with: "")
+            .replacingOccurrences(of: "Bridge は", with: "")
+            .replacingOccurrences(of: "Bridge is ", with: "")
+        return "\(strings.text(.bridgeHealthy)): \(normalizedHeadline) · \(health.version ?? "-")"
+    }
+
+    var homePriorityEmptyMessage: String {
+        health == nil ? strings.text(.noPriorityActionsDisconnected) : strings.text(.noPriorityActions)
+    }
+
+    var homePriorityEmptyBadgeText: String {
+        health == nil ? strings.text(.bridgeStartupFocus) : strings.text(.healthySignals)
+    }
+
+    var queueEmptyMessage: String {
+        health == nil ? strings.text(.noPriorityActionsDisconnected) : strings.text(.noCandidates)
+    }
+
+    var queueEmptyBadgeText: String? {
+        health == nil ? strings.text(.bridgeStartupFocus) : nil
+    }
+
+    var detailEmptyMessage: String {
+        health == nil ? strings.text(.noPriorityActionsDisconnected) : strings.text(.selectCandidatePrompt)
+    }
+
+    var detailEmptyBadgeText: String {
+        health == nil ? strings.text(.bridgeStartupFocus) : strings.text(.queue)
+    }
+
+    var daemonWorkspaceEmptyMessage: String {
+        health == nil ? strings.text(.noPriorityActionsDisconnected) : strings.text(.noPriorityActions)
+    }
+
+    var daemonWorkspaceEmptyBadgeText: String? {
+        health == nil ? strings.text(.bridgeStartupFocus) : nil
+    }
+
+    var daemonSummaryEmptyMessage: String {
+        health == nil ? strings.text(.noPriorityActionsDisconnected) : strings.text(.noPriorityActions)
+    }
+
+    var daemonSummaryEmptyBadgeText: String? {
+        health == nil ? strings.text(.bridgeStartupFocus) : nil
     }
 
     var bridgeSuggestedActionText: String {
+        if bridgeRecoveryActionDisabled {
+            guard let health else {
+                return strings.text(.startBridgeInProgress)
+            }
+            switch health.status {
+            case "ok", "healthy":
+                return strings.text(.refreshInProgress)
+            default:
+                return strings.text(.bootstrapInProgress)
+            }
+        }
         guard let health else {
             return strings.text(.startBridge)
         }
@@ -265,6 +397,22 @@ final class AppModel: ObservableObject {
         }
     }
 
+    var bridgeRecoveryActionDisabled: Bool {
+        isLoading
+    }
+
+    var bridgeRecoveryInProgress: Bool {
+        isLoading
+    }
+
+    var toolbarRefreshText: String {
+        bridgeRecoveryInProgress ? bridgeSuggestedActionText : strings.text(.refresh)
+    }
+
+    var bridgeStatusPanelSummaryText: String {
+        strings.bridgeStatusPanelSummaryText(status: health?.status)
+    }
+
     var bridgeBaseURLText: String {
         bridgeClient.configuration.baseURL.absoluteString
     }
@@ -273,8 +421,8 @@ final class AppModel: ObservableObject {
         bridgeClient.configuration.healthURL.absoluteString
     }
 
-    var bridgeDebugShellURLText: String {
-        bridgeClient.configuration.debugShellURL.absoluteString
+    var bridgeDebugShellEntryURLText: String {
+        bridgeClient.configuration.debugShellEntryURL(token: bridgeBootstrapToken).absoluteString
     }
 
     var startupCommandText: String? {
@@ -302,7 +450,7 @@ final class AppModel: ObservableObject {
         let value = daemonState?.nextActions.first?.reason
             .trimmingCharacters(in: .whitespacesAndNewlines)
         guard let value, !value.isEmpty else { return nil }
-        return value
+        return strings.operatorReasonLabel(value)
     }
 
     var nextReadSurfaceText: String? {
@@ -320,8 +468,143 @@ final class AppModel: ObservableObject {
         bridgeClient.configuration.logFileURL.path
     }
 
+    var bridgeLaunchSourceText: String {
+        BridgeLauncher.launchDiagnosticSummary()
+    }
+
     var bridgeProfileID: String {
         bridgeClient.configuration.profileID
+    }
+
+    var bridgeLaunchFailureText: String? {
+        guard let lastBridgeLaunchFailure, !lastBridgeLaunchFailure.isEmpty else { return nil }
+        return strings.localizedBridgeErrorMessage(lastBridgeLaunchFailure)
+    }
+
+    func bridgeDiagnosticRows(compact: Bool) -> [DiagnosticRow] {
+        let essentialDisconnectedRows = [
+            DiagnosticRow(label: strings.text(.healthEndpoint), value: bridgeHealthURLText),
+            DiagnosticRow(label: strings.text(.launchSource), value: bridgeLaunchSourceText),
+            DiagnosticRow(label: strings.text(.tokenFile), value: bridgeTokenFilePath),
+            DiagnosticRow(label: strings.text(.logFile), value: bridgeLogFilePath),
+        ]
+        let essentialConnectedRows = [
+            DiagnosticRow(label: strings.text(.bridgeURL), value: bridgeBaseURLText),
+            DiagnosticRow(label: strings.text(.healthEndpoint), value: bridgeHealthURLText),
+            DiagnosticRow(label: strings.text(.launchSource), value: bridgeLaunchSourceText),
+            DiagnosticRow(label: strings.text(.profile), value: bridgeProfileID),
+        ]
+
+        let supplementalRows = [
+            DiagnosticRow(label: strings.text(.bridgeURL), value: bridgeBaseURLText),
+            DiagnosticRow(label: strings.text(.bootstrapUI), value: bridgeDebugShellEntryURLText),
+            DiagnosticRow(label: strings.text(.tokenFile), value: bridgeTokenFilePath),
+            DiagnosticRow(label: strings.text(.logFile), value: bridgeLogFilePath),
+            DiagnosticRow(label: strings.text(.profile), value: bridgeProfileID),
+            DiagnosticRow(label: strings.text(.launchSource), value: bridgeLaunchSourceText),
+        ]
+        let failureRows = bridgeLaunchFailureText.map {
+            [DiagnosticRow(label: strings.text(.lastLaunchFailure), value: $0)]
+        } ?? []
+
+        let isDisconnectedOrStarting: Bool
+        if let health {
+            isDisconnectedOrStarting = ["starting", "bootstrapping"].contains(health.status.lowercased())
+        } else {
+            isDisconnectedOrStarting = true
+        }
+
+        if compact {
+            return (isDisconnectedOrStarting ? essentialDisconnectedRows : essentialConnectedRows) + failureRows
+        }
+
+        let primaryRows = isDisconnectedOrStarting ? essentialDisconnectedRows : essentialConnectedRows
+        let seen = Set(primaryRows.map(\.label))
+        return primaryRows + supplementalRows.filter { !seen.contains($0.label) } + failureRows.filter { !seen.contains($0.label) }
+    }
+
+    var shouldPresentBlockingErrorView: Bool {
+        errorMessage != nil && hasLoadedInitialData
+    }
+
+    var bridgeRecoveryHintTitle: String {
+        strings.bridgeRecoveryHintTitle(issue: bridgeRecoveryIssue.rawValue)
+    }
+
+    var bridgeRecoveryIssueTitle: String {
+        strings.bridgeRecoveryIssueTitle(issue: bridgeRecoveryIssue.rawValue)
+    }
+
+    var bridgeRecoveryIssueSummary: String {
+        strings.bridgeRecoveryIssueSummary(issue: bridgeRecoveryIssue.rawValue)
+    }
+
+    var errorDisplayMessage: String? {
+        guard let errorMessage, !errorMessage.isEmpty else { return nil }
+        return strings.localizedBridgeErrorMessage(errorMessage)
+    }
+
+    var bridgeRecoveryStepMessages: [String] {
+        strings.bridgeRecoveryStepMessages(
+            issue: bridgeRecoveryIssue.rawValue,
+            startupAvailable: startupCommandText != nil
+        )
+    }
+
+    var bridgeRecoveryShowsTokenAction: Bool {
+        switch bridgeRecoveryIssue {
+        case .missingToken, .uiSession:
+            return true
+        default:
+            return false
+        }
+    }
+
+    var bridgeRecoveryShowsLauncherAction: Bool {
+        guard let startupCommandText else { return false }
+        return resolvedLocalCommandPath(startupCommandText) != nil
+    }
+
+    var bridgeRecoveryPrefersLauncherAction: Bool {
+        bridgeRecoveryIssue == .notConnected && bridgeRecoveryShowsLauncherAction
+    }
+
+    var bridgeRecoveryPrefersTokenAction: Bool {
+        bridgeRecoveryIssue == .missingToken && bridgeRecoveryShowsTokenAction
+    }
+
+    var bridgeNeedsExpandedRecoveryLayout: Bool {
+        guard let health else { return true }
+        return ["starting", "bootstrapping"].contains(health.status.lowercased())
+            || bridgeRecoveryPrefersLauncherAction
+            || bridgeRecoveryPrefersTokenAction
+            || bridgeRecoveryShowsLauncherAction
+            || bridgeRecoveryShowsTokenAction
+    }
+
+    private var bridgeBootstrapToken: String? {
+        try? String(contentsOf: bridgeClient.configuration.tokenFileURL)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var bridgeRecoveryIssue: BridgeRecoveryIssue {
+        let detail = (errorMessage ?? "").lowercased()
+        if detail.contains("missing bearer token") || detail.contains("missing bootstrap bearer") {
+            return .missingToken
+        }
+        if detail.contains("missing or invalid resident app ui session")
+            || detail.contains("missing or invalid ui session")
+            || detail.contains("http 401")
+        {
+            return .uiSession
+        }
+        if detail.contains("could not connect to local bridge")
+            || detail.contains("connection refused")
+            || detail.contains("failed to connect")
+        {
+            return .notConnected
+        }
+        return .diagnostics
     }
 
     var selectedCandidateBadgeText: String? {
@@ -602,8 +885,27 @@ final class AppModel: ObservableObject {
     }
 
     func recoverSession() async {
+        showActionFeedback(
+            title: strings.text(.retry),
+            message: strings.bridgeActionInProgressMessage(startingBridge: false),
+            tone: .caution,
+            showsProgress: true
+        )
         await bridgeClient.resetSession()
         await bootstrapAndLoad()
+        if errorMessage == nil, health != nil {
+            showActionFeedback(
+                title: strings.text(.actionCompleted),
+                message: strings.text(.bridgeReconnectedMessage),
+                tone: .positive
+            )
+        } else if let errorMessage {
+            showActionFeedback(
+                title: strings.text(.actionFailed),
+                message: strings.bridgeRecoveryFailureMessage(strings.localizedBridgeErrorMessage(errorMessage)),
+                tone: .critical
+            )
+        }
     }
 
     func performBridgeSuggestedAction() async {
@@ -613,9 +915,41 @@ final class AppModel: ObservableObject {
         }
         switch health.status {
         case "ok", "healthy":
+            showActionFeedback(
+                title: strings.text(.refresh),
+                message: strings.bridgeActionInProgressMessage(startingBridge: false),
+                tone: .caution,
+                showsProgress: true
+            )
             await refreshCurrentScreen()
+            if errorMessage == nil {
+                showActionFeedback(
+                    title: strings.text(.actionCompleted),
+                    message: strings.text(.bridgeRefreshedMessage),
+                    tone: .positive
+                )
+            }
         case "starting", "bootstrapping":
+            showActionFeedback(
+                title: strings.text(.retry),
+                message: strings.bridgeActionInProgressMessage(startingBridge: false),
+                tone: .caution,
+                showsProgress: true
+            )
             await bootstrapAndLoad()
+            if errorMessage == nil, self.health != nil {
+                showActionFeedback(
+                    title: strings.text(.actionCompleted),
+                    message: strings.text(.bridgeReconnectedMessage),
+                    tone: .positive
+                )
+            } else if let errorMessage {
+                showActionFeedback(
+                    title: strings.text(.actionFailed),
+                    message: strings.bridgeRecoveryFailureMessage(strings.localizedBridgeErrorMessage(errorMessage)),
+                    tone: .critical
+                )
+            }
         default:
             await recoverSession()
         }
@@ -624,13 +958,60 @@ final class AppModel: ObservableObject {
     func startBridgeAndReload() async {
         isLoading = true
         defer { isLoading = false }
+        showActionFeedback(
+            title: strings.text(.startBridge),
+            message: strings.bridgeActionInProgressMessage(startingBridge: true),
+            tone: .caution,
+            showsProgress: true
+        )
         do {
             try BridgeLauncher.launchBridge()
+            lastBridgeLaunchFailure = nil
+            showActionFeedback(
+                title: strings.text(.startBridge),
+                message: strings.bridgeLaunchWarmupMessage(),
+                tone: .caution,
+                showsProgress: true
+            )
+            await waitForBridgeWarmup()
             await bridgeClient.resetSession()
             await bootstrapAndLoad()
-            errorMessage = nil
+            if errorMessage == nil, health != nil {
+                showActionFeedback(
+                    title: strings.text(.actionCompleted),
+                    message: strings.text(.bridgeStartedMessage),
+                    tone: .positive
+                )
+            } else if let errorMessage {
+                showActionFeedback(
+                    title: strings.text(.actionFailed),
+                    message: strings.localizedBridgeErrorMessage(errorMessage),
+                    tone: .critical
+                )
+            }
         } catch {
             errorMessage = error.localizedDescription
+            lastBridgeLaunchFailure = error.localizedDescription
+            showActionFeedback(
+                title: strings.text(.actionFailed),
+                message: strings.bridgeRecoveryFailureMessage(strings.localizedBridgeErrorMessage(error.localizedDescription)),
+                tone: .critical
+            )
+        }
+    }
+
+    private func waitForBridgeWarmup(
+        timeoutNanoseconds: UInt64 = 8_000_000_000,
+        pollNanoseconds: UInt64 = 250_000_000
+    ) async {
+        let start = DispatchTime.now().uptimeNanoseconds
+        while DispatchTime.now().uptimeNanoseconds - start < timeoutNanoseconds {
+            do {
+                _ = try await bridgeClient.health()
+                return
+            } catch {
+            }
+            try? await Task.sleep(nanoseconds: pollNanoseconds)
         }
     }
 
@@ -643,7 +1024,7 @@ final class AppModel: ObservableObject {
     }
 
     func openDebugShell() {
-        NSWorkspace.shared.open(bridgeClient.configuration.debugShellURL)
+        NSWorkspace.shared.open(bridgeClient.configuration.debugShellEntryURL(token: bridgeBootstrapToken))
     }
 
     func copyHealthCheckCommand() {
@@ -663,8 +1044,27 @@ final class AppModel: ObservableObject {
 
     func copyDebugShellURL() {
         copyToClipboard(
-            bridgeDebugShellURLText,
+            bridgeDebugShellEntryURLText,
             message: strings.copiedCommandMessage(context: strings.text(.debugShell))
+        )
+    }
+
+    func launchSourcePath() -> String? {
+        let value = bridgeLaunchSourceText
+        guard let index = value.firstIndex(of: ":") else { return nil }
+        let path = value[value.index(after: index)...].trimmingCharacters(in: .whitespacesAndNewlines)
+        guard path.hasPrefix("/") else { return nil }
+        return path
+    }
+
+    func openLaunchSource() {
+        openPath(launchSourcePath())
+    }
+
+    func copyLaunchSource() {
+        copyToClipboard(
+            bridgeLaunchSourceText,
+            message: strings.copiedCommandMessage(context: strings.text(.launchSource))
         )
     }
 
@@ -874,7 +1274,7 @@ final class AppModel: ObservableObject {
         if let nextAction = daemonState.nextActions.first {
             lines.append("\(strings.text(.nextCommand)): \(nextAction.command)")
             if !nextAction.reason.isEmpty {
-                lines.append("\(strings.text(.reason)): \(nextAction.reason)")
+                lines.append("\(strings.text(.reason)): \(strings.operatorReasonLabel(nextAction.reason))")
             }
         }
         let readSurfaces = Array(daemonState.operatorPhaseDetails.readSurfaces.prefix(3))
@@ -899,7 +1299,7 @@ final class AppModel: ObservableObject {
         var lines: [String] = [strings.text(.phaseClosureGates)]
         for value in checklist {
             guard let object = value.objectValue else { continue }
-            let item = object["item"]?.stringValue ?? strings.text(.none)
+            let item = object["item"]?.stringValue.map(strings.phaseChecklistItemLabel) ?? strings.text(.none)
             let status = object["status"]?.stringValue.map(strings.tokenLabel) ?? strings.text(.none)
             lines.append("")
             lines.append("\(item): \(status)")
@@ -934,7 +1334,7 @@ final class AppModel: ObservableObject {
             lines.append("")
             lines.append(action.command)
             if !action.reason.isEmpty {
-                lines.append("\(strings.text(.reason)): \(action.reason)")
+                lines.append("\(strings.text(.reason)): \(strings.operatorReasonLabel(action.reason))")
             }
         }
         return lines.joined(separator: "\n")
@@ -970,7 +1370,7 @@ final class AppModel: ObservableObject {
         sections.append("\(strings.text(.profile)): \(bridgeProfileID)")
         sections.append("\(strings.text(.bridgeURL)): \(bridgeBaseURLText)")
         sections.append("\(strings.text(.healthEndpoint)): \(bridgeHealthURLText)")
-        sections.append("\(strings.text(.debugShell)): \(bridgeDebugShellURLText)")
+        sections.append("\(strings.text(.debugShell)): \(bridgeDebugShellEntryURLText)")
         sections.append("\(strings.text(.tokenFile)): \(bridgeTokenFilePath)")
         sections.append("\(strings.text(.logFile)): \(bridgeLogFilePath)")
         sections.append("\(strings.text(.bridgeStatusPanel)): \(bridgeStatusHeadline)")
@@ -993,7 +1393,7 @@ final class AppModel: ObservableObject {
         if let firstAction = daemonState.nextActions.first {
             sections.append("• \(strings.text(.nextCommand)): \(firstAction.command)")
             if !firstAction.reason.isEmpty {
-                sections.append("• \(strings.text(.reason)): \(firstAction.reason)")
+                sections.append("• \(strings.text(.reason)): \(strings.operatorReasonLabel(firstAction.reason))")
             }
         }
         if let printCommand = daemonState.launchagentStatus?["print_command"]?.stringValue, !printCommand.isEmpty {
@@ -1110,12 +1510,14 @@ final class AppModel: ObservableObject {
         actionTitle = nil
         actionMessage = nil
         actionTone = .positive
+        actionShowsProgress = false
     }
 
-    private func showActionFeedback(title: String, message: String, tone: StatusTone) {
+    private func showActionFeedback(title: String, message: String, tone: StatusTone, showsProgress: Bool = false) {
         actionTitle = title
         actionMessage = message
         actionTone = tone
+        actionShowsProgress = showsProgress
     }
 
     private func handoffExportTimestampText(now: Date = Date()) -> String {

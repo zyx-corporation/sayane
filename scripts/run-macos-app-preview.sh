@@ -9,6 +9,7 @@ BRIDGE_URL="${SAYANE_BRIDGE_URL:-http://127.0.0.1:38741}"
 BRIDGE_HOST="${SAYANE_BRIDGE_HOST:-127.0.0.1}"
 BRIDGE_PORT="${SAYANE_BRIDGE_PORT:-38741}"
 BRIDGE_LOG_FILE="${SAYANE_APP_LOG_FILE:-$HOME/.sayane/run-app-local.log}"
+BRIDGE_START_MODE="${SAYANE_BRIDGE_START_MODE:-auto}"
 RUN_BRIDGE=1
 RUN_BUILD=1
 OPEN_XCODE=0
@@ -25,6 +26,9 @@ Usage: $(basename "$0") [options]
 
 Options:
   --no-bridge      Do not start or refresh the local Bridge
+  --bridge-foreground  Start Bridge in the current terminal
+  --bridge-background  Start Bridge in the background
+  --bridge-terminal    Start Bridge in a new Terminal window (macOS)
   --no-build       Do not run swift build before launch
   --xcode          Open Package.swift in Xcode instead of launching the binary
   --no-stop        Do not stop an existing SayaneApp preview process
@@ -43,6 +47,15 @@ while [[ $# -gt 0 ]]; do
       ;;
     --no-build)
       RUN_BUILD=0
+      ;;
+    --bridge-foreground)
+      BRIDGE_START_MODE="foreground"
+      ;;
+    --bridge-background)
+      BRIDGE_START_MODE="background"
+      ;;
+    --bridge-terminal)
+      BRIDGE_START_MODE="terminal"
       ;;
     --xcode)
       OPEN_XCODE=1
@@ -199,8 +212,12 @@ ensure_bridge() {
   run_init_if_needed
   stop_existing_bridge
   mkdir -p "$(dirname "${BRIDGE_LOG_FILE}")"
-  info "Starting Bridge through local launcher at ${BRIDGE_URL}"
-  bash "${ROOT}/scripts/run-app-local.sh" --no-open --no-bootstrap-check
+  info "Starting Bridge through local launcher at ${BRIDGE_URL} (mode: ${BRIDGE_START_MODE})"
+  if [[ "${BRIDGE_START_MODE}" == "auto" ]]; then
+    bash "${ROOT}/scripts/run-app-local.sh" --no-open --no-bootstrap-check
+  else
+    bash "${ROOT}/scripts/run-app-local.sh" "--${BRIDGE_START_MODE}" --no-open --no-bootstrap-check
+  fi
   wait_for_bridge || die "Bridge did not become healthy at ${BRIDGE_URL}. Check ${BRIDGE_LOG_FILE}"
 }
 
@@ -243,17 +260,34 @@ APPLESCRIPT
 }
 
 print_summary() {
+  local bootstrap_url
+  bootstrap_url="${BRIDGE_URL}/app/ui"
+  if [[ -f "${HOME}/.sayane/bridge.token" ]]; then
+    bootstrap_url="${BRIDGE_URL}/app/ui?bootstrap_token=\$(cat ~/.sayane/bridge.token)"
+  fi
   cat <<EOF
 
 SayaneApp native preview:
   Executable: ${EXECUTABLE_PATH}
-  Bridge UI: ${BRIDGE_URL}/app/ui
+  Bridge health: ${BRIDGE_URL}/health
+  Bridge start mode: ${BRIDGE_START_MODE}
+  Bridge log: ${BRIDGE_LOG_FILE}
   App log: ${APP_LOG_FILE}
 
 Useful checks:
   pgrep -fl "${EXECUTABLE_PATH}"
+  curl -s "${BRIDGE_URL}/health"
   tail -n 40 "${APP_LOG_FILE}"
-  open -a "Google Chrome" "${BRIDGE_URL}/app/ui?bootstrap_token=\$(cat ~/.sayane/bridge.token)"
+  tail -n 40 "${BRIDGE_LOG_FILE}"
+
+Notes:
+  - On macOS, Bridge auto mode prefers a dedicated Terminal window.
+  - If the app shows disconnected state, keep the Bridge terminal open and use Reconnect in the app.
+  - Browser compatibility shell remains debug-only and is not part of the normal macOS operator flow.
+
+Debug-only checks:
+  Compatibility shell: ${BRIDGE_URL}/app/ui
+  open -a "Google Chrome" "${bootstrap_url}"
 EOF
 }
 

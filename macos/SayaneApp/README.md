@@ -1,6 +1,12 @@
-# Sayane macOS App Preview
+# Sayane macOS App
 
-This directory contains the first native macOS app shell for the Sayane resident app.
+This directory contains the current primary native macOS app for the Sayane resident app.
+
+Platform focus for the current line:
+
+- macOS is the active completion target
+- Linux keeps the recorded `systemd --user` shipped slice, but further packaging work is paused
+- Windows keeps the recorded contract-only target state, but implementation work is paused
 
 ## Current scope
 
@@ -70,6 +76,96 @@ This directory contains the first native macOS app shell for the Sayane resident
 swift build --package-path macos/SayaneApp
 ```
 
+## Package / Install
+
+Current macOS distribution stays local-first:
+
+- the main user install path still starts with `curl | bash` for CLI / Bridge
+- build the native `.app` bundle from the current checkout
+- keep the local CLI / Bridge runtime as the current backend prerequisite
+- install the app into `~/Applications` for operator use
+
+Create a distributable bundle:
+
+```bash
+bash scripts/build-macos-app-bundle.sh
+# or also emit a zip archive:
+bash scripts/build-macos-app-bundle.sh --zip
+```
+
+Generated artifacts now include:
+
+- `dist/macos/SayaneApp.app`
+- `dist/macos/SayaneApp-<version>-macos-release.zip`
+- `dist/macos/SayaneApp-latest-macos-release.zip`
+- `dist/macos/SayaneApp-<version>-macos-release.sha256`
+- `dist/macos/SayaneApp-<version>-macos-release.manifest.txt`
+
+Install into `~/Applications`:
+
+```bash
+bash scripts/install-macos-app.sh
+bash scripts/refresh-macos-app.sh
+```
+
+Remove from `~/Applications`:
+
+```bash
+bash scripts/uninstall-macos-app.sh
+```
+
+Useful options:
+
+```bash
+bash scripts/build-macos-app-bundle.sh --debug
+bash scripts/install-macos-app.sh --no-build
+bash scripts/install-macos-app.sh --applications /tmp/SayaneApps
+bash scripts/refresh-macos-app.sh --no-build
+bash scripts/refresh-macos-app.sh --debug --no-open
+bash scripts/install-macos-app.sh --no-adhoc-sign
+```
+
+Default paths:
+
+- bundle output: `dist/macos/SayaneApp.app`
+- local install target: `~/Applications/SayaneApp.app`
+
+Quick verification:
+
+```bash
+bash scripts/verify-macos-app-install.sh
+plutil -lint ~/Applications/SayaneApp.app/Contents/Info.plist
+file ~/Applications/SayaneApp.app/Contents/MacOS/SayaneApp
+open ~/Applications/SayaneApp.app
+```
+
+Boundary notes:
+
+- current primary install path is still `curl | bash` for CLI / Bridge
+- current packaging is **not** a notarized dmg or signed pkg flow yet
+- current app launch now prefers an installed `sayane` CLI (`~/.local/bin/sayane`, `PATH`, or `SAYANE_CLI_BIN`) before falling back to repo-local launch scripts
+- installed `.app` bundles now carry `Contents/Resources/run-bridge-helper.sh` so normal app startup no longer depends on repo-local launchers
+- current app install still expects the local Sayane CLI / Bridge runtime to exist
+- use `docs/install.md` as the operator-facing install entrypoint
+- native diagnostics now surface the launch source (`bundled_helper`, `installed_cli`, or `repo_launcher`) and the last launch failure directly inside the app
+- local install now applies an ad-hoc signature so `open ~/Applications/SayaneApp.app` works before maintainer signing/notarization is available
+
+Signing / notarization preparation:
+
+```bash
+bash scripts/sign-macos-app.sh --dry-run --identity "Developer ID Application: Example"
+bash scripts/notarize-macos-app.sh --dry-run --profile sayane-notary
+bash scripts/prepare-macos-release-artifacts.sh
+```
+
+When maintainer secrets are available, the same helpers can be used for the real
+`codesign` / `notarytool` flow with:
+
+- `SAYANE_MACOS_CODESIGN_IDENTITY`
+- `SAYANE_MACOS_NOTARY_PROFILE`
+- optional `SAYANE_MACOS_TEAM_ID`
+- optional `SAYANE_MACOS_APPLE_ID`
+
 ## Native smoke check
 
 ```bash
@@ -100,13 +196,13 @@ If the native-first smoke check fails, inspect:
 - Bridge log: `~/.sayane/macos-app-smoke.log`
 - Cookie jar: `~/.sayane/macos-app-smoke.cookies.txt`
 - Health check: `curl -s http://127.0.0.1:38741/health`
-- Debug-shell bootstrap: `open -a "Google Chrome" "http://127.0.0.1:38741/app/ui?bootstrap_token=$(cat ~/.sayane/bridge.token)"`
+- Debug-shell bootstrap only when native diagnostics are insufficient: `open -a "Google Chrome" "http://127.0.0.1:38741/app/ui?bootstrap_token=$(cat ~/.sayane/bridge.token)"`
 
 Common failure hints:
 
 - `ERR_CONNECTION_REFUSED`: the Bridge is not listening; rerun the smoke script or start the Bridge first
-- `Missing bootstrap bearer or valid resident app UI session`: the debug shell was opened without the bootstrap hop; reopen `/app/ui?bootstrap_token=...`
-- `Missing or invalid resident app UI session`: the debug-shell session cookie is stale; rerun the bootstrap URL or remove the cookie jar and retry
+- `Missing bootstrap bearer or valid resident app UI session`: only relevant for the debug-only compatibility shell; reopen `/app/ui?bootstrap_token=...` if that shell is explicitly under test
+- `Missing or invalid resident app UI session`: only relevant for the debug-only compatibility shell; rerun the bootstrap URL or remove the cookie jar and retry
 
 ## Run from Xcode
 
@@ -124,10 +220,18 @@ The app uses the local Bridge at:
 http://127.0.0.1:38741
 ```
 
-Use the repo-level launcher first when needed:
+Normal macOS operator startup should come from the installed native app itself once the local CLI is installed.
+
+Repo-local launchers remain the development fallback:
 
 ```bash
 ./scripts/run-macos-app-preview.sh
+```
+
+Installed app bundles use the bundled helper first:
+
+```text
+~/Applications/SayaneApp.app/Contents/Resources/run-bridge-helper.sh
 ```
 
 Useful options:
@@ -135,10 +239,14 @@ Useful options:
 ```bash
 ./scripts/run-macos-app-preview.sh --no-build
 ./scripts/run-macos-app-preview.sh --foreground
+./scripts/run-macos-app-preview.sh --bridge-terminal
+./scripts/run-macos-app-preview.sh --bridge-background
 ./scripts/run-macos-app-preview.sh --xcode
 ```
 
 - default mode starts or reuses the local Bridge, then launches the built native executable directly
+- on macOS, the default Bridge launcher prefers a dedicated Terminal window over an in-process detached background launch
+- `--bridge-terminal` / `--bridge-background` / `--bridge-foreground` pin the Bridge start mode when auto mode is not what you want
 - `--no-build` reuses the current debug executable when iterating on launch behavior
 - `--foreground` keeps the native process attached to the current terminal
 - `--xcode` falls back to the old Package.swift-in-Xcode path when manual IDE inspection is needed
@@ -147,23 +255,41 @@ Useful options:
 
 If the app loses the Bridge connection after launch, use the native `Start Bridge` or `Reconnect` buttons from the error view.
 The Home and error surfaces also expose one shared connection diagnostics card so the operator can
-inspect the Bridge URL, health endpoint, browser fallback URL, token path, and log path without leaving
+inspect the Bridge URL, health endpoint, browser-compatibility entry, token path, and log path without leaving
 the native app.
+When the app is disconnected on macOS, the recovery copy now explicitly assumes the Terminal-backed
+Bridge path: start the Bridge, keep that Terminal window open, and then reconnect from the app.
+Successful `Start Bridge`, `Reconnect`, and `Refresh` actions now also raise a native feedback banner
+so the operator can tell whether recovery actually completed without leaving the current screen.
+Those same recovery actions now show an in-progress banner first, and failed recovery banners point
+back to the Bridge Terminal window plus `~/.sayane/run-app-local.log`.
+While that recovery is running, the main recovery buttons are disabled so repeated clicks do not
+queue overlapping Bridge actions.
+The main recovery button label also switches to an in-progress form such as `Bridge 起動中…` or
+`再接続中…` while that work is active.
+The Bridge status panel and compact error recovery card also show a spinner during that same window,
+and launcher / compatibility-open actions are temporarily disabled until recovery finishes.
+The top feedback banner now mirrors that state too, adding a small spinner next to the status badge
+for in-progress recovery messages.
+The toolbar `Refresh` action also follows that same state, switching its label to the active
+recovery wording and disabling itself while recovery is still running.
 Where the startup command resolves to a local script path, the native recovery surfaces now also expose
 `Open Launcher` beside `Copy Startup Command`. Where the browser compatibility path is visible, the same
-surfaces now also expose `Open Debug Shell` and `Copy Debug Shell URL`.
+surfaces now also expose `Open Compatibility Shell` and `Copy Compatibility Shell URL`. When the local token file is
+available, those debug actions prefer the bootstrap URL automatically instead of opening raw `/app/ui`
+first.
 The error view now also keeps one compact recovery card first, so the operator can trigger the
 recommended recovery action, copy the startup command, and open logs before reading deeper diagnostics.
-That diagnostics card now stays reference-first: it keeps file paths, URLs, and debug/fallback-only
+That diagnostics card now stays reference-first: it keeps file paths, URLs, and debug/compatibility-only
 utilities together, while the Bridge status panel carries the main recovery and navigation actions.
 The Home screen also keeps a compact Bridge status panel above the rest of the content so initial
 launch, reconnect, and log-first troubleshooting stay visible before drilling into Queue or Daemon.
 That same Home/Bridge Status surface now uses the same startup/debug actions as the Daemon supported-path
-and fallback error surfaces, so operators do not need to remember a separate recovery path per screen.
+and compact error surfaces, so operators do not need to remember a separate recovery path per screen.
 Queue and Daemon also keep the same Bridge status surface in compact form so the operator can
 recover connectivity without navigating back to Home first.
 When daemon state is available, the same native recovery surfaces now also show the current startup
-command directly, so the operator can copy the local restart path without opening the browser fallback.
+command directly, so the operator can copy the local restart path without opening the browser compatibility shell.
 The same Bridge status area now also surfaces the current gate and first next command from daemon
 state, so phase-closure blockers and the next local CLI step stay visible before opening the deeper
 Daemon workspace.
@@ -224,8 +350,9 @@ The exported filename is now timestamped, and the note also includes Bridge vers
 metadata when available, so repeated handoff saves stay distinct and easier to audit later.
 It now also includes component identity plus the local token/log file paths, making the exported note
 usable as a first-pass reconnect and log-triage artifact on its own.
-The same top block now also includes the debug-shell URL and the first next-command summary, so both
-browser fallback and the initial daemon action are visible before reading the deeper sections.
+The same top block now also includes the compatibility-shell entry URL and the first next-command summary, so both
+browser compatibility checks and the initial daemon action are visible before reading the deeper sections. When the
+local token file is available, that entry prefers the bootstrap URL automatically.
 It now also includes `launchctl print` plus stdout/stderr tail commands when available, so the saved
 note can hand off the first CLI inspection steps without requiring another pass through the app UI.
 The exported note now also carries the main preflight and proof-diagnostics entry commands, so the
@@ -269,7 +396,7 @@ directly from the daemon screen-state payload:
 - background-surface candidates that remain deferred
 - recommended recovery flow and app-UI guardrails
 - cross-platform target context with the macOS LaunchAgent line kept explicit
-- supported startup command, debug fallback URL, and phase-closure checklist visibility
+- supported startup command, debug compatibility URL, and phase-closure checklist visibility
 - operator handoff snapshot with workstream states and recommended implementation order
 - service lifecycle operations, policy gates, app-UI exposure limits, and governing rules
 - LaunchAgent-specific runbook guidance: preflight, verification, log paths, security boundary, troubleshooting
@@ -282,7 +409,7 @@ directly from the daemon screen-state payload:
 The native app reads and writes the app-facing resident surfaces directly with the
 local bearer token from `~/.sayane/bridge.token`.
 
-The Bridge-hosted debug shell still uses:
+The Bridge-hosted compatibility shell still uses:
 
 ```text
 GET /app/ui?bootstrap_token=...

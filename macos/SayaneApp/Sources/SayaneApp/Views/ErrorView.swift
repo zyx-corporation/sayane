@@ -1,15 +1,21 @@
 import SwiftUI
 
 struct ErrorView: View {
+    private enum RecoveryButtonKind {
+        case prominent
+        case regular
+    }
+
     @ObservedObject var model: AppModel
     let message: String
+    @State private var showsRawError = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text(model.strings.text(.error)).font(.largeTitle).bold()
-            Text(model.strings.text(.connectionProblem))
+            issueSummaryCard
             compactRecoveryCard
-            SelectableMonospaceText(text: message, font: .body.monospaced())
+            rawErrorDisclosure
             BridgeDiagnosticsCard(model: model, compact: true)
         }
         .padding(24)
@@ -20,11 +26,18 @@ struct ErrorView: View {
     private var compactRecoveryCard: some View {
         SurfaceCard(emphasis: 0.42) {
             VStack(alignment: .leading, spacing: 10) {
-                Text(model.bridgeSuggestedActionText)
-                    .font(.headline)
-                Text(model.strings.text(.sessionProblem))
+                HStack(spacing: 8) {
+                    Text(model.bridgeSuggestedActionText)
+                        .font(.headline)
+                    if model.bridgeRecoveryInProgress {
+                        ProgressView()
+                            .controlSize(.small)
+                    }
+                }
+                Text(model.errorDisplayMessage ?? model.strings.text(.sessionProblem))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+                recoveryHints
                 if let startupCommand = model.startupCommandText {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(model.strings.text(.startupCommand))
@@ -34,13 +47,11 @@ struct ErrorView: View {
                         StartupShortcutButtons(model: model, command: startupCommand)
                     }
                 }
-                if let bootstrapUI = model.daemonState?.operatorPhaseDetails.currentSupportedOperatorPath.bootstrapUI {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(model.strings.text(.bootstrapUI))
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                        CommandRowView(command: bootstrapUI, lineLimit: 2)
-                        DebugShellShortcutButtons(model: model, bootstrapUI: bootstrapUI)
+                if model.daemonState?.operatorPhaseDetails.currentSupportedOperatorPath.bootstrapUI != nil {
+                    DebugCompatibilityDisclosure(model: model) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            DebugShellShortcutButtons(model: model)
+                        }
                     }
                 }
                 if let currentGate = model.currentGateText {
@@ -60,15 +71,145 @@ struct ErrorView: View {
                         CommandRowView(command: nextCommand, lineLimit: 2)
                     }
                 }
+                recoveryActionRows
+            }
+        }
+    }
+
+    private var issueSummaryCard: some View {
+        SurfaceCard(emphasis: 0.22) {
+            VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 8) {
-                    Button(model.bridgeSuggestedActionText) {
-                        Task { await model.performBridgeSuggestedAction() }
+                    StatusBadge(text: model.strings.text(.needsAttention), tone: .critical)
+                    Text(model.bridgeRecoveryIssueTitle)
+                        .font(.headline)
+                }
+                Text(model.bridgeRecoveryIssueSummary)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private var rawErrorDisclosure: some View {
+        DisclosureGroup(
+            isExpanded: $showsRawError,
+            content: {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(model.strings.text(.errorDetails))
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                    SelectableMonospaceText(text: message, font: .body.monospaced())
+                }
+                .padding(.top, 4)
+            },
+            label: {
+                Label(
+                    showsRawError
+                        ? model.strings.text(.hideErrorDetails)
+                        : model.strings.text(.showErrorDetails),
+                    systemImage: "exclamationmark.bubble"
+                )
+                .font(.caption.weight(.semibold))
+            }
+        )
+    }
+
+    private var recoveryActionRows: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                if model.bridgeRecoveryPrefersLauncherAction, let startupCommand = model.startupCommandText {
+                    Button(model.strings.text(.openLauncher)) {
+                        model.openCommandPath(startupCommand)
                     }
                     .buttonStyle(.borderedProminent)
+                    .disabled(model.bridgeRecoveryActionDisabled)
+                } else if model.bridgeRecoveryPrefersTokenAction {
+                    Button(model.strings.text(.openToken)) {
+                        model.openTokenFile()
+                    }
+                    .buttonStyle(.borderedProminent)
+                } else {
+                    primaryRecoveryButton(kind: .prominent)
+                }
+
+                if model.bridgeRecoveryPrefersLauncherAction || model.bridgeRecoveryPrefersTokenAction {
+                    primaryRecoveryButton(kind: .regular)
+                }
+                if !model.bridgeNeedsExpandedRecoveryLayout {
                     Button(model.strings.text(.openLogs)) {
                         model.openLogFile()
                     }
                     .buttonStyle(.bordered)
+                }
+            }
+
+                if model.bridgeNeedsExpandedRecoveryLayout {
+                    HStack(spacing: 8) {
+                        if model.launchSourcePath() != nil {
+                            Button(model.strings.text(.openLaunchSource)) {
+                                model.openLaunchSource()
+                            }
+                            .buttonStyle(.bordered)
+                        }
+                        Button(model.strings.text(.copyLaunchSource)) {
+                            model.copyLaunchSource()
+                        }
+                        .buttonStyle(.bordered)
+                        if !model.bridgeRecoveryPrefersLauncherAction,
+                           model.bridgeRecoveryShowsLauncherAction,
+                           let startupCommand = model.startupCommandText
+                        {
+                            Button(model.strings.text(.openLauncher)) {
+                            model.openCommandPath(startupCommand)
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(model.bridgeRecoveryActionDisabled)
+                    }
+                    if !model.bridgeRecoveryPrefersTokenAction, model.bridgeRecoveryShowsTokenAction {
+                        Button(model.strings.text(.openToken)) {
+                            model.openTokenFile()
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                    Button(model.strings.text(.openLogs)) {
+                        model.openLogFile()
+                    }
+                    .buttonStyle(.bordered)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func primaryRecoveryButton(kind: RecoveryButtonKind) -> some View {
+        switch kind {
+        case .prominent:
+            Button(model.bridgeSuggestedActionText) {
+                Task { await model.performBridgeSuggestedAction() }
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(model.bridgeRecoveryActionDisabled)
+        case .regular:
+            Button(model.bridgeSuggestedActionText) {
+                Task { await model.performBridgeSuggestedAction() }
+            }
+            .buttonStyle(.bordered)
+            .disabled(model.bridgeRecoveryActionDisabled)
+        }
+    }
+
+    private var recoveryHints: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(model.bridgeRecoveryHintTitle)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+            ForEach(Array(model.bridgeRecoveryStepMessages.enumerated()), id: \.offset) { _, step in
+                HStack(alignment: .top, spacing: 8) {
+                    Text("•")
+                    Text(step)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
         }

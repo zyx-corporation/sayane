@@ -21,6 +21,7 @@ from sayane.app.daemon_runtime_init import build_runtime_init_plan
 from sayane.app.daemon_service_control_boundary import build_daemon_service_control_boundary
 from sayane.app.daemon_service_targets_status import build_daemon_service_targets_status
 from sayane.app.daemon_supervision_status import build_daemon_supervision_status
+from sayane.app.daemon_systemd_user import build_systemd_user_plan, build_systemd_user_status
 from sayane.core.candidate import CandidateUpdate
 from sayane.core.mcp_context import build_compiled_context, build_mcp_exposure_denial
 from sayane.core.review_decision import ReviewDecision
@@ -167,6 +168,16 @@ def build_daemon_overview_preview(
         if sys.platform == "darwin"
         else None
     )
+    systemd_user_preview = (
+        build_systemd_user_plan(runtime_root, host=host, port=port).public_metadata()
+        if sys.platform.startswith("linux")
+        else None
+    )
+    systemd_user_status = (
+        build_systemd_user_status(build_systemd_user_plan(runtime_root, host=host, port=port))
+        if sys.platform.startswith("linux")
+        else None
+    )
     return {
         "kind": "resident_daemon_overview_preview",
         "is_daemon_surface": True,
@@ -188,6 +199,8 @@ def build_daemon_overview_preview(
         "recovery_consent_status": recovery_consent_status,
         "launchagent_preview": launchagent_preview,
         "launchagent_status": launchagent_status,
+        "systemd_user_preview": systemd_user_preview,
+        "systemd_user_status": systemd_user_status,
         "next_actions": _build_daemon_next_actions(
             status=status_report.public_metadata(),
             runtime_init=runtime_init,
@@ -196,6 +209,8 @@ def build_daemon_overview_preview(
             service_targets_status=service_targets_status,
             launchagent_preview=launchagent_preview,
             launchagent_status=launchagent_status,
+            systemd_user_preview=systemd_user_preview,
+            systemd_user_status=systemd_user_status,
         ),
     }
 
@@ -209,6 +224,8 @@ def _build_daemon_next_actions(
     service_targets_status: dict[str, Any],
     launchagent_preview: dict[str, Any] | None,
     launchagent_status: dict[str, Any] | None,
+    systemd_user_preview: dict[str, Any] | None,
+    systemd_user_status: dict[str, Any] | None,
 ) -> list[dict[str, str]]:
     actions: list[dict[str, str]] = []
     if not status["runtime_initialized"]:
@@ -315,6 +332,66 @@ def _build_daemon_next_actions(
                         "The LaunchAgent is already loaded and may be "
                         "explicitly kickstarted when the service line needs "
                         "a bounded restart."
+                    ),
+                }
+            )
+    if service_targets_status.get("current_platform") == "linux":
+        actions.append(
+            {
+                "command": "sayane app daemon-service-targets-status --json",
+                "reason": (
+                    "Review the current Linux, macOS, and Windows service "
+                    "target contract before service-oriented control."
+                ),
+            }
+        )
+        actions.append(
+            {
+                "command": "sayane app daemon-systemd-user-preview --json",
+                "reason": (
+                    "Review the systemd --user unit and explicit systemctl "
+                    "commands for the Linux local service line."
+                ),
+            }
+        )
+        actions.append(
+            {
+                "command": "sayane app daemon-systemd-user-status --json",
+                "reason": (
+                    "Observe whether the reviewed systemd --user unit exists "
+                    "and whether the local user service is active or enabled."
+                ),
+            }
+        )
+        if systemd_user_preview and Path(systemd_user_preview.get("unit_path", "")).is_file():
+            actions.append(
+                {
+                    "command": "sayane app daemon-systemd-user-daemon-reload --json",
+                    "reason": (
+                        "A reviewed systemd --user unit already exists and the "
+                        "next explicit operator step is daemon-reload."
+                    ),
+                }
+            )
+        if systemd_user_status and (
+            systemd_user_status.get("enabled") is False or systemd_user_status.get("active") is False
+        ):
+            actions.append(
+                {
+                    "command": "sayane app daemon-systemd-user-enable-now --json",
+                    "reason": (
+                        "The reviewed systemd --user unit is not fully enabled "
+                        "or active and can be explicitly enabled now."
+                    ),
+                }
+            )
+        if systemd_user_status and systemd_user_status.get("unit_exists") is True:
+            actions.append(
+                {
+                    "command": "sayane app daemon-systemd-user-status --json",
+                    "reason": (
+                        "The reviewed systemd --user unit exists and can be "
+                        "verified directly through the local CLI status surface."
                     ),
                 }
             )

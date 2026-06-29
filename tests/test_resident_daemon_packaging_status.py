@@ -19,7 +19,11 @@ def test_daemon_packaging_status_exposes_cli_first_local_boundary(tmp_path: Path
     assert payload["kind"] == "resident_daemon_packaging_status"
     assert payload["packaging_model"] == "cli_first_local_bridge"
     assert payload["supervision_model"] == "manual_cli_with_bridge_delegation"
-    assert payload["service_integration"]["status"] in {"contract_only", "macos_launchagent_preview_apply_control"}
+    assert payload["service_integration"]["status"] in {
+        "contract_only",
+        "macos_launchagent_preview_apply_control",
+        "linux_systemd_user_preview_apply_unit_write",
+    }
     assert payload["background_supervision"]["status"] == "not_supported"
     assert payload["operator_surface"]["debug_ui"] == "bridge_hosted_debug_shell"
     assert payload["packaging_decision"]["current_supported_model"] == "cli_first_local_bridge"
@@ -40,6 +44,11 @@ def test_daemon_packaging_status_exposes_cli_first_local_boundary(tmp_path: Path
     if payload["service_integration"]["status"] == "macos_launchagent_preview_apply_control":
         assert payload["operator_surface"]["primary_ui"] == "native_macos_app_primary"
         assert payload["operator_surface"]["recommended_launcher"]["command_text"] == "./scripts/run-macos-app-preview.sh"
+    elif payload["service_integration"]["status"] == "linux_systemd_user_preview_apply_unit_write":
+        assert payload["service_integration"]["supported_targets"] == ["linux_systemd_user"]
+        assert payload["operator_surface"]["recommended_launcher"]["command_text"] == (
+            "sayane serve --host localhost --port 39000"
+        )
     else:
         assert payload["operator_surface"]["primary_ui"] == "local_bridge_shell_primary"
         assert payload["operator_surface"]["recommended_launcher"]["command_text"] == (

@@ -98,16 +98,47 @@ def test_app_overview_exposes_ui_friendly_summary_with_repositories(tmp_path) ->
     assert payload["summary"]["service_integration_status"] in {
         "contract_only",
         "macos_launchagent_preview_apply_control",
+        "linux_systemd_user_preview_apply_unit_write",
     }
     assert payload["service_control_boundary"]["service_plane"]["status"] in {
         "contract_only",
         "macos_explicit_cli_only",
         "mvp_macos_launchagent_preview_apply_cli_only",
+        "post_mvp_macos_launchagent_preview_apply_cli_only",
+        "post_mvp_linux_systemd_user_preview_apply_cli_only",
     }
     assert payload["supervision_status"]["background_surfaces"]["status"] == "not_supported"
     assert payload["recovery_consent_status"]["mutating_recovery_actions"][0]["consent_required"] is True
     assert payload["vault_status"]["status"] == "unavailable"
     assert payload["vault_session_status"]["active_session_count"] == 0
+
+
+def test_app_overview_exposes_linux_systemd_payloads(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr("sayane.app.ui.sys.platform", "linux")
+    monkeypatch.setattr("sayane.app.daemon_packaging_status.sys.platform", "linux")
+    monkeypatch.setattr("sayane.app.daemon_service_control_boundary.sys.platform", "linux")
+    monkeypatch.setattr("sayane.app.daemon_service_targets_status.sys.platform", "linux")
+    monkeypatch.setattr("sayane.app.daemon_systemd_user.sys.platform", "linux")
+
+    runtime = build_resident_runtime(home=tmp_path / "sayane")
+
+    payload = build_app_overview(runtime)
+
+    assert payload["summary"]["service_target_platform"] == "linux"
+    assert payload["summary"]["service_integration_status"] == "linux_systemd_user_preview_apply_unit_write"
+    assert payload["daemon_overview"]["launchagent_preview"] is None
+    assert payload["daemon_overview"]["launchagent_status"] is None
+    assert payload["daemon_overview"]["systemd_user_preview"]["kind"] == "resident_daemon_systemd_user_plan"
+    assert payload["daemon_overview"]["systemd_user_status"]["kind"] == "resident_daemon_systemd_user_status"
+    assert payload["daemon_overview"]["systemd_user_status"]["active_status"] in {
+        "unknown",
+        "inactive",
+        "systemctl_not_available",
+    }
+    assert any(
+        item["command"] == "sayane app daemon-systemd-user-preview --json"
+        for item in payload["daemon_overview"]["next_actions"]
+    )
 
 
 def test_app_overview_degrades_when_vault_runtime_has_no_read_session(tmp_path, monkeypatch) -> None:

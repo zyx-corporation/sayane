@@ -40,6 +40,11 @@ def _auth(token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
 
 
+def _assert_legacy_compatibility_headers(response) -> None:
+    assert response.headers["x-sayane-compatibility-surface"] == "debug_only_legacy"
+    assert response.headers["x-sayane-compatibility-mode"] == "bridge_hosted_local_shell"
+
+
 def test_health_without_auth(bridge_env: tuple[TestClient, BridgeConfig, str]) -> None:
     client, _, _ = bridge_env
     response = client.get("/health")
@@ -98,6 +103,9 @@ def test_app_daemon_overview_returns_preview_payload(
     else:
         assert payload["launchagent_preview"] is None
         assert payload["launchagent_status"] is None
+    if sys.platform.startswith("linux"):
+        assert payload["systemd_user_preview"]["kind"] == "resident_daemon_systemd_user_plan"
+        assert payload["systemd_user_status"]["kind"] == "resident_daemon_systemd_user_status"
     assert payload["is_preview"] is True
 
 
@@ -557,6 +565,7 @@ def test_app_ui_returns_bootstrap_home_html(
     assert "/app/ui-state/home" in text
     assert "/app/ui-action/capture-clipboard" in text
     assert "sayane_bridge_ui_session" in response.cookies
+    _assert_legacy_compatibility_headers(response)
 
 
 def test_app_ui_bootstrap_form_can_mint_browser_ui_session(
@@ -573,9 +582,11 @@ def test_app_ui_bootstrap_form_can_mint_browser_ui_session(
     assert response.status_code == 303
     assert response.headers["location"] == "/app/ui"
     assert response.cookies.get("sayane_bridge_ui_session")
+    _assert_legacy_compatibility_headers(response)
 
     follow_up = client.get("/app/ui-state/home")
     assert follow_up.status_code == 200
+    _assert_legacy_compatibility_headers(follow_up)
 
 
 def test_app_ui_bootstrap_query_token_mints_session_and_returns_home_html(
@@ -590,9 +601,11 @@ def test_app_ui_bootstrap_query_token_mints_session_and_returns_home_html(
     assert response.status_code == 200
     assert "text/html" in response.headers["content-type"]
     assert response.cookies.get("sayane_bridge_ui_session")
+    _assert_legacy_compatibility_headers(response)
 
     follow_up = client.get("/app/ui-state/home")
     assert follow_up.status_code == 200
+    _assert_legacy_compatibility_headers(follow_up)
 
 
 def test_app_ui_follow_up_routes_require_dedicated_ui_session_not_raw_bearer(
@@ -616,6 +629,9 @@ def test_app_ui_follow_up_routes_require_dedicated_ui_session_not_raw_bearer(
 
     state_with_session = client.get("/app/ui-state/home")
     assert state_with_session.status_code == 200
+    _assert_legacy_compatibility_headers(bootstrap)
+    _assert_legacy_compatibility_headers(queue_with_session)
+    _assert_legacy_compatibility_headers(state_with_session)
 
 
 def test_app_ui_persists_japanese_locale_across_cookie_navigation(
@@ -718,6 +734,7 @@ def test_app_ui_session_logout_invalidates_follow_up_requests(
     logout = client.post("/app/ui-action/session/logout")
     assert logout.status_code == 200
     assert logout.json() == {"status": "logged_out"}
+    _assert_legacy_compatibility_headers(logout)
 
     follow_up = client.get("/app/ui-state/home")
     assert follow_up.status_code == 401
@@ -809,10 +826,12 @@ def test_app_ui_state_endpoints_work_with_ui_cookie_session(
     home = client.get("/app/ui-state/home")
     assert home.status_code == 200
     assert home.json()["kind"] == "resident_app_home_screen_state"
+    _assert_legacy_compatibility_headers(home)
 
     contract = client.get("/app/ui-state/contract")
     assert contract.status_code == 200
     assert contract.json()["kind"] == "resident_app_contract"
+    _assert_legacy_compatibility_headers(contract)
 
     capture = client.post(
         "/app/ui-action/capture-clipboard",
@@ -822,24 +841,29 @@ def test_app_ui_state_endpoints_work_with_ui_cookie_session(
     payload = capture.json()
     candidate_id = payload["id"]
     assert payload["capture_surface"] == "resident_app_bridge"
+    _assert_legacy_compatibility_headers(capture)
 
     queue = client.get("/app/ui-state/candidates")
     assert queue.status_code == 200
     assert queue.json()["kind"] == "resident_app_candidate_queue_screen_state"
     assert any(item["id"] == candidate_id for item in queue.json()["items"])
+    _assert_legacy_compatibility_headers(queue)
 
     detail = client.get(f"/app/ui-state/candidates/{candidate_id}")
     assert detail.status_code == 200
     assert detail.json()["kind"] == "resident_app_candidate_detail_screen_state"
     assert detail.json()["ui_summary"]["status"] == "pending"
+    _assert_legacy_compatibility_headers(detail)
 
     diff = client.get(f"/app/ui-state/candidates/{candidate_id}/diff")
     assert diff.status_code == 200
     assert diff.json()["review_surface"] == "resident_app_bridge"
+    _assert_legacy_compatibility_headers(diff)
 
     lineage = client.get(f"/app/ui-state/candidates/{candidate_id}/lineage")
     assert lineage.status_code == 200
     assert lineage.json()["candidate_id"] == candidate_id
+    _assert_legacy_compatibility_headers(lineage)
 
     daemon = client.get("/app/ui-state/daemon")
     assert daemon.status_code == 200
@@ -848,6 +872,7 @@ def test_app_ui_state_endpoints_work_with_ui_cookie_session(
     assert daemon.json()["operator_phase_summary"]["phase_readiness"] == "ready_for_mvp_release_closure"
     assert daemon.json()["operator_phase_details"]["workstreams"][0]["name"] == "packaging_model_decision"
     assert daemon.json()["service_target_summary"]["current_platform"] in {"macos", "linux", "windows", "other"}
+    _assert_legacy_compatibility_headers(daemon)
 
 
 def test_app_ui_action_review_flow_works_with_ui_cookie_session(

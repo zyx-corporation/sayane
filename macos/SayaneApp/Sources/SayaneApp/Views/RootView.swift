@@ -2,6 +2,7 @@ import SwiftUI
 
 struct RootView: View {
     @ObservedObject var model: AppModel
+    @State private var showsDiagnosticsSheet = false
 
     var body: some View {
         NavigationSplitView {
@@ -83,7 +84,13 @@ struct RootView: View {
                     Button(model.strings.text(.openLogs)) {
                         model.openLogFile()
                     }
+                    Button(model.strings.text(.troubleshooting)) {
+                        showsDiagnosticsSheet = true
+                    }
                 }
+            }
+            .sheet(isPresented: $showsDiagnosticsSheet) {
+                DiagnosticsSheetView(model: model)
             }
         }
         .task {

@@ -320,6 +320,8 @@ struct AppStrings {
         case (.en, .securityBoundary): return "Security Boundary"
         case (.ja, .troubleshooting): return "トラブルシュート"
         case (.en, .troubleshooting): return "Troubleshooting"
+        case (.ja, .close): return "閉じる"
+        case (.en, .close): return "Close"
         case (.ja, .logPaths): return "ログパス"
         case (.en, .logPaths): return "Log Paths"
         case (.ja, .plistPreview): return "plist プレビュー"
@@ -1573,7 +1575,7 @@ struct AppStrings {
         case handoffSnapshot, workstreams, platformScope, operatorValue, implementationOrder
         case serviceLifecycle, policyGates, governingRules, appUIPolicy, allowedReads
         case allowedWrites, allowedControlExposure, forbiddenExposure, platformTargets, rollbackRequired, policyRequired
-        case launchAgentRunbook, preflightChecks, verification, securityBoundary, troubleshooting
+        case launchAgentRunbook, preflightChecks, verification, securityBoundary, troubleshooting, close
         case logPaths, plistPreview, environmentAssumptions, programArguments, copyPlist
         case previewMetadata, operationId, previewHash
         case previewApplyBoundary, tailLogs, launchctlPrint, stdoutTail, stderrTail, copyStdoutTail, copyStderrTail

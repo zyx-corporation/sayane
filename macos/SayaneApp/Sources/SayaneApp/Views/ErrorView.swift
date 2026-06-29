@@ -9,6 +9,7 @@ struct ErrorView: View {
     @ObservedObject var model: AppModel
     let message: String
     @State private var showsRawError = false
+    @State private var showsDiagnosticsSheet = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -16,10 +17,13 @@ struct ErrorView: View {
             issueSummaryCard
             compactRecoveryCard
             rawErrorDisclosure
-            BridgeDiagnosticsCard(model: model, compact: true)
+            diagnosticsPromptCard
         }
         .padding(24)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .sheet(isPresented: $showsDiagnosticsSheet) {
+            DiagnosticsSheetView(model: model)
+        }
     }
 
     @ViewBuilder
@@ -112,6 +116,18 @@ struct ErrorView: View {
                 )
                 .font(.caption.weight(.semibold))
             }
+        )
+    }
+
+    private var diagnosticsPromptCard: some View {
+        StateCardView(
+            icon: "stethoscope",
+            title: model.strings.text(.connectionDiagnostics),
+            message: model.bridgeStatusDetail,
+            tone: model.bridgeStatusTone,
+            badgeText: model.bridgeStatusText,
+            actionTitle: model.strings.text(.troubleshooting),
+            action: { showsDiagnosticsSheet = true }
         )
     }
 

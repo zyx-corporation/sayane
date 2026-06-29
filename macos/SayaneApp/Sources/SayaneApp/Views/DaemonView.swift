@@ -20,6 +20,21 @@ struct DaemonView: View {
     @State private var showRecoveryPolicy = false
     @State private var showLaunchAgent = true
     @State private var showLaunchAgentRunbook = true
+    @State private var showLaunchAgentCurrentStateDetails = false
+    @State private var showLaunchAgentRecoveryPreview = false
+    @State private var showLaunchAgentStatusDiagnostics = false
+    @State private var showLaunchAgentStderrPreview = false
+    @State private var showStartupVisibility = false
+    @State private var showHandoffSnapshot = false
+    @State private var showRunbookProofDiagnostics = false
+    @State private var showRunbookPlistPreview = false
+    @State private var showOperatorSupportedPath = false
+    @State private var showOperatorExitCriteria = false
+    @State private var showOperatorReadSurfaces = false
+    @State private var showOperatorDecisionAssist = false
+    @State private var showOperatorEvidenceDrilldown = false
+    @State private var showOperatorNotInScope = false
+    @State private var showServiceTargetsDetails = false
 
     private struct OperatorWorkspaceItem: Identifiable {
         let id: String
@@ -97,12 +112,12 @@ struct DaemonView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     header
                     focusSection(proxy: proxy)
-                    operatorSummaryRail(proxy: proxy)
-                    sectionNavigator(proxy: proxy)
-                    operatorWorkspace(proxy: proxy)
-                        .id(SectionAnchor.operatorWorkspace)
                     nextActions
                         .id(SectionAnchor.nextActions)
+                    operatorSummaryRail(proxy: proxy)
+                    operatorWorkspace(proxy: proxy)
+                        .id(SectionAnchor.operatorWorkspace)
+                    sectionNavigator(proxy: proxy)
                     launchAgent
                         .id(SectionAnchor.launchAgent)
                     serviceTargets
@@ -630,25 +645,27 @@ struct DaemonView: View {
                     action: { Task { await model.refreshCurrentScreen() } }
                 )
             } else {
-                ForEach(daemonFocusItems) { item in
-                    Button {
-                        expandSection(item.anchor)
-                        withAnimation {
-                            proxy.scrollTo(item.anchor, anchor: .top)
-                        }
-                    } label: {
-                        SurfaceCard(emphasis: 0.34) {
-                            HStack(alignment: .top, spacing: 12) {
-                                StatusBadge(text: item.badge, tone: item.tone)
-                                CardTitleSummary(title: item.title, summary: item.summary)
-                                Spacer()
-                                Image(systemName: "arrow.right.circle.fill")
-                                    .foregroundStyle(.secondary)
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 250), spacing: 12)], spacing: 12) {
+                    ForEach(daemonFocusItems) { item in
+                        Button {
+                            expandSection(item.anchor)
+                            withAnimation {
+                                proxy.scrollTo(item.anchor, anchor: .top)
+                            }
+                        } label: {
+                            SurfaceCard(emphasis: 0.34) {
+                                HStack(alignment: .top, spacing: 12) {
+                                    StatusBadge(text: item.badge, tone: item.tone)
+                                    CardTitleSummary(title: item.title, summary: item.summary)
+                                    Spacer()
+                                    Image(systemName: "arrow.right.circle.fill")
+                                        .foregroundStyle(.secondary)
+                                }
                             }
                         }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("\(item.badge) \(item.title) \(item.summary)")
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("\(item.badge) \(item.title) \(item.summary)")
                 }
             }
         }
@@ -782,7 +799,10 @@ struct DaemonView: View {
                 }
             }
             if let details = model.daemonState?.operatorPhaseDetails {
-                GroupBox(model.strings.text(.supportedPath)) {
+                compactDisclosureSection(
+                    title: model.strings.text(.supportedPath),
+                    isExpanded: $showOperatorSupportedPath
+                ) {
                     VStack(alignment: .leading, spacing: 6) {
                         if let startupCommand = details.currentSupportedOperatorPath.startupCommandText,
                            !startupCommand.isEmpty {
@@ -845,9 +865,11 @@ struct DaemonView: View {
                             }
                         }
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                GroupBox(model.strings.text(.exitCriteria)) {
+                compactDisclosureSection(
+                    title: model.strings.text(.exitCriteria),
+                    isExpanded: $showOperatorExitCriteria
+                ) {
                     VStack(alignment: .leading, spacing: 6) {
                         BulletListView(values: Array(details.exitCriteria.prefix(4)))
                         if details.exitCriteria.count > 4 {
@@ -856,9 +878,11 @@ struct DaemonView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                GroupBox(model.strings.text(.readSurfaces)) {
+                compactDisclosureSection(
+                    title: model.strings.text(.readSurfaces),
+                    isExpanded: $showOperatorReadSurfaces
+                ) {
                     VStack(alignment: .leading, spacing: 6) {
                         ForEach(Array(details.readSurfaces.prefix(3)), id: \.self) { surface in
                             commandRow(surface)
@@ -869,10 +893,12 @@ struct DaemonView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 if let decisionAssist = details.decisionAssist, !decisionAssist.isEmpty {
-                    GroupBox(model.strings.text(.decisionAssist)) {
+                    compactDisclosureSection(
+                        title: model.strings.text(.decisionAssist),
+                        isExpanded: $showOperatorDecisionAssist
+                    ) {
                         VStack(alignment: .leading, spacing: 8) {
                             ForEach(Array(decisionAssist.prefix(4))) { item in
                                 VStack(alignment: .leading, spacing: 4) {
@@ -885,11 +911,13 @@ struct DaemonView: View {
                                 }
                             }
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
                 if let closureEvidence = details.closureEvidence, !closureEvidence.isEmpty {
-                    GroupBox(model.strings.text(.evidenceDrilldown)) {
+                    compactDisclosureSection(
+                        title: model.strings.text(.evidenceDrilldown),
+                        isExpanded: $showOperatorEvidenceDrilldown
+                    ) {
                         VStack(alignment: .leading, spacing: 8) {
                             ForEach(Array(closureEvidence.prefix(4))) { item in
                                 VStack(alignment: .leading, spacing: 4) {
@@ -902,10 +930,12 @@ struct DaemonView: View {
                                 }
                             }
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
-                GroupBox(model.strings.text(.notInScope)) {
+                compactDisclosureSection(
+                    title: model.strings.text(.notInScope),
+                    isExpanded: $showOperatorNotInScope
+                ) {
                     VStack(alignment: .leading, spacing: 6) {
                         BulletListView(values: Array(details.notInScope.prefix(4)))
                         if details.notInScope.count > 4 {
@@ -914,14 +944,16 @@ struct DaemonView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
         }
     }
 
     private var startupVisibility: some View {
-        GroupBox(model.strings.text(.startupVisibility)) {
+        compactDisclosureSection(
+            title: model.strings.text(.startupVisibility),
+            isExpanded: $showStartupVisibility
+        ) {
             VStack(alignment: .leading, spacing: 10) {
                 if let startup = model.daemonState?.operatorPhaseStatus?["current_supported_operator_path"]?.objectValue {
                     if let command = startup["startup_command_text"]?.stringValue {
@@ -969,12 +1001,14 @@ struct DaemonView: View {
                     }
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
     private var handoffSnapshot: some View {
-        GroupBox(model.strings.text(.handoffSnapshot)) {
+        compactDisclosureSection(
+            title: model.strings.text(.handoffSnapshot),
+            isExpanded: $showHandoffSnapshot
+        ) {
             VStack(alignment: .leading, spacing: 10) {
                 if let workstreams = model.daemonState?.operatorPhaseStatus?["workstreams"]?.arrayValue {
                     Text(model.strings.text(.workstreams)).bold()
@@ -1008,39 +1042,68 @@ struct DaemonView: View {
                     values: model.daemonState?.operatorPhaseDetails.recommendedImplementationOrder ?? []
                 )
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
     private var serviceTargets: some View {
         GroupBox(model.strings.text(.serviceTargets)) {
             VStack(alignment: .leading, spacing: 6) {
-                DetailLabelValueRow(
-                    label: model.strings.text(.currentPlatform),
-                    value: model.daemonState?.serviceTargetSummary.currentPlatform.map(model.strings.tokenLabel) ?? model.strings.text(.none)
-                )
-                DetailLabelValueRow(
-                    label: model.strings.text(.recommended),
-                    value: model.daemonState?.serviceTargetSummary.recommendedTarget.map(model.strings.tokenLabel) ?? model.strings.text(.none)
-                )
-                if let policyGates = model.daemonState?.serviceTargetsStatus?["policy_gates"]?.objectValue {
-                    stringList(title: model.strings.text(.policyGates), values: policyGates.map { "\(model.strings.summaryCardLabel($0)): \($1.boolValue.map(model.strings.booleanValueLabel) ?? $1.displayText)" }.sorted())
-                }
-                ForEach(model.daemonState?.serviceTargetSummary.targets ?? []) { target in
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack {
-                            Text("• \(model.strings.tokenLabel(target.target)):")
-                            if let status = target.status {
-                                StatusBadge(text: model.strings.tokenLabel(status), tone: model.strings.tone(forToken: status))
-                            } else {
-                                Text("-")
-                            }
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 220), spacing: 10)], spacing: 10) {
+                    SurfaceCard(emphasis: 0.22) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(model.strings.text(.currentPlatform))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            StatusBadge(
+                                text: model.daemonState?.serviceTargetSummary.currentPlatform.map(model.strings.tokenLabel) ?? model.strings.text(.none),
+                                tone: .neutral
+                            )
                         }
-                        if let notes = target.notes, !notes.isEmpty {
-                            VStack(alignment: .leading, spacing: 2) {
-                                BulletListView(values: notes.map { "  \($0)" })
+                    }
+                    SurfaceCard(emphasis: 0.22) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(model.strings.text(.recommended))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            StatusBadge(
+                                text: model.daemonState?.serviceTargetSummary.recommendedTarget.map(model.strings.tokenLabel) ?? model.strings.text(.none),
+                                tone: .positive
+                            )
+                        }
+                    }
+                    SurfaceCard(emphasis: 0.22) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(model.strings.text(.platformTargets))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text("\((model.daemonState?.serviceTargetSummary.targets.count) ?? 0)")
+                                .font(.headline)
+                        }
+                    }
+                }
+                compactDisclosureSection(
+                    title: model.strings.text(.platformTargets),
+                    isExpanded: $showServiceTargetsDetails
+                ) {
+                    if let policyGates = model.daemonState?.serviceTargetsStatus?["policy_gates"]?.objectValue {
+                        stringList(title: model.strings.text(.policyGates), values: policyGates.map { "\(model.strings.summaryCardLabel($0)): \($1.boolValue.map(model.strings.booleanValueLabel) ?? $1.displayText)" }.sorted())
+                    }
+                    ForEach(model.daemonState?.serviceTargetSummary.targets ?? []) { target in
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text("• \(model.strings.tokenLabel(target.target)):")
+                                if let status = target.status {
+                                    StatusBadge(text: model.strings.tokenLabel(status), tone: model.strings.tone(forToken: status))
+                                } else {
+                                    Text("-")
+                                }
                             }
-                            .foregroundStyle(.secondary)
+                            if let notes = target.notes, !notes.isEmpty {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    BulletListView(values: notes.map { "  \($0)" })
+                                }
+                                .foregroundStyle(.secondary)
+                            }
                         }
                     }
                 }
@@ -1430,7 +1493,10 @@ struct DaemonView: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                GroupBox(model.strings.text(.currentStateDetails)) {
+                compactDisclosureSection(
+                    title: model.strings.text(.currentStateDetails),
+                    isExpanded: $showLaunchAgentCurrentStateDetails
+                ) {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
                             Spacer()
@@ -1453,7 +1519,10 @@ struct DaemonView: View {
                         }
                     }
                 }
-                GroupBox(model.strings.text(.recoveryPreviewDetails)) {
+                compactDisclosureSection(
+                    title: model.strings.text(.recoveryPreviewDetails),
+                    isExpanded: $showLaunchAgentRecoveryPreview
+                ) {
                     VStack(alignment: .leading, spacing: 6) {
                         HStack {
                             Spacer()
@@ -1468,12 +1537,19 @@ struct DaemonView: View {
                         diagnosticGroup(title: model.strings.text(.verifyNow), tone: .caution, items: verifyNowDiagnostics)
                         diagnosticGroup(title: model.strings.text(.healthySignals), tone: .positive, items: healthyDiagnostics)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 commandDeck
-                metadataGroup(title: model.strings.text(.statusDiagnostics), values: launchAgentStatusDiagnostics)
+                compactDisclosureSection(
+                    title: model.strings.text(.statusDiagnostics),
+                    isExpanded: $showLaunchAgentStatusDiagnostics
+                ) {
+                    metadataGroup(title: model.strings.text(.statusDiagnostics), values: launchAgentStatusDiagnostics)
+                }
                 if let stderrPreview = launchAgentStatusStderrPreview {
-                    GroupBox(model.strings.text(.stderrPreview)) {
+                    compactDisclosureSection(
+                        title: model.strings.text(.stderrPreview),
+                        isExpanded: $showLaunchAgentStderrPreview
+                    ) {
                         SelectableMonospaceText(
                             text: stderrPreview,
                             font: .system(.caption, design: .monospaced),
@@ -1558,7 +1634,10 @@ struct DaemonView: View {
                     )
                 }
                 if !proofDiagnosticCommands.isEmpty {
-                    GroupBox(model.strings.text(.proofDiagnostics)) {
+                    compactDisclosureSection(
+                        title: model.strings.text(.proofDiagnostics),
+                        isExpanded: $showRunbookProofDiagnostics
+                    ) {
                         VStack(alignment: .leading, spacing: 8) {
                             Text(model.strings.text(.proofDiagnosticsSummary))
                                 .font(.caption)
@@ -1567,7 +1646,6 @@ struct DaemonView: View {
                                 commandRow(command)
                             }
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
                 metadataGroup(
@@ -1591,7 +1669,10 @@ struct DaemonView: View {
                     values: previewMetadata
                 )
                 if let plistXML = model.daemonState?.launchagentPreview?["plist_xml"]?.stringValue {
-                    GroupBox(model.strings.text(.plistPreview)) {
+                    compactDisclosureSection(
+                        title: model.strings.text(.plistPreview),
+                        isExpanded: $showRunbookPlistPreview
+                    ) {
                         VStack(alignment: .leading, spacing: 6) {
                             HStack {
                                 Spacer()
@@ -1605,7 +1686,6 @@ struct DaemonView: View {
                                 lineLimit: 12
                             )
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
                 metadataGroup(
@@ -1678,7 +1758,7 @@ struct DaemonView: View {
 
     private var nextActions: some View {
         GroupBox(model.strings.text(.nextActions)) {
-            Group {
+            VStack(alignment: .leading, spacing: 10) {
                 if (model.daemonState?.nextActions ?? []).isEmpty {
                     StateCardView(
                         icon: "checkmark.circle",
@@ -1691,20 +1771,28 @@ struct DaemonView: View {
                         action: { Task { await model.refreshCurrentScreen() } }
                     )
                 } else {
-                    VStack(alignment: .leading, spacing: 6) {
-                        ForEach(model.daemonState?.nextActions ?? []) { action in
-                            VStack(alignment: .leading, spacing: 4) {
-                                HStack {
-                                    StatusBadge(text: actionPriorityTitle(action), tone: actionPriorityTone(action))
-                                    Spacer()
-                                }
-                                commandRow(action.command)
-                                if !action.reason.isEmpty {
-                                    Text("\(model.strings.text(.reason)): \(action.reason)")
-                                        .foregroundStyle(.secondary)
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 250), spacing: 10)], spacing: 10) {
+                        ForEach(Array((model.daemonState?.nextActions ?? []).prefix(3))) { action in
+                            SurfaceCard(emphasis: 0.24) {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack(alignment: .top, spacing: 8) {
+                                        StatusBadge(text: actionPriorityTitle(action), tone: actionPriorityTone(action))
+                                        Spacer()
+                                    }
+                                    commandRow(action.command)
+                                    if !action.reason.isEmpty {
+                                        Text("\(model.strings.text(.reason)): \(action.reason)")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
                                 }
                             }
                         }
+                    }
+                    if (model.daemonState?.nextActions.count ?? 0) > 3 {
+                        Text(model.strings.moreItemsMessage((model.daemonState?.nextActions.count ?? 0) - 3))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                 }
             }
@@ -2838,6 +2926,25 @@ struct DaemonView: View {
 
     private func actionPriorityTitle(_ action: DaemonNextAction) -> String {
         model.strings.commandPriorityTitle(for: action.command)
+    }
+
+    private func compactDisclosureSection<Content: View>(
+        title: String,
+        isExpanded: Binding<Bool>,
+        @ViewBuilder content: @escaping () -> Content
+    ) -> some View {
+        GroupBox {
+            DisclosureGroup(isExpanded: isExpanded) {
+                VStack(alignment: .leading, spacing: 8) {
+                    content()
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, 8)
+            } label: {
+                Text(title)
+                    .font(.headline)
+            }
+        }
     }
 
 }

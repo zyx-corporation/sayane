@@ -26,6 +26,9 @@ struct QueueAndDetailView: View {
     @State private var selectedStatusFilter = ""
     @State private var selectedSectionFilter = ""
     @State private var sortMode: SortMode = .newest
+    @State private var showDetailContent = true
+    @State private var showDiffContent = false
+    @State private var showLineageContent = false
 
     var body: some View {
         HSplitView {
@@ -307,16 +310,29 @@ struct QueueAndDetailView: View {
                     reviewCommandDeck
                     evidenceDrilldownSection
                     if let content = model.detailState?.content {
-                        GroupBox(model.strings.text(.detail)) {
+                        compactDisclosureSection(
+                            title: model.strings.text(.detail),
+                            isExpanded: $showDetailContent
+                        ) {
                             Text(content)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
                     if let diff = model.diffState {
-                        DiffSection(strings: model.strings, diff: diff)
+                        compactDisclosureSection(
+                            title: model.strings.text(.diff),
+                            isExpanded: $showDiffContent
+                        ) {
+                            DiffSection(strings: model.strings, diff: diff)
+                        }
                     }
                     if let lineage = model.lineageState {
-                        LineageSection(strings: model.strings, lineage: lineage)
+                        compactDisclosureSection(
+                            title: model.strings.text(.lineage),
+                            isExpanded: $showLineageContent
+                        ) {
+                            LineageSection(strings: model.strings, lineage: lineage)
+                        }
                     }
                 }
             }
@@ -342,6 +358,24 @@ struct QueueAndDetailView: View {
             .disabled(model.lineageState == nil)
 
             Spacer()
+        }
+    }
+
+    private func compactDisclosureSection<Content: View>(
+        title: String,
+        isExpanded: Binding<Bool>,
+        @ViewBuilder content: @escaping () -> Content
+    ) -> some View {
+        GroupBox {
+            DisclosureGroup(isExpanded: isExpanded) {
+                VStack(alignment: .leading, spacing: 8) {
+                    content()
+                }
+                .padding(.top, 8)
+            } label: {
+                Text(title)
+                    .font(.headline)
+            }
         }
     }
 
@@ -372,35 +406,33 @@ struct QueueAndDetailView: View {
     private var reviewCommandDeck: some View {
         GroupBox(model.strings.text(.commandDeck)) {
             VStack(alignment: .leading, spacing: 10) {
-                Text(model.strings.text(.actionReadiness))
-                    .font(.headline)
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(actionReadinessItems) { item in
-                            StatusBadge(text: item.label, tone: item.enabled ? .positive : .neutral)
+                HStack(alignment: .top, spacing: 10) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(model.strings.text(.actionReadiness))
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                ForEach(actionReadinessItems) { item in
+                                    StatusBadge(text: item.label, tone: item.enabled ? .positive : .neutral)
+                                }
+                            }
                         }
                     }
+                    Spacer()
                 }
-                Divider()
-                Text(model.strings.text(.queueActions))
-                    .font(.headline)
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                     ForEach(reviewActionItems) { item in
                         Button(item.title) { item.action() }
                             .keyboardShortcut(item.shortcut)
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.small)
                             .disabled(!item.enabled)
                     }
                 }
-                Divider()
-                Text(model.strings.text(.shortcutGuide))
-                    .font(.headline)
-                VStack(alignment: .leading, spacing: 4) {
-                    ForEach(actionShortcutHints, id: \.self) { hint in
-                        Text(hint)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
+                Text(actionShortcutHints.joined(separator: " · "))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }

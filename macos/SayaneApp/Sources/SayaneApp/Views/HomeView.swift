@@ -2,25 +2,29 @@ import SwiftUI
 
 struct HomeView: View {
     @ObservedObject var model: AppModel
+    @State private var showsDiagnosticsSheet = false
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 header
-                BridgeStatusPanel(model: model)
-                prioritySection
+                BridgeStatusPanel(model: model, compact: true)
+                launcherSection
                 if showsBridgeDiagnostics {
-                    BridgeDiagnosticsCard(model: model, compact: false)
+                    diagnosticsPromptCard
                 }
                 cardsSection
                 vaultSection
-                quickLinksSection
                 reviewSection
                 daemonSection
+                quickLinksSection
             }
             .padding(24)
         }
         .navigationTitle(model.strings.text(.home))
+        .sheet(isPresented: $showsDiagnosticsSheet) {
+            DiagnosticsSheetView(model: model)
+        }
     }
 
     private var header: some View {
@@ -36,6 +40,98 @@ struct HomeView: View {
                     Task { await model.captureClipboard() }
                 }
                 .buttonStyle(.borderedProminent)
+            }
+        }
+    }
+
+    private var launcherSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionTitle(text: model.strings.text(.startHere))
+            if priorityItems.isEmpty,
+               model.homeState?.topReviewItems.first == nil,
+               model.homeState?.topDaemonActions.first == nil
+            {
+                StateCardView(
+                    icon: "sparkles",
+                    title: model.strings.text(.startHere),
+                    message: model.homePriorityEmptyMessage,
+                    tone: .neutral,
+                    badgeText: model.homePriorityEmptyBadgeText,
+                    actionTitle: model.toolbarRefreshText,
+                    actionEnabled: !model.bridgeRecoveryActionDisabled,
+                    action: { Task { await model.refreshCurrentScreen() } }
+                )
+            } else {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 260), spacing: 12)], spacing: 12) {
+                    ForEach(Array(priorityItems.prefix(2).enumerated()), id: \.offset) { _, item in
+                        Button(action: item.action) {
+                            SurfaceCard(emphasis: 0.38) {
+                                HStack(alignment: .top, spacing: 12) {
+                                    StatusBadge(text: item.badge, tone: item.tone)
+                                    CardTitleSummary(title: item.title, summary: item.summary)
+                                    Spacer()
+                                    Image(systemName: "arrow.right.circle.fill")
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("\(item.badge) \(item.title) \(item.summary)")
+                    }
+
+                    if let review = model.homeState?.topReviewItems.first {
+                        Button {
+                            model.openCandidate(review.candidateId)
+                        } label: {
+                            SurfaceCard(emphasis: 0.28) {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack(alignment: .top, spacing: 8) {
+                                        CardTitleSummary(
+                                            title: model.strings.text(.reviewNextCandidate),
+                                            summary: homeReviewItemSummary(review)
+                                        )
+                                        Spacer()
+                                        if let status = review.status {
+                                            StatusBadge(
+                                                text: model.strings.statusValueLabel(status),
+                                                tone: model.strings.tone(forToken: status)
+                                            )
+                                        }
+                                    }
+                                    Text(review.candidateId)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("\(model.strings.text(.reviewNextCandidate)) \(review.candidateId) \(homeReviewItemSummary(review))")
+                    }
+
+                    if let action = model.homeState?.topDaemonActions.first {
+                        Button {
+                            model.choose(screen: .daemon)
+                        } label: {
+                            SurfaceCard(emphasis: 0.24) {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack {
+                                        StatusBadge(
+                                            text: homeDaemonActionTitle(action),
+                                            tone: homeDaemonActionTone(action)
+                                        )
+                                        Spacer()
+                                    }
+                                    Text(homeDaemonActionSummary(action))
+                                        .font(.subheadline)
+                                        .foregroundStyle(.secondary)
+                                    CommandRowView(command: action, lineLimit: 2)
+                                }
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("\(homeDaemonActionTitle(action)) \(homeDaemonActionSummary(action))")
+                    }
+                }
             }
         }
     }
@@ -56,38 +152,16 @@ struct HomeView: View {
         }
     }
 
-    private var prioritySection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            SectionTitle(text: model.strings.text(.startHere))
-            if priorityItems.isEmpty {
-                StateCardView(
-                    icon: "sparkles",
-                    title: model.strings.text(.startHere),
-                    message: model.homePriorityEmptyMessage,
-                    tone: .neutral,
-                    badgeText: model.homePriorityEmptyBadgeText,
-                    actionTitle: model.toolbarRefreshText,
-                    actionEnabled: !model.bridgeRecoveryActionDisabled,
-                    action: { Task { await model.refreshCurrentScreen() } }
-                )
-            } else {
-                ForEach(priorityItems, id: \.title) { item in
-                    Button(action: item.action) {
-                        SurfaceCard(emphasis: 0.38) {
-                            HStack(alignment: .top, spacing: 12) {
-                                StatusBadge(text: item.badge, tone: item.tone)
-                                CardTitleSummary(title: item.title, summary: item.summary)
-                                Spacer()
-                                Image(systemName: "arrow.right.circle.fill")
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("\(item.badge) \(item.title) \(item.summary)")
-                }
-            }
-        }
+    private var diagnosticsPromptCard: some View {
+        StateCardView(
+            icon: "stethoscope",
+            title: model.strings.text(.connectionDiagnostics),
+            message: model.bridgeStatusDetail,
+            tone: model.bridgeStatusTone,
+            badgeText: model.bridgeStatusText,
+            actionTitle: model.strings.text(.troubleshooting),
+            action: { showsDiagnosticsSheet = true }
+        )
     }
 
     private var reviewSection: some View {

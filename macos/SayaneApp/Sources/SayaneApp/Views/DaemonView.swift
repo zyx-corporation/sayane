@@ -685,14 +685,19 @@ struct DaemonView: View {
         VStack(alignment: .leading, spacing: 12) {
             SectionTitle(text: model.strings.text(.summaryCards))
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 180))], spacing: 12) {
-                ForEach(model.daemonState?.summaryCards ?? []) { card in
-                    SurfaceCard {
+                ForEach(summaryCardPreviewItems) { card in
+                    SurfaceCard(emphasis: 0.22) {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(model.strings.summaryCardLabel(card.key)).font(.caption).foregroundStyle(.secondary)
                             SummaryCardValueView(strings: model.strings, card: card)
                         }
                     }
                 }
+            }
+            if summaryCardOverflowCount > 0 {
+                Text(model.strings.moreItemsMessage(summaryCardOverflowCount))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
     }
@@ -703,50 +708,56 @@ struct DaemonView: View {
             Text(model.strings.text(.statusSectionSummary))
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            ForEach(orderedOperatorPanels) { panel in
-                GroupBox(model.strings.operatorPanelLabel(panel.panel)) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        if let status = panel.status {
-                            HStack {
-                                Text("\(model.strings.fieldLabel("status")):")
-                                StatusBadge(text: model.strings.tokenLabel(status), tone: model.strings.tone(forToken: status))
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 260), spacing: 12)], spacing: 12) {
+                ForEach(orderedOperatorPanels) { panel in
+                    SurfaceCard(emphasis: 0.2) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack(alignment: .top, spacing: 8) {
+                                Text(model.strings.operatorPanelLabel(panel.panel))
+                                    .font(.headline)
+                                Spacer()
+                                if let status = panel.status {
+                                    StatusBadge(text: model.strings.tokenLabel(status), tone: model.strings.tone(forToken: status))
+                                }
                             }
-                        }
-                        if let highlights = panel.highlights {
-                            FlowLayout(orderedHighlights(highlights), id: \.self, spacing: 6) { highlight in
-                                StatusBadge(text: model.strings.tokenLabel(highlight), tone: model.strings.tone(forToken: highlight))
+                            if let highlights = panel.highlights, let firstHighlight = orderedHighlights(highlights).first {
+                                StatusBadge(text: model.strings.tokenLabel(firstHighlight), tone: model.strings.tone(forToken: firstHighlight))
                             }
-                        }
-                        if let commands = panel.commands, !commands.isEmpty {
-                            ForEach(Array(commands.prefix(2)), id: \.self) { command in
-                                commandRow(command)
+                            if let command = panel.commands?.first, !command.isEmpty {
+                                CommandRowView(
+                                    command: command,
+                                    font: .system(.caption, design: .monospaced),
+                                    foregroundColor: .secondary,
+                                    lineLimit: 2
+                                )
                             }
-                            if commands.count > 2 {
-                                Text(model.strings.moreItemsMessage(commands.count - 2))
+                            if let deferred = panel.deferredCommands, let firstDeferred = deferred.first, !firstDeferred.isEmpty {
+                                Text("\(model.strings.text(.deferredCommands)): \(firstDeferred)")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
-                        }
-                        if let deferred = panel.deferredCommands, !deferred.isEmpty {
-                            Text("\(model.strings.text(.deferredCommands)): \(deferred.prefix(2).joined(separator: ", "))")
-                            if deferred.count > 2 {
-                                Text(model.strings.moreItemsMessage(deferred.count - 2))
+                            if let flow = panel.recommendedFlow, !flow.isEmpty {
+                                Text("\(model.strings.fieldLabel("flow")): \(flow.prefix(2).joined(separator: " → "))")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
-                        }
-                        if let flow = panel.recommendedFlow, !flow.isEmpty {
-                            Text("\(model.strings.fieldLabel("flow")): \(flow.prefix(2).joined(separator: " → "))")
-                            if flow.count > 2 {
-                                Text(model.strings.moreItemsMessage(flow.count - 2))
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
+                            panelOverflowSummary(panel)
                         }
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    private func panelOverflowSummary(_ panel: OperatorPanel) -> some View {
+        let extraCommands = max((panel.commands?.count ?? 0) - 1, 0)
+        let extraHighlights = max((panel.highlights?.count ?? 0) - 1, 0)
+        let extraDeferred = max((panel.deferredCommands?.count ?? 0) - 1, 0)
+        if extraCommands + extraHighlights + extraDeferred > 0 {
+            Text(model.strings.moreItemsMessage(extraCommands + extraHighlights + extraDeferred))
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -759,6 +770,14 @@ struct DaemonView: View {
             }
             return model.strings.operatorPanelLabel(lhs.panel) < model.strings.operatorPanelLabel(rhs.panel)
         }
+    }
+
+    private var summaryCardPreviewItems: [SummaryCard] {
+        Array((model.daemonState?.summaryCards ?? []).prefix(4))
+    }
+
+    private var summaryCardOverflowCount: Int {
+        max((model.daemonState?.summaryCards.count ?? 0) - summaryCardPreviewItems.count, 0)
     }
 
     private func orderedHighlights(_ highlights: [String]) -> [String] {

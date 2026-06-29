@@ -12,13 +12,22 @@ struct BridgeDiagnosticsCard: View {
                     Spacer()
                     StatusBadge(text: model.bridgeStatusText, tone: model.bridgeStatusTone)
                 }
-                ForEach(model.bridgeDiagnosticRows(compact: compact)) { row in
+                ForEach(model.bridgePrimaryDiagnosticRows(compact: compact)) { row in
                     diagnosticRow(label: row.label, value: row.value)
                 }
                 if !compact {
                     Divider()
+                    routineActionRows
+                }
+                if !compact, model.hasDebugCompatibilitySurface {
+                    Divider()
                     DebugCompatibilityDisclosure(model: model) {
-                        actionRows
+                        VStack(alignment: .leading, spacing: 10) {
+                            ForEach(model.bridgeDebugDiagnosticRows()) { row in
+                                diagnosticRow(label: row.label, value: row.value)
+                            }
+                            debugActionRows
+                        }
                     }
                 }
             }
@@ -35,15 +44,10 @@ struct BridgeDiagnosticsCard: View {
         }
     }
 
-    private var actionRows: some View {
+    private var routineActionRows: some View {
         VStack(alignment: .leading, spacing: 8) {
             if model.bridgeNeedsExpandedRecoveryLayout {
                 FlowLayout(primaryActionTitles, id: \.self, spacing: 8) { title in
-                    actionButton(title) {
-                        handleActionTap(title)
-                    }
-                }
-                FlowLayout(secondaryActionTitles, id: \.self, spacing: 8) { title in
                     actionButton(title) {
                         handleActionTap(title)
                     }
@@ -54,6 +58,14 @@ struct BridgeDiagnosticsCard: View {
                         handleActionTap(title)
                     }
                 }
+            }
+        }
+    }
+
+    private var debugActionRows: some View {
+        FlowLayout(secondaryActionTitles, id: \.self, spacing: 8) { title in
+            actionButton(title) {
+                handleActionTap(title)
             }
         }
     }

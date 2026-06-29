@@ -856,13 +856,6 @@ struct DaemonView: View {
                                 .font(.caption.weight(.semibold))
                             commandRow(recommendedLauncher)
                         }
-                        if details.currentSupportedOperatorPath.bootstrapUI != nil {
-                            DebugCompatibilityDisclosure(model: model) {
-                                VStack(alignment: .leading, spacing: 6) {
-                                    DebugShellShortcutButtons(model: model)
-                                }
-                            }
-                        }
                         if let localOnly = details.currentSupportedOperatorPath.localOnly {
                             DetailLabelValueRow(
                                 label: model.strings.text(.localOnly),
@@ -989,13 +982,6 @@ struct DaemonView: View {
                         Text(model.strings.text(.startupCommand)).bold()
                         commandRow(command)
                         StartupShortcutButtons(model: model, command: command)
-                    }
-                    if startup["bootstrap_ui"]?.stringValue != nil {
-                        DebugCompatibilityDisclosure(model: model) {
-                            VStack(alignment: .leading, spacing: 6) {
-                                DebugShellShortcutButtons(model: model)
-                            }
-                        }
                     }
                     if let localOnly = startup["local_only"]?.boolValue {
                         DetailLabelValueRow(

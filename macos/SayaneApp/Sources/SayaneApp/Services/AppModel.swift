@@ -482,6 +482,10 @@ final class AppModel: ObservableObject {
     }
 
     func bridgeDiagnosticRows(compact: Bool) -> [DiagnosticRow] {
+        bridgePrimaryDiagnosticRows(compact: compact)
+    }
+
+    func bridgePrimaryDiagnosticRows(compact: Bool) -> [DiagnosticRow] {
         let essentialDisconnectedRows = [
             DiagnosticRow(label: strings.text(.healthEndpoint), value: bridgeHealthURLText),
             DiagnosticRow(label: strings.text(.launchSource), value: bridgeLaunchSourceText),
@@ -495,14 +499,6 @@ final class AppModel: ObservableObject {
             DiagnosticRow(label: strings.text(.profile), value: bridgeProfileID),
         ]
 
-        let supplementalRows = [
-            DiagnosticRow(label: strings.text(.bridgeURL), value: bridgeBaseURLText),
-            DiagnosticRow(label: strings.text(.bootstrapUI), value: bridgeDebugShellEntryURLText),
-            DiagnosticRow(label: strings.text(.tokenFile), value: bridgeTokenFilePath),
-            DiagnosticRow(label: strings.text(.logFile), value: bridgeLogFilePath),
-            DiagnosticRow(label: strings.text(.profile), value: bridgeProfileID),
-            DiagnosticRow(label: strings.text(.launchSource), value: bridgeLaunchSourceText),
-        ]
         let failureRows = bridgeLaunchFailureText.map {
             [DiagnosticRow(label: strings.text(.lastLaunchFailure), value: $0)]
         } ?? []
@@ -520,7 +516,24 @@ final class AppModel: ObservableObject {
 
         let primaryRows = isDisconnectedOrStarting ? essentialDisconnectedRows : essentialConnectedRows
         let seen = Set(primaryRows.map(\.label))
-        return primaryRows + supplementalRows.filter { !seen.contains($0.label) } + failureRows.filter { !seen.contains($0.label) }
+        return primaryRows + failureRows.filter { !seen.contains($0.label) }
+    }
+
+    func bridgeDebugDiagnosticRows() -> [DiagnosticRow] {
+        let rows = [
+            DiagnosticRow(label: strings.text(.bridgeURL), value: bridgeBaseURLText),
+            DiagnosticRow(label: strings.text(.bootstrapUI), value: bridgeDebugShellEntryURLText),
+            DiagnosticRow(label: strings.text(.tokenFile), value: bridgeTokenFilePath),
+            DiagnosticRow(label: strings.text(.logFile), value: bridgeLogFilePath),
+            DiagnosticRow(label: strings.text(.profile), value: bridgeProfileID),
+            DiagnosticRow(label: strings.text(.launchSource), value: bridgeLaunchSourceText),
+        ]
+        var seen = Set<String>()
+        return rows.filter { seen.insert($0.label).inserted }
+    }
+
+    var hasDebugCompatibilitySurface: Bool {
+        daemonState?.operatorPhaseDetails.currentSupportedOperatorPath.bootstrapUI != nil
     }
 
     var shouldPresentBlockingErrorView: Bool {

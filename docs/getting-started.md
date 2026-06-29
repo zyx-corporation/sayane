@@ -334,9 +334,9 @@ process も起動前に掃除する。
 この native app は resident app contract / screen-state / action surfaces を使う。
 native app 自体は `~/.sayane/bridge.token` を使って bearer-backed app-facing surface を直接読む。
 Browser bootstrap と resident app UI session は Bridge-hosted compatibility shell 側の話として切り分ける。
-Home と error view には共通の connection diagnostics card があり、Bridge URL / health endpoint /
-compatibility shell entry / token path / log path と、Reconnect / Start Bridge / Open Logs などの復旧操作を
-同じ場所から使える。
+Home と error view には共通の connection diagnostics card があり、routine では health / launch source /
+log などの復旧操作を先に見せる。compatibility shell entry / token path などの debug-only 情報は
+diagnostics sheet から必要時だけ辿れる。
 さらに Home 最上部には Bridge status panel があり、未接続 / 起動中 / 利用可能 を先に判断してから
 次の操作へ進める。
 同じ status rail は Queue / Daemon にも compact 表示されるため、作業中の画面から戻らずに

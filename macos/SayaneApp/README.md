@@ -43,7 +43,7 @@ Platform focus for the current line:
 - shared workspace status strip, loading states, and empty-state guidance
 - shared state cards now carry recovery badges and inline next-action buttons for loading / empty / unavailable states
 - daemon section navigator and expand/collapse controls for long operator screens
-- connection diagnostics card with Bridge URL, health/debug-shell links, token/log paths, and recovery actions
+- connection diagnostics card with routine Bridge health/recovery details and a folded debug compatibility block
 - debug-only compatibility shell actions are now kept in the diagnostics sheet instead of the routine operator cards
 - startup-oriented Bridge status panel with clear disconnected / starting / ready states
 - compact Bridge status rail on Queue / Daemon so recovery actions stay visible away from Home
@@ -268,8 +268,7 @@ Useful options:
 
 If the app loses the Bridge connection after launch, use the native `Start Bridge` or `Reconnect` buttons from the error view.
 The Home and error surfaces also expose one shared connection diagnostics card so the operator can
-inspect the Bridge URL, health endpoint, browser-compatibility entry, token path, and log path without leaving
-the native app.
+inspect routine Bridge health/recovery details without leaving the native app.
 When the app is disconnected on macOS, the recovery copy now explicitly assumes the Terminal-backed
 Bridge path: start the Bridge, keep that Terminal window open, and then reconnect from the app.
 Successful `Start Bridge`, `Reconnect`, and `Refresh` actions now also raise a native feedback banner
@@ -292,8 +291,8 @@ sheet instead of the routine operator cards. When the local token file is availa
 actions prefer the bootstrap URL automatically instead of opening raw `/app/ui` first.
 The error view now also keeps one compact recovery card first, so the operator can trigger the
 recommended recovery action, copy the startup command, and open logs before reading deeper diagnostics.
-That diagnostics card now stays reference-first: it keeps file paths, URLs, and debug/compatibility-only
-utilities together, while the Bridge status panel carries the main recovery and navigation actions.
+That diagnostics card now stays reference-first: routine recovery details stay visible first, while
+debug/compatibility-only URLs and actions live in a folded block inside the diagnostics sheet.
 The Home screen also keeps a compact Bridge status panel above the rest of the content so initial
 launch, reconnect, and log-first troubleshooting stay visible before drilling into Queue or Daemon.
 That same Home/Bridge Status surface now uses the same startup/debug actions as the Daemon supported-path

@@ -194,6 +194,13 @@ native app 上では、`Home` / `Bridge Status` / `Daemon` / compact `Error` vie
 token file が読める場合は bootstrap URL を自動で使い、通常の `/app/ui` 直開きより
 セッション確立しやすい経路を優先する。
 
+現行の native app UI は compact routine path を優先しており、通常操作では次のように読む:
+
+- `Home`: start-here launcher、次の review、次の daemon action を先頭に表示
+- `Queue`: 左で絞り込み、右で review command deck と compact detail header を使って判断
+- `Daemon`: start-here / next actions / operator summary を先に見て、深い runbook は必要時だけ展開
+- `Troubleshooting`: routine path からは分離され、shared diagnostics sheet で必要時だけ開く
+
 ### 5.5 resident app compatibility shell（debug-only compatibility path）
 
 Bridge-hosted local shell は、debug / 互換確認 / handoff / browser-local smoke 向けに維持する。

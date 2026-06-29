@@ -69,6 +69,13 @@ Platform focus for the current line:
 - launchagent-adjacent decision assist now also routes runtime-init, cleanup-preview, and repair-preview review from the same workspace
 - workspace cards compress blocker display to the primary blocker plus remaining-count, then keep the next command directly underneath
 - Home daemon action cards now use the same summary-then-command order as the daemon workspace, and Queue review actions use a denser 2-column action grid
+- Root sidebar now behaves more like a native compact navigator: non-selected rows hide secondary summary text, while the top status strip uses badges instead of long inline labels
+- Home summary cards now stay capped to a short preview with remaining-count, keeping the launcher path above the fold
+- Queue left pane now keeps reviewable-count, active-filter count, sort mode, and aggregate chips in a shorter chrome stack
+- Queue detail header now promotes candidate id, current status, section, and evaluation badges before the lower evidence blocks
+- candidate action sheets now keep candidate identity visible in-sheet and bias toward shorter right-aligned native action rows
+- diagnostics sheet now opens with one compact troubleshooting header plus current bridge-state badge, and its action rows wrap naturally on narrower widths
+- Daemon summary cards now preview only the top set, and status panels now collapse to representative status/highlight/command cards before deeper drill-down
 
 ## Build
 

@@ -288,9 +288,7 @@ struct QueueAndDetailView: View {
                         }
                     )
                 } else {
-                    if let summary = model.detailState?.uiSummary {
-                        detailSummary(summary)
-                    }
+                    detailHeader
                     reviewCommandDeck
                     evidenceDrilldownSection
                     if let content = model.detailState?.content {
@@ -342,6 +340,34 @@ struct QueueAndDetailView: View {
             .disabled(model.lineageState == nil)
 
             Spacer()
+        }
+    }
+
+    @ViewBuilder
+    private var detailHeader: some View {
+        if let summary = model.detailState?.uiSummary {
+            HStack(alignment: .top, spacing: 10) {
+                VStack(alignment: .leading, spacing: 6) {
+                    if let candidateID = model.selectedCandidateID {
+                        Text(candidateID)
+                            .font(.title3).bold()
+                    }
+                    Text(summary.status.map(model.strings.statusValueLabel) ?? model.strings.text(.none))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                if let status = summary.status {
+                    StatusBadge(text: model.strings.statusValueLabel(status), tone: model.strings.tone(forToken: status))
+                }
+                if let section = summary.section {
+                    StatusBadge(text: model.strings.residentValueLabel(section), tone: .neutral)
+                }
+                if let evaluationLevel = summary.evaluationLevel {
+                    StatusBadge(text: model.strings.evaluationLevelLabel(evaluationLevel), tone: .caution)
+                }
+            }
+            detailSummary(summary)
         }
     }
 
@@ -424,37 +450,29 @@ struct QueueAndDetailView: View {
 
     private func detailSummary(_ summary: CandidateUISummary) -> some View {
         GroupBox(model.strings.text(.summaryCards)) {
-            VStack(alignment: .leading, spacing: 8) {
-                DetailLabelValueRow(
-                    label: model.strings.fieldLabel("status"),
-                    value: summary.status.map(model.strings.statusValueLabel) ?? model.strings.text(.none)
-                )
-                DetailLabelValueRow(
-                    label: model.strings.fieldLabel("section"),
-                    value: summary.section.map(model.strings.residentValueLabel) ?? model.strings.text(.none)
-                )
-                DetailLabelValueRow(
-                    label: model.strings.fieldLabel("operation"),
-                    value: summary.operation.map(model.strings.residentValueLabel) ?? model.strings.text(.none)
-                )
-                DetailLabelValueRow(
-                    label: model.strings.fieldLabel("rde"),
-                    value: summary.rdeClass.map(model.strings.residentValueLabel) ?? model.strings.text(.none)
-                )
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 180), spacing: 10)], spacing: 10) {
+                summaryChip(label: model.strings.fieldLabel("operation"), value: summary.operation.map(model.strings.residentValueLabel) ?? model.strings.text(.none))
+                summaryChip(label: model.strings.fieldLabel("rde"), value: summary.rdeClass.map(model.strings.residentValueLabel) ?? model.strings.text(.none))
                 if let sourceType = summary.sourceType {
-                    DetailLabelValueRow(
-                        label: model.strings.fieldLabel("source_type"),
-                        value: model.strings.residentValueLabel(sourceType)
-                    )
+                    summaryChip(label: model.strings.fieldLabel("source_type"), value: model.strings.residentValueLabel(sourceType))
                 }
                 if let evaluationLevel = summary.evaluationLevel {
-                    DetailLabelValueRow(
-                        label: model.strings.text(.evaluateLevel),
-                        value: model.strings.evaluationLevelLabel(evaluationLevel)
-                    )
+                    summaryChip(label: model.strings.text(.evaluateLevel), value: model.strings.evaluationLevelLabel(evaluationLevel))
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func summaryChip(label: String, value: String) -> some View {
+        SurfaceCard(emphasis: 0.18) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(label)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text(value)
+                    .font(.subheadline)
+            }
         }
     }
 

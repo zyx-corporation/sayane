@@ -51,13 +51,6 @@ struct ErrorView: View {
                         StartupShortcutButtons(model: model, command: startupCommand)
                     }
                 }
-                if model.daemonState?.operatorPhaseDetails.currentSupportedOperatorPath.bootstrapUI != nil {
-                    DebugCompatibilityDisclosure(model: model) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            DebugShellShortcutButtons(model: model)
-                        }
-                    }
-                }
                 if let currentGate = model.currentGateText {
                     HStack(alignment: .top, spacing: 8) {
                         Text(model.strings.text(.currentGate))

@@ -95,8 +95,6 @@ struct BridgeDiagnosticsCard: View {
             model.strings.text(.copyLaunchSource),
             model.strings.text(.openLogs),
             model.strings.text(.copyHealthCommand),
-            model.strings.text(.openDebugShell),
-            model.strings.text(.copyDebugShellURL),
         ]
     }
 

@@ -44,6 +44,7 @@ Platform focus for the current line:
 - shared state cards now carry recovery badges and inline next-action buttons for loading / empty / unavailable states
 - daemon section navigator and expand/collapse controls for long operator screens
 - connection diagnostics card with Bridge URL, health/debug-shell links, token/log paths, and recovery actions
+- debug-only compatibility shell actions are now kept in the diagnostics sheet instead of the routine operator cards
 - startup-oriented Bridge status panel with clear disconnected / starting / ready states
 - compact Bridge status rail on Queue / Daemon so recovery actions stay visible away from Home
 - shared action/result feedback banner for capture/review/copy flows, with sheet inputs preserved on failure
@@ -286,10 +287,9 @@ for in-progress recovery messages.
 The toolbar `Refresh` action also follows that same state, switching its label to the active
 recovery wording and disabling itself while recovery is still running.
 Where the startup command resolves to a local script path, the native recovery surfaces now also expose
-`Open Launcher` beside `Copy Startup Command`. Where the browser compatibility path is visible, the same
-surfaces now also expose `Open Compatibility Shell` and `Copy Compatibility Shell URL`. When the local token file is
-available, those debug actions prefer the bootstrap URL automatically instead of opening raw `/app/ui`
-first.
+`Open Launcher` beside `Copy Startup Command`. Browser compatibility actions stay in the diagnostics
+sheet instead of the routine operator cards. When the local token file is available, those debug
+actions prefer the bootstrap URL automatically instead of opening raw `/app/ui` first.
 The error view now also keeps one compact recovery card first, so the operator can trigger the
 recommended recovery action, copy the startup command, and open logs before reading deeper diagnostics.
 That diagnostics card now stays reference-first: it keeps file paths, URLs, and debug/compatibility-only
@@ -362,8 +362,8 @@ The exported filename is now timestamped, and the note also includes Bridge vers
 metadata when available, so repeated handoff saves stay distinct and easier to audit later.
 It now also includes component identity plus the local token/log file paths, making the exported note
 usable as a first-pass reconnect and log-triage artifact on its own.
-The same top block now also includes the compatibility-shell entry URL and the first next-command summary, so both
-browser compatibility checks and the initial daemon action are visible before reading the deeper sections. When the
+The same top block now also includes the compatibility-shell entry URL and the first next-command summary, so
+handoff/debug artifacts still preserve both the browser compatibility check and the initial daemon action. When the
 local token file is available, that entry prefers the bootstrap URL automatically.
 It now also includes `launchctl print` plus stdout/stderr tail commands when available, so the saved
 note can hand off the first CLI inspection steps without requiring another pass through the app UI.

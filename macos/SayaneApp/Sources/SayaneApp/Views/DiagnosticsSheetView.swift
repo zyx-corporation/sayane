@@ -8,7 +8,13 @@ struct DiagnosticsSheetView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    SheetTitle(text: model.strings.text(.troubleshooting))
+                    HStack {
+                        Text(model.strings.text(.troubleshooting))
+                            .font(.title2)
+                            .bold()
+                        Spacer()
+                        StatusBadge(text: model.bridgeStatusText, tone: model.bridgeStatusTone)
+                    }
                     BridgeDiagnosticsCard(model: model, compact: false)
                 }
                 .padding(24)

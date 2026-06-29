@@ -26,6 +26,7 @@ struct RootView: View {
                 )
                 .tag(AppModel.Screen.daemon)
             }
+            .listStyle(.sidebar)
             .navigationTitle(model.strings.text(.appTitle))
         } detail: {
             VStack(spacing: 0) {
@@ -132,12 +133,14 @@ struct RootView: View {
         return HStack(alignment: .center, spacing: 8) {
             Image(systemName: systemImage)
                 .foregroundStyle(.secondary)
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text(metadata.title)
-                Text(metadata.summary)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
+                if model.selectedScreen == screen {
+                    Text(metadata.summary)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
             }
             Spacer(minLength: 8)
             if let badgeText = metadata.badgeText, !badgeText.isEmpty {

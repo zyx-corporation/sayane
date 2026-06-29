@@ -101,10 +101,7 @@ struct RootView: View {
     private var workspaceStatusBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
-                StatusBadge(
-                    text: "\(model.strings.text(.screenOverview)): \(model.currentScreenTitle)",
-                    tone: .neutral
-                )
+                StatusBadge(text: model.currentScreenTitle, tone: .neutral)
                 StatusBadge(text: model.bridgeStatusText, tone: model.bridgeStatusTone)
                 if model.isLoading {
                     StatusBadge(text: model.strings.text(.loadingState), tone: .caution)
@@ -112,23 +109,20 @@ struct RootView: View {
                 Text(model.currentScreenSummary)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
                 if model.shouldShowNavigationTrailInStatusBar {
                     Divider().frame(height: 16)
-                    Text("\(model.strings.text(.navigationTrail)): \(model.navigationTrailText)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    StatusBadge(text: model.navigationTrailText, tone: .neutral)
                 }
                 if model.shouldShowSelectedCandidateInStatusBar,
                    let selectedCandidate = model.selectedCandidateBadgeText
                 {
                     Divider().frame(height: 16)
-                    Text(selectedCandidate)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    StatusBadge(text: selectedCandidate, tone: .caution)
                 }
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 10)
+            .padding(.vertical, 8)
         }
         .background(.quaternary.opacity(0.35))
     }

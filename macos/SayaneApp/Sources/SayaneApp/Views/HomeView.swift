@@ -140,7 +140,7 @@ struct HomeView: View {
         VStack(alignment: .leading, spacing: 12) {
             SectionTitle(text: model.strings.text(.summaryCards))
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 180))], spacing: 12) {
-                ForEach(model.homeState?.summaryCards ?? []) { card in
+                ForEach(summaryCardPreviewItems) { card in
                     SurfaceCard(emphasis: 0.4) {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(model.strings.summaryCardLabel(card.key)).font(.caption).foregroundStyle(.secondary)
@@ -148,6 +148,11 @@ struct HomeView: View {
                         }
                     }
                 }
+            }
+            if summaryCardOverflowCount > 0 {
+                Text(model.strings.moreItemsMessage(summaryCardOverflowCount))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
     }
@@ -486,6 +491,14 @@ struct HomeView: View {
 
     private var reviewPreviewItems: [TopReviewItem] {
         Array((model.homeState?.topReviewItems ?? []).prefix(2))
+    }
+
+    private var summaryCardPreviewItems: [SummaryCard] {
+        Array((model.homeState?.summaryCards ?? []).prefix(4))
+    }
+
+    private var summaryCardOverflowCount: Int {
+        max((model.homeState?.summaryCards.count ?? 0) - summaryCardPreviewItems.count, 0)
     }
 
     private var reviewOverflowCount: Int {

@@ -67,8 +67,19 @@ struct QueueAndDetailView: View {
     private var queuePane: some View {
         VStack(alignment: .leading, spacing: 12) {
             BridgeStatusPanel(model: model, compact: true)
-            Text("\(model.strings.text(.reviewableCount)): \(model.queueState?.reviewableCount ?? 0)")
-                .font(.headline)
+            HStack(spacing: 8) {
+                StatusBadge(
+                    text: "\(model.queueState?.reviewableCount ?? 0) \(model.strings.text(.reviewableCount))",
+                    tone: (model.queueState?.reviewableCount ?? 0) > 0 ? .positive : .neutral
+                )
+                if !activeFilterLabels.isEmpty {
+                    StatusBadge(
+                        text: "\(activeFilterLabels.count) \(model.strings.text(.activeFilters))",
+                        tone: .caution
+                    )
+                }
+                Spacer()
+            }
             queueStatusBar
             filterBar
             quickFilterBar
@@ -145,45 +156,18 @@ struct QueueAndDetailView: View {
         GroupBox {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    StatusBadge(
-                        text: "\(model.strings.text(.filteredCandidates)): \(filteredItems.count)",
-                        tone: filteredItems.isEmpty ? .neutral : .positive
-                    )
-                    StatusBadge(
-                        text: "\(model.strings.text(.sortOrder)): \(sortModeLabel)",
-                        tone: .neutral
-                    )
+                    StatusBadge(text: "\(filteredItems.count) \(model.strings.text(.filteredCandidates))", tone: filteredItems.isEmpty ? .neutral : .positive)
+                    StatusBadge(text: sortModeLabel, tone: .neutral)
                     Spacer()
                 }
-                HStack(alignment: .top, spacing: 8) {
-                    Text("\(model.strings.text(.activeFilters)):")
-                        .font(.caption.weight(.semibold))
-                    if activeFilterLabels.isEmpty {
-                        Text(model.strings.text(.noActiveFilters))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    } else {
-                        FlowLayout(activeFilterLabels, id: \.self, spacing: 6) { label in
-                            StatusBadge(text: label, tone: .caution)
-                        }
+                if !activeFilterLabels.isEmpty {
+                    FlowLayout(activeFilterLabels, id: \.self, spacing: 6) { label in
+                        StatusBadge(text: label, tone: .caution)
                     }
                 }
-                if !statusCountBadges.isEmpty {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(model.strings.text(.statusCounts))
-                            .font(.caption.weight(.semibold))
-                        FlowLayout(statusCountBadges, id: \.self, spacing: 6) { label in
-                            StatusBadge(text: label, tone: .neutral)
-                        }
-                    }
-                }
-                if !topSectionBadges.isEmpty {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(model.strings.text(.topSections))
-                            .font(.caption.weight(.semibold))
-                        FlowLayout(topSectionBadges, id: \.self, spacing: 6) { label in
-                            StatusBadge(text: label, tone: .neutral)
-                        }
+                if !statusCountBadges.isEmpty || !topSectionBadges.isEmpty {
+                    FlowLayout(statusCountBadges + topSectionBadges, id: \.self, spacing: 6) { label in
+                        StatusBadge(text: label, tone: .neutral)
                     }
                 }
             }
@@ -193,7 +177,7 @@ struct QueueAndDetailView: View {
 
     private var filterBar: some View {
         GroupBox(model.strings.text(.filters)) {
-            VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .center, spacing: 8) {
                 TextField(model.strings.text(.searchCandidates), text: $searchText)
                     .textFieldStyle(.roundedBorder)
                 HStack {

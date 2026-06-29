@@ -194,6 +194,10 @@ native app 上では、`Home` / `Bridge Status` / `Daemon` / compact `Error` vie
 token file が読める場合は bootstrap URL を自動で使い、通常の `/app/ui` 直開きより
 セッション確立しやすい経路を優先する。
 
+smoke では `./scripts/check-macos-app-preview.sh` を使う。macOS の Terminal Apple Events が
+許可されていない環境では、既定の `auto` モードが background Bridge 起動へ自動 fallback する。
+明示したい場合は `--bridge-background` を付ける。
+
 現行の native app UI は compact routine path を優先しており、通常操作では次のように読む:
 
 - `Home`: start-here launcher、次の review、次の daemon action を先頭に表示

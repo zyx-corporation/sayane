@@ -188,13 +188,18 @@ Useful options:
 ```bash
 ./scripts/check-macos-app-preview.sh --no-start
 ./scripts/check-macos-app-preview.sh --no-build --no-tests
+./scripts/check-macos-app-preview.sh --bridge-background
+./scripts/check-macos-app-preview.sh --bridge-terminal
 ./scripts/check-macos-app-preview.sh --with-debug-shell
 ./scripts/check-macos-app-preview.sh --verbose
 ```
 
 - `--no-start` keeps a manually started Bridge and only checks the native-app surfaces
 - `--no-build --no-tests` is useful when iterating on Bridge/session behavior only
+- `--bridge-background` forces a permission-free background Bridge launch during smoke
+- `--bridge-terminal` forces the Terminal-window launch path when that behavior itself is under test
 - default behavior runs the full `swift test --package-path macos/SayaneApp --disable-xctest` suite during smoke validation
+- default `auto` mode now retries with a background Bridge launch if macOS denies Terminal Apple Events
 - `--with-debug-shell` additionally validates `/app/ui` bootstrap and cookie-backed compatibility flows
 - `--verbose` prints the last response body when a bootstrap or screen-state check fails
 

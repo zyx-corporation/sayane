@@ -189,6 +189,12 @@ def build_daemon_panel_screen_state(daemon_payload: dict[str, Any]) -> dict[str,
                 "recommended_launcher": operator_phase_status.get(
                     "current_supported_operator_path", {}
                 ).get("recommended_launcher"),
+                "debug_shell_bootstrap_ui": operator_phase_status.get(
+                    "current_supported_operator_path", {}
+                ).get("debug_shell_bootstrap_ui")
+                or operator_phase_status.get("current_supported_operator_path", {}).get(
+                    "bootstrap_ui"
+                ),
                 "bootstrap_ui": operator_phase_status.get(
                     "current_supported_operator_path", {}
                 ).get("bootstrap_ui"),

@@ -48,7 +48,10 @@ def register_daemon_operator_phase_status_command(app_group: typer.Typer) -> Non
         typer.echo(f"primary_operator_ui: {operator_path.get('primary_operator_ui', '—')}")
         typer.echo(f"debug_operator_ui: {operator_path.get('debug_operator_ui', '—')}")
         typer.echo(f"recommended_launcher: {operator_path.get('recommended_launcher', '—')}")
-        typer.echo(f"bootstrap_ui: {operator_path.get('bootstrap_ui', '—')}")
+        typer.echo(
+            "debug_shell_bootstrap_ui: "
+            f"{operator_path.get('debug_shell_bootstrap_ui') or operator_path.get('bootstrap_ui', '—')}"
+        )
         typer.echo(f"local_only: {operator_path.get('local_only')}")
         blocking_reasons = payload.get("blocking_reasons", [])
         typer.echo(f"blocking_reasons: {', '.join(blocking_reasons) if blocking_reasons else '—'}")

@@ -18,6 +18,7 @@ This directory contains release notes, release closures, and release-prep docume
 - [v1.0.85 Compatibility Shell Maintainer Wording Release Note](v1.0.85-compatibility-shell-maintainer-wording-release-note.md) — launcher summaries and remaining active docs now describe `/app/ui*` as maintainer/debug-only material more consistently
 - [v1.0.86 Active Docs Maintainer/Debug Wording Alignment Release Note](v1.0.86-active-docs-maintainer-debug-wording-alignment-release-note.md) — active operator docs now use the same maintainer/debug wording for the retained browser compatibility shell
 - [v1.0.87 Historical Docs Maintainer/Debug Wording Alignment Release Note](v1.0.87-historical-docs-maintainer-debug-wording-alignment-release-note.md) — historical release and handoff docs now use the same maintainer/debug wording more consistently
+- [v1.0.88 Debug Shell Bootstrap Label Alignment Release Note](v1.0.88-debug-shell-bootstrap-label-alignment-release-note.md) — routine-facing operator status now labels the retained `/app/ui` URL as a debug-shell bootstrap rather than a generic bootstrap UI
 - [v1.0.78 Terminal-First Bridge Launch Release Note](v1.0.78-terminal-first-bridge-launch-release-note.md) — macOS launchers now prefer visible Terminal-backed Bridge startup and reuse healthy Bridge processes
 - [v1.0.13 Resident Daemon Preflight Schema Preview](v1.0.13-resident-daemon-preflight-schema-preview.md) — published release note
 - [v1.0.13 Release Prep Checklist](v1.0.13-release-prep-checklist.md) — operator checklist

@@ -248,7 +248,7 @@ curl -H "Authorization: Bearer $TOKEN" http://127.0.0.1:38741/app/overview
 # Read app-facing UI handoff contract metadata
 curl -H "Authorization: Bearer $TOKEN" http://127.0.0.1:38741/app/contract
 
-# Open the local HTML bootstrap UI
+# Open the maintainer/debug compatibility shell only when explicitly needed
 curl -H "Authorization: Bearer $TOKEN" http://127.0.0.1:38741/app/ui
 
 # After bootstrap, browser-driven follow-up UI activity uses the dedicated local UI session

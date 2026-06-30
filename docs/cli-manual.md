@@ -346,9 +346,9 @@ sayane serve --port 38741 --host 127.0.0.1
 
 初回起動時に `~/.sayane/bridge.token` を生成し、Bearer トークンと pairing code を表示する。
 
-resident app の browser follow-up activity では、`/app/ui` bootstrap 後に dedicated local UI session が
-`~/.sayane/bridge.ui-session.json` とブラウザ cookie で扱われる。steady-state browser session は raw bearer
-token ではない。
+maintainer/debug compatibility shell を明示的に使う場合のみ、`/app/ui` bootstrap 後に dedicated local UI
+session が `~/.sayane/bridge.ui-session.json` とブラウザ cookie で扱われる。steady-state browser session は
+raw bearer token ではない。
 
 **HTTP エンドポイント**（保護系は `Authorization: Bearer <token>` 必須）
 

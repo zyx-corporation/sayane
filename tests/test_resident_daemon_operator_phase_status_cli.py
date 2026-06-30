@@ -50,7 +50,7 @@ def test_daemon_operator_phase_status_text_exposes_post_app_detail_surface(
     assert "primary_operator_ui:" in result.stdout
     assert "debug_operator_ui: bridge_hosted_debug_shell" in result.stdout
     assert "recommended_launcher:" in result.stdout
-    assert "bootstrap_ui: http://127.0.0.1:38741/app/ui" in result.stdout
+    assert "debug_shell_bootstrap_ui: http://127.0.0.1:38741/app/ui" in result.stdout
     assert "blocking_reasons:" in result.stdout
     assert "workstreams:" in result.stdout
     assert "packaging_model_decision: closed_for_mvp" in result.stdout

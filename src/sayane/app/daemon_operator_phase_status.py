@@ -99,6 +99,7 @@ class ResidentDaemonOperatorPhaseStatus:
             "current_supported_operator_path": {
                 "startup_command": startup_command,
                 "startup_command_text": " ".join(shlex.quote(part) for part in startup_command),
+                "debug_shell_bootstrap_ui": f"http://{self.host}:{self.port}/app/ui",
                 "bootstrap_ui": f"http://{self.host}:{self.port}/app/ui",
                 "local_only": True,
                 "primary_operator_ui": packaging["operator_surface"].get("primary_ui"),
@@ -109,7 +110,7 @@ class ResidentDaemonOperatorPhaseStatus:
                 "notes": [
                     "native macOS app is the primary MVP operator path on macOS",
                     "current supported packaging model remains local-only CLI plus Local Bridge",
-                    "Bridge-hosted /app/ui remains a debug-only compatibility surface",
+                    "Bridge-hosted /app/ui remains a maintainer/debug compatibility surface",
                 ],
             },
             "workstreams": [

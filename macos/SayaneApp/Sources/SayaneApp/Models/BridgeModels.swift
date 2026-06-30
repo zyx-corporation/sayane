@@ -490,6 +490,7 @@ struct CurrentSupportedOperatorPath: Codable, Sendable {
     let primaryOperatorUI: String?
     let debugOperatorUI: String?
     let recommendedLauncher: String?
+    let debugShellBootstrapUI: String?
     let bootstrapUI: String?
     let localOnly: Bool?
     let notes: [String]
@@ -499,9 +500,25 @@ struct CurrentSupportedOperatorPath: Codable, Sendable {
         case primaryOperatorUI = "primary_operator_ui"
         case debugOperatorUI = "debug_operator_ui"
         case recommendedLauncher = "recommended_launcher"
+        case debugShellBootstrapUI = "debug_shell_bootstrap_ui"
         case bootstrapUI = "bootstrap_ui"
         case localOnly = "local_only"
         case notes
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        startupCommandText = try container.decodeIfPresent(String.self, forKey: .startupCommandText)
+        primaryOperatorUI = try container.decodeIfPresent(String.self, forKey: .primaryOperatorUI)
+        debugOperatorUI = try container.decodeIfPresent(String.self, forKey: .debugOperatorUI)
+        recommendedLauncher = try container.decodeIfPresent(String.self, forKey: .recommendedLauncher)
+        debugShellBootstrapUI = try container.decodeIfPresent(
+            String.self,
+            forKey: .debugShellBootstrapUI
+        ) ?? container.decodeIfPresent(String.self, forKey: .bootstrapUI)
+        bootstrapUI = try container.decodeIfPresent(String.self, forKey: .bootstrapUI)
+        localOnly = try container.decodeIfPresent(Bool.self, forKey: .localOnly)
+        notes = try container.decodeIfPresent([String].self, forKey: .notes) ?? []
     }
 }
 

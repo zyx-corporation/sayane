@@ -288,6 +288,7 @@ BOOTSTRAP_COPY_FIELDS: dict[str, str] = {
     "field.phase_status": "Phase Status",
     "field.phase_readiness": "Phase Readiness",
     "field.startup_command_text": "Startup Command",
+    "field.debug_shell_bootstrap_ui": "Debug Shell Bootstrap UI",
     "field.bootstrap_ui": "Bootstrap UI",
     "field.local_only": "Local Only",
     "field.detail": "Detail",
@@ -745,6 +746,7 @@ BOOTSTRAP_COPY_JA_FIELDS: dict[str, str] = {
     "field.phase_status": "フェーズ状態",
     "field.phase_readiness": "フェーズ完了準備",
     "field.startup_command_text": "起動コマンド",
+    "field.debug_shell_bootstrap_ui": "デバッグシェル起動 URL",
     "field.bootstrap_ui": "Bootstrap UI",
     "field.local_only": "ローカル限定",
     "field.detail": "詳細",
@@ -1424,7 +1426,7 @@ def _render_operator_phase_status(locale: str, payload: dict[str, Any] | None) -
                 "primary_operator_ui",
                 "debug_operator_ui",
                 "recommended_launcher",
-                "bootstrap_ui",
+                "debug_shell_bootstrap_ui",
                 "local_only",
             ],
         )
@@ -2516,7 +2518,7 @@ def _render_resident_app_shell_bootstrap(
         <h4>${{escapeHtml(strings.operatorPath)}}</h4>
         ${{renderKeyValuePanel({{
           startup_command_text: operatorPath.startup_command_text,
-          bootstrap_ui: operatorPath.bootstrap_ui,
+          debug_shell_bootstrap_ui: operatorPath.debug_shell_bootstrap_ui || operatorPath.bootstrap_ui,
           local_only: operatorPath.local_only,
         }})}}
         <h4>${{escapeHtml(strings.notes)}}</h4>

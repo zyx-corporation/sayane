@@ -175,7 +175,7 @@ report_failure() {
   printf '  Log: %s\n' "${LOG_FILE}" >&2
   printf '  Hint: curl -s %s/health\n' "${BASE_URL}" >&2
   if [[ "${WITH_DEBUG_SHELL}" == "1" ]]; then
-    printf '  Hint: open %s/app/ui?bootstrap_token=$(cat %s)\n' "${BASE_URL}" "${TOKEN_FILE}" >&2
+    printf '  Hint: open %s/app/ui?bootstrap_token=$(cat %s) only for explicit debug-shell checks\n' "${BASE_URL}" "${TOKEN_FILE}" >&2
   fi
   if [[ -f "${LOG_FILE}" ]]; then
     printf '\nRecent Bridge log tail:\n' >&2

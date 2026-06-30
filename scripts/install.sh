@@ -56,7 +56,7 @@ post_install_hints() {
     fi
   fi
   if [[ "${PLATFORM}" == "macos" ]]; then
-    info "Optional native macOS app is a secondary path. Build/install it from a repo checkout when needed."
+    info "Optional native macOS app is a secondary path. Use the release-zip helper or build/install it from a repo checkout when needed."
     info "Install guide: ${SAYANE_DOCS_BASE_URL}/install.md"
   fi
 }

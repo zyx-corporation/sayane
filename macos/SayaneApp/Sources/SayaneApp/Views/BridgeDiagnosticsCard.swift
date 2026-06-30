@@ -19,7 +19,7 @@ struct BridgeDiagnosticsCard: View {
                     Divider()
                     routineActionRows
                 }
-                if !compact, model.hasDebugCompatibilitySurface {
+                if !compact, model.shouldExposeDebugCompatibilityTools {
                     Divider()
                     DebugCompatibilityDisclosure(model: model) {
                         VStack(alignment: .leading, spacing: 10) {
@@ -97,7 +97,6 @@ struct BridgeDiagnosticsCard: View {
 
     private var secondaryActionTitles: [String] {
         [
-            model.strings.text(.openDebugShell),
             model.strings.text(.copyDebugShellURL),
         ]
     }
@@ -125,8 +124,6 @@ struct BridgeDiagnosticsCard: View {
             model.openLogFile()
         } else if title == model.strings.text(.copyHealthCommand) {
             model.copyHealthCheckCommand()
-        } else if title == model.strings.text(.openDebugShell) {
-            model.openDebugShell()
         } else if title == model.strings.text(.copyDebugShellURL) {
             model.copyDebugShellURL()
         }

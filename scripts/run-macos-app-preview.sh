@@ -285,9 +285,9 @@ Notes:
   - If the app shows disconnected state, keep the Bridge terminal open and use Reconnect in the app.
   - Browser compatibility shell remains debug-only and is not part of the normal macOS operator flow.
 
-Debug-only checks:
+Maintainer/debug checks:
   Compatibility shell: ${BRIDGE_URL}/app/ui
-  open -a "Google Chrome" "${bootstrap_url}"
+  Open manually if needed: ${bootstrap_url}
 EOF
 }
 

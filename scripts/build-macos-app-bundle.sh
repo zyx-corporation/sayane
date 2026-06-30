@@ -120,6 +120,11 @@ create_bundle() {
     ditto "${RESOURCE_DIR}" "${resources_dir}"
     find "${resources_dir}" -type f -name '*.sh' -exec chmod +x {} +
   fi
+  cat > "${resources_dir}/runtime-env.sh" <<EOF
+#!/usr/bin/env bash
+export SAYANE_DEFAULT_REPO_ROOT='${ROOT}'
+EOF
+  chmod +x "${resources_dir}/runtime-env.sh"
   codesign --remove-signature "${macos_dir}/${APP_NAME}" >/dev/null 2>&1 || true
   cat > "${plist_path}" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>

@@ -119,15 +119,16 @@ struct DaemonView: View {
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 14) {
                     header
-                    focusSection(proxy: proxy)
+                    compactDaemonOverview(proxy: proxy)
+                    sectionNavigator(proxy: proxy)
                     nextActions
                         .id(SectionAnchor.nextActions)
+                    focusSection(proxy: proxy)
                     operatorSummaryRail(proxy: proxy)
                     operatorWorkspace(proxy: proxy)
                         .id(SectionAnchor.operatorWorkspace)
-                    sectionNavigator(proxy: proxy)
                     launchAgent
                         .id(SectionAnchor.launchAgent)
                     serviceTargets
@@ -148,14 +149,107 @@ struct DaemonView: View {
                     startupVisibility
                     handoffSnapshot
                 }
-                .padding(24)
+                .padding(18)
             }
         }
         .navigationTitle(model.strings.text(.daemon))
     }
 
-    private var header: some View {
+    private func compactDaemonOverview(proxy: ScrollViewProxy) -> some View {
         VStack(alignment: .leading, spacing: 10) {
+            SurfaceCard(emphasis: 0.22) {
+                VStack(alignment: .leading, spacing: 10) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(model.strings.text(.currentState))
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(.secondary)
+                        HStack(alignment: .center, spacing: 10) {
+                            Circle()
+                                .fill(model.bridgeStatusTone.foregroundStyle)
+                                .frame(width: 10, height: 10)
+                            Text(model.currentGateText ?? model.bridgeStatusHeadline)
+                                .font(.title3.weight(.bold))
+                        }
+                    }
+
+                    if let blockerSummary = compactDaemonBlockerSummary {
+                        SurfaceCard(emphasis: 0.14) {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(model.strings.text(.blockedBy))
+                                    .font(.caption2.weight(.bold))
+                                    .foregroundStyle(.secondary)
+                                Text(blockerSummary)
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(2)
+                            }
+                        }
+                    }
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(model.strings.text(.nextCommand))
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(.secondary)
+                        HStack(spacing: 8) {
+                            Button(model.bridgeSuggestedActionText) {
+                                Task { await model.performBridgeSuggestedAction() }
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.small)
+                            .disabled(model.bridgeRecoveryActionDisabled)
+
+                            Button(model.strings.text(.openSection)) {
+                                expandSection(compactDaemonPrimaryAnchor)
+                                withAnimation {
+                                    proxy.scrollTo(compactDaemonPrimaryAnchor, anchor: .top)
+                                }
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+
+                            Spacer()
+                        }
+                    }
+                }
+            }
+
+            HStack(spacing: 8) {
+                compactOverviewLink(title: model.strings.text(.launchAgentRunbook), anchor: .launchAgentRunbook, proxy: proxy)
+                compactOverviewLink(title: model.strings.text(.readSurfaces), anchor: .operatorWorkspace, proxy: proxy)
+                compactOverviewLink(title: model.strings.text(.supervision), anchor: .supervision, proxy: proxy)
+            }
+        }
+    }
+
+    private func compactOverviewLink(title: String, anchor: SectionAnchor, proxy: ScrollViewProxy) -> some View {
+        Button {
+            expandSection(anchor)
+            withAnimation {
+                proxy.scrollTo(anchor, anchor: .top)
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "chevron.right")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(.secondary)
+                Text(title)
+                    .font(.caption.weight(.semibold))
+                Spacer()
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(Color(NSColor.windowBackgroundColor))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.secondary.opacity(0.15), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 8) {
             BridgeStatusPanel(model: model, compact: true)
             HStack {
                 Button(model.strings.text(.expandAll)) {
@@ -175,7 +269,7 @@ struct DaemonView: View {
 
     private func operatorSummaryRail(proxy: ScrollViewProxy) -> some View {
         GroupBox(model.strings.text(.operatorSummaryRail)) {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text(model.strings.text(.operatorSummaryRailSummary))
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -195,7 +289,7 @@ struct DaemonView: View {
                         badgeText: model.daemonSummaryEmptyBadgeText
                     )
                 } else {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 240), spacing: 10)], spacing: 10) {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 240), spacing: 8)], spacing: 8) {
                         ForEach(operatorSummaryRailPreviewItems) { item in
                             SurfaceCard(emphasis: 0.30) {
                                 VStack(alignment: .leading, spacing: 8) {
@@ -276,7 +370,7 @@ struct DaemonView: View {
     }
 
     private func operatorWorkspace(proxy: ScrollViewProxy) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             SectionTitle(text: model.strings.text(.nextEpicWorkspace))
             Text(model.strings.text(.nextEpicWorkspaceSummary))
                 .font(.caption)
@@ -312,7 +406,7 @@ struct DaemonView: View {
             operatorEvidenceRail(proxy: proxy)
         case .remainingWorkstreams:
             GroupBox(model.strings.text(.remainingWorkstreams)) {
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 8) {
                     Text(model.strings.text(.remainingWorkstreamsSummary))
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -679,6 +773,27 @@ struct DaemonView: View {
                 }
             }
         }
+    }
+
+    private var compactDaemonBlockerSummary: String? {
+        if let reason = model.nextDaemonReasonText, !reason.isEmpty {
+            return reason
+        }
+        if let action = model.daemonState?.nextActions.first, !action.reason.isEmpty {
+            return action.reason
+        }
+        let detail = model.bridgeStatusDetail.trimmingCharacters(in: .whitespacesAndNewlines)
+        return detail.isEmpty ? nil : detail
+    }
+
+    private var compactDaemonPrimaryAnchor: SectionAnchor {
+        if let action = model.daemonState?.nextActions.first {
+            return focusAnchor(for: action.command)
+        }
+        if model.startupCommandText != nil {
+            return .operatorPhase
+        }
+        return .launchAgentRunbook
     }
 
     private var cards: some View {

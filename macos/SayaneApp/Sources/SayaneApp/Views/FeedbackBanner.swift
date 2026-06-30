@@ -27,10 +27,10 @@ struct FeedbackBanner: View {
             .buttonStyle(.plain)
             .accessibilityLabel(title)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
         .background(tone.backgroundStyle, in: RoundedRectangle(cornerRadius: 12))
-        .padding(.horizontal, 16)
-        .padding(.top, 12)
+        .padding(.horizontal, 14)
+        .padding(.top, 8)
     }
 }

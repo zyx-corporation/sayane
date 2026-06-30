@@ -26,17 +26,22 @@ struct QueueAndDetailView: View {
     @State private var selectedStatusFilter = ""
     @State private var selectedSectionFilter = ""
     @State private var sortMode: SortMode = .newest
-    @State private var showDetailContent = true
-    @State private var showDiffContent = false
-    @State private var showLineageContent = false
+    @State private var showsLowerPanel = false
+    @State private var selectedLowerPanel: LowerPanelTab = .diff
+
+    private enum LowerPanelTab: String {
+        case diff
+        case lineage
+    }
 
     var body: some View {
         HSplitView {
             queuePane
-                .frame(minWidth: 320)
+                .frame(minWidth: 320, idealWidth: 320, maxWidth: 320)
             detailPane
-                .frame(minWidth: 520)
+                .frame(minWidth: 520, idealWidth: 640)
         }
+        .frame(maxWidth: .infinity, alignment: .topLeading)
         .navigationTitle(model.strings.text(.queue))
         .toolbar {
             ToolbarItemGroup {
@@ -65,8 +70,7 @@ struct QueueAndDetailView: View {
     }
 
     private var queuePane: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            BridgeStatusPanel(model: model, compact: true)
+        VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
                 StatusBadge(
                     text: "\(model.queueState?.reviewableCount ?? 0) \(model.strings.text(.reviewableCount))",
@@ -79,10 +83,13 @@ struct QueueAndDetailView: View {
                     )
                 }
                 Spacer()
+                Button(model.toolbarRefreshText) {
+                    Task { await model.refreshCurrentScreen() }
+                }
+                .buttonStyle(.plain)
+                .font(.caption.weight(.semibold))
             }
-            queueStatusBar
             filterBar
-            quickFilterBar
             if model.isLoading && model.queueState == nil {
                 StateCardView(
                     icon: "arrow.triangle.2.circlepath",
@@ -117,75 +124,60 @@ struct QueueAndDetailView: View {
                     get: { model.selectedCandidateID },
                     set: { if let value = $0 { model.chooseCandidate(value) } }
                 )) { item in
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(item.id).font(.headline)
-                        Text(item.displaySummary ?? item.section.map(model.strings.residentValueLabel) ?? item.status.map(model.strings.statusValueLabel) ?? model.strings.text(.none))
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                        HStack(spacing: 10) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        HStack(spacing: 6) {
                             if let status = item.status {
-                                Label(model.strings.statusValueLabel(status), systemImage: "circle.fill")
-                                    .labelStyle(.titleAndIcon)
+                                StatusBadge(text: model.strings.statusValueLabel(status), tone: model.strings.tone(forToken: status))
                             }
+                            Text(item.id).font(.subheadline.weight(.semibold))
+                            Spacer()
+                        }
+                        Text(item.displaySummary ?? item.section.map(model.strings.residentValueLabel) ?? item.status.map(model.strings.statusValueLabel) ?? model.strings.text(.none))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                        HStack(spacing: 8) {
                             if let section = item.section {
                                 Text(model.strings.residentValueLabel(section))
                             }
-                        }
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        HStack(spacing: 10) {
                             if let proposalSection = item.proposalSection {
-                                Text("\(model.strings.fieldLabel("proposal_section")): \(model.strings.residentValueLabel(proposalSection))")
+                                Text(model.strings.residentValueLabel(proposalSection))
                             }
                             if let capturedAt = formattedCapturedAt(item.capturedAt) {
-                                Text("\(model.strings.fieldLabel("captured_at")): \(capturedAt)")
+                                Text(capturedAt)
                             }
                         }
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, 3)
                     .accessibilityLabel(candidateAccessibilityLabel(item))
                 }
+                .frame(maxWidth: .infinity, alignment: .topLeading)
             }
         }
-        .padding()
-    }
-
-    private var queueStatusBar: some View {
-        GroupBox {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    StatusBadge(text: "\(filteredItems.count) \(model.strings.text(.filteredCandidates))", tone: filteredItems.isEmpty ? .neutral : .positive)
-                    StatusBadge(text: sortModeLabel, tone: .neutral)
-                    Spacer()
-                }
-                if !activeFilterLabels.isEmpty {
-                    FlowLayout(activeFilterLabels, id: \.self, spacing: 6) { label in
-                        StatusBadge(text: label, tone: .caution)
-                    }
-                }
-                if !statusCountBadges.isEmpty || !topSectionBadges.isEmpty {
-                    FlowLayout(statusCountBadges + topSectionBadges, id: \.self, spacing: 6) { label in
-                        StatusBadge(text: label, tone: .neutral)
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .background(Color(NSColor.controlBackgroundColor).opacity(0.32))
     }
 
     private var filterBar: some View {
-        GroupBox(model.strings.text(.filters)) {
-            HStack(alignment: .center, spacing: 8) {
+        GroupBox {
+            VStack(alignment: .leading, spacing: 8) {
                 TextField(model.strings.text(.searchCandidates), text: $searchText)
                     .textFieldStyle(.roundedBorder)
-                HStack {
+                HStack(spacing: 8) {
                     Picker(model.strings.text(.sortOrder), selection: $sortMode) {
                         Text(model.strings.text(.sortNewest)).tag(SortMode.newest)
                         Text(model.strings.text(.sortStatus)).tag(SortMode.status)
                         Text(model.strings.text(.sortSection)).tag(SortMode.section)
                     }
+                    .labelsHidden()
+                    .frame(maxWidth: 180)
+                    if !activeFilterLabels.isEmpty {
+                        StatusBadge(text: "\(activeFilterLabels.count) \(model.strings.text(.activeFilters))", tone: .caution)
+                    }
+                    Spacer()
                     Button(model.strings.text(.clearFilters)) {
                         searchText = ""
                         selectedStatusFilter = ""
@@ -194,46 +186,15 @@ struct QueueAndDetailView: View {
                     }
                     .disabled(searchText.isEmpty && selectedStatusFilter.isEmpty && selectedSectionFilter.isEmpty && sortMode == .newest)
                 }
-            }
-        }
-    }
-
-    private var quickFilterBar: some View {
-        GroupBox(model.strings.text(.quickFilters)) {
-            VStack(alignment: .leading, spacing: 8) {
-                if !selectedStatusFilter.isEmpty || !selectedSectionFilter.isEmpty {
-                    HStack {
-                        Text(model.strings.text(.activeFilters))
-                            .font(.caption.weight(.semibold))
-                        Spacer()
-                        Button(model.strings.text(.clearFilters)) {
-                            selectedStatusFilter = ""
-                            selectedSectionFilter = ""
+                if !quickFilterItems.isEmpty {
+                    FlowLayout(quickFilterItems, id: \.id, spacing: 6) { item in
+                        Button {
+                            item.action()
+                        } label: {
+                            StatusBadge(text: item.label, tone: item.selected ? .caution : .neutral)
                         }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
+                        .buttonStyle(.plain)
                     }
-                }
-                if let statusCounts = model.queueState?.statusCounts, !statusCounts.isEmpty {
-                    quickFilterChipGroup(
-                        title: model.strings.text(.statusCounts),
-                        items: statusCounts.keys.sorted(),
-                        selection: selectedStatusFilter,
-                        label: { key in "\(model.strings.statusValueLabel(key)) (\(statusCounts[key] ?? 0))" },
-                        action: { key in toggleStatusFilter(key) }
-                    )
-                }
-                if let topSections = model.queueState?.topSections, !topSections.isEmpty {
-                    quickFilterChipGroup(
-                        title: model.strings.text(.topSections),
-                        items: topSections.map(\.section),
-                        selection: selectedSectionFilter,
-                        label: { section in
-                            let count = topSections.first(where: { $0.section == section })?.count ?? 0
-                            return "\(model.strings.residentValueLabel(section)) (\(count))"
-                        },
-                        action: { section in toggleSectionFilter(section) }
-                    )
                 }
             }
         }
@@ -241,11 +202,7 @@ struct QueueAndDetailView: View {
 
     private var detailPane: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                if let candidateID = model.selectedCandidateID {
-                    Text("\(model.strings.text(.currentCandidate)): \(candidateID)")
-                        .font(.title2).bold()
-                }
+            VStack(alignment: .leading, spacing: 12) {
                 if let record = model.selectedCandidateActionRecord {
                     CandidateResultStrip(strings: model.strings, record: record)
                 }
@@ -290,36 +247,21 @@ struct QueueAndDetailView: View {
                 } else {
                     detailHeader
                     reviewCommandDeck
-                    evidenceDrilldownSection
                     if let content = model.detailState?.content {
-                        compactDisclosureSection(
-                            title: model.strings.text(.detail),
-                            isExpanded: $showDetailContent
-                        ) {
+                        bodySection(title: model.strings.text(.detail)) {
                             Text(content)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
-                    if let diff = model.diffState {
-                        compactDisclosureSection(
-                            title: model.strings.text(.diff),
-                            isExpanded: $showDiffContent
-                        ) {
-                            DiffSection(strings: model.strings, diff: diff)
-                        }
-                    }
-                    if let lineage = model.lineageState {
-                        compactDisclosureSection(
-                            title: model.strings.text(.lineage),
-                            isExpanded: $showLineageContent
-                        ) {
-                            LineageSection(strings: model.strings, lineage: lineage)
-                        }
-                    }
+                    lowerPanelSection
+                    evidenceDrilldownSection
                 }
             }
-            .padding(24)
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
         }
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .background(Color(NSColor.controlBackgroundColor).opacity(0.22))
     }
 
     private var detailCopyActions: some View {
@@ -346,28 +288,36 @@ struct QueueAndDetailView: View {
     @ViewBuilder
     private var detailHeader: some View {
         if let summary = model.detailState?.uiSummary {
-            HStack(alignment: .top, spacing: 10) {
-                VStack(alignment: .leading, spacing: 6) {
-                    if let candidateID = model.selectedCandidateID {
-                        Text(candidateID)
-                            .font(.title3).bold()
+            SurfaceCard(emphasis: 0.22) {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(alignment: .top, spacing: 10) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            if let candidateID = model.selectedCandidateID {
+                                Text(candidateID)
+                                    .font(.headline).bold()
+                            }
+                            Text(detailHeaderSummaryText(summary))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        VStack(alignment: .trailing, spacing: 6) {
+                            if let status = summary.status {
+                                StatusBadge(text: model.strings.statusValueLabel(status), tone: model.strings.tone(forToken: status))
+                            }
+                            HStack(spacing: 6) {
+                                if let section = summary.section {
+                                    StatusBadge(text: model.strings.residentValueLabel(section), tone: .neutral)
+                                }
+                                if let evaluationLevel = summary.evaluationLevel {
+                                    StatusBadge(text: model.strings.evaluationLevelLabel(evaluationLevel), tone: .caution)
+                                }
+                            }
+                        }
                     }
-                    Text(summary.status.map(model.strings.statusValueLabel) ?? model.strings.text(.none))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                if let status = summary.status {
-                    StatusBadge(text: model.strings.statusValueLabel(status), tone: model.strings.tone(forToken: status))
-                }
-                if let section = summary.section {
-                    StatusBadge(text: model.strings.residentValueLabel(section), tone: .neutral)
-                }
-                if let evaluationLevel = summary.evaluationLevel {
-                    StatusBadge(text: model.strings.evaluationLevelLabel(evaluationLevel), tone: .caution)
+                    detailSummary(summary)
                 }
             }
-            detailSummary(summary)
         }
     }
 
@@ -386,6 +336,20 @@ struct QueueAndDetailView: View {
                 Text(title)
                     .font(.headline)
             }
+        }
+    }
+
+    private func bodySection<Content: View>(
+        title: String,
+        @ViewBuilder content: @escaping () -> Content
+    ) -> some View {
+        GroupBox {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(title)
+                    .font(.headline)
+                content()
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -414,30 +378,15 @@ struct QueueAndDetailView: View {
     }
 
     private var reviewCommandDeck: some View {
-        GroupBox(model.strings.text(.commandDeck)) {
+        GroupBox {
             VStack(alignment: .leading, spacing: 10) {
-                HStack(alignment: .top, spacing: 10) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(model.strings.text(.actionReadiness))
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 8) {
-                                ForEach(actionReadinessItems) { item in
-                                    StatusBadge(text: item.label, tone: item.enabled ? .positive : .neutral)
-                                }
-                            }
-                        }
+                HStack(spacing: 8) {
+                    ForEach(reviewActionItems) { item in
+                        reviewActionButton(item)
                     }
                     Spacer()
-                }
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                    ForEach(reviewActionItems) { item in
-                        Button(item.title) { item.action() }
-                            .keyboardShortcut(item.shortcut)
-                            .buttonStyle(.borderedProminent)
-                            .controlSize(.small)
-                            .disabled(!item.enabled)
+                    if let firstDisabled = actionReadinessItems.first(where: { !$0.enabled }) {
+                        StatusBadge(text: firstDisabled.label, tone: .neutral)
                     }
                 }
                 Text(actionShortcutHints.joined(separator: " · "))
@@ -449,8 +398,8 @@ struct QueueAndDetailView: View {
     }
 
     private func detailSummary(_ summary: CandidateUISummary) -> some View {
-        GroupBox(model.strings.text(.summaryCards)) {
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 180), spacing: 10)], spacing: 10) {
+        GroupBox {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 8)], spacing: 8) {
                 summaryChip(label: model.strings.fieldLabel("operation"), value: summary.operation.map(model.strings.residentValueLabel) ?? model.strings.text(.none))
                 summaryChip(label: model.strings.fieldLabel("rde"), value: summary.rdeClass.map(model.strings.residentValueLabel) ?? model.strings.text(.none))
                 if let sourceType = summary.sourceType {
@@ -464,14 +413,85 @@ struct QueueAndDetailView: View {
         }
     }
 
+    @ViewBuilder
+    private var lowerPanelSection: some View {
+        if model.diffState != nil || model.lineageState != nil {
+            GroupBox {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 10) {
+                        Button {
+                            selectedLowerPanel = .diff
+                            withAnimation(.easeInOut(duration: 0.16)) { showsLowerPanel = true }
+                        } label: {
+                            lowerPanelTabLabel(model.strings.text(.diff), selected: selectedLowerPanel == .diff && showsLowerPanel)
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(model.diffState == nil)
+
+                        Button {
+                            selectedLowerPanel = .lineage
+                            withAnimation(.easeInOut(duration: 0.16)) { showsLowerPanel = true }
+                        } label: {
+                            lowerPanelTabLabel(model.strings.text(.lineage), selected: selectedLowerPanel == .lineage && showsLowerPanel)
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(model.lineageState == nil)
+
+                        Spacer()
+
+                        Button(showsLowerPanel ? "▾ 閉じる" : "▸ タップで展開") {
+                            withAnimation(.easeInOut(duration: 0.16)) {
+                                showsLowerPanel.toggle()
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    }
+
+                    if showsLowerPanel {
+                        if selectedLowerPanel == .diff, let diff = model.diffState {
+                            DiffSection(strings: model.strings, diff: diff)
+                        } else if selectedLowerPanel == .lineage, let lineage = model.lineageState {
+                            LineageSection(strings: model.strings, lineage: lineage)
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
+    private func lowerPanelTabLabel(_ title: String, selected: Bool) -> some View {
+        Text(title)
+            .font(.subheadline.weight(selected ? .bold : .semibold))
+            .foregroundStyle(selected ? .primary : .secondary)
+            .padding(.vertical, 4)
+            .overlay(alignment: .bottom) {
+                Rectangle()
+                    .fill(selected ? Color.primary : Color.clear)
+                    .frame(height: 2)
+            }
+    }
+
+    private func detailHeaderSummaryText(_ summary: CandidateUISummary) -> String {
+        [
+            summary.status.map(model.strings.statusValueLabel),
+            summary.section.map(model.strings.residentValueLabel),
+            summary.sourceType.map(model.strings.residentValueLabel),
+        ]
+        .compactMap { $0 }
+        .joined(separator: " · ")
+    }
+
     private func summaryChip(label: String, value: String) -> some View {
         SurfaceCard(emphasis: 0.18) {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(label)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Text(value)
-                    .font(.subheadline)
+                    .font(.caption)
             }
         }
     }
@@ -642,6 +662,18 @@ struct QueueAndDetailView: View {
         enabled ? model.strings.text(.enabled) : model.strings.text(.disabled)
     }
 
+    private func reviewActionButton(_ item: ReviewActionItem) -> some View {
+        let button = Button(item.title) { item.action() }
+            .keyboardShortcut(item.shortcut)
+            .controlSize(.small)
+            .disabled(!item.enabled)
+
+        if item.id == "approve" {
+            return AnyView(button.buttonStyle(.bordered))
+        }
+        return AnyView(button.buttonStyle(.borderedProminent))
+    }
+
     private func candidateAccessibilityLabel(_ item: CandidateItem) -> String {
         [
             item.id,
@@ -654,30 +686,41 @@ struct QueueAndDetailView: View {
         .joined(separator: " ")
     }
 
-    @ViewBuilder
-    private func quickFilterChipGroup(
-        title: String,
-        items: [String],
-        selection: String,
-        label: @escaping (String) -> String,
-        action: @escaping (String) -> Void
-    ) -> some View {
-        if !items.isEmpty {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(title).bold()
-                FlowLayout(items, id: \.self, spacing: 6) { item in
-                    Button {
-                        action(item)
-                    } label: {
-                        StatusBadge(
-                            text: label(item),
-                            tone: selection == item ? .caution : .neutral
-                        )
-                    }
-                    .buttonStyle(.plain)
-                }
+    private struct QuickFilterItem: Identifiable {
+        let id: String
+        let label: String
+        let selected: Bool
+        let action: () -> Void
+    }
+
+    private var quickFilterItems: [QuickFilterItem] {
+        var items: [QuickFilterItem] = []
+        if let statusCounts = model.queueState?.statusCounts {
+            for key in statusCounts.keys.sorted() {
+                items.append(
+                    QuickFilterItem(
+                        id: "status-\(key)",
+                        label: "\(model.strings.statusValueLabel(key)) (\(statusCounts[key] ?? 0))",
+                        selected: selectedStatusFilter == key,
+                        action: { toggleStatusFilter(key) }
+                    )
+                )
             }
         }
+        if let topSections = model.queueState?.topSections {
+            for section in topSections.map(\.section) {
+                let count = topSections.first(where: { $0.section == section })?.count ?? 0
+                items.append(
+                    QuickFilterItem(
+                        id: "section-\(section)",
+                        label: "\(model.strings.residentValueLabel(section)) (\(count))",
+                        selected: selectedSectionFilter == section,
+                        action: { toggleSectionFilter(section) }
+                    )
+                )
+            }
+        }
+        return items
     }
 }
 

@@ -2,6 +2,29 @@ import AppKit
 import SwiftUI
 
 @MainActor
+enum WindowSizing {
+    static func fitAllWindows() {
+        for window in NSApp.windows {
+            fit(window)
+        }
+    }
+
+    static func fit(_ window: NSWindow) {
+        guard let contentView = window.contentView else { return }
+        contentView.layoutSubtreeIfNeeded()
+        let fitting = contentView.fittingSize
+        guard fitting.width > 0, fitting.height > 0 else { return }
+        window.minSize = NSSize(width: 1080, height: 160)
+        window.setContentSize(
+            NSSize(
+                width: max(1080, fitting.width),
+                height: max(160, fitting.height)
+            )
+        )
+    }
+}
+
+@MainActor
 final class SayaneAppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         activateAppWindow(attemptsRemaining: 8)
@@ -14,6 +37,7 @@ final class SayaneAppDelegate: NSObject, NSApplicationDelegate {
         for window in NSApp.windows {
             window.deminiaturize(nil)
             window.orderFrontRegardless()
+            WindowSizing.fit(window)
         }
         NSApp.windows.first?.makeKeyAndOrderFront(nil)
         guard attemptsRemaining > 0, NSApp.windows.first == nil else {
@@ -33,7 +57,7 @@ struct SayaneApp: App {
     var body: some Scene {
         WindowGroup {
             RootView(model: model)
-                .frame(minWidth: 1080, minHeight: 720)
+                .frame(minWidth: 1080)
         }
         .windowResizability(.contentSize)
     }

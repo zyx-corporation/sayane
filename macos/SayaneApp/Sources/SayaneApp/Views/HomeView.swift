@@ -3,24 +3,25 @@ import SwiftUI
 struct HomeView: View {
     @ObservedObject var model: AppModel
     @State private var showsDiagnosticsSheet = false
+    @State private var showsStatusDetails = false
+    private let launcherCardHeight: CGFloat = 126
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                header
-                BridgeStatusPanel(model: model, compact: true)
-                launcherSection
+        VStack(alignment: .leading, spacing: 14) {
+            header
+            homeStatusLauncherBar
+            launcherSection
+            VStack(alignment: .leading, spacing: 12) {
+                minimalLinksRow
                 if showsBridgeDiagnostics {
                     diagnosticsPromptCard
                 }
-                cardsSection
-                vaultSection
-                reviewSection
-                daemonSection
-                quickLinksSection
             }
-            .padding(24)
+            Spacer(minLength: 0)
         }
+        .padding(18)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Color(NSColor.underPageBackgroundColor))
         .navigationTitle(model.strings.text(.home))
         .sheet(isPresented: $showsDiagnosticsSheet) {
             DiagnosticsSheetView(model: model)
@@ -29,132 +30,213 @@ struct HomeView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(model.strings.text(.appTitle)).font(.largeTitle).bold()
+            HStack(alignment: .center, spacing: 10) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(model.strings.text(.appTitle))
+                        .font(.title2)
+                        .bold()
                     Text(model.homeBridgeSummaryText)
+                        .font(.caption)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button(model.strings.text(.captureClipboard)) {
-                    Task { await model.captureClipboard() }
+            }
+        }
+    }
+
+    private var homeStatusLauncherBar: some View {
+        SurfaceCard(emphasis: 0.22) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 6) {
+                    statusChip(
+                        title: model.strings.text(.backend),
+                        value: model.bridgeStatusText,
+                        tone: model.bridgeStatusTone
+                    )
+                    statusChip(
+                        title: "Vault",
+                        value: vaultStatusText,
+                        tone: vaultStatusTone
+                    )
+                    statusChip(
+                        title: "Queue",
+                        value: queueCountText,
+                        tone: queueCountTone
+                    )
+                    Spacer()
+                    Button(showsStatusDetails ? "閉じる" : "詳細 ›") {
+                        withAnimation(.easeInOut(duration: 0.16)) {
+                            showsStatusDetails.toggle()
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.secondary)
                 }
-                .buttonStyle(.borderedProminent)
+
+                if showsStatusDetails {
+                    VStack(alignment: .leading, spacing: 6) {
+                        statusDetailRow(
+                            title: model.strings.text(.backend),
+                            summary: model.bridgeStatusDetail,
+                            tone: model.bridgeStatusTone
+                        )
+                        statusDetailRow(
+                            title: "Vault",
+                            summary: vaultStatusDetailText,
+                            tone: vaultStatusTone
+                        )
+                        statusDetailRow(
+                            title: "Queue",
+                            summary: queueStatusDetailText,
+                            tone: queueCountTone
+                        )
+                    }
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
             }
         }
     }
 
     private var launcherSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            SectionTitle(text: model.strings.text(.startHere))
-            if priorityItems.isEmpty,
-               model.homeState?.topReviewItems.first == nil,
-               model.homeState?.topDaemonActions.first == nil
-            {
-                StateCardView(
-                    icon: "sparkles",
-                    title: model.strings.text(.startHere),
-                    message: model.homePriorityEmptyMessage,
-                    tone: .neutral,
-                    badgeText: model.homePriorityEmptyBadgeText,
-                    actionTitle: model.toolbarRefreshText,
-                    actionEnabled: !model.bridgeRecoveryActionDisabled,
-                    action: { Task { await model.refreshCurrentScreen() } }
+        HStack(alignment: .top, spacing: 10) {
+            reviewLauncherCard
+                .frame(maxWidth: .infinity, minHeight: launcherCardHeight, maxHeight: launcherCardHeight, alignment: .topLeading)
+            daemonLauncherCard
+                .frame(maxWidth: .infinity, minHeight: launcherCardHeight, maxHeight: launcherCardHeight, alignment: .topLeading)
+        }
+    }
+
+    private var reviewLauncherCard: some View {
+        Group {
+            if let review = model.homeState?.topReviewItems.first {
+                launcherCard(
+                    eyebrow: "次のレビュー対象",
+                    badgeText: reviewPriorityBadge(review),
+                    badgeTone: reviewPriorityTone(review),
+                    title: "\(review.candidateId) / \(homeReviewItemSummary(review))",
+                    summary: reviewCardSummary(review),
+                    primaryTitle: model.strings.text(.reviewNextCandidate),
+                    primaryTone: .positive,
+                    primaryAction: { model.openCandidate(review.candidateId) },
+                    secondaryTitle: "スキップ",
+                    secondaryAction: nil
                 )
             } else {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 260), spacing: 12)], spacing: 12) {
-                    ForEach(Array(priorityItems.prefix(2).enumerated()), id: \.offset) { _, item in
-                        Button(action: item.action) {
-                            SurfaceCard(emphasis: 0.38) {
-                                HStack(alignment: .top, spacing: 12) {
-                                    StatusBadge(text: item.badge, tone: item.tone)
-                                    CardTitleSummary(title: item.title, summary: item.summary)
-                                    Spacer()
-                                    Image(systemName: "arrow.right.circle.fill")
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("\(item.badge) \(item.title) \(item.summary)")
-                    }
-
-                    if let review = model.homeState?.topReviewItems.first {
-                        Button {
-                            model.openCandidate(review.candidateId)
-                        } label: {
-                            SurfaceCard(emphasis: 0.28) {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    HStack(alignment: .top, spacing: 8) {
-                                        CardTitleSummary(
-                                            title: model.strings.text(.reviewNextCandidate),
-                                            summary: homeReviewItemSummary(review)
-                                        )
-                                        Spacer()
-                                        if let status = review.status {
-                                            StatusBadge(
-                                                text: model.strings.statusValueLabel(status),
-                                                tone: model.strings.tone(forToken: status)
-                                            )
-                                        }
-                                    }
-                                    Text(review.candidateId)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("\(model.strings.text(.reviewNextCandidate)) \(review.candidateId) \(homeReviewItemSummary(review))")
-                    }
-
-                    if let action = model.homeState?.topDaemonActions.first {
-                        Button {
-                            model.choose(screen: .daemon)
-                        } label: {
-                            SurfaceCard(emphasis: 0.24) {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    HStack {
-                                        StatusBadge(
-                                            text: homeDaemonActionTitle(action),
-                                            tone: homeDaemonActionTone(action)
-                                        )
-                                        Spacer()
-                                    }
-                                    Text(homeDaemonActionSummary(action))
-                                        .font(.subheadline)
-                                        .foregroundStyle(.secondary)
-                                    CommandRowView(command: action, lineLimit: 2)
-                                }
-                            }
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("\(homeDaemonActionTitle(action)) \(homeDaemonActionSummary(action))")
-                    }
-                }
+                launcherCard(
+                    eyebrow: "次のレビュー対象",
+                    badgeText: model.homePriorityEmptyBadgeText,
+                    badgeTone: .neutral,
+                    title: model.strings.text(.reviewNextCandidate),
+                    summary: model.homePriorityEmptyMessage,
+                    primaryTitle: model.toolbarRefreshText,
+                    primaryTone: .neutral,
+                    primaryAction: { Task { await model.refreshCurrentScreen() } },
+                    secondaryTitle: nil,
+                    secondaryAction: nil
+                )
             }
         }
     }
 
-    private var cardsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            SectionTitle(text: model.strings.text(.summaryCards))
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 180))], spacing: 12) {
-                ForEach(summaryCardPreviewItems) { card in
-                    SurfaceCard(emphasis: 0.4) {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(model.strings.summaryCardLabel(card.key)).font(.caption).foregroundStyle(.secondary)
-                            SummaryCardValueView(strings: model.strings, card: card)
-                        }
+    private var daemonLauncherCard: some View {
+        Group {
+            if let action = effectiveHomeDaemonAction {
+                launcherCard(
+                    eyebrow: "次のバックエンドアクション",
+                    badgeText: homeDaemonActionTitle(action),
+                    badgeTone: homeDaemonActionTone(action),
+                    title: model.currentGateText ?? model.bridgeStatusHeadline,
+                    summary: homeDaemonActionSummary(action),
+                    primaryTitle: model.bridgeSuggestedActionText,
+                    primaryTone: .caution,
+                    primaryAction: { Task { await model.performBridgeSuggestedAction() } },
+                    secondaryTitle: model.strings.text(.daemon),
+                    secondaryAction: { model.choose(screen: .daemon) }
+                )
+            } else {
+                launcherCard(
+                    eyebrow: "次のバックエンドアクション",
+                    badgeText: model.bridgeStatusText,
+                    badgeTone: model.bridgeStatusTone,
+                    title: model.currentGateText ?? model.bridgeStatusHeadline,
+                    summary: model.strings.text(.noDaemonActions),
+                    primaryTitle: model.strings.text(.daemon),
+                    primaryTone: .neutral,
+                    primaryAction: { model.choose(screen: .daemon) },
+                    secondaryTitle: nil,
+                    secondaryAction: nil
+                )
+            }
+        }
+    }
+
+    private func launcherCard(
+        eyebrow: String,
+        badgeText: String,
+        badgeTone: StatusTone,
+        title: String,
+        summary: String,
+        primaryTitle: String,
+        primaryTone: StatusTone,
+        primaryAction: @escaping () -> Void,
+        secondaryTitle: String?,
+        secondaryAction: (() -> Void)?
+    ) -> some View {
+        SurfaceCard(emphasis: 0.28) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(eyebrow)
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(.secondary)
+                HStack(alignment: .top, spacing: 8) {
+                    StatusBadge(text: badgeText, tone: badgeTone)
+                    Text(title)
+                        .font(.subheadline.weight(.semibold))
+                    Spacer()
+                }
+                Text(summary)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                HStack(spacing: 8) {
+                    Button(primaryTitle, action: primaryAction)
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.small)
+                        .disabled(model.bridgeRecoveryActionDisabled && primaryTitle != model.strings.text(.reviewNextCandidate))
+                    if let secondaryTitle, let secondaryAction {
+                        Button(secondaryTitle, action: secondaryAction)
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                    } else if let secondaryTitle {
+                        Text(secondaryTitle)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
                     }
                 }
             }
-            if summaryCardOverflowCount > 0 {
-                Text(model.strings.moreItemsMessage(summaryCardOverflowCount))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
+            .frame(maxWidth: .infinity, alignment: .topLeading)
         }
+    }
+
+    private var minimalLinksRow: some View {
+        HStack(spacing: 12) {
+            Button(model.strings.text(.queue)) {
+                model.choose(screen: .queue)
+            }
+            .buttonStyle(.plain)
+            Button(model.strings.text(.daemon)) {
+                model.choose(screen: .daemon)
+            }
+            .buttonStyle(.plain)
+            Spacer()
+            Button(model.strings.text(.troubleshooting)) {
+                showsDiagnosticsSheet = true
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+        }
+        .font(.caption.weight(.semibold))
+        .padding(.top, 2)
     }
 
     private var diagnosticsPromptCard: some View {
@@ -168,289 +250,104 @@ struct HomeView: View {
             action: { showsDiagnosticsSheet = true }
         )
     }
-
-    private var reviewSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            SectionTitle(text: model.strings.text(.topReviewItems))
-            if (model.homeState?.topReviewItems ?? []).isEmpty {
-                StateCardView(
-                    icon: "tray",
-                    title: model.strings.text(.topReviewItems),
-                    message: model.strings.text(.noReviewItems),
-                    tone: .neutral,
-                    actionTitle: model.toolbarRefreshText,
-                    actionEnabled: !model.bridgeRecoveryActionDisabled,
-                    action: { Task { await model.refreshCurrentScreen() } }
-                )
-            } else {
-                ForEach(reviewPreviewItems) { item in
-                    Button {
-                        model.openCandidate(item.candidateId)
-                    } label: {
-                        SurfaceCard {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(item.candidateId).font(.headline)
-                                Text(homeReviewItemSummary(item))
-                                    .foregroundStyle(.secondary)
-                                if let status = item.status {
-                                    StatusBadge(
-                                        text: model.strings.statusValueLabel(status),
-                                        tone: model.strings.tone(forToken: status)
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("\(item.candidateId) \(homeReviewItemSummary(item))")
-                }
-                if reviewOverflowCount > 0 {
-                    Text(model.strings.moreItemsMessage(reviewOverflowCount))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+    private func statusChip(title: String, value: String, tone: StatusTone) -> some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(tone.foregroundStyle)
+                .frame(width: 7, height: 7)
+            Text(title)
+                .font(.caption2.weight(.semibold))
+            if !value.isEmpty {
+                Text(value)
+                    .font(.caption2.weight(.semibold))
             }
         }
+        .foregroundStyle(.primary)
+        .padding(.horizontal, 7)
+        .padding(.vertical, 5)
+        .background(Color(NSColor.windowBackgroundColor))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color.secondary.opacity(0.15), lineWidth: 1)
+        )
     }
 
-    private var quickLinksSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            SectionTitle(text: model.strings.text(.quickLinks))
-            if (model.homeState?.quickLinks ?? []).isEmpty {
-                StateCardView(
-                    icon: "link",
-                    title: model.strings.text(.quickLinks),
-                    message: model.strings.text(.noQuickLinks),
-                    tone: .neutral,
-                    actionTitle: model.toolbarRefreshText,
-                    actionEnabled: !model.bridgeRecoveryActionDisabled,
-                    action: { Task { await model.refreshCurrentScreen() } }
-                )
-            } else {
-                ForEach(quickLinkPreviewItems) { link in
-                    Button {
-                        model.openQuickLink(link)
-                    } label: {
-                        SurfaceCard {
-                            HStack {
-                                CardTitleSummary(
-                                    title: model.strings.quickLinkLabel(screen: link.screen),
-                                    summary: quickLinkSummary(link)
-                                )
-                                Spacer()
-                                Image(systemName: "arrow.right.circle.fill")
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(model.strings.quickLinkLabel(screen: link.screen))
-                }
-                if quickLinkOverflowCount > 0 {
-                    Text(model.strings.moreItemsMessage(quickLinkOverflowCount))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+    private func statusDetailRow(title: String, summary: String, tone: StatusTone) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Circle()
+                .fill(tone.foregroundStyle)
+                .frame(width: 8, height: 8)
+                .padding(.top, 4)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.caption2.weight(.semibold))
+                Text(summary)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var vaultSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            SectionTitle(text: model.strings.text(.localVault))
-            if let summary = model.homeState?.vaultSummary {
-                SurfaceCard {
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack {
-                            StatusBadge(
-                                text: model.strings.summaryValueLabel(key: "vault_status", value: summary.status ?? "unavailable"),
-                                tone: model.strings.tone(forToken: summary.status ?? "unavailable")
-                            )
-                            Spacer()
-                            if let assurance = summary.assurance, !assurance.isEmpty {
-                                StatusBadge(
-                                    text: model.strings.summaryValueLabel(key: "vault_assurance", value: assurance),
-                                    tone: model.strings.tone(forToken: assurance)
-                                )
-                            }
-                        }
-                        if let backend = summary.backend, !backend.isEmpty {
-                            DetailLabelValueRow(
-                                label: model.strings.text(.backend),
-                                value: model.strings.summaryValueLabel(key: "vault_backend", value: backend)
-                            )
-                        }
-                        if let path = summary.vaultPath, !path.isEmpty {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(model.strings.text(.vaultPath))
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(.secondary)
-                                SelectableMonospaceText(text: path)
-                            }
-                        }
-                        if let supports = summary.supportsScopedUnlockSessions {
-                            DetailLabelValueRow(
-                                label: model.strings.text(.vaultSessions),
-                                value: supports ? model.strings.text(.supported) : model.strings.text(.notSupported)
-                            )
-                        }
-                        if let sessionStatus = summary.sessionStatus {
-                            DetailLabelValueRow(
-                                label: model.strings.text(.activeSessions),
-                                value: "\(sessionStatus.activeSessionCount)"
-                            )
-                            if !sessionStatus.activeSessions.isEmpty {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    ForEach(sessionStatus.activeSessions.prefix(2)) { session in
-                                        SurfaceCard(emphasis: 0.18) {
-                                            VStack(alignment: .leading, spacing: 6) {
-                                                HStack {
-                                                    if let level = session.level {
-                                                        StatusBadge(
-                                                            text: model.strings.tokenLabel(level),
-                                                            tone: model.strings.tone(forToken: level)
-                                                        )
-                                                    }
-                                                    if let assurance = session.assurance {
-                                                        StatusBadge(
-                                                            text: model.strings.tokenLabel(assurance),
-                                                            tone: model.strings.tone(forToken: assurance)
-                                                        )
-                                                    }
-                                                }
-                                                if let purpose = session.purpose, !purpose.isEmpty {
-                                                    DetailLabelValueRow(
-                                                        label: model.strings.text(.sessionPurpose),
-                                                        value: purpose
-                                                    )
-                                                }
-                                                if let expiresAt = session.expiresAt, !expiresAt.isEmpty {
-                                                    DetailLabelValueRow(
-                                                        label: model.strings.text(.expiresAt),
-                                                        value: expiresAt
-                                                    )
-                                                }
-                                                if let idleExpiresAt = session.idleExpiresAt, !idleExpiresAt.isEmpty {
-                                                    DetailLabelValueRow(
-                                                        label: model.strings.text(.idleExpiresAt),
-                                                        value: idleExpiresAt
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            if !sessionStatus.availableLevels.isEmpty {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    HStack(spacing: 8) {
-                                        Button(model.strings.text(.unlockNormal)) {
-                                            Task { await model.openVaultSession(level: "normal") }
-                                        }
-                                        .buttonStyle(.bordered)
-                                        Button(model.strings.text(.unlockSensitive)) {
-                                            Task { await model.openVaultSession(level: "sensitive") }
-                                        }
-                                        .buttonStyle(.bordered)
-                                        Button(model.strings.text(.unlockDeepPrivate)) {
-                                            Task { await model.openVaultSession(level: "deep_private") }
-                                        }
-                                        .buttonStyle(.bordered)
-                                    }
-                                    Button(model.strings.text(.lockAll)) {
-                                        Task { await model.lockAllVaultSessions() }
-                                    }
-                                    .buttonStyle(.bordered)
-                                }
-                            }
-                        }
-                        if !summary.unlockPolicies.isEmpty {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text(model.strings.text(.unlockPolicies))
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(.secondary)
-                                ForEach(summary.unlockPolicies.prefix(2)) { policy in
-                                    Text("\(model.strings.tokenLabel(policy.level)) · idle \(policy.idleTimeoutSeconds)s / ttl \(policy.absoluteTimeoutSeconds)s")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                        }
-                        if let setup = summary.recommendedSetup, !setup.isEmpty {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text(model.strings.text(.recommendedSetup))
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(.secondary)
-                                ForEach(setup.keys.sorted(), id: \.self) { key in
-                                    if let command = setup[key] {
-                                        CommandRowView(command: command, lineLimit: 2)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            } else {
-                StateCardView(
-                    icon: "lock.shield",
-                    title: model.strings.text(.localVault),
-                    message: model.strings.text(.vaultUnavailable),
-                    tone: .neutral,
-                    actionTitle: model.toolbarRefreshText,
-                    actionEnabled: !model.bridgeRecoveryActionDisabled,
-                    action: { Task { await model.refreshCurrentScreen() } }
-                )
-            }
-        }
+    private func reviewPriorityBadge(_ item: TopReviewItem) -> String {
+        item.requiresReview == true
+            ? model.strings.text(.recommended)
+            : (item.status.map(model.strings.statusValueLabel) ?? model.strings.text(.topReviewItems))
     }
 
-    private var daemonSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            SectionTitle(text: model.strings.text(.topDaemonActions))
-            if (model.homeState?.topDaemonActions ?? []).isEmpty {
-                StateCardView(
-                    icon: "bolt.slash",
-                    title: model.strings.text(.topDaemonActions),
-                    message: model.strings.text(.noDaemonActions),
-                    tone: .neutral,
-                    actionTitle: model.strings.text(.daemon),
-                    action: { model.choose(screen: .daemon) }
-                )
-            } else {
-                ForEach(daemonActionPreviewItems, id: \.self) { action in
-                    Button {
-                        model.choose(screen: .daemon)
-                    } label: {
-                        SurfaceCard {
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack {
-                                    StatusBadge(
-                                        text: homeDaemonActionTitle(action),
-                                        tone: homeDaemonActionTone(action)
-                                    )
-                                    Spacer()
-                                }
-                                Text(homeDaemonActionSummary(action))
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(model.strings.text(.nextCommand))
-                                        .font(.caption.weight(.semibold))
-                                    CommandRowView(command: action, lineLimit: 2)
-                                }
-                            }
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("\(homeDaemonActionTitle(action)) \(homeDaemonActionSummary(action))")
-                }
-                if daemonActionOverflowCount > 0 {
-                    Text(model.strings.moreItemsMessage(daemonActionOverflowCount))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
+    private func reviewPriorityTone(_ item: TopReviewItem) -> StatusTone {
+        item.status.map(model.strings.tone(forToken:)) ?? .caution
+    }
+
+    private func reviewCardSummary(_ item: TopReviewItem) -> String {
+        item.displaySummary
+            ?? item.proposalSection.map(model.strings.residentValueLabel)
+            ?? model.strings.text(.none)
+    }
+
+    private func homeReviewItemSummary(_ item: TopReviewItem) -> String {
+        item.displaySummary
+            ?? item.proposalSection.map(model.strings.residentValueLabel)
+            ?? item.status.map(model.strings.statusValueLabel)
+            ?? model.strings.text(.none)
+    }
+
+    private var queueCountText: String {
+        let count = model.queueState?.reviewableCount ?? model.homeState?.topReviewItems.count ?? 0
+        return "\(count)"
+    }
+
+    private var queueCountTone: StatusTone {
+        (model.queueState?.reviewableCount ?? 0) > 0 ? .caution : .positive
+    }
+
+    private var queueStatusDetailText: String {
+        let reviewable = model.queueState?.reviewableCount ?? 0
+        let total = model.queueState?.items.count ?? 0
+        return "\(total) 件中 \(reviewable) 件がレビュー待ちです"
+    }
+
+    private var vaultStatusText: String {
+        guard let summary = model.homeState?.vaultSummary else {
+            return model.strings.text(.none)
         }
+        return model.strings.summaryValueLabel(key: "vault_status", value: summary.status ?? "unavailable")
+    }
+
+    private var vaultStatusTone: StatusTone {
+        guard let status = model.homeState?.vaultSummary?.status else { return .neutral }
+        return model.strings.tone(forToken: status)
+    }
+
+    private var vaultStatusDetailText: String {
+        guard let summary = model.homeState?.vaultSummary else {
+            return model.strings.text(.vaultUnavailable)
+        }
+        if let sessionStatus = summary.sessionStatus {
+            return "\(summary.backend ?? "-") · active \(sessionStatus.activeSessionCount)"
+        }
+        return "\(summary.backend ?? "-") · \(summary.status ?? "-")"
     }
 
     private func homeDaemonActionTitle(_ action: String) -> String {
@@ -465,106 +362,13 @@ struct HomeView: View {
         model.strings.homeDaemonActionSummary(for: action)
     }
 
-    private func homeReviewItemSummary(_ item: TopReviewItem) -> String {
-        item.displaySummary
-            ?? item.proposalSection.map(model.strings.residentValueLabel)
-            ?? item.status.map(model.strings.statusValueLabel)
-            ?? model.strings.text(.none)
-    }
-
-    private func quickLinkSummary(_ link: QuickLink) -> String {
-        switch link.screen {
-        case "candidate_queue":
-            return model.strings.text(.selectCandidatePrompt)
-        case "daemon_panel":
-            return model.strings.text(.reviewDaemonAction)
-        default:
-            return "\(model.strings.text(.screenOverview)): \(link.path)"
-        }
+    private var effectiveHomeDaemonAction: String? {
+        model.nextDaemonCommandText ?? model.homeState?.topDaemonActions.first
     }
 
     private var showsBridgeDiagnostics: Bool {
         if model.errorMessage != nil { return true }
         guard let status = model.health?.status.lowercased() else { return true }
         return status != "ok" && status != "healthy"
-    }
-
-    private var reviewPreviewItems: [TopReviewItem] {
-        Array((model.homeState?.topReviewItems ?? []).prefix(2))
-    }
-
-    private var summaryCardPreviewItems: [SummaryCard] {
-        Array((model.homeState?.summaryCards ?? []).prefix(4))
-    }
-
-    private var summaryCardOverflowCount: Int {
-        max((model.homeState?.summaryCards.count ?? 0) - summaryCardPreviewItems.count, 0)
-    }
-
-    private var reviewOverflowCount: Int {
-        max((model.homeState?.topReviewItems.count ?? 0) - reviewPreviewItems.count, 0)
-    }
-
-    private var quickLinkPreviewItems: [QuickLink] {
-        Array((model.homeState?.quickLinks ?? []).prefix(3))
-    }
-
-    private var quickLinkOverflowCount: Int {
-        max((model.homeState?.quickLinks.count ?? 0) - quickLinkPreviewItems.count, 0)
-    }
-
-    private var daemonActionPreviewItems: [String] {
-        Array((model.homeState?.topDaemonActions ?? []).prefix(2))
-    }
-
-    private var daemonActionOverflowCount: Int {
-        max((model.homeState?.topDaemonActions.count ?? 0) - daemonActionPreviewItems.count, 0)
-    }
-
-    private var priorityItems: [(title: String, summary: String, badge: String, tone: StatusTone, action: () -> Void)] {
-        var items: [(String, String, String, StatusTone, () -> Void)] = []
-
-        if let startupCommand = model.startupCommandText {
-            items.append((
-                model.strings.text(.supportedPath),
-                startupCommand,
-                model.strings.text(.recommended),
-                .positive,
-                { model.choose(screen: .daemon) }
-            ))
-        }
-
-        if let review = model.homeState?.topReviewItems.first {
-            items.append((
-                model.strings.text(.reviewNextCandidate),
-                homeReviewItemSummary(review),
-                model.strings.text(.topReviewItems),
-                .caution,
-                { model.openCandidate(review.candidateId) }
-            ))
-        }
-
-        if let link = model.homeState?.quickLinks.first {
-            items.append((
-                model.strings.quickLinkLabel(screen: link.screen),
-                quickLinkSummary(link),
-                model.strings.text(.quickLinks),
-                .positive,
-                { model.openQuickLink(link) }
-            ))
-        }
-
-        if model.currentGateText == nil, model.nextDaemonCommandText == nil, model.nextReadSurfaceText == nil,
-           let daemonAction = model.homeState?.topDaemonActions.first {
-            items.append((
-                model.strings.text(.reviewDaemonAction),
-                homeDaemonActionSummary(daemonAction),
-                homeDaemonActionTitle(daemonAction),
-                homeDaemonActionTone(daemonAction),
-                { model.choose(screen: .daemon) }
-            ))
-        }
-
-        return items
     }
 }

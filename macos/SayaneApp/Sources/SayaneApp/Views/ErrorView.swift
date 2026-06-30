@@ -20,7 +20,7 @@ struct ErrorView: View {
             diagnosticsPromptCard
         }
         .padding(24)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
         .sheet(isPresented: $showsDiagnosticsSheet) {
             DiagnosticsSheetView(model: model)
         }

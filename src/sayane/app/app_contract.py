@@ -184,7 +184,9 @@ def build_app_contract() -> dict[str, Any]:
             {
                 "path": "cli:sayane app daemon-systemd-user-status --json",
                 "payload_kind": "resident_daemon_systemd_user_status",
-                "purpose": "Linux systemd --user status read for explicit local service observation",
+                "purpose": (
+                    "Linux systemd --user status read for explicit local service observation"
+                ),
             },
             {
                 "path": "cli:sayane app daemon-systemd-user-daemon-reload --json",
@@ -482,14 +484,26 @@ def build_app_contract() -> dict[str, Any]:
         ],
         "html_shell_retirement_boundary": {
             "status": "documented",
-            "governing_adr": "docs/adr/0029-server-rendered-app-ui-html-remains-removable-after-maintainer-parity.md",
+            "governing_adr": (
+                "docs/adr/"
+                "0029-server-rendered-app-ui-html-remains-removable-after-"
+                "maintainer-parity.md"
+            ),
             "summary": (
                 "server-rendered `/app/ui` HTML is removable once native, CLI, and retained "
                 "maintainer/debug seams cover remaining debug, smoke, and handoff needs"
             ),
             "criteria": [
-                "routine operator startup, review, diagnostics, recovery, install, and handoff remain native-first without browser fallback",
-                "maintainer/debug reads and writes remain available through native views, CLI, or `/app/ui-state/*` and `/app/ui-action/*`",
+                (
+                    "routine operator startup, review, diagnostics, recovery, "
+                    "install, and handoff remain native-first without browser "
+                    "fallback"
+                ),
+                (
+                    "maintainer/debug reads and writes remain available "
+                    "through native views, CLI, or `/app/ui-state/*` and "
+                    "`/app/ui-action/*`"
+                ),
                 "smoke and runbook material no longer prefers HTML-page navigation",
                 "handoff and troubleshooting no longer depend on HTML rendering specifically",
             ],
@@ -633,7 +647,9 @@ def build_app_contract() -> dict[str, Any]:
             },
             {
                 "command": "sayane app daemon-systemd-user-status --json",
-                "purpose": "Linux systemd --user status read for explicit local service observation",
+                "purpose": (
+                    "Linux systemd --user status read for explicit local service observation"
+                ),
             },
             {
                 "command": "sayane app daemon-systemd-user-apply --json",

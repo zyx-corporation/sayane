@@ -28,17 +28,19 @@ def build_app_vault_status(runtime: ResidentRuntime) -> dict[str, Any]:
             "vault_path": str(default_path),
             "recommended_setup": {
                 "development": (
-                    f"SAYANE_VAULT_PASSPHRASE=... sayane vault status --development --sqlite {default_path} "
+                    "SAYANE_VAULT_PASSPHRASE=... sayane vault status "
+                    f"--development --sqlite {default_path} "
                     "--passphrase-env SAYANE_VAULT_PASSPHRASE --json"
                 ),
-                "macos": (
-                    f"sayane vault status --macos-keychain --sqlite {default_path} --json"
-                ),
+                "macos": (f"sayane vault status --macos-keychain --sqlite {default_path} --json"),
             },
             "unlock_policies": _unlock_policy_payloads(),
             "notes": [
                 "resident runtime is currently using legacy process-local storage selection",
-                "production vault default remains fail-closed until an explicit backend is selected",
+                (
+                    "production vault default remains fail-closed until an "
+                    "explicit backend is selected"
+                ),
             ],
         }
 

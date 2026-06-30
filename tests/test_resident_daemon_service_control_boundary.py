@@ -23,6 +23,8 @@ def test_daemon_service_control_boundary_exposes_allowed_control_and_deferred_se
     assert payload["service_plane"]["status"] in {
         "mvp_contract_only_non_macos",
         "mvp_macos_launchagent_preview_apply_cli_only",
+        "post_mvp_macos_launchagent_preview_apply_cli_only",
+        "post_mvp_linux_systemd_user_preview_apply_cli_only",
     }
     assert "daemon-service-install" in payload["service_plane"]["deferred_commands"]
     assert "daemon-service-update" in payload["service_plane"]["deferred_commands"]
@@ -38,7 +40,10 @@ def test_daemon_service_control_boundary_exposes_allowed_control_and_deferred_se
     assert allowed_commands[0]["app_ui_exposure"] == "next_action_only"
     assert "daemon-start --host localhost --port 39000 --json" in allowed_commands[0]["command"]
     assert payload["app_ui_policy"]["allowed_control_exposure"]
-    if payload["service_plane"]["status"] == "mvp_macos_launchagent_preview_apply_cli_only":
+    if payload["service_plane"]["status"] in {
+        "mvp_macos_launchagent_preview_apply_cli_only",
+        "post_mvp_macos_launchagent_preview_apply_cli_only",
+    }:
         assert any(
             item["command"] == "sayane app daemon-launchagent-bootstrap --json"
             for item in payload["service_plane"]["allowed_commands"]

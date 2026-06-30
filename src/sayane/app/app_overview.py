@@ -10,13 +10,13 @@ from sayane.app.daemon_service_control_boundary import build_daemon_service_cont
 from sayane.app.daemon_service_targets_status import build_daemon_service_targets_status
 from sayane.app.daemon_supervision_status import build_daemon_supervision_status
 from sayane.app.runtime import ResidentRuntime
-from sayane.app.vault_session_status import build_app_vault_session_status
-from sayane.app.vault_status import build_app_vault_status
 from sayane.app.ui import (
     build_daemon_overview_preview,
     build_mcp_preview,
     build_review_queue,
 )
+from sayane.app.vault_session_status import build_app_vault_session_status
+from sayane.app.vault_status import build_app_vault_status
 
 
 def build_app_overview(runtime: ResidentRuntime) -> dict[str, Any]:

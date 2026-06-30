@@ -6,6 +6,7 @@ Maps to docs/cli-acceptance-test.md and docs/acceptance-spec.md L1 backlog items
 from __future__ import annotations
 
 import json
+import re
 import shutil
 from pathlib import Path
 
@@ -21,6 +22,10 @@ from sayane.storage.obsidian import EXPORT_METADATA_FILENAME, EXPORT_NOTICE_FILE
 from sayane.storage.candidates import create_from_capture, load_candidate
 
 runner = CliRunner()
+
+
+def _plain(text: str) -> str:
+    return re.sub(r"\x1b\[[0-9;]*m", "", text)
 
 
 @pytest.fixture
@@ -162,7 +167,7 @@ def test_storage_export_and_commit(isolated_home: Path) -> None:
 
     export = runner.invoke(app, ["storage", "export", str(vault)])
     assert export.exit_code != 0
-    assert "--legacy-compatible" in (export.stdout + export.stderr)
+    assert "--legacy-compatible" in _plain(export.stdout + export.stderr)
 
     export = runner.invoke(app, ["storage", "export", str(vault), "--legacy-compatible"])
     assert export.exit_code == 0

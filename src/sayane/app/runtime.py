@@ -7,9 +7,9 @@ entrypoints do not construct repository backends directly.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 from enum import StrEnum
-import os
 from pathlib import Path
 from typing import Any, cast
 
@@ -231,9 +231,7 @@ def select_resident_repositories(
             repositories=cast(RepositoryBundle, vault_runtime.repositories),
             storage_boundary="sqlite_development_local_vault",
             vault_runtime=vault_runtime,
-            notes=(
-                "explicit passphrase-backed SQLite Local Vault runtime",
-            ),
+            notes=("explicit passphrase-backed SQLite Local Vault runtime",),
         )
         _repository_selection_cache[cache_key] = selection
         return selection
@@ -256,9 +254,7 @@ def select_resident_repositories(
             repositories=cast(RepositoryBundle, vault_runtime.repositories),
             storage_boundary="sqlite_macos_keychain_vault",
             vault_runtime=vault_runtime,
-            notes=(
-                "explicit macOS keychain-backed SQLite Local Vault runtime",
-            ),
+            notes=("explicit macOS keychain-backed SQLite Local Vault runtime",),
         )
         _repository_selection_cache[cache_key] = selection
         return selection
@@ -296,13 +292,19 @@ def build_resident_runtime(
         if env_mode == "test":
             resolved_backend = ResidentRepositoryBackend.SQLITE_TEST_LOCAL_VAULT
             resolved_allow_test_vault = True
-            resolved_vault_path = resolved_vault_path or (home or BridgeConfig().home) / "vault" / "test.sqlite"
+            resolved_vault_path = resolved_vault_path or (
+                (home or BridgeConfig().home) / "vault" / "test.sqlite"
+            )
         elif env_mode == "development":
             resolved_backend = ResidentRepositoryBackend.SQLITE_DEVELOPMENT_LOCAL_VAULT
-            resolved_vault_path = resolved_vault_path or (home or BridgeConfig().home) / "vault" / "main.sqlite"
+            resolved_vault_path = resolved_vault_path or (
+                (home or BridgeConfig().home) / "vault" / "main.sqlite"
+            )
         elif env_mode == "macos-keychain":
             resolved_backend = ResidentRepositoryBackend.SQLITE_MACOS_KEYCHAIN_VAULT
-            resolved_vault_path = resolved_vault_path or (home or BridgeConfig().home) / "vault" / "main.sqlite"
+            resolved_vault_path = resolved_vault_path or (
+                (home or BridgeConfig().home) / "vault" / "main.sqlite"
+            )
 
     repository_selection = select_resident_repositories(
         profile_id=profile_id,

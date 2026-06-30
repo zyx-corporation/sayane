@@ -208,6 +208,20 @@ def test_app_contract_exposes_entrypoint_and_surfaces() -> None:
     assert "POST /app/ui-action/vault-session/open" in payload["legacy_compatibility_flow"]
     assert "POST /app/ui-action/candidates/{id}/approve or /reject" in payload["legacy_compatibility_flow"]
     assert "POST /app/ui-action/session/logout" in payload["legacy_compatibility_flow"]
+    assert payload["html_shell_retirement_boundary"]["status"] == "documented"
+    assert payload["html_shell_retirement_boundary"]["governing_adr"].endswith(
+        "0029-server-rendered-app-ui-html-remains-removable-after-maintainer-parity.md"
+    )
+    assert len(payload["html_shell_retirement_boundary"]["criteria"]) == 4
+
+    roles = {
+        surface["path"]: surface["maintenance_role"]
+        for surface in payload["human_surfaces"]
+    }
+    assert roles["/app/ui"] == "removable_html_compatibility_layer"
+    assert roles["/app/ui/candidates"] == "removable_html_compatibility_layer"
+    assert roles["/app/ui-state/*"] == "maintainer_debug_transport_seam"
+    assert roles["/app/ui-action/*"] == "maintainer_debug_transport_seam"
 
 
 def test_app_contract_uses_local_shell_wording_for_cookie_backed_ui_surfaces() -> None:

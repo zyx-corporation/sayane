@@ -37,7 +37,7 @@ def test_daemon_packaging_status_text_exposes_post_app_detail_surface(
     result = runner.invoke(app, ["app", "daemon-packaging-status"])
 
     assert result.exit_code == 0
-    assert "phase_status: next_up_after_proof_phase" in result.stdout
+    assert "phase_status: mvp_supported_native_first_line" in result.stdout
     assert "current_entrypoint: sayane serve --host 127.0.0.1 --port 38741" in result.stdout
     assert "primary_operator_ui:" in result.stdout
     assert "recommended_launcher:" in result.stdout

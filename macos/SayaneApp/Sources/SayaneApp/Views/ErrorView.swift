@@ -9,6 +9,7 @@ struct ErrorView: View {
     @ObservedObject var model: AppModel
     let message: String
     @State private var showsRawError = false
+    @State private var showsDiagnosticsSheet = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -16,10 +17,13 @@ struct ErrorView: View {
             issueSummaryCard
             compactRecoveryCard
             rawErrorDisclosure
-            BridgeDiagnosticsCard(model: model, compact: true)
+            diagnosticsPromptCard
         }
         .padding(24)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .sheet(isPresented: $showsDiagnosticsSheet) {
+            DiagnosticsSheetView(model: model)
+        }
     }
 
     @ViewBuilder
@@ -45,13 +49,6 @@ struct ErrorView: View {
                             .foregroundStyle(.secondary)
                         CommandRowView(command: startupCommand, lineLimit: 2)
                         StartupShortcutButtons(model: model, command: startupCommand)
-                    }
-                }
-                if model.daemonState?.operatorPhaseDetails.currentSupportedOperatorPath.bootstrapUI != nil {
-                    DebugCompatibilityDisclosure(model: model) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            DebugShellShortcutButtons(model: model)
-                        }
                     }
                 }
                 if let currentGate = model.currentGateText {
@@ -112,6 +109,18 @@ struct ErrorView: View {
                 )
                 .font(.caption.weight(.semibold))
             }
+        )
+    }
+
+    private var diagnosticsPromptCard: some View {
+        StateCardView(
+            icon: "stethoscope",
+            title: model.strings.text(.connectionDiagnostics),
+            message: model.bridgeStatusDetail,
+            tone: model.bridgeStatusTone,
+            badgeText: model.bridgeStatusText,
+            actionTitle: model.strings.text(.troubleshooting),
+            action: { showsDiagnosticsSheet = true }
         )
     }
 

@@ -1,3 +1,4 @@
+import re
 import subprocess
 from pathlib import Path
 
@@ -5,6 +6,10 @@ from typer.testing import CliRunner
 
 from sayane.cli.main import app
 from sayane.storage.git_integration import commit_profile_store, is_git_repo
+
+
+def _plain(text: str) -> str:
+    return re.sub(r"\x1b\[[0-9;]*m", "", text)
 
 
 def test_git_commit_profile_store(tmp_path: Path) -> None:
@@ -62,7 +67,7 @@ def test_storage_commit_requires_legacy_confirmation(tmp_path: Path, monkeypatch
 
     result = runner.invoke(app, ["storage", "commit", "-m", "test commit", "--init"])
     assert result.exit_code != 0
-    assert "--legacy-compatible" in (result.stdout + result.stderr)
+    assert "--legacy-compatible" in _plain(result.stdout + result.stderr)
 
 
 def test_storage_commit_with_legacy_confirmation_can_init_repo(tmp_path: Path, monkeypatch) -> None:

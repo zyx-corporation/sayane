@@ -8,13 +8,26 @@ This directory contains release notes, release closures, and release-prep docume
 - [v1.0.75 macOS Local Distribution Prep Release Note](v1.0.75-macos-local-distribution-prep-release-note.md) — current local macOS bundle/install/verify/release-prep workflow before signing credentials are introduced
 - [v1.0.76 curl+bash Operator Quickstart](v1.0.76-curl-bash-operator-quickstart.md) — shortest supported operator path: curl+bash first, native macOS app only when needed
 - [v1.0.77 curl+bash Installer Source and Smoke Release Note](v1.0.77-curl-bash-installer-source-and-smoke-release-note.md) — PyPI-first installer auto-mode plus a local smoke check for the same primary path
+- [v1.0.78 macOS Release Zip Install Release Note](v1.0.78-macos-release-zip-install-release-note.md) — adds a no-checkout native macOS app install/update path from release zip assets
+- [v1.0.79 Native Debug Compatibility Disclosure Retirement Release Note](v1.0.79-native-debug-compatibility-disclosure-retirement-release-note.md) — keeps `/app/ui*` debug-only while removing routine browser-opening actions from the native flow
+- [v1.0.80 Native Handoff Debug Surface Gating Release Note](v1.0.80-native-handoff-debug-surface-gating-release-note.md) — omits the debug compatibility URL from routine native handoff/export output unless explicit diagnostics need it
+- [v1.0.81 Debug Compatibility Manual-Open Default Release Note](v1.0.81-debug-compatibility-manual-open-default-release-note.md) — makes the retained `/app/ui*` compatibility shell manual-open by default and removes Chrome-first wording from current operator docs
+- [v1.0.82 UI State Debug Seam Governance Release Note](v1.0.82-ui-state-debug-seam-governance-release-note.md) — fixes `/app/ui-state/*` and `/app/ui-action/*` as maintainer-only debug seams while native macOS stays on bearer-backed `/app/*`
+- [v1.0.83 App UI HTML Retirement Criteria Release Note](v1.0.83-app-ui-html-retirement-criteria-release-note.md) — fixes the server-rendered `/app/ui` HTML layer as removable once native, CLI, and debug-seam parity no longer depend on HTML rendering
+- [v1.0.84 Routine macOS Smoke Separates Debug Shell Release Note](v1.0.84-routine-macos-smoke-separates-debug-shell-release-note.md) — routine macOS smoke now centers on API plus native app checks while HTML/UI-session validation stays explicit maintainer/debug work
+- [v1.0.85 Compatibility Shell Maintainer Wording Release Note](v1.0.85-compatibility-shell-maintainer-wording-release-note.md) — launcher summaries and remaining active docs now describe `/app/ui*` as maintainer/debug-only material more consistently
+- [v1.0.86 Active Docs Maintainer/Debug Wording Alignment Release Note](v1.0.86-active-docs-maintainer-debug-wording-alignment-release-note.md) — active operator docs now use the same maintainer/debug wording for the retained browser compatibility shell
+- [v1.0.87 Historical Docs Maintainer/Debug Wording Alignment Release Note](v1.0.87-historical-docs-maintainer-debug-wording-alignment-release-note.md) — historical release and handoff docs now use the same maintainer/debug wording more consistently
 - [v1.0.78 Terminal-First Bridge Launch Release Note](v1.0.78-terminal-first-bridge-launch-release-note.md) — macOS launchers now prefer visible Terminal-backed Bridge startup and reuse healthy Bridge processes
 - [v1.0.13 Resident Daemon Preflight Schema Preview](v1.0.13-resident-daemon-preflight-schema-preview.md) — published release note
 - [v1.0.13 Release Prep Checklist](v1.0.13-release-prep-checklist.md) — operator checklist
 - [v1.0.13 Release Prep Issue Body](v1.0.13-release-prep-issue-body.md) — short reusable issue text
 - [v1.0.13 Operator Handoff Note](v1.0.13-operator-handoff-note.md) — ready-to-use operator handoff
 
-## Current app-facing handoff line
+## Historical app-facing handoff line
+
+These documents remain useful as implementation history and boundary evidence.
+They do not override the current native-first macOS operator flow.
 
 - [v1.0.14 Resident App Surface Handoff](v1.0.14-resident-app-surface-handoff.md) — UI implementation handoff for current resident app surfaces
 - [v1.0.14 Resident App Surface Closure](v1.0.14-resident-app-surface-closure.md) — phase closeout for current resident app-facing integration slice
@@ -31,6 +44,8 @@ This directory contains release notes, release closures, and release-prep docume
 
 - [ADR 0010 Resident App First Real UI Uses a Bridge-Hosted Local Web App Shell](../adr/0010-resident-app-first-real-ui-container.md) — accepted container decision for Issue 1 / the first real resident app UI shell
 - [ADR 0014 `/app/ui` Becomes a Debug-Only Compatibility Surface](../adr/0014-app-ui-debug-only-compatibility-surface.md) — accepted decision that native macOS is the primary operator UI while `/app/ui` remains a debug / smoke / fallback / handoff path
+- [ADR 0028 `/app/ui-state/*` and `/app/ui-action/*` Remain Maintainer-Only Debug Seams on macOS](../adr/0028-ui-state-ui-action-remain-maintainer-debug-seams-on-macos.md) — accepted decision that cookie-backed local shell JSON routes remain bounded maintainer/debug transport rather than operator-facing app integration
+- [ADR 0029 Server-Rendered `/app/ui` HTML Remains Removable After Maintainer Parity](../adr/0029-server-rendered-app-ui-html-remains-removable-after-maintainer-parity.md) — accepted decision that the HTML pages are a removable presentation layer once native/CLI/debug-seam parity is sufficient
 - [ADR 0015 Current Supported Operator Packaging Model Remains CLI-First With Native macOS Primary UI](../adr/0015-current-supported-operator-packaging-model.md) — accepted decision that the supported packaging line remains `cli_first_local_bridge` even while native macOS is the primary operator-facing UI on macOS
 - [ADR 0017 Transitional FileSystem Working Stores Remain Debug and Legacy Compatibility Only After P2](../adr/0017-transitional-filesystem-working-store-boundary-after-p2.md) — accepted decision that post-P2 FileSystem working stores remain only as debug / legacy / import-fixture compatibility paths
 - [ADR 0018 External Integrations Become Explicit Legacy Opt-In After P2](../adr/0018-external-integration-explicit-legacy-opt-in-after-p2.md) — accepted decision that Obsidian import/export and Git commit remain available only through explicit compatibility confirmation
@@ -164,14 +179,14 @@ Use these documents first:
 - [v1.0.55 Native Smoke Full Test Default Release Note](v1.0.55-native-smoke-full-test-default-release-note.md) — current native smoke script now validates with the full Swift Testing suite by default and skips the hanging XCTest path
 - [v1.0.56 Resident App UI Session Smoke Release Note](v1.0.56-resident-app-ui-session-smoke-release-note.md) — current bridge-hosted local shell now has a direct UI-session smoke path outside full pytest
 - [v1.0.57 Resident App API Surface Smoke Release Note](v1.0.57-resident-app-api-surface-smoke-release-note.md) — current bearer-backed app-facing JSON read surfaces now have a direct smoke path outside full pytest
-- [v1.0.58 Resident App Release Smoke Wrapper Release Note](v1.0.58-resident-app-release-smoke-wrapper-release-note.md) — current release verification now has one wrapper for API surface and UI session smoke
+- [v1.0.58 Resident App Release Smoke Wrapper Release Note](v1.0.58-resident-app-release-smoke-wrapper-release-note.md) — current release verification now has one wrapper for API surface and compatibility-shell UI session smoke
 - [v1.0.59 Resident App Smoke CLI Bridge Start Release Note](v1.0.59-resident-app-smoke-cli-bridge-start-release-note.md) — current smoke scripts now start the Bridge through the same `sayane serve` CLI path used by operators
 - [v1.0.60 Resident App Smoke Venv CLI Preference Release Note](v1.0.60-resident-app-smoke-venv-cli-preference-release-note.md) — current smoke scripts now prefer the repo-local CLI install over user-local shims during Bridge startup
 - [v1.0.61 Resident App CLI Serve Watchfiles Guard Release Note](v1.0.61-resident-app-cli-serve-watchfiles-guard-release-note.md) — current CLI/local-launch path now avoids broken optional `watchfiles` imports and clears stale detached `serve` processes before restart
 - [v1.0.62 Native Smoke Launcher Alignment Release Note](v1.0.62-native-smoke-launcher-alignment-release-note.md) — current native preview smoke now shares the same Bridge launcher path, stale-process cleanup, and timeout budget as the resident app shell
 - [v1.0.63 Resident App Full Release Smoke Release Note](v1.0.63-resident-app-full-release-smoke-release-note.md) — current one-command release smoke now covers API, UI session, and native preview together with launcher retry protection
 - [v1.0.64 Isolated Package Metadata Check Release Note](v1.0.64-isolated-package-metadata-check-release-note.md) — current local release-prep build path now verifies package metadata inside a short-lived isolated toolchain instead of depending on a damaged long-lived `nh3` install
-- [v1.0.65 Native Primary UI and Debug-Only Compatibility Release Note](v1.0.65-native-primary-ui-debug-only-compatibility-release-note.md) — current resident app line now states native macOS as the primary operator UI and `/app/ui` as debug-only compatibility, with fail-closed launcher/runtime checks
+- [v1.0.65 Native Primary UI and Debug-Only Compatibility Release Note](v1.0.65-native-primary-ui-debug-only-compatibility-release-note.md) — current resident app line now states native macOS as the primary operator UI and `/app/ui` as maintainer/debug compatibility, with fail-closed launcher/runtime checks
 - [v1.0.66 Native Cross-Surface Startup Shortcuts Release Note](v1.0.66-native-cross-surface-startup-shortcuts-release-note.md) — current native Home, Daemon, and fallback views now reuse the same startup-command and debug-shell shortcuts
 - [v1.0.67 Local Vault Foundation P1 Closure Release Note](v1.0.67-local-vault-foundation-p1-closure-release-note.md) — closes the first production-completion Local Vault foundation slice and points the next security migration at P2
 - [v1.0.68 P2 Vault-Aware Resident Working Store Release Note](v1.0.68-p2-vault-aware-resident-working-store-release-note.md) — starts the resident-app side of P2 by moving working Candidate/Decision/Lineage persistence onto vault-aware repositories

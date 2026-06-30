@@ -87,10 +87,39 @@ This decision does not:
 3. smoke and runbook paths no longer require browser-local validation for routine readiness checks
 4. remaining handoff/debug needs are covered by explicit internal diagnostics or native exports
 
+## Current Maintenance Boundary
+
+Until those exit criteria are met, the retained `/app/ui*` surface should be maintained only under
+the following boundary:
+
+1. keep it available for explicit debug, smoke, fallback inspection, and historical handoff needs
+2. do not expand it as a product-facing routine operator UX
+3. prefer copy/export/diagnostic helpers over browser-opening shortcuts in current native flows
+4. keep current docs native-first; if `/app/ui*` is mentioned, label it as debug-only or historical
+5. allow compatibility-preserving fixes and auth/session safety fixes, but avoid new feature growth
+
+## Current Retirement Readiness Snapshot
+
+As of 2026-06-30:
+
+- native bootstrap, reconnect, install, upgrade, and diagnostics are available from the macOS app
+- routine startup, recovery, and handoff/export no longer require browser-opening defaults
+- retained `/app/ui*` references now mostly live in debug-only, bridge-manual, smoke, and historical
+  release/handoff material
+
+Remaining work before full removal is primarily:
+
+1. finish shrinking current smoke/runbook dependence on browser-local validation
+2. decide separately when the server-rendered `/app/ui` HTML pages themselves can retire
+3. keep the retained cookie-backed JSON routes under explicit maintainer/debug governance
+
+That follow-on decision is now recorded in `docs/adr/0028-ui-state-ui-action-remain-maintainer-debug-seams-on-macos.md`.
+
 ## Related
 
 - `docs/adr/0013-macos-native-app-primary-ui-path.md`
 - `docs/adr/0012-resident-app-production-auth-model.md`
 - `docs/adr/0011-resident-app-local-ui-session-json-surfaces.md`
+- `docs/adr/0028-ui-state-ui-action-remain-maintainer-debug-seams-on-macos.md`
 - `docs/architecture/resident-app-bootstrap-ui.md`
 - `docs/architecture/resident-app-service-boundary.md`

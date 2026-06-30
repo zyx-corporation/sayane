@@ -16,6 +16,7 @@ WITH_DEBUG_SHELL=0
 VERBOSE=0
 TEST_TIMEOUT_SECONDS="${SAYANE_MACOS_SMOKE_TEST_TIMEOUT_SECONDS:-120}"
 CHECK_TIMEOUT_SECONDS="${SAYANE_MACOS_SMOKE_CHECK_TIMEOUT_SECONDS:-15}"
+BRIDGE_START_MODE="${SAYANE_MACOS_SMOKE_BRIDGE_START_MODE:-auto}"
 CURRENT_STEP="initializing"
 STARTED_BRIDGE=0
 LAST_RESPONSE_BODY=""
@@ -32,6 +33,9 @@ Options:
   --no-start   Use the existing Bridge instead of starting a fresh one
   --no-build   Skip swift build
   --no-tests   Skip swift test validation
+  --bridge-background  Start Bridge in background mode for smoke
+  --bridge-terminal    Start Bridge in a new Terminal window for smoke
+  --bridge-foreground  Start Bridge in the current shell for smoke
   --with-debug-shell  Also validate /app/ui compatibility shell flows
   --verbose    Print response-body and curl diagnostics on failure
   -h, --help   Show this help
@@ -48,6 +52,15 @@ while [[ $# -gt 0 ]]; do
       ;;
     --no-tests)
       RUN_TESTS=0
+      ;;
+    --bridge-background)
+      BRIDGE_START_MODE="background"
+      ;;
+    --bridge-terminal)
+      BRIDGE_START_MODE="terminal"
+      ;;
+    --bridge-foreground)
+      BRIDGE_START_MODE="foreground"
       ;;
     --with-debug-shell)
       WITH_DEBUG_SHELL=1
@@ -162,7 +175,7 @@ report_failure() {
   printf '  Log: %s\n' "${LOG_FILE}" >&2
   printf '  Hint: curl -s %s/health\n' "${BASE_URL}" >&2
   if [[ "${WITH_DEBUG_SHELL}" == "1" ]]; then
-    printf '  Hint: open %s/app/ui?bootstrap_token=$(cat %s)\n' "${BASE_URL}" "${TOKEN_FILE}" >&2
+    printf '  Hint: open %s/app/ui?bootstrap_token=$(cat %s) only for explicit debug-shell checks\n' "${BASE_URL}" "${TOKEN_FILE}" >&2
   fi
   if [[ -f "${LOG_FILE}" ]]; then
     printf '\nRecent Bridge log tail:\n' >&2
@@ -267,14 +280,46 @@ prepare_local_bridge() {
   mkdir -p "$(dirname "${LOG_FILE}")"
   info "Starting Bridge for smoke check"
   CURRENT_STEP="starting bridge"
-  if ! bash "${ROOT}/scripts/run-app-local.sh" --no-open --no-bootstrap-check; then
+  if ! start_bridge_for_smoke; then
     warn "Initial Bridge launch did not become healthy; retrying once"
     stop_existing_bridge
-    bash "${ROOT}/scripts/run-app-local.sh" --no-open --no-bootstrap-check
+    start_bridge_for_smoke
   fi
   STARTED_BRIDGE=1
   CURRENT_STEP="waiting for bridge health"
   wait_for_bridge || die "Bridge did not become healthy. Check ${LOG_FILE}"
+}
+
+start_bridge_for_smoke() {
+  local args=(--no-open --no-bootstrap-check)
+  case "${BRIDGE_START_MODE}" in
+    background)
+      args+=(--background)
+      ;;
+    terminal)
+      args+=(--terminal)
+      ;;
+    foreground)
+      args+=(--foreground)
+      ;;
+    auto)
+      ;;
+    *)
+      die "Unsupported bridge start mode: ${BRIDGE_START_MODE}"
+      ;;
+  esac
+
+  if bash "${ROOT}/scripts/run-app-local.sh" "${args[@]}"; then
+    return 0
+  fi
+
+  if [[ "${BRIDGE_START_MODE}" == "auto" || "${BRIDGE_START_MODE}" == "terminal" ]]; then
+    warn "Bridge Terminal launch failed; falling back to background mode"
+    bash "${ROOT}/scripts/run-app-local.sh" --background --no-open --no-bootstrap-check
+    return 0
+  fi
+
+  return 1
 }
 
 check_json_endpoint() {

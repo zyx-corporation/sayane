@@ -1,5 +1,6 @@
-from pathlib import Path
 import json
+import re
+from pathlib import Path
 
 import yaml
 from typer.testing import CliRunner
@@ -9,6 +10,10 @@ from sayane.core.export_package import create_package
 from sayane.core.bundle_provenance import compute_bundle_hash, generate_bundle_id
 
 runner = CliRunner()
+
+
+def _plain(text: str) -> str:
+    return re.sub(r"\x1b\[[0-9;]*m", "", text)
 
 
 def test_storage_index_updates_profile(tmp_path: Path, monkeypatch) -> None:
@@ -63,7 +68,7 @@ def test_storage_import_requires_legacy_confirmation(tmp_path: Path, monkeypatch
     runner.invoke(app, ["init"])
     result = runner.invoke(app, ["storage", "import", str(vault)])
     assert result.exit_code != 0
-    assert "--legacy-compatible" in (result.stdout + result.stderr)
+    assert "--legacy-compatible" in _plain(result.stdout + result.stderr)
 
 
 def test_storage_import_allows_legacy_confirmation(tmp_path: Path, monkeypatch) -> None:

@@ -93,14 +93,6 @@ struct BridgeStatusPanel: View {
                     }
                 }
 
-                if !compact, let daemonState = model.daemonState, daemonState.operatorPhaseDetails.currentSupportedOperatorPath.bootstrapUI != nil {
-                    DebugCompatibilityDisclosure(model: model) {
-                        VStack(alignment: .leading, spacing: 6) {
-                            DebugShellShortcutButtons(model: model, controlSize: .small)
-                        }
-                    }
-                }
-
                 if model.currentGateText != nil || model.nextDaemonCommandText != nil || model.nextReadSurfaceText != nil {
                     VStack(alignment: .leading, spacing: 6) {
                         if let currentGate = model.currentGateText {

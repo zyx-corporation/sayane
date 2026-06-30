@@ -68,7 +68,9 @@ def _policy_payload(level: UnlockLevel) -> dict[str, Any]:
     }
 
 
-def _session_payload(manager: Any, session_id: str, session: Any, *, now: datetime) -> dict[str, Any]:
+def _session_payload(
+    manager: Any, session_id: str, session: Any, *, now: datetime
+) -> dict[str, Any]:
     level = getattr(manager, "policy_levels", {}).get(session_id)
     return {
         "session_id": session.session_id,

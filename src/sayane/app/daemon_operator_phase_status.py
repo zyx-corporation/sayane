@@ -173,15 +173,14 @@ class ResidentDaemonOperatorPhaseStatus:
                 {
                     "topic": "service_control_boundary_definition",
                     "summary": (
-                        "review the finalized MVP boundary before any post-MVP service lifecycle expansion"
+                        "review the finalized MVP boundary before any post-MVP "
+                        "service lifecycle expansion"
                     ),
                     "command": "sayane app daemon-service-control-boundary --json",
                 },
                 {
                     "topic": "supervision_ux_decision",
-                    "summary": (
-                        "verify that MVP supervision stays passive and local-only"
-                    ),
+                    "summary": ("verify that MVP supervision stays passive and local-only"),
                     "command": "sayane app daemon-supervision-status --json",
                 },
                 {
@@ -203,7 +202,9 @@ class ResidentDaemonOperatorPhaseStatus:
                 {
                     "surface": "packaging_status",
                     "command": "sayane app daemon-packaging-status --json",
-                    "confirms": "current supported model, candidate models, and operator launcher guidance",
+                    "confirms": (
+                        "current supported model, candidate models, and operator launcher guidance"
+                    ),
                 },
                 {
                     "surface": "service_targets_status",
@@ -213,7 +214,9 @@ class ResidentDaemonOperatorPhaseStatus:
                 {
                     "surface": "service_control_boundary",
                     "command": "sayane app daemon-service-control-boundary --json",
-                    "confirms": "allowed local control path, deferred commands, and lifecycle operations",
+                    "confirms": (
+                        "allowed local control path, deferred commands, and lifecycle operations"
+                    ),
                 },
                 {
                     "surface": "supervision_status",

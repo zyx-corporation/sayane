@@ -57,7 +57,8 @@ class ResidentDaemonSystemdUserPlan:
                 f"Environment=SAYANE_HOME={self.sayane_home}",
                 (
                     "ExecStart="
-                    f"{sys.executable} -m sayane.cli.main serve --host {self.host} --port {self.port}"
+                    f"{sys.executable} -m sayane.cli.main serve --host "
+                    f"{self.host} --port {self.port}"
                 ),
                 "Restart=on-failure",
                 "RestartSec=3",
@@ -194,8 +195,12 @@ def build_systemd_user_status(
         "unit_path": str(plan.unit_path),
         "unit_exists": unit_exists,
         "service_manager": "systemd --user",
-        "active_status": "unsupported_platform" if not sys.platform.startswith("linux") else "unknown",
-        "enabled_status": "unsupported_platform" if not sys.platform.startswith("linux") else "unknown",
+        "active_status": (
+            "unsupported_platform" if not sys.platform.startswith("linux") else "unknown"
+        ),
+        "enabled_status": (
+            "unsupported_platform" if not sys.platform.startswith("linux") else "unknown"
+        ),
         "active": False,
         "enabled": False,
         "status_command": f"systemctl --user status {SYSTEMD_USER_UNIT_NAME} --no-pager --full",
@@ -206,8 +211,12 @@ def build_systemd_user_status(
     active_command = ["systemctl", "--user", "is-active", SYSTEMD_USER_UNIT_NAME]
     enabled_command = ["systemctl", "--user", "is-enabled", SYSTEMD_USER_UNIT_NAME]
     try:
-        active_completed = subprocess.run(active_command, capture_output=True, text=True, check=False)
-        enabled_completed = subprocess.run(enabled_command, capture_output=True, text=True, check=False)
+        active_completed = subprocess.run(
+            active_command, capture_output=True, text=True, check=False
+        )
+        enabled_completed = subprocess.run(
+            enabled_command, capture_output=True, text=True, check=False
+        )
     except FileNotFoundError:
         payload.update(
             {

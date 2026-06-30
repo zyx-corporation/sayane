@@ -9,7 +9,7 @@ APP_URL="${BRIDGE_URL}/app/ui"
 TOKEN_FILE="${SAYANE_BRIDGE_TOKEN_FILE:-$HOME/.sayane/bridge.token}"
 LOG_FILE="${SAYANE_APP_LOG_FILE:-$HOME/.sayane/run-app-local.log}"
 BOOTSTRAP_CHECK=1
-AUTO_OPEN=1
+AUTO_OPEN=0
 AUTO_INIT=1
 START_MODE="${SAYANE_BRIDGE_START_MODE:-auto}"
 
@@ -25,7 +25,8 @@ Options:
   --foreground        Start \`sayane serve\` in the current terminal
   --background        Start \`sayane serve\` in the background
   --terminal          Start \`sayane serve\` in a new Terminal window (macOS)
-  --no-open           Do not open the browser URL
+  --open              Open the debug-only browser compatibility URL after bootstrap
+  --no-open           Compatibility alias; keep browser auto-open disabled
   --no-init           Do not run \`sayane init\` automatically
   --no-bootstrap-check  Skip bearer-based \`/app/ui\` check
   -h, --help          Show this help
@@ -48,6 +49,9 @@ while [[ $# -gt 0 ]]; do
       ;;
     --terminal)
       START_MODE="terminal"
+      ;;
+    --open)
+      AUTO_OPEN=1
       ;;
     --no-open)
       AUTO_OPEN=0
@@ -237,18 +241,13 @@ open_browser() {
     return 0
   fi
   local bootstrap_url="${APP_URL}?bootstrap_token=${TOKEN}"
-  if command -v open >/dev/null 2>&1 && [[ -d "/Applications/Google Chrome.app" ]]; then
-    info "Opening browser bootstrap in Google Chrome"
-    (nohup open -a "Google Chrome" "${bootstrap_url}" >/dev/null 2>&1 &) || warn "Could not open Google Chrome automatically"
-    return 0
-  fi
   if command -v open >/dev/null 2>&1; then
-    info "Opening browser bootstrap"
+    info "Opening debug-only browser compatibility URL"
     (nohup open "${bootstrap_url}" >/dev/null 2>&1 &) || warn "Could not open browser automatically"
     return 0
   fi
   if command -v xdg-open >/dev/null 2>&1; then
-    info "Opening browser bootstrap"
+    info "Opening debug-only browser compatibility URL"
     (nohup xdg-open "${bootstrap_url}" >/dev/null 2>&1 &) || warn "Could not open browser automatically"
     return 0
   fi
@@ -258,7 +257,7 @@ open_browser() {
 print_summary() {
   cat <<EOF
 
-Resident app local shell:
+Resident app compatibility shell:
   URL: ${APP_URL}
   Health: ${BRIDGE_URL}/health
   Token: ${TOKEN_FILE}
@@ -276,11 +275,13 @@ Useful checks:
   sayane app daemon-proof-diagnostics --operation-class bridge_health --json
 
 Notes:
-  - Current resident app entrypoint is ${APP_URL}
+  - Current resident app compatibility entrypoint is ${APP_URL}
   - Bridge startup prefers repo-local source via PYTHONPATH=${ROOT}/src
   - Do not use http://127.0.0.1:8008/index.html
-  - Browser bootstrap is performed through one local URL hop using /app/ui?bootstrap_token=...
-  - If browser or follow-up shell requests return 401, reopen ${APP_URL} after restarting the Bridge
+  - This shell is for maintainer/debug compatibility work, not routine operator flow
+  - Browser compatibility bootstrap uses one local URL hop: /app/ui?bootstrap_token=...
+  - This script does not auto-open the browser unless --open is passed
+  - If browser or follow-up shell requests return 401, reopen the compatibility URL after restarting the Bridge
 EOF
   if [[ "${START_MODE}" == "auto" ]]; then
     printf '  - Background log: %s\n' "${LOG_FILE}"

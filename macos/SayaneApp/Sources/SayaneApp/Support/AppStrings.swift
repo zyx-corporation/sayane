@@ -24,14 +24,14 @@ struct AppStrings {
 
     func text(_ key: Key) -> String {
         switch (language, key) {
-        case (.ja, .appTitle): return "紗綾音 Resident App"
-        case (.en, .appTitle): return "Sayane Resident App"
+        case (.ja, .appTitle): return "紗綾音"
+        case (.en, .appTitle): return "紗綾音"
         case (.ja, .home): return "ホーム"
         case (.en, .home): return "Home"
         case (.ja, .queue): return "候補キュー"
         case (.en, .queue): return "Candidate Queue"
-        case (.ja, .daemon): return "デーモン"
-        case (.en, .daemon): return "Daemon"
+        case (.ja, .daemon): return "バックエンド状態"
+        case (.en, .daemon): return "Backend State"
         case (.ja, .refresh): return "更新"
         case (.en, .refresh): return "Refresh"
         case (.ja, .refreshInProgress): return "更新中…"
@@ -46,10 +46,10 @@ struct AppStrings {
         case (.en, .captureClipboard): return "Capture Clipboard"
         case (.ja, .openLogs): return "ログを開く"
         case (.en, .openLogs): return "Open Logs"
-        case (.ja, .startBridge): return "Bridge を起動"
-        case (.en, .startBridge): return "Start Bridge"
-        case (.ja, .startBridgeInProgress): return "Bridge 起動中…"
-        case (.en, .startBridgeInProgress): return "Starting Bridge…"
+        case (.ja, .startBridge): return "バックエンドを起動"
+        case (.en, .startBridge): return "Start Backend"
+        case (.ja, .startBridgeInProgress): return "バックエンド起動中…"
+        case (.en, .startBridgeInProgress): return "Starting Backend…"
         case (.ja, .status): return "状態"
         case (.en, .status): return "Status"
         case (.ja, .nextActions): return "次のアクション"
@@ -58,8 +58,8 @@ struct AppStrings {
         case (.en, .summaryCards): return "Summary"
         case (.ja, .topReviewItems): return "レビュー候補"
         case (.en, .topReviewItems): return "Top Review Items"
-        case (.ja, .topDaemonActions): return "デーモンの次アクション"
-        case (.en, .topDaemonActions): return "Top Daemon Actions"
+        case (.ja, .topDaemonActions): return "バックエンドの次アクション"
+        case (.en, .topDaemonActions): return "Top Backend Actions"
         case (.ja, .reviewableCount): return "レビュー対象"
         case (.en, .reviewableCount): return "Reviewable"
         case (.ja, .localVault): return "Local Vault"
@@ -122,26 +122,26 @@ struct AppStrings {
         case (.en, .launchAgent): return "LaunchAgent"
         case (.ja, .clipboardEmpty): return "クリップボードにテキストがありません。"
         case (.en, .clipboardEmpty): return "No text is available in the clipboard."
-        case (.ja, .connectionProblem): return "Bridge に接続できません。"
-        case (.en, .connectionProblem): return "Could not connect to the Bridge."
-        case (.ja, .sessionProblem): return "Bridge を復旧してください。起動後はターミナルウインドウを閉じず、そのまま再接続します。"
-        case (.en, .sessionProblem): return "Recover the local Bridge. After startup, keep the Bridge Terminal window open and then reconnect."
+        case (.ja, .connectionProblem): return "バックエンドに接続できません。"
+        case (.en, .connectionProblem): return "Could not connect to the backend."
+        case (.ja, .sessionProblem): return "バックエンドを復旧してください。起動後にこのアプリから再接続します。"
+        case (.en, .sessionProblem): return "Recover the local backend, then reconnect from this app."
         case (.ja, .loading): return "読み込み中…"
         case (.en, .loading): return "Loading…"
         case (.ja, .none): return "なし"
         case (.en, .none): return "None"
         case (.ja, .error): return "エラー"
         case (.en, .error): return "Error"
-        case (.ja, .bridgeHealthy): return "Bridge接続"
-        case (.en, .bridgeHealthy): return "Bridge Health"
+        case (.ja, .bridgeHealthy): return "バックエンド接続"
+        case (.en, .bridgeHealthy): return "Backend Health"
         case (.ja, .bridgeStartupFocus): return "起動優先"
         case (.en, .bridgeStartupFocus): return "Startup First"
-        case (.ja, .bridgeDisconnectedShort): return "Bridge 未接続"
-        case (.en, .bridgeDisconnectedShort): return "Bridge Disconnected"
+        case (.ja, .bridgeDisconnectedShort): return "バックエンド未接続"
+        case (.en, .bridgeDisconnectedShort): return "Backend Disconnected"
         case (.ja, .screenSummaryPending): return "起動後に読み込み"
         case (.en, .screenSummaryPending): return "Loads after startup"
-        case (.ja, .homeStartupSummary): return "Bridge が未接続です。起動または再接続してから各画面を読み込みます。"
-        case (.en, .homeStartupSummary): return "The Bridge is disconnected. Start or reconnect first, then load the Home, Queue, and Daemon screens."
+        case (.ja, .homeStartupSummary): return "バックエンドが未接続です。起動または再接続してから各画面を読み込みます。"
+        case (.en, .homeStartupSummary): return "The backend is disconnected. Start or reconnect first, then load the Home, Queue, and Backend State screens."
         case (.ja, .currentCandidate): return "選択中候補"
         case (.en, .currentCandidate): return "Selected Candidate"
         case (.ja, .editedText): return "修正文"
@@ -192,12 +192,12 @@ struct AppStrings {
         case (.en, .savedFile): return "Saved"
         case (.ja, .actionFailed): return "失敗"
         case (.en, .actionFailed): return "Failed"
-        case (.ja, .bridgeStartedMessage): return "Bridge を起動しました。ターミナルウインドウを開いたまま、このアプリで再接続します。"
-        case (.en, .bridgeStartedMessage): return "Started the Bridge. Keep the Terminal window open and reconnect from this app."
-        case (.ja, .bridgeReconnectedMessage): return "Bridge へ再接続しました。"
-        case (.en, .bridgeReconnectedMessage): return "Reconnected to the Bridge."
-        case (.ja, .bridgeRefreshedMessage): return "Bridge の状態を更新しました。"
-        case (.en, .bridgeRefreshedMessage): return "Refreshed the Bridge state."
+        case (.ja, .bridgeStartedMessage): return "バックエンドを起動しました。このアプリで再接続します。"
+        case (.en, .bridgeStartedMessage): return "Started the backend and reconnected from this app."
+        case (.ja, .bridgeReconnectedMessage): return "バックエンドへ再接続しました。"
+        case (.en, .bridgeReconnectedMessage): return "Reconnected to the backend."
+        case (.ja, .bridgeRefreshedMessage): return "バックエンドの状態を更新しました。"
+        case (.en, .bridgeRefreshedMessage): return "Refreshed the backend state."
         case (.ja, .openPlist): return "plistファイルを開く"
         case (.en, .openPlist): return "Open Plist"
         case (.ja, .openRuntime): return "ランタイムを開く"
@@ -208,8 +208,8 @@ struct AppStrings {
         case (.en, .reviewPreviews): return "Recovery Previews"
         case (.ja, .generatedAt): return "生成日時"
         case (.en, .generatedAt): return "Generated At"
-        case (.ja, .bridgeContext): return "Bridge コンテキスト"
-        case (.en, .bridgeContext): return "Bridge Context"
+        case (.ja, .bridgeContext): return "バックエンドコンテキスト"
+        case (.en, .bridgeContext): return "Backend Context"
         case (.ja, .component): return "コンポーネント"
         case (.en, .component): return "Component"
         case (.ja, .currentState): return "現在状態"
@@ -320,6 +320,8 @@ struct AppStrings {
         case (.en, .securityBoundary): return "Security Boundary"
         case (.ja, .troubleshooting): return "トラブルシュート"
         case (.en, .troubleshooting): return "Troubleshooting"
+        case (.ja, .close): return "閉じる"
+        case (.en, .close): return "Close"
         case (.ja, .logPaths): return "ログパス"
         case (.en, .logPaths): return "Log Paths"
         case (.ja, .plistPreview): return "plist プレビュー"
@@ -402,12 +404,12 @@ struct AppStrings {
         case (.en, .startHere): return "Start Here"
         case (.ja, .noPriorityActions): return "今すぐ着手すべき項目はありません"
         case (.en, .noPriorityActions): return "There is nothing urgent to start right now"
-        case (.ja, .noPriorityActionsDisconnected): return "最初に Bridge を起動または再接続すると、この画面の優先項目を読み込めます"
-        case (.en, .noPriorityActionsDisconnected): return "Start or reconnect the Bridge first to load the priority items for this screen"
+        case (.ja, .noPriorityActionsDisconnected): return "最初にバックエンドを起動または再接続すると、この画面の優先項目を読み込めます"
+        case (.en, .noPriorityActionsDisconnected): return "Start or reconnect the backend first to load the priority items for this screen"
         case (.ja, .reviewNextCandidate): return "次の候補を確認"
         case (.en, .reviewNextCandidate): return "Review Next Candidate"
-        case (.ja, .reviewDaemonAction): return "デーモンの次アクションを確認"
-        case (.en, .reviewDaemonAction): return "Review Daemon Action"
+        case (.ja, .reviewDaemonAction): return "バックエンドの次アクションを確認"
+        case (.en, .reviewDaemonAction): return "Review Backend Action"
         case (.ja, .checkLaunchAgentStatus): return "LaunchAgentの状態を確認"
         case (.en, .checkLaunchAgentStatus): return "Check LaunchAgent Status"
         case (.ja, .openRunbook): return "運用手順書を開く"
@@ -472,8 +474,8 @@ struct AppStrings {
         case (.en, .recoveryAssistSummary): return "Review the recovery flow and consent boundary first"
         case (.ja, .supervisionAssistSummary): return "現在の監視モードと保留中の背景サーフェスを確認します"
         case (.en, .supervisionAssistSummary): return "Review the current supervision mode and deferred background surfaces"
-        case (.ja, .inspectActionsSummary): return "現在の launchd 状態と Bridge のヘルスを非破壊で確認します"
-        case (.en, .inspectActionsSummary): return "Check the current launchd state and Bridge health without mutating anything"
+        case (.ja, .inspectActionsSummary): return "現在の launchd 状態とバックエンドのヘルスを非破壊で確認します"
+        case (.en, .inspectActionsSummary): return "Check the current launchd state and backend health without mutating anything"
         case (.ja, .recoverActionsSummary): return "cleanup / repair / bootout の順で古い状態を解消します"
         case (.en, .recoverActionsSummary): return "Clear stale state through cleanup, repair, and then bootout"
         case (.ja, .startActionsSummary): return "確認後に bootstrap / kickstart で起動します"
@@ -488,28 +490,28 @@ struct AppStrings {
         case (.en, .loadingState): return "Loading"
         case (.ja, .screenOverview): return "表示中"
         case (.en, .screenOverview): return "Viewing"
-        case (.ja, .bridgeConnected): return "Bridge 接続中"
-        case (.en, .bridgeConnected): return "Bridge Connected"
-        case (.ja, .bridgeAttention): return "Bridge 要確認"
-        case (.en, .bridgeAttention): return "Bridge Needs Attention"
-        case (.ja, .bridgeStatusPanel): return "Bridge 状態"
-        case (.en, .bridgeStatusPanel): return "Bridge Status"
-        case (.ja, .bridgeReady): return "Bridge は利用可能です"
-        case (.en, .bridgeReady): return "Bridge is available"
-        case (.ja, .bridgeStarting): return "Bridge は起動中です"
-        case (.en, .bridgeStarting): return "Bridge is starting"
-        case (.ja, .bridgeNotConnected): return "Bridge に未接続です"
-        case (.en, .bridgeNotConnected): return "Bridge is not connected"
-        case (.ja, .bridgeStatusDetailDisconnected): return "Bridge を起動すると各画面を読み込めます。macOS ではターミナルウインドウを閉じずに保持します"
-        case (.en, .bridgeStatusDetailDisconnected): return "Start the Bridge to load the Home, Queue, and Daemon screens. On macOS, keep the opened Terminal window running."
+        case (.ja, .bridgeConnected): return "バックエンド接続中"
+        case (.en, .bridgeConnected): return "Backend Connected"
+        case (.ja, .bridgeAttention): return "バックエンド要確認"
+        case (.en, .bridgeAttention): return "Backend Needs Attention"
+        case (.ja, .bridgeStatusPanel): return "バックエンド状態"
+        case (.en, .bridgeStatusPanel): return "Backend Status"
+        case (.ja, .bridgeReady): return "バックエンドは利用可能です"
+        case (.en, .bridgeReady): return "Backend is available"
+        case (.ja, .bridgeStarting): return "バックエンドは起動中です"
+        case (.en, .bridgeStarting): return "Backend is starting"
+        case (.ja, .bridgeNotConnected): return "バックエンドに未接続です"
+        case (.en, .bridgeNotConnected): return "Backend is not connected"
+        case (.ja, .bridgeStatusDetailDisconnected): return "バックエンドを起動すると各画面を読み込めます。macOS アプリから自動起動します"
+        case (.en, .bridgeStatusDetailDisconnected): return "Start the backend to load the Home, Queue, and Backend State screens. The macOS app starts it automatically."
         case (.ja, .moreItems): return "ほか %d 件"
         case (.en, .moreItems): return "%d more"
         case (.ja, .bridgeVersion): return "バージョン"
         case (.en, .bridgeVersion): return "Version"
         case (.ja, .sourceUpdatedAt): return "ソース更新時刻"
         case (.en, .sourceUpdatedAt): return "Source Updated"
-        case (.ja, .bridgeStatusPanelSummary): return "ここで接続状態を確認し、必要なら起動・再接続・ログ確認へ進みます。macOS ではターミナルウインドウを開いたまま使います"
-        case (.en, .bridgeStatusPanelSummary): return "Check connectivity here first, then start, reconnect, or inspect logs as needed. On macOS, the startup path keeps a Bridge Terminal window open."
+        case (.ja, .bridgeStatusPanelSummary): return "ここで接続状態を確認し、必要なら起動・再接続・ログ確認へ進みます。macOS アプリから自動起動します"
+        case (.en, .bridgeStatusPanelSummary): return "Check connectivity here first, then start, reconnect, or inspect logs as needed. The macOS app starts it automatically."
         case (.ja, .connectionDiagnostics): return "接続診断"
         case (.en, .connectionDiagnostics): return "Connection Diagnostics"
         case (.ja, .debugShellCompatibilitySummary): return "通常操作ではなく、ブラウザでのデバッグ・互換確認・引き継ぎ用の経路です"
@@ -518,8 +520,8 @@ struct AppStrings {
         case (.en, .debugCompatibilityTools): return "Debug Compatibility Tools"
         case (.ja, .debugCompatibilityToolsSummary): return "通常の macOS 操作導線から外し、必要時だけ開くブラウザ互換経路です"
         case (.en, .debugCompatibilityToolsSummary): return "A browser compatibility path kept out of the normal macOS workflow until needed"
-        case (.ja, .bridgeURL): return "Bridge URL"
-        case (.en, .bridgeURL): return "Bridge URL"
+        case (.ja, .bridgeURL): return "バックエンド URL"
+        case (.en, .bridgeURL): return "Backend URL"
         case (.ja, .healthEndpoint): return "ヘルスエンドポイント"
         case (.en, .healthEndpoint): return "Health Endpoint"
         case (.ja, .debugShell): return "ブラウザ互換シェル（デバッグ用）"
@@ -558,8 +560,8 @@ struct AppStrings {
         case (.en, .noQuickLinks): return "No quick links are available"
         case (.ja, .noReviewItems): return "レビュー候補はまだありません"
         case (.en, .noReviewItems): return "There are no review items yet"
-        case (.ja, .noDaemonActions): return "デーモンの次アクションはありません"
-        case (.en, .noDaemonActions): return "There are no daemon actions right now"
+        case (.ja, .noDaemonActions): return "バックエンドの次アクションはありません"
+        case (.en, .noDaemonActions): return "There are no backend actions right now"
         case (.ja, .noCandidates): return "候補はまだありません"
         case (.en, .noCandidates): return "There are no candidates yet"
         case (.ja, .noCandidatesMatchingFilters): return "条件に一致する候補はありません"
@@ -647,8 +649,8 @@ struct AppStrings {
         case (.en, "approved_context"): return "Approved Context"
         case (.ja, "blocked_context"): return "保留中コンテキスト"
         case (.en, "blocked_context"): return "Blocked Context"
-        case (.ja, "daemon_state"): return "デーモン状態"
-        case (.en, "daemon_state"): return "Daemon State"
+        case (.ja, "daemon_state"): return "バックエンド状態"
+        case (.en, "daemon_state"): return "Backend State"
         case (.ja, "next_actions"): return "次のアクション"
         case (.en, "next_actions"): return "Next Actions"
         case (.ja, "vault_status"): return "Vault状態"
@@ -687,8 +689,8 @@ struct AppStrings {
         case (.en, "recovery_and_consent_path_remains_explicit_under_next_model"): return "Recovery and Consent Stay Explicit Under Next Model"
         case (.ja, "state"): return "状態"
         case (.en, "state"): return "State"
-        case (.ja, "is_running_daemon"): return "デーモン稼働"
-        case (.en, "is_running_daemon"): return "Daemon Running"
+        case (.ja, "is_running_daemon"): return "バックエンド稼働"
+        case (.en, "is_running_daemon"): return "Backend Running"
         case (.ja, "runtime_initialized"): return "ランタイム初期化"
         case (.en, "runtime_initialized"): return "Runtime Initialized"
         case (.ja, "readiness_status"): return "準備状況"
@@ -874,16 +876,16 @@ struct AppStrings {
         case (.en, "limited_cli_only"): return "Limited CLI Only"
         case (.ja, "not_supported"): return "未対応"
         case (.en, "not_supported"): return "Not Supported"
-        case (.ja, "cli_first_local_bridge"): return "CLI先行 + Local Bridge"
-        case (.en, "cli_first_local_bridge"): return "CLI First + Local Bridge"
+        case (.ja, "cli_first_local_bridge"): return "CLI先行 + ローカルバックエンド"
+        case (.en, "cli_first_local_bridge"): return "CLI First + Local Backend"
         case (.ja, "native_macos_app_primary"): return "macOS ネイティブアプリ"
         case (.en, "native_macos_app_primary"): return "Native macOS App"
-        case (.ja, "local_bridge_shell_primary"): return "Local Bridge シェル"
-        case (.en, "local_bridge_shell_primary"): return "Local Bridge Shell"
-        case (.ja, "bridge_hosted_debug_shell"): return "Bridge 上の互換シェル"
-        case (.en, "bridge_hosted_debug_shell"): return "Bridge-hosted Compatibility Shell"
-        case (.ja, "hybrid_local_bridge_plus_service_targets"): return "Local Bridge + Service Target 併用候補"
-        case (.en, "hybrid_local_bridge_plus_service_targets"): return "Hybrid Local Bridge Plus Service Targets"
+        case (.ja, "local_bridge_shell_primary"): return "ローカルバックエンドシェル"
+        case (.en, "local_bridge_shell_primary"): return "Local Backend Shell"
+        case (.ja, "bridge_hosted_debug_shell"): return "バックエンド上の互換シェル"
+        case (.en, "bridge_hosted_debug_shell"): return "Backend-hosted Compatibility Shell"
+        case (.ja, "hybrid_local_bridge_plus_service_targets"): return "ローカルバックエンド + Service Target 併用候補"
+        case (.en, "hybrid_local_bridge_plus_service_targets"): return "Hybrid Local Backend Plus Service Targets"
         case (.ja, "service_first_resident_runtime"): return "service-first 常駐ランタイム候補"
         case (.en, "service_first_resident_runtime"): return "Service-first Resident Runtime"
         case (.ja, "macos_launchagent"): return "macOS LaunchAgent"
@@ -1022,8 +1024,8 @@ struct AppStrings {
     func homeDaemonActionSummary(for action: String) -> String {
         if action.contains("status") || action.contains("health") {
             switch language {
-            case .ja: return "現在の Bridge / launchd 状態を先に確認します。"
-            case .en: return "Check the current Bridge and launchd status first."
+            case .ja: return "現在のバックエンド / launchd 状態を先に確認します。"
+            case .en: return "Check the current backend and launchd status first."
             }
         }
         if action.contains("start") || action.contains("bootstrap") || action.contains("kickstart") {
@@ -1266,22 +1268,22 @@ struct AppStrings {
     func bridgeActionInProgressMessage(startingBridge: Bool) -> String {
         switch (language, startingBridge) {
         case (.ja, true):
-            return "Bridge を起動しています。macOS ではターミナルウインドウが開いたら閉じずに保持します。"
+            return "バックエンドを起動しています。ローカル接続が応答するまで少し待ってから再接続します。"
         case (.en, true):
-            return "Starting the Bridge. On macOS, keep the opened Terminal window running."
+            return "Starting the backend. Wait briefly for the local endpoint to respond, then reconnect."
         case (.ja, false):
-            return "Bridge へ再接続しています。接続診断とログを確認しながら待機します。"
+            return "バックエンドへ再接続しています。接続診断とログを確認しながら待機します。"
         case (.en, false):
-            return "Reconnecting to the Bridge. Wait while checking the diagnostics and logs if needed."
+            return "Reconnecting to the backend. Wait while checking the diagnostics and logs if needed."
         }
     }
 
     func bridgeLaunchWarmupMessage() -> String {
         switch language {
         case .ja:
-            return "Bridge を起動しました。ローカル接続が応答するまで少し待ってから再接続します。"
+            return "バックエンドを起動しました。ローカル接続が応答するまで少し待ってから再接続します。"
         case .en:
-            return "The Bridge has started. Wait briefly for the local endpoint to respond, then reconnect."
+            return "The backend has started. Wait briefly for the local endpoint to respond, then reconnect."
         }
     }
 
@@ -1290,16 +1292,16 @@ struct AppStrings {
         case .ja:
             return "起動または再接続してから各画面を読み込みます。"
         case .en:
-            return "Start or reconnect first, then load the Home, Queue, and Daemon screens."
+            return "Start or reconnect first, then load the Home, Queue, and Backend State screens."
         }
     }
 
     func bridgeTerminalRetentionSummary() -> String {
         switch language {
         case .ja:
-            return "macOS では起動後にターミナルウインドウを閉じず、そのまま保持します。"
+            return "macOS アプリから自動起動します。"
         case .en:
-            return "On macOS, keep the Bridge Terminal window open after startup."
+            return "The macOS app starts it automatically."
         }
     }
 
@@ -1311,15 +1313,15 @@ struct AppStrings {
         let normalizedStatus = status?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         switch (language, normalizedStatus) {
         case (.ja, nil):
-            return "Bridge を起動すると \(bridgeStartupSummary()) \(bridgeTerminalRetentionSummary())"
+            return "バックエンドを起動すると \(bridgeStartupSummary()) \(bridgeTerminalRetentionSummary())"
         case (.en, nil):
-            return "Start the Bridge to \(Self.lowercasedFirstLetter(bridgeStartupSummary())) \(bridgeTerminalRetentionSummary())"
+            return "Start the backend to \(Self.lowercasedFirstLetter(bridgeStartupSummary())) \(bridgeTerminalRetentionSummary())"
         case (.ja, "starting"), (.ja, "bootstrapping"):
             let versionLabel = version ?? "-"
-            return "Bridge は起動中です。\(bridgeTerminalRetentionSummary()) バージョン: \(versionLabel)"
+            return "バックエンドは起動中です。\(bridgeTerminalRetentionSummary()) バージョン: \(versionLabel)"
         case (.en, "starting"), (.en, "bootstrapping"):
             let versionLabel = version ?? "-"
-            return "The Bridge is starting. \(bridgeTerminalRetentionSummary()) Version: \(versionLabel)"
+            return "The backend is starting. \(bridgeTerminalRetentionSummary()) Version: \(versionLabel)"
         default:
             let versionLabel = version ?? "-"
             if let sourceUpdatedAt, !sourceUpdatedAt.isEmpty {
@@ -1335,11 +1337,11 @@ struct AppStrings {
         case (.ja, nil):
             return "まずここから \(bridgeStartupSummary()) \(bridgeTerminalRetentionSummary())"
         case (.en, nil):
-            return "Start or reconnect the Bridge here first, then load the Home, Queue, and Daemon screens. \(bridgeTerminalRetentionSummary())"
+            return "Start or reconnect the backend here first, then load the Home, Queue, and Backend State screens. \(bridgeTerminalRetentionSummary())"
         case (.ja, "starting"), (.ja, "bootstrapping"):
-            return "Bridge は起動中です。まずローカル応答を待ち、必要なら再接続またはログ確認へ進みます。\(bridgeTerminalRetentionSummary())"
+            return "バックエンドは起動中です。まずローカル応答を待ち、必要なら再接続またはログ確認へ進みます。\(bridgeTerminalRetentionSummary())"
         case (.en, "starting"), (.en, "bootstrapping"):
-            return "The Bridge is starting. Wait for the local endpoint first, then reconnect or inspect logs if needed. \(bridgeTerminalRetentionSummary())"
+            return "The backend is starting. Wait for the local endpoint first, then reconnect or inspect logs if needed. \(bridgeTerminalRetentionSummary())"
         default:
             return "ここで接続状態を確認し、必要なら起動・再接続・ログ確認へ進みます。\(bridgeTerminalRetentionSummary())"
         }
@@ -1348,9 +1350,9 @@ struct AppStrings {
     func bridgeRecoveryFailureMessage(_ detail: String) -> String {
         switch language {
         case .ja:
-            return "\(detail)\n次はターミナルウインドウと ~/.sayane/run-app-local.log を確認してください。"
+            return "\(detail)\n次は ~/.sayane/run-app-local.log を確認してください。"
         case .en:
-            return "\(detail)\nNext, inspect the Bridge Terminal window and ~/.sayane/run-app-local.log."
+            return "\(detail)\nNext, inspect ~/.sayane/run-app-local.log."
         }
     }
 
@@ -1363,27 +1365,36 @@ struct AppStrings {
                 return "Bearer トークンが見つかりません: \(path)"
             }
             if value == "Invalid Bridge response" {
-                return "Bridge からの応答を解釈できません。"
+                return "バックエンドからの応答を解釈できません。"
             }
             if let detail = Self.removingPrefix("HTTP ", from: value), let separator = detail.firstIndex(of: ":") {
                 let status = String(detail[..<separator]).trimmingCharacters(in: .whitespaces)
                 let body = String(detail[detail.index(after: separator)...]).trimmingCharacters(in: .whitespaces)
-                return "Bridge から HTTP \(status) が返りました: \(localizedBridgeErrorDetail(body))"
+                return "バックエンドから HTTP \(status) が返りました: \(localizedBridgeErrorDetail(body))"
             }
             if value == "Could not connect to local Bridge" {
-                return "ローカル Bridge に接続できません。"
+                return "ローカルバックエンドに接続できません。"
             }
             if value == "Could not locate the Sayane repository root from the current working directory." {
                 return "現在の作業ディレクトリから Sayane リポジトリを見つけられません。"
             }
             if let path = Self.removingPrefix("Missing launcher script: ", from: value) {
-                return "Bridge の起動スクリプトが見つかりません: \(path)"
+                return "バックエンドの起動スクリプトが見つかりません: \(path)"
+            }
+            if let path = Self.removingPrefix("Missing backend launcher script: ", from: value) {
+                return "バックエンドの起動スクリプトが見つかりません: \(path)"
             }
             if let message = Self.removingPrefix("Bridge launch failed: ", from: value) {
                 let cleaned = message
                     .replacingOccurrences(of: "\nCheck the opened Bridge Terminal window or ~/.sayane/run-app-local.log.", with: "")
                     .trimmingCharacters(in: .whitespacesAndNewlines)
-                return "Bridge の起動に失敗しました: \(localizedBridgeErrorDetail(cleaned))"
+                return "バックエンドの起動に失敗しました: \(localizedBridgeErrorDetail(cleaned))"
+            }
+            if let message = Self.removingPrefix("Backend launch failed: ", from: value) {
+                let cleaned = message
+                    .replacingOccurrences(of: "\nCheck ~/.sayane/run-app-local.log.", with: "")
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                return "バックエンドの起動に失敗しました: \(localizedBridgeErrorDetail(cleaned))"
             }
             return localizedBridgeErrorDetail(value)
         case .en:
@@ -1416,17 +1427,17 @@ struct AppStrings {
     func bridgeRecoveryHintTitle(issue: String) -> String {
         switch (language, issue) {
         case (.ja, "missing_token"):
-            return "Bridge トークンを確認"
+            return "バックエンドトークンを確認"
         case (.en, "missing_token"):
-            return "Check the Bridge token"
+            return "Check the backend token"
         case (.ja, "ui_session"):
-            return "Bridge セッションを作り直す"
+            return "バックエンドセッションを作り直す"
         case (.en, "ui_session"):
-            return "Recreate the Bridge session"
+            return "Recreate the backend session"
         case (.ja, "not_connected"):
-            return "Bridge を先に起動"
+            return "バックエンドを先に起動"
         case (.en, "not_connected"):
-            return "Start the Bridge first"
+            return "Start the backend first"
         default:
             return text(.connectionDiagnostics)
         }
@@ -1435,17 +1446,17 @@ struct AppStrings {
     func bridgeRecoveryIssueTitle(issue: String) -> String {
         switch (language, issue) {
         case (.ja, "missing_token"):
-            return "Bridge トークンが見つかりません"
+            return "バックエンドトークンが見つかりません"
         case (.en, "missing_token"):
-            return "The Bridge token is missing"
+            return "The backend token is missing"
         case (.ja, "ui_session"):
-            return "Bridge セッションが無効です"
+            return "バックエンドセッションが無効です"
         case (.en, "ui_session"):
-            return "The Bridge session is invalid"
+            return "The backend session is invalid"
         case (.ja, "not_connected"):
-            return "Bridge がまだ起動していません"
+            return "バックエンドがまだ起動していません"
         case (.en, "not_connected"):
-            return "The Bridge is not running yet"
+            return "The backend is not running yet"
         default:
             return text(.connectionProblem)
         }
@@ -1454,17 +1465,17 @@ struct AppStrings {
     func bridgeRecoveryIssueSummary(issue: String) -> String {
         switch (language, issue) {
         case (.ja, "missing_token"):
-            return "認証用トークンを読めないため、このアプリから Bridge API を呼び出せません。"
+            return "認証用トークンを読めないため、このアプリからバックエンド API を呼び出せません。"
         case (.en, "missing_token"):
-            return "This app cannot call the Bridge API because it cannot read the authentication token."
+            return "This app cannot call the backend API because it cannot read the authentication token."
         case (.ja, "ui_session"):
-            return "Bridge には到達していますが、Resident App の UI セッションが切れているため再接続が必要です。"
+            return "バックエンドには到達していますが、Resident App の UI セッションが切れているため再接続が必要です。"
         case (.en, "ui_session"):
-            return "The app can reach the Bridge, but the Resident App UI session has expired and must be refreshed."
+            return "The app can reach the backend, but the Resident App UI session has expired and must be refreshed."
         case (.ja, "not_connected"):
-            return "Bridge の待受がまだ無いため、\(bridgeStartupSummary())"
+            return "バックエンドの待受がまだ無いため、\(bridgeStartupSummary())"
         case (.en, "not_connected"):
-            return "Home, Queue, and Daemon cannot load because the Bridge is not listening yet."
+            return "Home, Queue, and Backend State cannot load because the backend is not listening yet."
         default:
             return text(.sessionProblem)
         }
@@ -1475,49 +1486,49 @@ struct AppStrings {
         case (.ja, "missing_token"):
             var steps = ["トークンファイルが読めるか確認します。"]
             if startupAvailable {
-                steps.append("ランチャーから Bridge を起動し直してトークンを再生成します。")
+                steps.append("ランチャーからバックエンドを起動し直してトークンを再生成します。")
             }
             steps.append("解決しない場合はログを開いて失敗理由を確認します。")
             return steps
         case (.en, "missing_token"):
             var steps = ["Check whether the token file can be read."]
             if startupAvailable {
-                steps.append("Restart the Bridge from the launcher to regenerate the token.")
+                steps.append("Restart the backend from the launcher to regenerate the token.")
             }
             steps.append("If it still fails, open the logs and inspect the launch error.")
             return steps
         case (.ja, "ui_session"):
             var steps = ["まず再接続を実行して UI セッションを更新します。"]
             if startupAvailable {
-                steps.append("直らなければランチャーから Bridge を再起動し、開いたターミナルウインドウを閉じずに保持します。")
+                steps.append("直らなければランチャーからバックエンドを再起動します。")
             }
             steps.append("その後にもう一度この画面で再接続します。")
             return steps
         case (.en, "ui_session"):
             var steps = ["Reconnect first to refresh the UI session."]
             if startupAvailable {
-                steps.append("If that does not fix it, restart the Bridge from the launcher and keep the opened Terminal window running.")
+                steps.append("If that does not fix it, restart the backend from the launcher.")
             }
             steps.append("Then reconnect again from this screen.")
             return steps
         case (.ja, "not_connected"):
-            var steps = ["Bridge がまだ待受していません。"]
+            var steps = ["バックエンドがまだ待受していません。"]
             if startupAvailable {
-                steps.append("ランチャーから Bridge を起動し、ターミナルウインドウを閉じずに保持します。")
+                steps.append("ランチャーからバックエンドを起動します。")
             }
             steps.append("起動後にこの画面で再接続または更新します。")
             return steps
         case (.en, "not_connected"):
-            var steps = ["The Bridge is not listening yet."]
+            var steps = ["The backend is not listening yet."]
             if startupAvailable {
-                steps.append("Start the Bridge from the launcher and keep the Terminal window open.")
+                steps.append("Start the backend from the launcher.")
             }
             steps.append("After it starts, reconnect or refresh from this screen.")
             return steps
         default:
             var steps = ["Run the recovery action from this screen first."]
             if startupAvailable {
-                steps.append("If needed, relaunch the Bridge from the launcher and keep the Terminal window open.")
+                steps.append("If needed, relaunch the backend from the launcher.")
             }
             steps.append("Use diagnostics and logs to inspect the next failure detail.")
             return steps
@@ -1549,8 +1560,8 @@ struct AppStrings {
         switch (language, screen) {
         case (.ja, "candidate_queue"): return "候補キューを開く"
         case (.en, "candidate_queue"): return "Open Candidate Queue"
-        case (.ja, "daemon_panel"): return "デーモンを開く"
-        case (.en, "daemon_panel"): return "Open Daemon Panel"
+        case (.ja, "daemon_panel"): return "バックエンド状態を開く"
+        case (.en, "daemon_panel"): return "Open Backend State"
         default:
             return "\(text(.openScreen)): \(tokenLabel(screen))"
         }
@@ -1573,7 +1584,7 @@ struct AppStrings {
         case handoffSnapshot, workstreams, platformScope, operatorValue, implementationOrder
         case serviceLifecycle, policyGates, governingRules, appUIPolicy, allowedReads
         case allowedWrites, allowedControlExposure, forbiddenExposure, platformTargets, rollbackRequired, policyRequired
-        case launchAgentRunbook, preflightChecks, verification, securityBoundary, troubleshooting
+        case launchAgentRunbook, preflightChecks, verification, securityBoundary, troubleshooting, close
         case logPaths, plistPreview, environmentAssumptions, programArguments, copyPlist
         case previewMetadata, operationId, previewHash
         case previewApplyBoundary, tailLogs, launchctlPrint, stdoutTail, stderrTail, copyStdoutTail, copyStderrTail

@@ -18,7 +18,8 @@ Options:
   --start       Start a local Bridge when one is not healthy
   --with-native Include native macOS preview smoke
   --api-only    Run only bearer-backed API surface smoke
-  --ui-only     Run only UI session smoke
+  --ui-only     Run only compatibility-shell UI session smoke
+  --routine     Run routine macOS smoke only (API + native, no HTML/UI session shell)
   -h, --help    Show this help
 EOF
 }
@@ -40,6 +41,11 @@ while [[ $# -gt 0 ]]; do
       RUN_API=0
       RUN_UI=1
       RUN_NATIVE=0
+      ;;
+    --routine)
+      RUN_API=1
+      RUN_UI=0
+      RUN_NATIVE=1
       ;;
     -h|--help)
       usage
@@ -80,7 +86,7 @@ main() {
   fi
 
   if [[ "${RUN_UI}" == "1" ]]; then
-    info "Running resident app UI session smoke"
+    info "Running resident app compatibility-shell UI session smoke"
     run_smoke "${ROOT}/scripts/check-resident-app-ui-session.sh"
   fi
 
@@ -93,7 +99,7 @@ main() {
 
 Resident app release smoke passed:
   API surfaces: $( [[ "${RUN_API}" == "1" ]] && printf 'yes' || printf 'skipped' )
-  UI session: $( [[ "${RUN_UI}" == "1" ]] && printf 'yes' || printf 'skipped' )
+  UI session compatibility shell: $( [[ "${RUN_UI}" == "1" ]] && printf 'yes' || printf 'skipped' )
   Native macOS: $( [[ "${RUN_NATIVE}" == "1" ]] && printf 'yes' || printf 'skipped' )
 EOF
 }

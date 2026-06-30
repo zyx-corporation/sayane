@@ -239,7 +239,7 @@ main() {
   check_session_invalid_after_logout
   cat <<EOF
 
-Resident app debug-shell UI session smoke passed:
+Resident app compatibility-shell UI session smoke passed:
   Bridge: ${BASE_URL}
   Token file: ${TOKEN_FILE}
   Cookie jar: ${COOKIE_JAR}

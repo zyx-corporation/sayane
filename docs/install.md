@@ -100,6 +100,25 @@ Bridge / CLI runtime は引き続きローカル Python 環境に依存するた
 通常起動は native app から行い、app 側が installed `sayane` CLI を見つけて Local Bridge を内部 backend として起動する前提へ寄せている。
 生成される `.app` bundle には `Contents/Resources/run-bridge-helper.sh` も同梱され、installed app は repo-local launcher ではなくこの helper を優先して使う。
 
+repo checkout を前提にしない install 導線として、GitHub release zip から直接 `~/Applications` へ入れる補助スクリプトも使える:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/zyx-corporation/sayane/main/scripts/install-macos-app-release.sh | bash
+```
+
+特定バージョンを入れたい場合:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/zyx-corporation/sayane/main/scripts/install-macos-app-release.sh | bash -s -- --version 1.0.14.post1
+```
+
+この release zip install も、前提は変わらない:
+
+- 先に `curl | bash` で CLI / Bridge runtime を入れておく
+- native app 自体は `~/Applications/SayaneApp.app` に入る薄い shell である
+- backend は native app 側が installed `sayane` CLI または bundled helper から起動する
+- self-contained Python runtime や notarized dmg を意味しない
+
 bundle 作成:
 
 ```bash
@@ -159,6 +178,14 @@ bash scripts/install-macos-app.sh --no-adhoc-sign
 
 ```bash
 bash scripts/refresh-macos-app.sh --no-build
+```
+
+release zip から更新したい場合:
+
+```bash
+bash scripts/install-macos-app-release.sh
+# または特定バージョン:
+bash scripts/install-macos-app-release.sh --version 1.0.14.post1
 ```
 
 起動:

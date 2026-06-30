@@ -6,16 +6,29 @@ struct EvaluateSheet: View {
     @State private var level = 1
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            SheetTitle(text: model.strings.text(.evaluate))
-            Picker(model.strings.text(.evaluateLevel), selection: $level) {
-                Text(model.strings.evaluationLevelLabel(1, detailed: true)).tag(1)
-                Text(model.strings.evaluationLevelLabel(2, detailed: true)).tag(2)
-                Text(model.strings.evaluationLevelLabel(3, detailed: true)).tag(3)
-            }
-            .pickerStyle(.menu)
+        VStack(alignment: .leading, spacing: 14) {
             HStack {
+                SheetTitle(text: model.strings.text(.evaluate))
+                Spacer()
+                if let candidate = model.selectedCandidateID {
+                    StatusBadge(text: candidate, tone: .neutral)
+                }
+            }
+            VStack(alignment: .leading, spacing: 6) {
+                Text(model.strings.text(.evaluateLevel))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                Picker(model.strings.text(.evaluateLevel), selection: $level) {
+                    Text(model.strings.evaluationLevelLabel(1, detailed: true)).tag(1)
+                    Text(model.strings.evaluationLevelLabel(2, detailed: true)).tag(2)
+                    Text(model.strings.evaluationLevelLabel(3, detailed: true)).tag(3)
+                }
+                .pickerStyle(.menu)
+            }
+            HStack(spacing: 8) {
+                Spacer()
                 Button(model.strings.text(.cancel)) { dismiss() }
+                    .buttonStyle(.bordered)
                 Button(model.strings.text(.submit)) {
                     Task {
                         if await model.evaluateSelected(level: level) {
@@ -37,11 +50,21 @@ struct RejectSheet: View {
     @State private var reason = ""
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            SheetTitle(text: model.strings.text(.reject))
-            TextField(model.strings.text(.rejectReason), text: $reason)
+        VStack(alignment: .leading, spacing: 14) {
             HStack {
+                SheetTitle(text: model.strings.text(.reject))
+                Spacer()
+                if let candidate = model.selectedCandidateID {
+                    StatusBadge(text: candidate, tone: .neutral)
+                }
+            }
+            TextField(model.strings.text(.rejectReason), text: $reason, axis: .vertical)
+                .textFieldStyle(.roundedBorder)
+                .lineLimit(3, reservesSpace: true)
+            HStack(spacing: 8) {
+                Spacer()
                 Button(model.strings.text(.cancel)) { dismiss() }
+                    .buttonStyle(.bordered)
                 Button(model.strings.text(.submit)) {
                     Task {
                         if await model.rejectSelected(reason: reason.isEmpty ? nil : reason) {
@@ -65,15 +88,26 @@ struct ReviseSheet: View {
     @State private var changeReason = ""
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            SheetTitle(text: model.strings.text(.revise))
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                SheetTitle(text: model.strings.text(.revise))
+                Spacer()
+                if let candidate = model.selectedCandidateID {
+                    StatusBadge(text: candidate, tone: .neutral)
+                }
+            }
             TextField(model.strings.text(.targetSection), text: $targetSection)
-            TextField(model.strings.text(.changeReason), text: $changeReason)
+                .textFieldStyle(.roundedBorder)
+            TextField(model.strings.text(.changeReason), text: $changeReason, axis: .vertical)
+                .textFieldStyle(.roundedBorder)
+                .lineLimit(2, reservesSpace: true)
             TextEditor(text: $editedText)
                 .frame(minHeight: 180)
                 .border(.quaternary)
-            HStack {
+            HStack(spacing: 8) {
+                Spacer()
                 Button(model.strings.text(.cancel)) { dismiss() }
+                    .buttonStyle(.bordered)
                 Button(model.strings.text(.submit)) {
                     Task {
                         if await model.reviseSelected(

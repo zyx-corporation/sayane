@@ -178,11 +178,7 @@ class ResidentDaemonServiceControlBoundary:
                     else "mvp_contract_only_non_macos"
                 ),
                 "allowed_commands": (
-                    launchagent_commands
-                    if is_macos
-                    else systemd_user_commands
-                    if is_linux
-                    else []
+                    launchagent_commands if is_macos else systemd_user_commands if is_linux else []
                 ),
                 "deferred_commands": [
                     "daemon-service-install",
@@ -223,9 +219,20 @@ class ResidentDaemonServiceControlBoundary:
                 "preview commands do not mutate",
                 "apply commands require explicit operator consent",
                 "control commands remain local-only and CLI-first in the current MVP",
-                "macOS LaunchAgent preview/apply/bootstrap/bootout/kickstart are the only MVP service-adjacent operator path",
-                "Linux systemd --user preview/apply/status are a post-MVP explicit local unit-write path and not an automated lifecycle installer",
-                "Linux systemd --user daemon-reload and enable-now/disable-now are explicit local CLI operations over a reviewed unit file only",
+                (
+                    "macOS LaunchAgent preview/apply/bootstrap/bootout/"
+                    "kickstart are the only MVP service-adjacent operator path"
+                ),
+                (
+                    "Linux systemd --user preview/apply/status are a post-MVP "
+                    "explicit local unit-write path and not an automated "
+                    "lifecycle installer"
+                ),
+                (
+                    "Linux systemd --user daemon-reload and enable-now/"
+                    "disable-now are explicit local CLI operations over a "
+                    "reviewed unit file only"
+                ),
                 "service install/enable/disable/remove/update are outside the MVP support boundary",
                 (
                     "cross-platform service lifecycle and rollback-policy closure "

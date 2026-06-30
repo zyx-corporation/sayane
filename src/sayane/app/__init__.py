@@ -164,16 +164,6 @@ from sayane.app.daemon_service_control_boundary import (
     ResidentDaemonServiceControlBoundary,
     build_daemon_service_control_boundary,
 )
-from sayane.app.daemon_systemd_user import (
-    SYSTEMD_USER_UNIT_NAME,
-    ResidentDaemonSystemdUserApplyError,
-    ResidentDaemonSystemdUserControlError,
-    ResidentDaemonSystemdUserPlan,
-    apply_systemd_user_plan,
-    build_systemd_user_plan,
-    build_systemd_user_status,
-    run_systemd_user_command,
-)
 from sayane.app.daemon_service_targets_status import (
     ResidentDaemonServiceTargetsStatus,
     build_daemon_service_targets_status,
@@ -194,6 +184,16 @@ from sayane.app.daemon_state_machine import (
 from sayane.app.daemon_supervision_status import (
     ResidentDaemonSupervisionStatus,
     build_daemon_supervision_status,
+)
+from sayane.app.daemon_systemd_user import (
+    SYSTEMD_USER_UNIT_NAME,
+    ResidentDaemonSystemdUserApplyError,
+    ResidentDaemonSystemdUserControlError,
+    ResidentDaemonSystemdUserPlan,
+    apply_systemd_user_plan,
+    build_systemd_user_plan,
+    build_systemd_user_status,
+    run_systemd_user_command,
 )
 from sayane.app.runtime import (
     ResidentRepositoryBackend,

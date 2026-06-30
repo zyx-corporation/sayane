@@ -11,7 +11,9 @@ def build_home_screen_state(overview: dict[str, Any]) -> dict[str, Any]:
     review_summary = overview.get("review_summary", {})
     daemon_summary = overview.get("daemon_summary", {})
     vault_status = overview.get("vault_status", {})
-    vault_session_status = overview.get("vault_session_status") or vault_status.get("session_status", {})
+    vault_session_status = overview.get("vault_session_status") or vault_status.get(
+        "session_status", {}
+    )
     return {
         "kind": "resident_app_home_screen_state",
         "summary_cards": [

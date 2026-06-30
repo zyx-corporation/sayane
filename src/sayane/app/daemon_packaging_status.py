@@ -109,7 +109,9 @@ class ResidentDaemonPackagingStatus:
                 ),
                 "debug_ui": "bridge_hosted_debug_shell",
                 "recommended_launcher": {
-                    "command": native_launcher_command if platform_family == "macos" else serve_command,
+                    "command": (
+                        native_launcher_command if platform_family == "macos" else serve_command
+                    ),
                     "command_text": (
                         " ".join(shlex.quote(part) for part in native_launcher_command)
                         if platform_family == "macos"
@@ -126,7 +128,10 @@ class ResidentDaemonPackagingStatus:
                         "native macOS app is the primary operator-facing UI; "
                         "/app/ui remains debug-only compatibility"
                         if platform_family == "macos"
-                        else "Bridge-hosted local shell remains the primary operator-facing UI on this platform"
+                        else (
+                            "Bridge-hosted local shell remains the primary "
+                            "operator-facing UI on this platform"
+                        )
                     ),
                 ],
             },

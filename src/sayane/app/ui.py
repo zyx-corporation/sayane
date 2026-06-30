@@ -374,7 +374,8 @@ def _build_daemon_next_actions(
                 }
             )
         if systemd_user_status and (
-            systemd_user_status.get("enabled") is False or systemd_user_status.get("active") is False
+            systemd_user_status.get("enabled") is False
+            or systemd_user_status.get("active") is False
         ):
             actions.append(
                 {

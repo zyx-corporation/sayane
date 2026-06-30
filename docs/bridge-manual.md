@@ -31,6 +31,10 @@ sayane serve --port 38741 --host 127.0.0.1
 - コンソールに pairing code（表示用ヒント）と token ファイルパスを出力
 - resident app debug shell は `/app/ui` bootstrap 後に dedicated local UI session へ切り替わる
 
+`/app/ui-state/*` と `/app/ui-action/*` は current macOS line では maintainer/debug 用の
+cookie-backed compatibility seam であり、通常の operator-facing app integration は
+bearer-backed `/app/*` を優先する。
+
 ## 3. エンドポイント
 
 ### 3.1 認証不要
@@ -253,7 +257,19 @@ curl -s -H "$AUTH" \
 
 #### `GET /app/ui`
 
-Resident app の debug-only local HTML compatibility shell。
+Resident app の maintainer/debug local HTML compatibility shell。
+
+Current maintenance boundary:
+
+- current native macOS operator flowの代替 primary UI ではない
+- explicit maintainer/debug / fallback / historical handoff のためだけに残す
+- routine operator guidance や日常的な browser 起動導線は増やさない
+
+Retirement boundary:
+
+- `/app/ui-state/*` と `/app/ui-action/*` に必要な maintainer/debug transport が残っていても
+  server-rendered HTML 自体は後で retire 可能
+- HTML rendering 固有の debug/runbook 依存がなくなった時点で removable legacy surface に移せる
 
 ```bash
 curl -s -H "$AUTH" \
@@ -261,6 +277,7 @@ curl -s -H "$AUTH" \
 ```
 
 ブラウザで直接開く場合の debug shell entrypoint も同じで、`http://127.0.0.1:38741/app/ui` を使う。
+routine operator flow ではなく、native diagnostics で不足するときだけ明示的に使う。
 `http://127.0.0.1:8008/index.html` のような別静的配信前提の URL は現行 debug shell では使わない。
 
 この endpoint は server-rendered HTML として以下を束ねて表示する:
@@ -271,7 +288,7 @@ curl -s -H "$AUTH" \
 - contract bootstrap guidance
 
 これは local presentation surface であり、final GUI framework の確定ではない。
-native macOS app の代替 primary UI ではなく、debug / smoke / fallback / handoff 用の
+native macOS app の代替 primary UI ではなく、maintainer/debug / fallback / handoff 用の
 compatibility surface として残している。
 
 daemon panel では runtime / cleanup / repair preview に加えて、service target status と
@@ -372,11 +389,11 @@ proof-oriented CLI surfaces are now available for the same local runtime line:
 また、packaging / service-control / supervision / recovery-consent contract は operator guidance
 surface であり、OS service integration や background control を有効化するものではない。
 
-#### `GET /app/ui-state/*`（legacy debug compatibility）
+#### `GET /app/ui-state/*`（maintainer debug compatibility）
 
 `GET /app/ui` が設定する local UI session cookie を使う、Bridge-hosted local shell 向けの
-JSON read surfaces です。native macOS app の routine path ではなく、debug / fallback /
-handoff 向けの legacy compatibility surface として維持しています。
+JSON read surfaces です。native macOS app の routine path ではなく、maintainer/debug / fallback /
+handoff 向けの maintainer/debug compatibility surface として維持しています。
 
 ```bash
 curl -s -b cookie.txt -c cookie.txt -H "$AUTH" \
@@ -400,11 +417,11 @@ curl -s -b cookie.txt \
 これは local browser shell の same-origin fetch 用 transport seam であり、Bearer ベース
 `/app/...` surface と同じ resident app semantics を再利用する。
 
-#### `POST /app/ui-action/*`（legacy debug compatibility）
+#### `POST /app/ui-action/*`（maintainer debug compatibility）
 
 `GET /app/ui` が設定する local UI session cookie を使う、Bridge-hosted local shell 向けの
-JSON write surfaces です。native macOS app の routine path ではなく、debug / fallback /
-handoff 向けの legacy compatibility surface として維持しています。
+JSON write surfaces です。native macOS app の routine path ではなく、maintainer/debug / fallback /
+handoff 向けの maintainer/debug compatibility surface として維持しています。
 
 ```bash
 curl -s -b cookie.txt -X POST -H "Content-Type: application/json" \

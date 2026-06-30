@@ -44,12 +44,6 @@ struct DebugShellShortcutButtons: View {
 
     var body: some View {
         HStack {
-            Button(model.strings.text(.openDebugShell)) {
-                model.openDebugShell()
-            }
-            .buttonStyle(.bordered)
-            .controlSize(controlSize)
-            .disabled(model.bridgeRecoveryActionDisabled)
             Button(model.strings.text(.copyDebugShellURL)) {
                 model.copyDebugShellURL()
             }

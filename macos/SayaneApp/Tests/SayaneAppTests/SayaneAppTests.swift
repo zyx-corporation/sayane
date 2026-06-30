@@ -4,7 +4,7 @@ import Testing
 
 @Test func appStringsHaveJapaneseTitle() {
     let strings = AppStrings(language: .ja)
-    #expect(strings.text(.appTitle) == "紗綾音 Resident App")
+    #expect(strings.text(.appTitle) == "紗綾音")
 }
 
 @Test func appStringsLocalizeSummaryCardLabels() {
@@ -19,7 +19,7 @@ import Testing
     #expect(strings.fieldLabel("backend") == "バックエンド")
     #expect(strings.statusValueLabel("pending") == "保留")
     #expect(strings.lineageDetailLabel("candidate_id") == "候補ID")
-    #expect(strings.tokenLabel("cli_first_local_bridge") == "CLI先行 + Local Bridge")
+    #expect(strings.tokenLabel("cli_first_local_bridge") == "CLI先行 + ローカルバックエンド")
     #expect(strings.tokenLabel("sqlite_test_local_vault") == "SQLite テスト用 Local Vault")
     #expect(strings.tokenLabel("sqlite_development_local_vault") == "SQLite 開発用 Local Vault")
     #expect(strings.tokenLabel("sqlite_macos_keychain_vault") == "SQLite macOS keychain Vault")
@@ -94,7 +94,7 @@ import Testing
     #expect(strings.fieldLabel("plist_exists") == "plist 存在")
     #expect(strings.tokenLabel("ready") == "準備完了")
     #expect(strings.tokenLabel("review_required") == "レビュー要")
-    #expect(strings.homeDaemonActionSummary(for: "curl -s http://127.0.0.1:38741/health") == "現在の Bridge / launchd 状態を先に確認します。")
+    #expect(strings.homeDaemonActionSummary(for: "curl -s http://127.0.0.1:38741/health") == "現在のバックエンド / launchd 状態を先に確認します。")
     #expect(strings.runtimeInitSummary(reviewRequired: true, itemCount: 2) == "レビュー要 (2)")
     #expect(strings.cleanupSummary(removeCount: 1, totalCount: 3) == "削除候補=1, 合計=3")
     #expect(strings.diagnosticMessage("launchagent_loaded") == "LaunchAgent は読み込み済みです。")
@@ -107,7 +107,7 @@ import Testing
     #expect(strings.text(.quickLinks) == "クイックリンク")
     #expect(strings.text(.screenOverview) == "表示中")
     #expect(strings.quickLinkLabel(screen: "candidate_queue") == "候補キューを開く")
-    #expect(strings.quickLinkLabel(screen: "daemon_panel") == "デーモンを開く")
+    #expect(strings.quickLinkLabel(screen: "daemon_panel") == "バックエンド状態を開く")
     #expect(strings.text(.noCandidates) == "候補はまだありません")
     #expect(strings.text(.noCandidatesMatchingFilters) == "条件に一致する候補はありません")
     #expect(strings.text(.selectCandidatePrompt) == "候補を選ぶと、詳細・差分・来歴を表示します")
@@ -130,14 +130,14 @@ import Testing
     #expect(strings.text(.back) == "戻る")
     #expect(strings.text(.navigationTrail) == "移動履歴")
     #expect(strings.text(.connectionDiagnostics) == "接続診断")
-    #expect(strings.text(.bridgeStatusPanel) == "Bridge 状態")
-    #expect(strings.text(.bridgeReady) == "Bridge は利用可能です")
-    #expect(strings.text(.bridgeStarting) == "Bridge は起動中です")
-    #expect(strings.text(.bridgeNotConnected) == "Bridge に未接続です")
+    #expect(strings.text(.bridgeStatusPanel) == "バックエンド状態")
+    #expect(strings.text(.bridgeReady) == "バックエンドは利用可能です")
+    #expect(strings.text(.bridgeStarting) == "バックエンドは起動中です")
+    #expect(strings.text(.bridgeNotConnected) == "バックエンドに未接続です")
     #expect(strings.text(.bridgeStartupFocus) == "起動優先")
-    #expect(strings.text(.bridgeDisconnectedShort) == "Bridge 未接続")
+    #expect(strings.text(.bridgeDisconnectedShort) == "バックエンド未接続")
     #expect(strings.text(.screenSummaryPending) == "起動後に読み込み")
-    #expect(strings.text(.homeStartupSummary) == "Bridge が未接続です。起動または再接続してから各画面を読み込みます。")
+    #expect(strings.text(.homeStartupSummary) == "バックエンドが未接続です。起動または再接続してから各画面を読み込みます。")
     #expect(strings.text(.debugCompatibilityTools) == "デバッグ互換ツール")
     #expect(strings.text(.debugCompatibilityToolsSummary) == "通常の macOS 操作導線から外し、必要時だけ開くブラウザ互換経路です")
     #expect(strings.text(.showDebugCompatibilityTools) == "デバッグ互換ツールを表示")
@@ -145,33 +145,33 @@ import Testing
     #expect(strings.text(.debugShell) == "ブラウザ互換シェル（デバッグ用）")
     #expect(strings.text(.debugShellCompatibilitySummary) == "通常操作ではなく、ブラウザでのデバッグ・互換確認・引き継ぎ用の経路です")
     #expect(strings.text(.bootstrapUI) == "デバッグ用互換URL")
-    #expect(strings.text(.sessionProblem) == "Bridge を復旧してください。起動後はターミナルウインドウを閉じず、そのまま再接続します。")
-    #expect(strings.text(.bridgeStatusDetailDisconnected) == "Bridge を起動すると各画面を読み込めます。macOS ではターミナルウインドウを閉じずに保持します")
-    #expect(strings.text(.bridgeStatusPanelSummary) == "ここで接続状態を確認し、必要なら起動・再接続・ログ確認へ進みます。macOS ではターミナルウインドウを開いたまま使います")
+    #expect(strings.text(.sessionProblem) == "バックエンドを復旧してください。起動後にこのアプリから再接続します。")
+    #expect(strings.text(.bridgeStatusDetailDisconnected) == "バックエンドを起動すると各画面を読み込めます。macOS アプリから自動起動します")
+    #expect(strings.text(.bridgeStatusPanelSummary) == "ここで接続状態を確認し、必要なら起動・再接続・ログ確認へ進みます。macOS アプリから自動起動します")
     #expect(strings.bridgeStartupSummary() == "起動または再接続してから各画面を読み込みます。")
-    #expect(strings.bridgeTerminalRetentionSummary() == "macOS では起動後にターミナルウインドウを閉じず、そのまま保持します。")
-    #expect(strings.bridgeStatusDetailText(status: nil, version: nil, sourceUpdatedAt: nil) == "Bridge を起動すると 起動または再接続してから各画面を読み込みます。 macOS では起動後にターミナルウインドウを閉じず、そのまま保持します。")
-    #expect(strings.bridgeStatusDetailText(status: "starting", version: "1.0.0", sourceUpdatedAt: nil) == "Bridge は起動中です。macOS では起動後にターミナルウインドウを閉じず、そのまま保持します。 バージョン: 1.0.0")
-    #expect(strings.bridgeStatusPanelSummaryText(status: nil) == "まずここから 起動または再接続してから各画面を読み込みます。 macOS では起動後にターミナルウインドウを閉じず、そのまま保持します。")
-    #expect(strings.bridgeStatusPanelSummaryText(status: "starting").contains("Bridge は起動中です"))
-    #expect(strings.text(.bridgeStartedMessage) == "Bridge を起動しました。ターミナルウインドウを開いたまま、このアプリで再接続します。")
-    #expect(strings.text(.bridgeReconnectedMessage) == "Bridge へ再接続しました。")
-    #expect(strings.text(.bridgeRefreshedMessage) == "Bridge の状態を更新しました。")
-    #expect(strings.bridgeActionInProgressMessage(startingBridge: true) == "Bridge を起動しています。macOS ではターミナルウインドウが開いたら閉じずに保持します。")
-    #expect(strings.bridgeActionInProgressMessage(startingBridge: false) == "Bridge へ再接続しています。接続診断とログを確認しながら待機します。")
-    #expect(strings.bridgeLaunchWarmupMessage() == "Bridge を起動しました。ローカル接続が応答するまで少し待ってから再接続します。")
+    #expect(strings.bridgeTerminalRetentionSummary() == "macOS アプリから自動起動します。")
+    #expect(strings.bridgeStatusDetailText(status: nil, version: nil, sourceUpdatedAt: nil) == "バックエンドを起動すると 起動または再接続してから各画面を読み込みます。 macOS アプリから自動起動します。")
+    #expect(strings.bridgeStatusDetailText(status: "starting", version: "1.0.0", sourceUpdatedAt: nil) == "バックエンドは起動中です。macOS アプリから自動起動します。 バージョン: 1.0.0")
+    #expect(strings.bridgeStatusPanelSummaryText(status: nil) == "まずここから 起動または再接続してから各画面を読み込みます。 macOS アプリから自動起動します。")
+    #expect(strings.bridgeStatusPanelSummaryText(status: "starting").contains("バックエンドは起動中です"))
+    #expect(strings.text(.bridgeStartedMessage) == "バックエンドを起動しました。このアプリで再接続します。")
+    #expect(strings.text(.bridgeReconnectedMessage) == "バックエンドへ再接続しました。")
+    #expect(strings.text(.bridgeRefreshedMessage) == "バックエンドの状態を更新しました。")
+    #expect(strings.bridgeActionInProgressMessage(startingBridge: true) == "バックエンドを起動しています。ローカル接続が応答するまで少し待ってから再接続します。")
+    #expect(strings.bridgeActionInProgressMessage(startingBridge: false) == "バックエンドへ再接続しています。接続診断とログを確認しながら待機します。")
+    #expect(strings.bridgeLaunchWarmupMessage() == "バックエンドを起動しました。ローカル接続が応答するまで少し待ってから再接続します。")
     #expect(strings.bridgeRecoveryFailureMessage("mock failure").contains("run-app-local.log"))
     #expect(strings.localizedBridgeErrorMessage("Missing bearer token at /tmp/sayane-token") == "Bearer トークンが見つかりません: /tmp/sayane-token")
-    #expect(strings.localizedBridgeErrorMessage("Could not connect to local Bridge") == "ローカル Bridge に接続できません。")
-    #expect(strings.localizedBridgeErrorMessage("Invalid Bridge response") == "Bridge からの応答を解釈できません。")
-    #expect(strings.localizedBridgeErrorMessage("HTTP 401: Missing or invalid resident app UI session") == "Bridge から HTTP 401 が返りました: Resident App の UI セッションが見つからないか無効です")
-    #expect(strings.localizedBridgeErrorMessage("Bridge launch failed: mock failure\nCheck the opened Bridge Terminal window or ~/.sayane/run-app-local.log.") == "Bridge の起動に失敗しました: mock failure")
-    #expect(strings.bridgeRecoveryHintTitle(issue: "missing_token") == "Bridge トークンを確認")
-    #expect(strings.bridgeRecoveryHintTitle(issue: "ui_session") == "Bridge セッションを作り直す")
-    #expect(strings.bridgeRecoveryHintTitle(issue: "not_connected") == "Bridge を先に起動")
-    #expect(strings.bridgeRecoveryIssueTitle(issue: "missing_token") == "Bridge トークンが見つかりません")
-    #expect(strings.bridgeRecoveryIssueTitle(issue: "ui_session") == "Bridge セッションが無効です")
-    #expect(strings.bridgeRecoveryIssueTitle(issue: "not_connected") == "Bridge がまだ起動していません")
+    #expect(strings.localizedBridgeErrorMessage("Could not connect to local Bridge") == "ローカルバックエンドに接続できません。")
+    #expect(strings.localizedBridgeErrorMessage("Invalid Bridge response") == "バックエンドからの応答を解釈できません。")
+    #expect(strings.localizedBridgeErrorMessage("HTTP 401: Missing or invalid resident app UI session") == "バックエンドから HTTP 401 が返りました: Resident App の UI セッションが見つからないか無効です")
+    #expect(strings.localizedBridgeErrorMessage("Bridge launch failed: mock failure\nCheck the opened Bridge Terminal window or ~/.sayane/run-app-local.log.") == "バックエンドの起動に失敗しました: mock failure")
+    #expect(strings.bridgeRecoveryHintTitle(issue: "missing_token") == "バックエンドトークンを確認")
+    #expect(strings.bridgeRecoveryHintTitle(issue: "ui_session") == "バックエンドセッションを作り直す")
+    #expect(strings.bridgeRecoveryHintTitle(issue: "not_connected") == "バックエンドを先に起動")
+    #expect(strings.bridgeRecoveryIssueTitle(issue: "missing_token") == "バックエンドトークンが見つかりません")
+    #expect(strings.bridgeRecoveryIssueTitle(issue: "ui_session") == "バックエンドセッションが無効です")
+    #expect(strings.bridgeRecoveryIssueTitle(issue: "not_connected") == "バックエンドがまだ起動していません")
     #expect(strings.bridgeRecoveryIssueSummary(issue: "ui_session").contains("UI セッション"))
     #expect(strings.bridgeRecoveryStepMessages(issue: "missing_token", startupAvailable: true).count == 3)
     #expect(strings.bridgeRecoveryStepMessages(issue: "ui_session", startupAvailable: false).first == "まず再接続を実行して UI セッションを更新します。")
@@ -195,7 +195,7 @@ import Testing
     #expect(strings.text(.exportHandoffNote) == "引き継ぎノートを書き出す")
     #expect(strings.text(.savedFile) == "保存しました")
     #expect(strings.text(.generatedAt) == "生成日時")
-    #expect(strings.text(.bridgeContext) == "Bridge コンテキスト")
+    #expect(strings.text(.bridgeContext) == "バックエンドコンテキスト")
     #expect(strings.text(.component) == "コンポーネント")
     #expect(strings.text(.statusDiagnostics) == "状態診断")
     #expect(strings.text(.returnCode) == "リターンコード")
@@ -220,9 +220,9 @@ import Testing
     #expect(strings.text(.shortcutGuide) == "ショートカット")
     #expect(strings.text(.startHere) == "まずここから")
     #expect(strings.text(.noPriorityActions) == "今すぐ着手すべき項目はありません")
-    #expect(strings.text(.noPriorityActionsDisconnected) == "最初に Bridge を起動または再接続すると、この画面の優先項目を読み込めます")
+    #expect(strings.text(.noPriorityActionsDisconnected) == "最初にバックエンドを起動または再接続すると、この画面の優先項目を読み込めます")
     #expect(strings.text(.reviewNextCandidate) == "次の候補を確認")
-    #expect(strings.text(.reviewDaemonAction) == "デーモンの次アクションを確認")
+    #expect(strings.text(.reviewDaemonAction) == "バックエンドの次アクションを確認")
     #expect(strings.text(.checkLaunchAgentStatus) == "LaunchAgentの状態を確認")
     #expect(strings.text(.openRunbook) == "運用手順書を開く")
     #expect(strings.text(.launchAgentFocus) == "LaunchAgent 注目点")
@@ -252,7 +252,7 @@ import Testing
     #expect(strings.text(.evidenceDrilldownSummary) == "関連する参照先を見比べて確認先を絞ります")
     #expect(strings.text(.decisionAssist) == "判断支援")
     #expect(strings.text(.decisionAssistSummary) == "次の一手を要約とコマンドで示します")
-    #expect(strings.text(.inspectActionsSummary) == "現在の launchd 状態と Bridge のヘルスを非破壊で確認します")
+    #expect(strings.text(.inspectActionsSummary) == "現在の launchd 状態とバックエンドのヘルスを非破壊で確認します")
     #expect(strings.text(.recoverActionsSummary) == "cleanup / repair / bootout の順で古い状態を解消します")
     #expect(strings.text(.startActionsSummary) == "確認後に bootstrap / kickstart で起動します")
     #expect(strings.text(.logActionsSummary) == "ログの場所を確認してから tail で追跡します")
@@ -272,8 +272,8 @@ import Testing
     #expect(strings.tokenLabel("blocked") == "ブロック中")
     #expect(strings.tokenLabel("candidate_requires_larger_architecture_change") == "大きな設計変更が必要")
     #expect(strings.tokenLabel("native_macos_app_primary") == "macOS ネイティブアプリ")
-    #expect(strings.tokenLabel("local_bridge_shell_primary") == "Local Bridge シェル")
-    #expect(strings.tokenLabel("bridge_hosted_debug_shell") == "Bridge 上の互換シェル")
+    #expect(strings.tokenLabel("local_bridge_shell_primary") == "ローカルバックエンドシェル")
+    #expect(strings.tokenLabel("bridge_hosted_debug_shell") == "バックエンド上の互換シェル")
     #expect(strings.tokenLabel("service_first_resident_runtime") == "service-first 常駐ランタイム候補")
     #expect(strings.operatorPanelPriority("packaging_status") < strings.operatorPanelPriority("service_targets"))
     #expect(strings.operatorPanelPriority("service_targets") < strings.operatorPanelPriority("operator_phase_status"))
@@ -335,20 +335,20 @@ import Testing
 @MainActor
 @Test func appModelBuildsBridgeStatusSummary() {
     let model = AppModel()
-    #expect(model.bridgeStatusHeadline == "Bridge に未接続です")
-    #expect(model.bridgeSuggestedActionText == "Bridge を起動")
-    #expect(model.bridgeStatusDetail.contains("ターミナルウインドウ"))
-    #expect(model.bridgeStatusPanelSummaryText == "まずここから 起動または再接続してから各画面を読み込みます。 macOS では起動後にターミナルウインドウを閉じず、そのまま保持します。")
-    #expect(model.homeBridgeSummaryText == "Bridge が未接続です。起動または再接続してから各画面を読み込みます。")
-    #expect(model.homePriorityEmptyMessage == "最初に Bridge を起動または再接続すると、この画面の優先項目を読み込めます")
+    #expect(model.bridgeStatusHeadline == "バックエンドに未接続です")
+    #expect(model.bridgeSuggestedActionText == "バックエンドを起動")
+    #expect(model.bridgeStatusDetail.contains("macOS アプリから自動起動"))
+    #expect(model.bridgeStatusPanelSummaryText == "まずここから 起動または再接続してから各画面を読み込みます。 macOS アプリから自動起動します。")
+    #expect(model.homeBridgeSummaryText == "バックエンドが未接続です。起動または再接続してから各画面を読み込みます。")
+    #expect(model.homePriorityEmptyMessage == "最初にバックエンドを起動または再接続すると、この画面の優先項目を読み込めます")
     #expect(model.homePriorityEmptyBadgeText == "起動優先")
-    #expect(model.queueEmptyMessage == "最初に Bridge を起動または再接続すると、この画面の優先項目を読み込めます")
+    #expect(model.queueEmptyMessage == "最初にバックエンドを起動または再接続すると、この画面の優先項目を読み込めます")
     #expect(model.queueEmptyBadgeText == "起動優先")
-    #expect(model.detailEmptyMessage == "最初に Bridge を起動または再接続すると、この画面の優先項目を読み込めます")
+    #expect(model.detailEmptyMessage == "最初にバックエンドを起動または再接続すると、この画面の優先項目を読み込めます")
     #expect(model.detailEmptyBadgeText == "起動優先")
-    #expect(model.daemonWorkspaceEmptyMessage == "最初に Bridge を起動または再接続すると、この画面の優先項目を読み込めます")
+    #expect(model.daemonWorkspaceEmptyMessage == "最初にバックエンドを起動または再接続すると、この画面の優先項目を読み込めます")
     #expect(model.daemonWorkspaceEmptyBadgeText == "起動優先")
-    #expect(model.daemonSummaryEmptyMessage == "最初に Bridge を起動または再接続すると、この画面の優先項目を読み込めます")
+    #expect(model.daemonSummaryEmptyMessage == "最初にバックエンドを起動または再接続すると、この画面の優先項目を読み込めます")
     #expect(model.daemonSummaryEmptyBadgeText == "起動優先")
     #expect(model.bridgeDiagnosticRows(compact: true).map(\.label) == ["ヘルスエンドポイント", "起動ソース", "トークンファイル", "ログファイル"])
     #expect(model.bridgeNeedsExpandedRecoveryLayout)
@@ -357,17 +357,17 @@ import Testing
     #expect(model.actionShowsProgress == false)
 
     model.health = HealthResponse(status: "starting", version: "1.0.0", sourceUpdatedAt: nil, component: nil)
-    #expect(model.bridgeStatusHeadline == "Bridge は起動中です")
-    #expect(model.bridgeStatusDetail == "Bridge は起動中です。macOS では起動後にターミナルウインドウを閉じず、そのまま保持します。 バージョン: 1.0.0")
-    #expect(model.bridgeStatusPanelSummaryText.contains("Bridge は起動中です"))
+    #expect(model.bridgeStatusHeadline == "バックエンドは起動中です")
+    #expect(model.bridgeStatusDetail == "バックエンドは起動中です。macOS アプリから自動起動します。 バージョン: 1.0.0")
+    #expect(model.bridgeStatusPanelSummaryText.contains("バックエンドは起動中です"))
     #expect(model.bridgeDiagnosticRows(compact: true).map(\.label) == ["ヘルスエンドポイント", "起動ソース", "トークンファイル", "ログファイル"])
     #expect(model.bridgeSuggestedActionText == "再試行")
 
     model.health = HealthResponse(status: "ok", version: "1.0.1", sourceUpdatedAt: "2026-06-23T09:00:00Z", component: nil)
-    #expect(model.bridgeStatusHeadline == "Bridge は利用可能です")
+    #expect(model.bridgeStatusHeadline == "バックエンドは利用可能です")
     #expect(model.bridgeStatusDetail.contains("1.0.1"))
-    #expect(model.bridgeStatusPanelSummaryText == "ここで接続状態を確認し、必要なら起動・再接続・ログ確認へ進みます。macOS では起動後にターミナルウインドウを閉じず、そのまま保持します。")
-    #expect(model.homeBridgeSummaryText == "Bridge接続: 利用可能です · 1.0.1")
+    #expect(model.bridgeStatusPanelSummaryText == "ここで接続状態を確認し、必要なら起動・再接続・ログ確認へ進みます。macOS アプリから自動起動します。")
+    #expect(model.homeBridgeSummaryText == "バックエンド接続: 利用可能です · 1.0.1")
     #expect(model.homePriorityEmptyMessage == "今すぐ着手すべき項目はありません")
     #expect(model.homePriorityEmptyBadgeText == "正常シグナル")
     #expect(model.queueEmptyMessage == "候補はまだありません")
@@ -378,8 +378,9 @@ import Testing
     #expect(model.daemonWorkspaceEmptyBadgeText == nil)
     #expect(model.daemonSummaryEmptyMessage == "今すぐ着手すべき項目はありません")
     #expect(model.daemonSummaryEmptyBadgeText == nil)
-    #expect(model.bridgeDiagnosticRows(compact: true).map(\.label) == ["Bridge URL", "ヘルスエンドポイント", "起動ソース", "プロファイル"])
-    #expect(model.bridgeDiagnosticRows(compact: false).map(\.label).contains("デバッグ用互換URL"))
+    #expect(model.bridgeDiagnosticRows(compact: true).map(\.label) == ["バックエンド URL", "ヘルスエンドポイント", "起動ソース", "プロファイル"])
+    #expect(model.bridgeDiagnosticRows(compact: false).map(\.label) == ["バックエンド URL", "ヘルスエンドポイント", "起動ソース", "プロファイル"])
+    #expect(model.bridgeDebugDiagnosticRows().map(\.label).contains("デバッグ用互換URL"))
     #expect(model.bridgeNeedsExpandedRecoveryLayout == false)
     #expect(model.bridgeSuggestedActionText == "更新")
     #expect(model.toolbarRefreshText == "更新")
@@ -395,8 +396,8 @@ import Testing
     #expect(model.toolbarRefreshText == "更新中…")
 
     model.health = nil
-    #expect(model.bridgeSuggestedActionText == "Bridge 起動中…")
-    #expect(model.toolbarRefreshText == "Bridge 起動中…")
+    #expect(model.bridgeSuggestedActionText == "バックエンド起動中…")
+    #expect(model.toolbarRefreshText == "バックエンド起動中…")
 
     model.health = HealthResponse(status: "starting", version: "1.0.0", sourceUpdatedAt: nil, component: nil)
     #expect(model.bridgeSuggestedActionText == "再接続中…")
@@ -408,32 +409,67 @@ import Testing
     let model = AppModel()
 
     model.errorMessage = "Could not connect to local Bridge"
-    #expect(model.errorDisplayMessage == "ローカル Bridge に接続できません。")
-    #expect(model.bridgeRecoveryIssueTitle == "Bridge がまだ起動していません")
-    #expect(model.bridgeRecoveryIssueSummary == "Bridge の待受がまだ無いため、起動または再接続してから各画面を読み込みます。")
-    #expect(model.bridgeRecoveryHintTitle == "Bridge を先に起動")
-    #expect(model.bridgeRecoveryStepMessages.first == "Bridge がまだ待受していません。")
+    #expect(model.errorDisplayMessage == "ローカルバックエンドに接続できません。")
+    #expect(model.bridgeRecoveryIssueTitle == "バックエンドがまだ起動していません")
+    #expect(model.bridgeRecoveryIssueSummary == "バックエンドの待受がまだ無いため、起動または再接続してから各画面を読み込みます。")
+    #expect(model.bridgeRecoveryHintTitle == "バックエンドを先に起動")
+    #expect(model.bridgeRecoveryStepMessages.first == "バックエンドがまだ待受していません。")
     #expect(model.bridgeRecoveryShowsTokenAction == false)
     #expect(model.bridgeRecoveryPrefersLauncherAction == false)
+    #expect(model.shouldExposeDebugCompatibilityTools == false)
     #expect(model.shouldPresentBlockingErrorView == false)
 
     model.errorMessage = "Missing bearer token at /tmp/sayane-token"
     #expect(model.errorDisplayMessage == "Bearer トークンが見つかりません: /tmp/sayane-token")
-    #expect(model.bridgeRecoveryIssueTitle == "Bridge トークンが見つかりません")
-    #expect(model.bridgeRecoveryHintTitle == "Bridge トークンを確認")
+    #expect(model.bridgeRecoveryIssueTitle == "バックエンドトークンが見つかりません")
+    #expect(model.bridgeRecoveryHintTitle == "バックエンドトークンを確認")
     #expect(model.bridgeRecoveryShowsTokenAction)
     #expect(model.bridgeRecoveryPrefersTokenAction)
+    #expect(model.shouldExposeDebugCompatibilityTools == false)
 
     model.errorMessage = "HTTP 401: Missing or invalid resident app UI セッション"
-    #expect(model.errorDisplayMessage?.contains("Bridge から HTTP 401 が返りました") == true)
-    #expect(model.bridgeRecoveryIssueTitle == "Bridge セッションが無効です")
-    #expect(model.bridgeRecoveryHintTitle == "Bridge セッションを作り直す")
+    #expect(model.errorDisplayMessage?.contains("バックエンドから HTTP 401 が返りました") == true)
+    #expect(model.bridgeRecoveryIssueTitle == "バックエンドセッションが無効です")
+    #expect(model.bridgeRecoveryHintTitle == "バックエンドセッションを作り直す")
     #expect(model.bridgeRecoveryShowsTokenAction)
     #expect(model.bridgeRecoveryPrefersTokenAction == false)
     #expect(model.bridgeRecoveryStepMessages.contains("まず再接続を実行して UI セッションを更新します。"))
+    #expect(model.shouldExposeDebugCompatibilityTools == false)
+
+    model.lastBridgeLaunchFailure = "Backend launch failed: mock failure"
+    #expect(model.shouldExposeDebugCompatibilityTools == false)
 
     model.hasLoadedInitialData = true
     #expect(model.shouldPresentBlockingErrorView)
+
+    let daemonData = Data(#"""
+    {
+      "kind": "resident_app_daemon_panel_screen_state",
+      "summary_cards": [],
+      "operator_panels": [],
+      "service_target_summary": {"current_platform": null, "recommended_target": null, "targets": []},
+      "launchagent_summary": {"preview_available": false, "status_available": false, "plist_path": null, "loaded_status": null, "launchctl_commands": {}},
+      "operator_phase_summary": {"phase": null, "phase_status": null, "phase_readiness": "review_required", "blocking_reasons": [], "checklist": []},
+      "operator_phase_details": {
+        "current_supported_operator_path": {"startup_command_text": "sayane resident-app bridge", "bootstrap_ui": "http://127.0.0.1:38741/app/ui", "local_only": true, "notes": []},
+        "workstreams": [],
+        "recommended_implementation_order": [],
+        "read_surfaces": [],
+        "exit_criteria": [],
+        "not_in_scope": []
+      },
+      "next_actions": [],
+      "runtime_init": {},
+      "preflight": {},
+      "readiness_diagnostics": [],
+      "proof_diagnostics": [],
+      "vault_status": {}
+    }
+    """#.utf8)
+    model.daemonState = try! JSONDecoder().decode(DaemonPanelScreenState.self, from: daemonData)
+    #expect(model.hasDebugCompatibilitySurface)
+    #expect(model.shouldExposeDebugCompatibilityTools)
+    #expect(model.shouldIncludeDebugCompatibilityInHandoff)
 }
 
 @MainActor
@@ -596,7 +632,7 @@ import Testing
 @Test func bridgeLauncherLaunchFailedMentionsTerminalAndLog() {
     let error = BridgeLauncherError.launchFailed("mock failure")
     let description = error.errorDescription ?? ""
-    #expect(description.contains("Bridge launch failed: mock failure"))
+    #expect(description.contains("Backend launch failed: mock failure"))
     #expect(description.contains("run-app-local.log"))
 }
 
@@ -713,17 +749,17 @@ import Testing
 
     let handoff = try #require(model.daemonHandoffExportText())
     #expect(handoff.contains("引き継ぎスナップショット"))
-    #expect(handoff.contains("Bridge コンテキスト:"))
+    #expect(handoff.contains("バックエンドコンテキスト:"))
     #expect(handoff.contains("生成日時: "))
     #expect(handoff.contains("プロファイル: default"))
-    #expect(handoff.contains("Bridge URL: http://127.0.0.1:38741"))
+    #expect(handoff.contains("バックエンド URL: http://127.0.0.1:38741"))
     #expect(handoff.contains("ヘルスエンドポイント: http://127.0.0.1:38741/health"))
-    #expect(handoff.contains("ブラウザ互換シェル（デバッグ用）: http://127.0.0.1:38741/app/ui"))
+    #expect(handoff.contains("ブラウザ互換シェル（デバッグ用）: http://127.0.0.1:38741/app/ui") == false)
     #expect(handoff.contains("トークンファイル: "))
     #expect(handoff.contains(".sayane/bridge.token"))
     #expect(handoff.contains("ログファイル: "))
     #expect(handoff.contains(".sayane/run-app-local.log"))
-    #expect(handoff.contains("Bridge 状態: Bridge は利用可能です"))
+    #expect(handoff.contains("バックエンド状態: バックエンドは利用可能です"))
     #expect(handoff.contains("コンポーネント: resident-app-bridge"))
     #expect(handoff.contains("バージョン: 1.0.12"))
     #expect(handoff.contains("ソース更新時刻: 2026-06-24T10:00:00Z"))
@@ -745,7 +781,7 @@ import Testing
     #expect(handoff.contains("現在状態:"))
     #expect(handoff.contains("復旧プレビュー:"))
     let operatorSummaryIndex = try #require(handoff.range(of: "運用サマリーレール:")?.lowerBound)
-    let bridgeContextIndex = try #require(handoff.range(of: "Bridge コンテキスト:")?.lowerBound)
+    let bridgeContextIndex = try #require(handoff.range(of: "バックエンドコンテキスト:")?.lowerBound)
     let suggestedActionIndex = try #require(handoff.range(of: "推奨アクション:")?.lowerBound)
     let phaseGatesIndex = try #require(handoff.range(of: "フェーズ完了ゲート:")?.lowerBound)
     let readSurfacesIndex = try #require(handoff.range(of: "参照サーフェス:")?.lowerBound)
@@ -757,6 +793,45 @@ import Testing
     #expect(readSurfacesIndex < currentStateIndex)
     #expect(model.daemonHandoffExportFilename().hasPrefix("sayane-daemon-handoff-"))
     #expect(model.daemonHandoffExportFilename().hasSuffix(".txt"))
+}
+
+@MainActor
+@Test func routineHealthyHandoffOmitsDebugCompatibilityURL() throws {
+    let model = AppModel()
+    model.health = HealthResponse(status: "ok", version: "1.0.14", sourceUpdatedAt: nil, component: "resident-app-bridge")
+
+    let daemonData = Data(#"""
+    {
+      "kind": "resident_app_daemon_panel_screen_state",
+      "summary_cards": [],
+      "operator_panels": [],
+      "service_target_summary": {"current_platform": null, "recommended_target": null, "targets": []},
+      "launchagent_summary": {"preview_available": false, "status_available": false, "plist_path": null, "loaded_status": null, "launchctl_commands": {}},
+      "operator_phase_summary": {"phase": null, "phase_status": null, "phase_readiness": "ready", "blocking_reasons": [], "checklist": []},
+      "operator_phase_details": {
+        "current_supported_operator_path": {"startup_command_text": "sayane resident-app bridge", "bootstrap_ui": "http://127.0.0.1:38741/app/ui", "local_only": true, "notes": []},
+        "workstreams": [],
+        "recommended_implementation_order": [],
+        "read_surfaces": [],
+        "exit_criteria": [],
+        "not_in_scope": []
+      },
+      "next_actions": [],
+      "runtime_init": {},
+      "cleanup_preview": {},
+      "repair_preview": {}
+    }
+    """#.utf8)
+    model.daemonState = try JSONDecoder().decode(DaemonPanelScreenState.self, from: daemonData)
+
+    #expect(model.hasDebugCompatibilitySurface)
+    #expect(model.shouldExposeDebugCompatibilityTools == false)
+    #expect(model.shouldIncludeDebugCompatibilityInHandoff == false)
+
+    let handoff = try #require(model.daemonHandoffExportText())
+    #expect(handoff.contains("バックエンド URL: http://127.0.0.1:38741"))
+    #expect(handoff.contains("ヘルスエンドポイント: http://127.0.0.1:38741/health"))
+    #expect(handoff.contains("ブラウザ互換シェル（デバッグ用）") == false)
 }
 
 @MainActor
@@ -784,7 +859,7 @@ import Testing
 
     model.choose(screen: .daemon)
     #expect(model.selectedScreen == .daemon)
-    #expect(model.navigationTrailText == "ホーム → デーモン")
+    #expect(model.navigationTrailText == "ホーム → バックエンド状態")
 
     model.goBack()
     #expect(model.selectedScreen == .queue)
@@ -801,7 +876,7 @@ import Testing
     let disconnected = model.sidebarMetadata(for: .home)
     #expect(disconnected.title == "ホーム")
     #expect(disconnected.summary == "起動後に読み込み")
-    #expect(disconnected.badgeText == "Bridge 未接続")
+    #expect(disconnected.badgeText == "バックエンド未接続")
     #expect(disconnected.badgeTone == .neutral)
     #expect(model.shouldCondenseChromeMetadata)
     #expect(model.shouldShowNavigationTrailInStatusBar == false)
@@ -865,7 +940,7 @@ import Testing
     #expect(queue.badgeTone == .caution)
 
     let daemon = model.sidebarMetadata(for: .daemon)
-    #expect(daemon.title == "デーモン")
+    #expect(daemon.title == "バックエンド状態")
     #expect(daemon.summary == "運用フェーズ: レビュー要")
     #expect(daemon.badgeText == "レビュー要")
     #expect(daemon.badgeTone == .neutral)

@@ -26,7 +26,12 @@ struct SurfaceCard<Content: View>: View {
         content
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding()
-            .background(.quaternary.opacity(emphasis), in: RoundedRectangle(cornerRadius: 12))
+            .background(Color(NSColor.windowBackgroundColor), in: RoundedRectangle(cornerRadius: 12))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.primary.opacity(0.16 + emphasis * 0.12), lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(0.03 + emphasis * 0.04), radius: 4, y: 1)
     }
 }
 

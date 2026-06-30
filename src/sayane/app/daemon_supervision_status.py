@@ -98,7 +98,10 @@ class ResidentDaemonSupervisionStatus:
                     "explicit CLI-first control policy",
                     "background surfaces may not imply daemon proof, "
                     "readiness proof, or API readiness proof on their own",
-                    "background surfaces are post-MVP candidates unless a later packaging decision reopens them",
+                    (
+                        "background surfaces are post-MVP candidates unless a "
+                        "later packaging decision reopens them"
+                    ),
                 ],
             },
             "recovery_entrypoints": [
@@ -111,7 +114,10 @@ class ResidentDaemonSupervisionStatus:
                 "passive status visibility remains separate from unrestricted daemon control",
                 "current app shell does not expose tray or menu-bar supervision toggles",
                 "current supervision line stays local-only and CLI-compatible",
-                "candidate background surfaces remain post-MVP ideas, not current product commitments",
+                (
+                    "candidate background surfaces remain post-MVP ideas, not "
+                    "current product commitments"
+                ),
             ],
         }
 

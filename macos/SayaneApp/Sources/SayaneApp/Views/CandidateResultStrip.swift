@@ -6,17 +6,15 @@ struct CandidateResultStrip: View {
 
     var body: some View {
         GroupBox(strings.text(.candidateResult)) {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    StatusBadge(text: record.title, tone: record.tone)
-                    Spacer()
-                    Text(strings.text(.resultForCurrentCandidate))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+            HStack(alignment: .top, spacing: 10) {
+                StatusBadge(text: record.title, tone: record.tone)
                 Text(record.message)
-                    .font(.subheadline)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                Text(strings.text(.resultForCurrentCandidate))
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }

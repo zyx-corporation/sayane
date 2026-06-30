@@ -13,9 +13,9 @@ enum BridgeLauncherError: LocalizedError {
         case .cliNotFound:
             return "Could not find an installed Sayane CLI. Install it first with curl+bash or pip, then retry."
         case let .launcherMissing(url):
-            return "Missing launcher script: \(url.path)"
+            return "Missing backend launcher script: \(url.path)"
         case let .launchFailed(message):
-            return "Bridge launch failed: \(message)\nCheck ~/.sayane/run-app-local.log."
+            return "Backend launch failed: \(message)\nCheck ~/.sayane/run-app-local.log."
         }
     }
 }
@@ -136,7 +136,10 @@ struct BridgeLauncher {
         if [ ! -f '\(profilePath.replacingOccurrences(of: "'", with: "'\\''"))' ]; then
           '\(cliPath)' init >> '\(logPath.replacingOccurrences(of: "'", with: "'\\''"))' 2>&1 || true
         fi
-        if lsof -tiTCP:38741 -sTCP:LISTEN >/dev/null 2>&1; then
+        if curl --max-time 2 -fsS http://127.0.0.1:38741/health >/dev/null 2>&1; then
+          exit 0
+        fi
+        if lsof -tiTCP:38741 -sTCP:LISTEN >/dev/null 2>&1 || pgrep -f "sayane.*serve --host 127.0.0.1 --port 38741" >/dev/null 2>&1; then
           exit 0
         fi
         nohup '\(cliPath)' serve --host 127.0.0.1 --port 38741 >> '\(logPath.replacingOccurrences(of: "'", with: "'\\''"))' 2>&1 </dev/null &

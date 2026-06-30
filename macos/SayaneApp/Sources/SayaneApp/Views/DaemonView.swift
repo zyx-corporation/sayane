@@ -20,6 +20,31 @@ struct DaemonView: View {
     @State private var showRecoveryPolicy = false
     @State private var showLaunchAgent = true
     @State private var showLaunchAgentRunbook = true
+    @State private var showLaunchAgentCurrentStateDetails = false
+    @State private var showLaunchAgentRecoveryPreview = false
+    @State private var showLaunchAgentStatusDiagnostics = false
+    @State private var showLaunchAgentStderrPreview = false
+    @State private var showStartupVisibility = false
+    @State private var showHandoffSnapshot = false
+    @State private var showRunbookProofDiagnostics = false
+    @State private var showRunbookPlistPreview = false
+    @State private var showOperatorSupportedPath = false
+    @State private var showOperatorExitCriteria = false
+    @State private var showOperatorReadSurfaces = false
+    @State private var showOperatorDecisionAssist = false
+    @State private var showOperatorEvidenceDrilldown = false
+    @State private var showOperatorNotInScope = false
+    @State private var showServiceTargetsDetails = false
+    @State private var showServiceAllowedCommands = false
+    @State private var showServiceDeferredCommands = false
+    @State private var showServiceAppPolicy = false
+    @State private var showSupervisionCandidates = false
+    @State private var showRecoveryMutatingActions = false
+    @State private var showRecoveryControlActions = false
+    @State private var showRecoveryFlowDetails = false
+    @State private var showPackagingOperatorSurface = false
+    @State private var showPackagingCandidates = false
+    @State private var showPackagingGuardrails = false
 
     private struct OperatorWorkspaceItem: Identifiable {
         let id: String
@@ -94,15 +119,16 @@ struct DaemonView: View {
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 14) {
                     header
-                    focusSection(proxy: proxy)
-                    operatorSummaryRail(proxy: proxy)
+                    compactDaemonOverview(proxy: proxy)
                     sectionNavigator(proxy: proxy)
-                    operatorWorkspace(proxy: proxy)
-                        .id(SectionAnchor.operatorWorkspace)
                     nextActions
                         .id(SectionAnchor.nextActions)
+                    focusSection(proxy: proxy)
+                    operatorSummaryRail(proxy: proxy)
+                    operatorWorkspace(proxy: proxy)
+                        .id(SectionAnchor.operatorWorkspace)
                     launchAgent
                         .id(SectionAnchor.launchAgent)
                     serviceTargets
@@ -123,14 +149,107 @@ struct DaemonView: View {
                     startupVisibility
                     handoffSnapshot
                 }
-                .padding(24)
+                .padding(18)
             }
         }
         .navigationTitle(model.strings.text(.daemon))
     }
 
-    private var header: some View {
+    private func compactDaemonOverview(proxy: ScrollViewProxy) -> some View {
         VStack(alignment: .leading, spacing: 10) {
+            SurfaceCard(emphasis: 0.22) {
+                VStack(alignment: .leading, spacing: 10) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(model.strings.text(.currentState))
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(.secondary)
+                        HStack(alignment: .center, spacing: 10) {
+                            Circle()
+                                .fill(model.bridgeStatusTone.foregroundStyle)
+                                .frame(width: 10, height: 10)
+                            Text(model.currentGateText ?? model.bridgeStatusHeadline)
+                                .font(.title3.weight(.bold))
+                        }
+                    }
+
+                    if let blockerSummary = compactDaemonBlockerSummary {
+                        SurfaceCard(emphasis: 0.14) {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(model.strings.text(.blockedBy))
+                                    .font(.caption2.weight(.bold))
+                                    .foregroundStyle(.secondary)
+                                Text(blockerSummary)
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(2)
+                            }
+                        }
+                    }
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(model.strings.text(.nextCommand))
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(.secondary)
+                        HStack(spacing: 8) {
+                            Button(model.bridgeSuggestedActionText) {
+                                Task { await model.performBridgeSuggestedAction() }
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.small)
+                            .disabled(model.bridgeRecoveryActionDisabled)
+
+                            Button(model.strings.text(.openSection)) {
+                                expandSection(compactDaemonPrimaryAnchor)
+                                withAnimation {
+                                    proxy.scrollTo(compactDaemonPrimaryAnchor, anchor: .top)
+                                }
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+
+                            Spacer()
+                        }
+                    }
+                }
+            }
+
+            HStack(spacing: 8) {
+                compactOverviewLink(title: model.strings.text(.launchAgentRunbook), anchor: .launchAgentRunbook, proxy: proxy)
+                compactOverviewLink(title: model.strings.text(.readSurfaces), anchor: .operatorWorkspace, proxy: proxy)
+                compactOverviewLink(title: model.strings.text(.supervision), anchor: .supervision, proxy: proxy)
+            }
+        }
+    }
+
+    private func compactOverviewLink(title: String, anchor: SectionAnchor, proxy: ScrollViewProxy) -> some View {
+        Button {
+            expandSection(anchor)
+            withAnimation {
+                proxy.scrollTo(anchor, anchor: .top)
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "chevron.right")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(.secondary)
+                Text(title)
+                    .font(.caption.weight(.semibold))
+                Spacer()
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(Color(NSColor.windowBackgroundColor))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.secondary.opacity(0.15), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 8) {
             BridgeStatusPanel(model: model, compact: true)
             HStack {
                 Button(model.strings.text(.expandAll)) {
@@ -150,7 +269,7 @@ struct DaemonView: View {
 
     private func operatorSummaryRail(proxy: ScrollViewProxy) -> some View {
         GroupBox(model.strings.text(.operatorSummaryRail)) {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text(model.strings.text(.operatorSummaryRailSummary))
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -170,7 +289,7 @@ struct DaemonView: View {
                         badgeText: model.daemonSummaryEmptyBadgeText
                     )
                 } else {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 240), spacing: 10)], spacing: 10) {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 240), spacing: 8)], spacing: 8) {
                         ForEach(operatorSummaryRailPreviewItems) { item in
                             SurfaceCard(emphasis: 0.30) {
                                 VStack(alignment: .leading, spacing: 8) {
@@ -251,7 +370,7 @@ struct DaemonView: View {
     }
 
     private func operatorWorkspace(proxy: ScrollViewProxy) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             SectionTitle(text: model.strings.text(.nextEpicWorkspace))
             Text(model.strings.text(.nextEpicWorkspaceSummary))
                 .font(.caption)
@@ -287,7 +406,7 @@ struct DaemonView: View {
             operatorEvidenceRail(proxy: proxy)
         case .remainingWorkstreams:
             GroupBox(model.strings.text(.remainingWorkstreams)) {
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 8) {
                     Text(model.strings.text(.remainingWorkstreamsSummary))
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -630,42 +749,70 @@ struct DaemonView: View {
                     action: { Task { await model.refreshCurrentScreen() } }
                 )
             } else {
-                ForEach(daemonFocusItems) { item in
-                    Button {
-                        expandSection(item.anchor)
-                        withAnimation {
-                            proxy.scrollTo(item.anchor, anchor: .top)
-                        }
-                    } label: {
-                        SurfaceCard(emphasis: 0.34) {
-                            HStack(alignment: .top, spacing: 12) {
-                                StatusBadge(text: item.badge, tone: item.tone)
-                                CardTitleSummary(title: item.title, summary: item.summary)
-                                Spacer()
-                                Image(systemName: "arrow.right.circle.fill")
-                                    .foregroundStyle(.secondary)
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 250), spacing: 12)], spacing: 12) {
+                    ForEach(daemonFocusItems) { item in
+                        Button {
+                            expandSection(item.anchor)
+                            withAnimation {
+                                proxy.scrollTo(item.anchor, anchor: .top)
+                            }
+                        } label: {
+                            SurfaceCard(emphasis: 0.34) {
+                                HStack(alignment: .top, spacing: 12) {
+                                    StatusBadge(text: item.badge, tone: item.tone)
+                                    CardTitleSummary(title: item.title, summary: item.summary)
+                                    Spacer()
+                                    Image(systemName: "arrow.right.circle.fill")
+                                        .foregroundStyle(.secondary)
+                                }
                             }
                         }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("\(item.badge) \(item.title) \(item.summary)")
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("\(item.badge) \(item.title) \(item.summary)")
                 }
             }
         }
+    }
+
+    private var compactDaemonBlockerSummary: String? {
+        if let reason = model.nextDaemonReasonText, !reason.isEmpty {
+            return reason
+        }
+        if let action = model.daemonState?.nextActions.first, !action.reason.isEmpty {
+            return action.reason
+        }
+        let detail = model.bridgeStatusDetail.trimmingCharacters(in: .whitespacesAndNewlines)
+        return detail.isEmpty ? nil : detail
+    }
+
+    private var compactDaemonPrimaryAnchor: SectionAnchor {
+        if let action = model.daemonState?.nextActions.first {
+            return focusAnchor(for: action.command)
+        }
+        if model.startupCommandText != nil {
+            return .operatorPhase
+        }
+        return .launchAgentRunbook
     }
 
     private var cards: some View {
         VStack(alignment: .leading, spacing: 12) {
             SectionTitle(text: model.strings.text(.summaryCards))
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 180))], spacing: 12) {
-                ForEach(model.daemonState?.summaryCards ?? []) { card in
-                    SurfaceCard {
+                ForEach(summaryCardPreviewItems) { card in
+                    SurfaceCard(emphasis: 0.22) {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(model.strings.summaryCardLabel(card.key)).font(.caption).foregroundStyle(.secondary)
                             SummaryCardValueView(strings: model.strings, card: card)
                         }
                     }
                 }
+            }
+            if summaryCardOverflowCount > 0 {
+                Text(model.strings.moreItemsMessage(summaryCardOverflowCount))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
     }
@@ -676,50 +823,56 @@ struct DaemonView: View {
             Text(model.strings.text(.statusSectionSummary))
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            ForEach(orderedOperatorPanels) { panel in
-                GroupBox(model.strings.operatorPanelLabel(panel.panel)) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        if let status = panel.status {
-                            HStack {
-                                Text("\(model.strings.fieldLabel("status")):")
-                                StatusBadge(text: model.strings.tokenLabel(status), tone: model.strings.tone(forToken: status))
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 260), spacing: 12)], spacing: 12) {
+                ForEach(orderedOperatorPanels) { panel in
+                    SurfaceCard(emphasis: 0.2) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack(alignment: .top, spacing: 8) {
+                                Text(model.strings.operatorPanelLabel(panel.panel))
+                                    .font(.headline)
+                                Spacer()
+                                if let status = panel.status {
+                                    StatusBadge(text: model.strings.tokenLabel(status), tone: model.strings.tone(forToken: status))
+                                }
                             }
-                        }
-                        if let highlights = panel.highlights {
-                            FlowLayout(orderedHighlights(highlights), id: \.self, spacing: 6) { highlight in
-                                StatusBadge(text: model.strings.tokenLabel(highlight), tone: model.strings.tone(forToken: highlight))
+                            if let highlights = panel.highlights, let firstHighlight = orderedHighlights(highlights).first {
+                                StatusBadge(text: model.strings.tokenLabel(firstHighlight), tone: model.strings.tone(forToken: firstHighlight))
                             }
-                        }
-                        if let commands = panel.commands, !commands.isEmpty {
-                            ForEach(Array(commands.prefix(2)), id: \.self) { command in
-                                commandRow(command)
+                            if let command = panel.commands?.first, !command.isEmpty {
+                                CommandRowView(
+                                    command: command,
+                                    font: .system(.caption, design: .monospaced),
+                                    foregroundColor: .secondary,
+                                    lineLimit: 2
+                                )
                             }
-                            if commands.count > 2 {
-                                Text(model.strings.moreItemsMessage(commands.count - 2))
+                            if let deferred = panel.deferredCommands, let firstDeferred = deferred.first, !firstDeferred.isEmpty {
+                                Text("\(model.strings.text(.deferredCommands)): \(firstDeferred)")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
-                        }
-                        if let deferred = panel.deferredCommands, !deferred.isEmpty {
-                            Text("\(model.strings.text(.deferredCommands)): \(deferred.prefix(2).joined(separator: ", "))")
-                            if deferred.count > 2 {
-                                Text(model.strings.moreItemsMessage(deferred.count - 2))
+                            if let flow = panel.recommendedFlow, !flow.isEmpty {
+                                Text("\(model.strings.fieldLabel("flow")): \(flow.prefix(2).joined(separator: " → "))")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
-                        }
-                        if let flow = panel.recommendedFlow, !flow.isEmpty {
-                            Text("\(model.strings.fieldLabel("flow")): \(flow.prefix(2).joined(separator: " → "))")
-                            if flow.count > 2 {
-                                Text(model.strings.moreItemsMessage(flow.count - 2))
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
+                            panelOverflowSummary(panel)
                         }
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    private func panelOverflowSummary(_ panel: OperatorPanel) -> some View {
+        let extraCommands = max((panel.commands?.count ?? 0) - 1, 0)
+        let extraHighlights = max((panel.highlights?.count ?? 0) - 1, 0)
+        let extraDeferred = max((panel.deferredCommands?.count ?? 0) - 1, 0)
+        if extraCommands + extraHighlights + extraDeferred > 0 {
+            Text(model.strings.moreItemsMessage(extraCommands + extraHighlights + extraDeferred))
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -732,6 +885,14 @@ struct DaemonView: View {
             }
             return model.strings.operatorPanelLabel(lhs.panel) < model.strings.operatorPanelLabel(rhs.panel)
         }
+    }
+
+    private var summaryCardPreviewItems: [SummaryCard] {
+        Array((model.daemonState?.summaryCards ?? []).prefix(4))
+    }
+
+    private var summaryCardOverflowCount: Int {
+        max((model.daemonState?.summaryCards.count ?? 0) - summaryCardPreviewItems.count, 0)
     }
 
     private func orderedHighlights(_ highlights: [String]) -> [String] {
@@ -782,7 +943,10 @@ struct DaemonView: View {
                 }
             }
             if let details = model.daemonState?.operatorPhaseDetails {
-                GroupBox(model.strings.text(.supportedPath)) {
+                compactDisclosureSection(
+                    title: model.strings.text(.supportedPath),
+                    isExpanded: $showOperatorSupportedPath
+                ) {
                     VStack(alignment: .leading, spacing: 6) {
                         if let startupCommand = details.currentSupportedOperatorPath.startupCommandText,
                            !startupCommand.isEmpty {
@@ -806,13 +970,6 @@ struct DaemonView: View {
                             Text(model.strings.text(.recommendedLauncher))
                                 .font(.caption.weight(.semibold))
                             commandRow(recommendedLauncher)
-                        }
-                        if details.currentSupportedOperatorPath.bootstrapUI != nil {
-                            DebugCompatibilityDisclosure(model: model) {
-                                VStack(alignment: .leading, spacing: 6) {
-                                    DebugShellShortcutButtons(model: model)
-                                }
-                            }
                         }
                         if let localOnly = details.currentSupportedOperatorPath.localOnly {
                             DetailLabelValueRow(
@@ -845,9 +1002,11 @@ struct DaemonView: View {
                             }
                         }
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                GroupBox(model.strings.text(.exitCriteria)) {
+                compactDisclosureSection(
+                    title: model.strings.text(.exitCriteria),
+                    isExpanded: $showOperatorExitCriteria
+                ) {
                     VStack(alignment: .leading, spacing: 6) {
                         BulletListView(values: Array(details.exitCriteria.prefix(4)))
                         if details.exitCriteria.count > 4 {
@@ -856,9 +1015,11 @@ struct DaemonView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                GroupBox(model.strings.text(.readSurfaces)) {
+                compactDisclosureSection(
+                    title: model.strings.text(.readSurfaces),
+                    isExpanded: $showOperatorReadSurfaces
+                ) {
                     VStack(alignment: .leading, spacing: 6) {
                         ForEach(Array(details.readSurfaces.prefix(3)), id: \.self) { surface in
                             commandRow(surface)
@@ -869,10 +1030,12 @@ struct DaemonView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 if let decisionAssist = details.decisionAssist, !decisionAssist.isEmpty {
-                    GroupBox(model.strings.text(.decisionAssist)) {
+                    compactDisclosureSection(
+                        title: model.strings.text(.decisionAssist),
+                        isExpanded: $showOperatorDecisionAssist
+                    ) {
                         VStack(alignment: .leading, spacing: 8) {
                             ForEach(Array(decisionAssist.prefix(4))) { item in
                                 VStack(alignment: .leading, spacing: 4) {
@@ -885,11 +1048,13 @@ struct DaemonView: View {
                                 }
                             }
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
                 if let closureEvidence = details.closureEvidence, !closureEvidence.isEmpty {
-                    GroupBox(model.strings.text(.evidenceDrilldown)) {
+                    compactDisclosureSection(
+                        title: model.strings.text(.evidenceDrilldown),
+                        isExpanded: $showOperatorEvidenceDrilldown
+                    ) {
                         VStack(alignment: .leading, spacing: 8) {
                             ForEach(Array(closureEvidence.prefix(4))) { item in
                                 VStack(alignment: .leading, spacing: 4) {
@@ -902,10 +1067,12 @@ struct DaemonView: View {
                                 }
                             }
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
-                GroupBox(model.strings.text(.notInScope)) {
+                compactDisclosureSection(
+                    title: model.strings.text(.notInScope),
+                    isExpanded: $showOperatorNotInScope
+                ) {
                     VStack(alignment: .leading, spacing: 6) {
                         BulletListView(values: Array(details.notInScope.prefix(4)))
                         if details.notInScope.count > 4 {
@@ -914,27 +1081,22 @@ struct DaemonView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
         }
     }
 
     private var startupVisibility: some View {
-        GroupBox(model.strings.text(.startupVisibility)) {
+        compactDisclosureSection(
+            title: model.strings.text(.startupVisibility),
+            isExpanded: $showStartupVisibility
+        ) {
             VStack(alignment: .leading, spacing: 10) {
                 if let startup = model.daemonState?.operatorPhaseStatus?["current_supported_operator_path"]?.objectValue {
                     if let command = startup["startup_command_text"]?.stringValue {
                         Text(model.strings.text(.startupCommand)).bold()
                         commandRow(command)
                         StartupShortcutButtons(model: model, command: command)
-                    }
-                    if startup["bootstrap_ui"]?.stringValue != nil {
-                        DebugCompatibilityDisclosure(model: model) {
-                            VStack(alignment: .leading, spacing: 6) {
-                                DebugShellShortcutButtons(model: model)
-                            }
-                        }
                     }
                     if let localOnly = startup["local_only"]?.boolValue {
                         DetailLabelValueRow(
@@ -969,12 +1131,14 @@ struct DaemonView: View {
                     }
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
     private var handoffSnapshot: some View {
-        GroupBox(model.strings.text(.handoffSnapshot)) {
+        compactDisclosureSection(
+            title: model.strings.text(.handoffSnapshot),
+            isExpanded: $showHandoffSnapshot
+        ) {
             VStack(alignment: .leading, spacing: 10) {
                 if let workstreams = model.daemonState?.operatorPhaseStatus?["workstreams"]?.arrayValue {
                     Text(model.strings.text(.workstreams)).bold()
@@ -1008,39 +1172,68 @@ struct DaemonView: View {
                     values: model.daemonState?.operatorPhaseDetails.recommendedImplementationOrder ?? []
                 )
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
     private var serviceTargets: some View {
         GroupBox(model.strings.text(.serviceTargets)) {
             VStack(alignment: .leading, spacing: 6) {
-                DetailLabelValueRow(
-                    label: model.strings.text(.currentPlatform),
-                    value: model.daemonState?.serviceTargetSummary.currentPlatform.map(model.strings.tokenLabel) ?? model.strings.text(.none)
-                )
-                DetailLabelValueRow(
-                    label: model.strings.text(.recommended),
-                    value: model.daemonState?.serviceTargetSummary.recommendedTarget.map(model.strings.tokenLabel) ?? model.strings.text(.none)
-                )
-                if let policyGates = model.daemonState?.serviceTargetsStatus?["policy_gates"]?.objectValue {
-                    stringList(title: model.strings.text(.policyGates), values: policyGates.map { "\(model.strings.summaryCardLabel($0)): \($1.boolValue.map(model.strings.booleanValueLabel) ?? $1.displayText)" }.sorted())
-                }
-                ForEach(model.daemonState?.serviceTargetSummary.targets ?? []) { target in
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack {
-                            Text("• \(model.strings.tokenLabel(target.target)):")
-                            if let status = target.status {
-                                StatusBadge(text: model.strings.tokenLabel(status), tone: model.strings.tone(forToken: status))
-                            } else {
-                                Text("-")
-                            }
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 220), spacing: 10)], spacing: 10) {
+                    SurfaceCard(emphasis: 0.22) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(model.strings.text(.currentPlatform))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            StatusBadge(
+                                text: model.daemonState?.serviceTargetSummary.currentPlatform.map(model.strings.tokenLabel) ?? model.strings.text(.none),
+                                tone: .neutral
+                            )
                         }
-                        if let notes = target.notes, !notes.isEmpty {
-                            VStack(alignment: .leading, spacing: 2) {
-                                BulletListView(values: notes.map { "  \($0)" })
+                    }
+                    SurfaceCard(emphasis: 0.22) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(model.strings.text(.recommended))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            StatusBadge(
+                                text: model.daemonState?.serviceTargetSummary.recommendedTarget.map(model.strings.tokenLabel) ?? model.strings.text(.none),
+                                tone: .positive
+                            )
+                        }
+                    }
+                    SurfaceCard(emphasis: 0.22) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(model.strings.text(.platformTargets))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text("\((model.daemonState?.serviceTargetSummary.targets.count) ?? 0)")
+                                .font(.headline)
+                        }
+                    }
+                }
+                compactDisclosureSection(
+                    title: model.strings.text(.platformTargets),
+                    isExpanded: $showServiceTargetsDetails
+                ) {
+                    if let policyGates = model.daemonState?.serviceTargetsStatus?["policy_gates"]?.objectValue {
+                        stringList(title: model.strings.text(.policyGates), values: policyGates.map { "\(model.strings.summaryCardLabel($0)): \($1.boolValue.map(model.strings.booleanValueLabel) ?? $1.displayText)" }.sorted())
+                    }
+                    ForEach(model.daemonState?.serviceTargetSummary.targets ?? []) { target in
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text("• \(model.strings.tokenLabel(target.target)):")
+                                if let status = target.status {
+                                    StatusBadge(text: model.strings.tokenLabel(status), tone: model.strings.tone(forToken: status))
+                                } else {
+                                    Text("-")
+                                }
                             }
-                            .foregroundStyle(.secondary)
+                            if let notes = target.notes, !notes.isEmpty {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    BulletListView(values: notes.map { "  \($0)" })
+                                }
+                                .foregroundStyle(.secondary)
+                            }
                         }
                     }
                 }
@@ -1057,7 +1250,10 @@ struct DaemonView: View {
         ) {
             VStack(alignment: .leading, spacing: 10) {
                 if let allowedCommands = model.daemonState?.serviceControlBoundary?["control_plane"]?.objectValue?["allowed_commands"]?.arrayValue {
-                    GroupBox(model.strings.text(.allowedCommands)) {
+                    compactDisclosureSection(
+                        title: model.strings.text(.allowedCommands),
+                        isExpanded: $showServiceAllowedCommands
+                    ) {
                         VStack(alignment: .leading, spacing: 8) {
                             ForEach(Array(allowedCommands.enumerated()), id: \.offset) { _, value in
                                 if let command = value.objectValue?["command"]?.stringValue {
@@ -1065,7 +1261,6 @@ struct DaemonView: View {
                                 }
                             }
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
                 stringList(
@@ -1074,13 +1269,15 @@ struct DaemonView: View {
                 )
                 if let deferredCommands = model.daemonState?.serviceControlBoundary?["service_plane"]?.objectValue?["deferred_commands"]?.arrayValue?.compactMap(\.stringValue),
                    !deferredCommands.isEmpty {
-                    GroupBox(model.strings.text(.deferredCommands)) {
+                    compactDisclosureSection(
+                        title: model.strings.text(.deferredCommands),
+                        isExpanded: $showServiceDeferredCommands
+                    ) {
                         VStack(alignment: .leading, spacing: 6) {
                             FlowLayout(deferredCommands, id: \.self, spacing: 6) { command in
                                 StatusBadge(text: model.strings.tokenLabel(command), tone: .caution)
                             }
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
                 stringList(
@@ -1124,14 +1321,16 @@ struct DaemonView: View {
                     }
                 }
                 if let appPolicy = model.daemonState?.serviceControlBoundary?["app_ui_policy"]?.objectValue {
-                    GroupBox(model.strings.text(.appUIPolicy)) {
+                    compactDisclosureSection(
+                        title: model.strings.text(.appUIPolicy),
+                        isExpanded: $showServiceAppPolicy
+                    ) {
                         VStack(alignment: .leading, spacing: 8) {
                             stringList(title: model.strings.text(.allowedReads), values: appPolicy["allowed_reads"]?.arrayValue?.compactMap(\.stringValue) ?? [])
                             stringList(title: model.strings.text(.allowedWrites), values: appPolicy["allowed_writes"]?.arrayValue?.compactMap(\.stringValue) ?? [])
                             stringList(title: model.strings.text(.allowedControlExposure), values: appPolicy["allowed_control_exposure"]?.arrayValue?.compactMap(\.stringValue) ?? [])
                             stringList(title: model.strings.text(.forbiddenExposure), values: appPolicy["forbidden_control_exposure"]?.arrayValue?.compactMap(\.stringValue) ?? [])
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
                 stringList(
@@ -1145,60 +1344,107 @@ struct DaemonView: View {
     private var packagingModels: some View {
         GroupBox(model.strings.text(.packagingModels)) {
             VStack(alignment: .leading, spacing: 10) {
-                if let current = model.daemonState?.packagingStatus?["packaging_model"]?.stringValue {
-                    DetailBadgeRow(
-                        label: model.strings.text(.currentValue),
-                        badgeText: model.strings.tokenLabel(current),
-                        tone: model.strings.tone(forToken: current)
-                    )
-                }
-                if let operatorSurface = model.daemonState?.packagingStatus?["operator_surface"]?.objectValue {
-                    if let primaryUI = operatorSurface["primary_ui"]?.stringValue {
-                        DetailLabelValueRow(
-                            label: model.strings.text(.primaryOperatorUI),
-                            value: model.strings.tokenLabel(primaryUI)
-                        )
-                    }
-                    if let recommendedLauncher = operatorSurface["recommended_launcher"]?.objectValue?["command_text"]?.stringValue,
-                       !recommendedLauncher.isEmpty {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(model.strings.text(.recommendedLauncher))
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 220), spacing: 10)], spacing: 10) {
+                    SurfaceCard(emphasis: 0.22) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(model.strings.text(.currentValue))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
-                            commandRow(recommendedLauncher)
-                            StartupShortcutButtons(model: model, command: recommendedLauncher)
+                            if let current = model.daemonState?.packagingStatus?["packaging_model"]?.stringValue {
+                                StatusBadge(
+                                    text: model.strings.tokenLabel(current),
+                                    tone: model.strings.tone(forToken: current)
+                                )
+                            } else {
+                                Text(model.strings.text(.none))
+                                    .font(.headline)
+                            }
                         }
                     }
-                    stringList(
+                    SurfaceCard(emphasis: 0.22) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(model.strings.text(.primaryOperatorUI))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text(
+                                model.daemonState?.packagingStatus?["operator_surface"]?.objectValue?["primary_ui"]?.stringValue.map(model.strings.tokenLabel)
+                                ?? model.strings.text(.none)
+                            )
+                            .font(.headline)
+                        }
+                    }
+                    SurfaceCard(emphasis: 0.22) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(model.strings.text(.packagingModels))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text("\(model.daemonState?.packagingStatus?["packaging_decision"]?.objectValue?["candidate_models"]?.arrayValue?.count ?? 0)")
+                                .font(.headline)
+                        }
+                    }
+                }
+                if let operatorSurface = model.daemonState?.packagingStatus?["operator_surface"]?.objectValue {
+                    compactDisclosureSection(
                         title: model.strings.text(.operatorSurfaceNotes),
-                        values: operatorSurface["notes"]?.arrayValue?.compactMap(\.stringValue) ?? []
-                    )
+                        isExpanded: $showPackagingOperatorSurface
+                    ) {
+                        if let primaryUI = operatorSurface["primary_ui"]?.stringValue {
+                            DetailLabelValueRow(
+                                label: model.strings.text(.primaryOperatorUI),
+                                value: model.strings.tokenLabel(primaryUI)
+                            )
+                        }
+                        if let recommendedLauncher = operatorSurface["recommended_launcher"]?.objectValue?["command_text"]?.stringValue,
+                           !recommendedLauncher.isEmpty {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(model.strings.text(.recommendedLauncher))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                commandRow(recommendedLauncher)
+                                StartupShortcutButtons(model: model, command: recommendedLauncher)
+                            }
+                        }
+                        stringList(
+                            title: model.strings.text(.operatorSurfaceNotes),
+                            values: operatorSurface["notes"]?.arrayValue?.compactMap(\.stringValue) ?? []
+                        )
+                    }
                 }
                 if let candidates = model.daemonState?.packagingStatus?["packaging_decision"]?.objectValue?["candidate_models"]?.arrayValue {
-                    ForEach(Array(candidates.enumerated()), id: \.offset) { _, value in
-                        if let object = value.objectValue {
-                            SurfaceCard(emphasis: 0.25) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    HStack {
-                                        Text(object["model"]?.stringValue.map(model.strings.tokenLabel) ?? model.strings.text(.none)).bold()
-                                        Spacer()
-                                        if let status = object["status"]?.stringValue {
-                                            StatusBadge(text: model.strings.tokenLabel(status), tone: model.strings.tone(forToken: status))
+                    compactDisclosureSection(
+                        title: model.strings.text(.packagingModels),
+                        isExpanded: $showPackagingCandidates
+                    ) {
+                        ForEach(Array(candidates.enumerated()), id: \.offset) { _, value in
+                            if let object = value.objectValue {
+                                SurfaceCard(emphasis: 0.25) {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        HStack {
+                                            Text(object["model"]?.stringValue.map(model.strings.tokenLabel) ?? model.strings.text(.none)).bold()
+                                            Spacer()
+                                            if let status = object["status"]?.stringValue {
+                                                StatusBadge(text: model.strings.tokenLabel(status), tone: model.strings.tone(forToken: status))
+                                            }
                                         }
+                                        if let operatorValue = object["operator_value"]?.stringValue {
+                                            Text(operatorValue).foregroundStyle(.secondary)
+                                        }
+                                        stringList(title: model.strings.text(.blockedBy), values: object["blocked_by"]?.arrayValue?.compactMap(\.stringValue) ?? [])
                                     }
-                                    if let operatorValue = object["operator_value"]?.stringValue {
-                                        Text(operatorValue).foregroundStyle(.secondary)
-                                    }
-                                    stringList(title: model.strings.text(.blockedBy), values: object["blocked_by"]?.arrayValue?.compactMap(\.stringValue) ?? [])
                                 }
                             }
                         }
                     }
                 }
-                stringList(
+                compactDisclosureSection(
                     title: model.strings.text(.guardrails),
-                    values: model.daemonState?.packagingStatus?["packaging_decision"]?.objectValue?["decision_guardrails"]?.arrayValue?.compactMap(\.stringValue) ?? []
-                )
+                    isExpanded: $showPackagingGuardrails
+                ) {
+                    stringList(
+                        title: model.strings.text(.guardrails),
+                        values: model.daemonState?.packagingStatus?["packaging_decision"]?.objectValue?["decision_guardrails"]?.arrayValue?.compactMap(\.stringValue) ?? []
+                    )
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -1231,29 +1477,33 @@ struct DaemonView: View {
                     values: model.daemonState?.supervisionStatus?["background_surfaces"]?.objectValue?["deferred_topics"]?.arrayValue?.compactMap(\.stringValue) ?? []
                 )
                 if let candidates = model.daemonState?.supervisionStatus?["background_surfaces"]?.objectValue?["candidate_surfaces"]?.arrayValue {
-                    Text(model.strings.text(.backgroundSurfaces)).bold()
-                    ForEach(Array(candidates.enumerated()), id: \.offset) { _, value in
-                        if let object = value.objectValue {
-                            SurfaceCard(emphasis: 0.25) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    HStack {
-                                        Text(object["surface"]?.stringValue ?? model.strings.text(.none)).bold()
-                                        Spacer()
-                                        if let status = object["status"]?.stringValue {
-                                            StatusBadge(text: model.strings.tokenLabel(status), tone: model.strings.tone(forToken: status))
+                    compactDisclosureSection(
+                        title: model.strings.text(.backgroundSurfaces),
+                        isExpanded: $showSupervisionCandidates
+                    ) {
+                        ForEach(Array(candidates.enumerated()), id: \.offset) { _, value in
+                            if let object = value.objectValue {
+                                SurfaceCard(emphasis: 0.25) {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        HStack {
+                                            Text(object["surface"]?.stringValue ?? model.strings.text(.none)).bold()
+                                            Spacer()
+                                            if let status = object["status"]?.stringValue {
+                                                StatusBadge(text: model.strings.tokenLabel(status), tone: model.strings.tone(forToken: status))
+                                            }
                                         }
-                                    }
-                                    if let operatorValue = object["operator_value"]?.stringValue {
-                                        DetailLabelValueRow(
-                                            label: model.strings.text(.operatorValue),
-                                            value: operatorValue
+                                        if let operatorValue = object["operator_value"]?.stringValue {
+                                            DetailLabelValueRow(
+                                                label: model.strings.text(.operatorValue),
+                                                value: operatorValue
+                                            )
+                                        }
+                                        stringList(
+                                            title: model.strings.text(.platformScope),
+                                            values: object["platform_scope"]?.arrayValue?.compactMap(\.stringValue) ?? []
                                         )
+                                        stringList(title: model.strings.text(.blockedBy), values: object["forbidden_capabilities"]?.arrayValue?.compactMap(\.stringValue) ?? [])
                                     }
-                                    stringList(
-                                        title: model.strings.text(.platformScope),
-                                        values: object["platform_scope"]?.arrayValue?.compactMap(\.stringValue) ?? []
-                                    )
-                                    stringList(title: model.strings.text(.blockedBy), values: object["forbidden_capabilities"]?.arrayValue?.compactMap(\.stringValue) ?? [])
                                 }
                             }
                         }
@@ -1297,27 +1547,31 @@ struct DaemonView: View {
                     values: model.daemonState?.recoveryConsentStatus?["non_mutating_diagnostics"]?.arrayValue?.compactMap(\.stringValue) ?? []
                 )
                 if let mutatingActions = model.daemonState?.recoveryConsentStatus?["mutating_recovery_actions"]?.arrayValue {
-                    Text(model.strings.text(.recoverActions)).bold()
-                    ForEach(Array(mutatingActions.enumerated()), id: \.offset) { _, value in
-                        if let object = value.objectValue, let command = object["command"]?.stringValue {
-                            SurfaceCard(emphasis: 0.25) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    HStack {
-                                        StatusBadge(text: model.strings.text(.consent), tone: .critical)
-                                        Spacer()
-                                    }
-                                    commandRow(command)
-                                    if let scope = object["scope"]?.stringValue {
-                                        DetailLabelValueRow(
-                                            label: model.strings.text(.scope),
-                                            value: scope
-                                        )
-                                    }
-                                    if let consentRequired = object["consent_required"]?.boolValue {
-                                        DetailLabelValueRow(
-                                            label: model.strings.text(.policyRequired),
-                                            value: model.strings.booleanValueLabel(consentRequired)
-                                        )
+                    compactDisclosureSection(
+                        title: model.strings.text(.recoverActions),
+                        isExpanded: $showRecoveryMutatingActions
+                    ) {
+                        ForEach(Array(mutatingActions.enumerated()), id: \.offset) { _, value in
+                            if let object = value.objectValue, let command = object["command"]?.stringValue {
+                                SurfaceCard(emphasis: 0.25) {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        HStack {
+                                            StatusBadge(text: model.strings.text(.consent), tone: .critical)
+                                            Spacer()
+                                        }
+                                        commandRow(command)
+                                        if let scope = object["scope"]?.stringValue {
+                                            DetailLabelValueRow(
+                                                label: model.strings.text(.scope),
+                                                value: scope
+                                            )
+                                        }
+                                        if let consentRequired = object["consent_required"]?.boolValue {
+                                            DetailLabelValueRow(
+                                                label: model.strings.text(.policyRequired),
+                                                value: model.strings.booleanValueLabel(consentRequired)
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -1325,23 +1579,30 @@ struct DaemonView: View {
                     }
                 }
                 if let controlActions = model.daemonState?.recoveryConsentStatus?["control_recovery_actions"]?.arrayValue {
-                    Text(model.strings.text(.activeSupervision)).bold()
-                    ForEach(Array(controlActions.enumerated()), id: \.offset) { _, value in
-                        if let object = value.objectValue, let command = object["command"]?.stringValue {
-                            SurfaceCard(emphasis: 0.25) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    HStack {
-                                        StatusBadge(text: model.strings.text(.suggestedAction), tone: .caution)
-                                        Spacer()
+                    compactDisclosureSection(
+                        title: model.strings.text(.activeSupervision),
+                        isExpanded: $showRecoveryControlActions
+                    ) {
+                        ForEach(Array(controlActions.enumerated()), id: \.offset) { _, value in
+                            if let object = value.objectValue, let command = object["command"]?.stringValue {
+                                SurfaceCard(emphasis: 0.25) {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        HStack {
+                                            StatusBadge(text: model.strings.text(.suggestedAction), tone: .caution)
+                                            Spacer()
+                                        }
+                                        commandRow(command)
+                                        stringList(title: model.strings.text(.notes), values: object["notes"]?.arrayValue?.compactMap(\.stringValue) ?? [])
                                     }
-                                    commandRow(command)
-                                    stringList(title: model.strings.text(.notes), values: object["notes"]?.arrayValue?.compactMap(\.stringValue) ?? [])
                                 }
                             }
                         }
                     }
                 }
-                GroupBox(model.strings.text(.recoveryFlow)) {
+                compactDisclosureSection(
+                    title: model.strings.text(.recoveryFlow),
+                    isExpanded: $showRecoveryFlowDetails
+                ) {
                     VStack(alignment: .leading, spacing: 8) {
                         stringList(
                             title: model.strings.text(.recoveryFlow),
@@ -1352,7 +1613,6 @@ struct DaemonView: View {
                             values: model.daemonState?.recoveryConsentStatus?["app_ui_guardrails"]?.arrayValue?.compactMap(\.stringValue) ?? []
                         )
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
         }
@@ -1430,7 +1690,10 @@ struct DaemonView: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                GroupBox(model.strings.text(.currentStateDetails)) {
+                compactDisclosureSection(
+                    title: model.strings.text(.currentStateDetails),
+                    isExpanded: $showLaunchAgentCurrentStateDetails
+                ) {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
                             Spacer()
@@ -1453,7 +1716,10 @@ struct DaemonView: View {
                         }
                     }
                 }
-                GroupBox(model.strings.text(.recoveryPreviewDetails)) {
+                compactDisclosureSection(
+                    title: model.strings.text(.recoveryPreviewDetails),
+                    isExpanded: $showLaunchAgentRecoveryPreview
+                ) {
                     VStack(alignment: .leading, spacing: 6) {
                         HStack {
                             Spacer()
@@ -1468,12 +1734,19 @@ struct DaemonView: View {
                         diagnosticGroup(title: model.strings.text(.verifyNow), tone: .caution, items: verifyNowDiagnostics)
                         diagnosticGroup(title: model.strings.text(.healthySignals), tone: .positive, items: healthyDiagnostics)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 commandDeck
-                metadataGroup(title: model.strings.text(.statusDiagnostics), values: launchAgentStatusDiagnostics)
+                compactDisclosureSection(
+                    title: model.strings.text(.statusDiagnostics),
+                    isExpanded: $showLaunchAgentStatusDiagnostics
+                ) {
+                    metadataGroup(title: model.strings.text(.statusDiagnostics), values: launchAgentStatusDiagnostics)
+                }
                 if let stderrPreview = launchAgentStatusStderrPreview {
-                    GroupBox(model.strings.text(.stderrPreview)) {
+                    compactDisclosureSection(
+                        title: model.strings.text(.stderrPreview),
+                        isExpanded: $showLaunchAgentStderrPreview
+                    ) {
                         SelectableMonospaceText(
                             text: stderrPreview,
                             font: .system(.caption, design: .monospaced),
@@ -1558,7 +1831,10 @@ struct DaemonView: View {
                     )
                 }
                 if !proofDiagnosticCommands.isEmpty {
-                    GroupBox(model.strings.text(.proofDiagnostics)) {
+                    compactDisclosureSection(
+                        title: model.strings.text(.proofDiagnostics),
+                        isExpanded: $showRunbookProofDiagnostics
+                    ) {
                         VStack(alignment: .leading, spacing: 8) {
                             Text(model.strings.text(.proofDiagnosticsSummary))
                                 .font(.caption)
@@ -1567,7 +1843,6 @@ struct DaemonView: View {
                                 commandRow(command)
                             }
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
                 metadataGroup(
@@ -1591,7 +1866,10 @@ struct DaemonView: View {
                     values: previewMetadata
                 )
                 if let plistXML = model.daemonState?.launchagentPreview?["plist_xml"]?.stringValue {
-                    GroupBox(model.strings.text(.plistPreview)) {
+                    compactDisclosureSection(
+                        title: model.strings.text(.plistPreview),
+                        isExpanded: $showRunbookPlistPreview
+                    ) {
                         VStack(alignment: .leading, spacing: 6) {
                             HStack {
                                 Spacer()
@@ -1605,7 +1883,6 @@ struct DaemonView: View {
                                 lineLimit: 12
                             )
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
                 metadataGroup(
@@ -1678,7 +1955,7 @@ struct DaemonView: View {
 
     private var nextActions: some View {
         GroupBox(model.strings.text(.nextActions)) {
-            Group {
+            VStack(alignment: .leading, spacing: 10) {
                 if (model.daemonState?.nextActions ?? []).isEmpty {
                     StateCardView(
                         icon: "checkmark.circle",
@@ -1691,20 +1968,28 @@ struct DaemonView: View {
                         action: { Task { await model.refreshCurrentScreen() } }
                     )
                 } else {
-                    VStack(alignment: .leading, spacing: 6) {
-                        ForEach(model.daemonState?.nextActions ?? []) { action in
-                            VStack(alignment: .leading, spacing: 4) {
-                                HStack {
-                                    StatusBadge(text: actionPriorityTitle(action), tone: actionPriorityTone(action))
-                                    Spacer()
-                                }
-                                commandRow(action.command)
-                                if !action.reason.isEmpty {
-                                    Text("\(model.strings.text(.reason)): \(action.reason)")
-                                        .foregroundStyle(.secondary)
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 250), spacing: 10)], spacing: 10) {
+                        ForEach(Array((model.daemonState?.nextActions ?? []).prefix(3))) { action in
+                            SurfaceCard(emphasis: 0.24) {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack(alignment: .top, spacing: 8) {
+                                        StatusBadge(text: actionPriorityTitle(action), tone: actionPriorityTone(action))
+                                        Spacer()
+                                    }
+                                    commandRow(action.command)
+                                    if !action.reason.isEmpty {
+                                        Text("\(model.strings.text(.reason)): \(action.reason)")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
                                 }
                             }
                         }
+                    }
+                    if (model.daemonState?.nextActions.count ?? 0) > 3 {
+                        Text(model.strings.moreItemsMessage((model.daemonState?.nextActions.count ?? 0) - 3))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                 }
             }
@@ -2838,6 +3123,25 @@ struct DaemonView: View {
 
     private func actionPriorityTitle(_ action: DaemonNextAction) -> String {
         model.strings.commandPriorityTitle(for: action.command)
+    }
+
+    private func compactDisclosureSection<Content: View>(
+        title: String,
+        isExpanded: Binding<Bool>,
+        @ViewBuilder content: @escaping () -> Content
+    ) -> some View {
+        GroupBox {
+            DisclosureGroup(isExpanded: isExpanded) {
+                VStack(alignment: .leading, spacing: 8) {
+                    content()
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, 8)
+            } label: {
+                Text(title)
+                    .font(.headline)
+            }
+        }
     }
 
 }

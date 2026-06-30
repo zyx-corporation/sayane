@@ -288,7 +288,7 @@ of introducing a parallel profile-mutation path.
 ## Local Bootstrap HTML UI
 
 The current resident app phase also includes a local Bridge HTML bootstrap UI retained as a
-debug-only compatibility surface:
+maintainer/debug compatibility surface:
 
 ```text
 GET /app/ui

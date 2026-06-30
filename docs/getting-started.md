@@ -147,7 +147,7 @@ Chrome Extension は既存利用者向けには利用可能だが、現行方針
 sayane serve
 # Bearer token: ~/.sayane/bridge.token
 # Dedicated local UI session artifact: ~/.sayane/bridge.ui-session.json
-# Resident app bootstrap: http://127.0.0.1:38741/app/ui
+# Resident app debug compatibility bootstrap: http://127.0.0.1:38741/app/ui
 ```
 
 ターミナル 2:
@@ -162,7 +162,7 @@ cd extension && npm install && npm run build
 ### 5.4 native macOS app（primary operator path）
 
 現行の primary operator-facing growth path は、Bridge-hosted local shell ではなく
-**native macOS app** である。`/app/ui` は debug-only compatibility surface として残っている。
+**native macOS app** である。`/app/ui` は maintainer/debug compatibility surface として残っている。
 
 ただし install の主導線は先に **`curl | bash` で CLI / Bridge runtime を入れること** であり、
 native macOS app はその後段に追加する operator-facing path として扱う。
@@ -195,7 +195,9 @@ native app 上では、`Home` / `Bridge Status` / `Daemon` / compact `Error` vie
 token file が読める場合は bootstrap URL を自動で使い、通常の `/app/ui` 直開きより
 セッション確立しやすい経路を優先する。
 
-smoke では `./scripts/check-macos-app-preview.sh` を使う。macOS の Terminal Apple Events が
+native routine smoke では `./scripts/check-macos-routine-smoke.sh` を優先する。
+`./scripts/check-macos-app-preview.sh` は preview app 自体の回帰確認用で、debug shell 検証は
+opt-in である。macOS の Terminal Apple Events が
 許可されていない環境では、既定の `auto` モードが background Bridge 起動へ自動 fallback する。
 明示したい場合は `--bridge-background` を付ける。
 
@@ -206,9 +208,9 @@ smoke では `./scripts/check-macos-app-preview.sh` を使う。macOS の Termin
 - `Daemon`: start-here / next actions / operator summary を先に見て、深い runbook は必要時だけ展開
 - `Troubleshooting`: routine path からは分離され、shared diagnostics sheet で必要時だけ開く
 
-### 5.5 resident app compatibility shell（debug-only compatibility path）
+### 5.5 resident app compatibility shell（maintainer/debug compatibility path）
 
-Bridge-hosted local shell は、debug / 互換確認 / handoff / browser-local smoke 向けに維持する。
+Bridge-hosted local shell は、debug / 互換確認 / handoff / maintainer smoke 向けに維持する。
 
 ```bash
 ./scripts/run-app-local.sh
@@ -216,8 +218,7 @@ Bridge-hosted local shell は、debug / 互換確認 / handoff / browser-local s
 # ./scripts/run-app-local.sh --foreground
 # ./scripts/run-app-local.sh --background
 # ./scripts/run-app-local.sh --terminal
-# ./scripts/run-app-local.sh --no-open
-# Google Chrome があれば bootstrap URL を Chrome で優先的に開く
+# ./scripts/run-app-local.sh --open
 # macOS の既定動作では Bridge を新しい Terminal window で前面起動する
 # 初回ブラウザ導線は /app/ui?bootstrap_token=... を 1 回だけ踏み、
 # 以後は dedicated local UI session cookie で /app/ui を継続利用する
@@ -235,6 +236,7 @@ sayane app daemon-proof-diagnostics --operation-class bridge_health --json
 
 `run-app-local.sh` も同じ前提で動く。互換 Python が見つからない場合は fail-closed で止まるため、
 その場合は `uv run --extra dev pytest -q` か `.venv` 構築を先に行う。
+通常は browser を自動では開かず、明示的に `--open` を付けたときだけ maintainer/debug compatibility URL を開く。
 
 Bridge-hosted daemon shell では、UI session 確立後に次の read surface へそのまま drill-down できる:
 
@@ -295,8 +297,8 @@ Bridge の起動方式を固定したい場合は
 `./scripts/run-macos-app-preview.sh --bridge-terminal` /
 `--bridge-background` / `--bridge-foreground` を使う。
 Bridge 切断時は native error view の `Start Bridge` / `Reconnect` を使う。
-`./scripts/check-macos-app-preview.sh` は local Bridge shell の準備、Swift package build/test、
-`/app/ui` bootstrap と screen-state surface の smoke check をまとめて実行する。
+`./scripts/check-macos-app-preview.sh` は native macOS preview の build/test と app 側回帰確認を行う。
+`--with-debug-shell` を付けたときだけ `/app/ui*` compatibility shell まで追加検証する。
 接続診断カードには Bridge URL / health / 互換 URL / token / log が揃うため、切断時は
 そこで Terminal-backed Bridge の状態を確認してから再接続できる。
 `Start Bridge` / `Reconnect` / `Refresh` が通ると native app 上部に結果バナーも出るため、
@@ -314,14 +316,16 @@ native app 導線の回帰をそのまま確認する。
 この native smoke は current resident app shell と同じ `./scripts/run-app-local.sh`
 経由で Bridge を起動し、stale な detached `serve` process が残っていても
 起動前に整理する。
-Bridge-hosted local shell の UI session だけを軽く確認したい場合は
-`./scripts/check-resident-app-ui-session.sh` を使う。
+routine macOS operator path を 1 回で確認したい場合は
+`./scripts/check-macos-routine-smoke.sh --start` を使う。
 bearer-backed resident app JSON read surface だけを軽く確認したい場合は
 `./scripts/check-resident-app-api-surfaces.sh` を使う。
-release 向けに API surface smoke と UI session smoke をまとめて流したい場合は
+Bridge-hosted local shell の UI session だけを maintainer/debug 用に確認したい場合は
+`./scripts/check-resident-app-ui-session.sh` を使う。
+compatibility shell を含む release/debug smoke をまとめて流したい場合は
 `./scripts/check-resident-app-release-smoke.sh --start` を使う。
-native macOS preview も含めて current app shell 全体を 1 回で確認したい場合は
-`./scripts/check-resident-app-release-smoke.sh --start --with-native` を使う。
+native macOS preview も含めて routine path を一括確認したい場合は
+`./scripts/check-resident-app-release-smoke.sh --routine --start` を使う。
 現在の local launcher / smoke scripts は、port だけを掴んでいない stale `serve`
 process も起動前に掃除する。
 また `sayane serve` は、通常の Bridge 起動では optional reload watcher
@@ -334,8 +338,9 @@ process も起動前に掃除する。
 この native app は resident app contract / screen-state / action surfaces を使う。
 native app 自体は `~/.sayane/bridge.token` を使って bearer-backed app-facing surface を直接読む。
 Browser bootstrap と resident app UI session は Bridge-hosted compatibility shell 側の話として切り分ける。
+routine operator readiness の既定 smoke には含めない。
 Home と error view には共通の connection diagnostics card があり、routine では health / launch source /
-log などの復旧操作を先に見せる。compatibility shell entry / token path などの debug-only 情報は
+log などの復旧操作を先に見せる。compatibility shell entry / token path などの maintainer/debug 情報は
 diagnostics sheet から必要時だけ辿れる。
 さらに Home 最上部には Bridge status panel があり、未接続 / 起動中 / 利用可能 を先に判断してから
 次の操作へ進める。
@@ -443,13 +448,13 @@ loaded status / return code / stderr summary も先に確認できる。
 
 ```bash
 curl -s http://127.0.0.1:38741/health
-open -a "Google Chrome" "http://127.0.0.1:38741/app/ui?bootstrap_token=$(cat ~/.sayane/bridge.token)"
+open "http://127.0.0.1:38741/app/ui?bootstrap_token=$(cat ~/.sayane/bridge.token)"
 tail -n 40 ~/.sayane/macos-app-smoke.log
 ```
 
 - `ERR_CONNECTION_REFUSED`: Bridge 未起動または listen 失敗
-- `Missing bootstrap bearer or valid resident app UI session`: bootstrap URL を踏まずに `/app/ui` を開いている
-- `Missing or invalid resident app UI session`: cookie が stale。bootstrap URL を開き直すか smoke script を再実行する
+- `Missing bootstrap bearer or valid resident app UI session`: maintainer/debug compatibility shell を bootstrap せずに `/app/ui` を開いている
+- `Missing or invalid resident app UI session`: cookie が stale。bootstrap URL を開き直すか maintainer/debug smoke を再実行する
 
 → [macOS app](../macos/SayaneApp/README.md)
 

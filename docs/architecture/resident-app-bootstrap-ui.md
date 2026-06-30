@@ -81,6 +81,10 @@ The JSON shell endpoints under `/app/ui-state/*` and `/app/ui-action/*` reuse th
 session cookie so the browser-local debug shell can fetch screen state and submit review actions
 without embedding the bearer token into page JavaScript.
 
+Per ADR 0028, these JSON routes now remain on the macOS line as **maintainer-only debug seams**.
+They should stay same-origin, session-bound, and compatibility-oriented rather than becoming a
+parallel operator-facing integration contract.
+
 ## Feedback seam
 
 The bootstrap UI currently uses redirect-based feedback:
@@ -162,7 +166,13 @@ describe the same bounded operator path without claiming shipped background supe
 target platform.
 
 The native macOS app is now the primary operator-facing UI path. The bootstrap shell is retained
-only as a debug-only compatibility surface and should not receive primary operator-flow expansion.
+only as a maintainer/debug compatibility surface and should not receive primary operator-flow expansion.
+
+The cookie-backed `/app/ui-state/*` and `/app/ui-action/*` routes are retained for maintainer
+debugging and smoke compatibility even if the HTML shell is reduced further later.
+
+Per ADR 0029, the server-rendered `/app/ui` HTML pages themselves are now treated as a removable
+compatibility presentation layer once maintainer/debug parity no longer depends on HTML rendering.
 
 ## Boundaries
 
@@ -182,6 +192,8 @@ docs/architecture/resident-app-service-boundary.md
 docs/architecture/resident-app-ui-integration-contract.md
 docs/architecture/resident-app-ui-screen-map.md
 docs/adr/0011-resident-app-local-ui-session-json-surfaces.md
+docs/adr/0028-ui-state-ui-action-remain-maintainer-debug-seams-on-macos.md
+docs/adr/0029-server-rendered-app-ui-html-remains-removable-after-maintainer-parity.md
 docs/release/v1.0.14-resident-app-bootstrap-ui-handoff.md
 docs/release/v1.0.14-resident-app-bootstrap-ui-closure.md
 ```

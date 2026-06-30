@@ -52,7 +52,8 @@ GET /app/ui/daemon
 
 This is a presentation wrapper over the existing `GET /app/daemon-overview` style preview surface.
 
-The Bridge-hosted Sayane Resident App local shell also provides cookie-backed same-origin JSON reads and writes as a legacy debug-compatibility layer:
+The Bridge-hosted Sayane Resident App local shell also provides cookie-backed same-origin JSON
+reads and writes as a maintainer-only debug-compatibility layer:
 
 ```text
 GET /app/ui-state/contract
@@ -196,7 +197,8 @@ These writes stay inside the candidate/review boundary.
 
 They do not directly patch profile state outside the existing approval flow.
 
-The Bridge-hosted Sayane Resident App local shell mirrors those same semantics through the same legacy debug-compatibility layer:
+The Bridge-hosted Sayane Resident App local shell mirrors those same semantics through the same
+maintainer-only debug-compatibility layer:
 
 ```text
 POST /app/ui-action/capture-clipboard
@@ -207,6 +209,10 @@ POST /app/ui-action/candidates/{id}/reject
 ```
 
 These are transport variants for the local shell, not a separate review policy.
+
+Per ADR 0028, `/app/ui-state/*` and `/app/ui-action/*` remain available on the macOS line as
+session-bound maintainer/debug seams. New operator-facing integrations should prefer bearer-backed
+`/app/*` surfaces instead.
 
 ## Screen mapping
 

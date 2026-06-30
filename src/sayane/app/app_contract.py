@@ -17,24 +17,28 @@ def build_app_contract() -> dict[str, Any]:
                 "format": "text/html",
                 "purpose": "local bootstrap home screen",
                 "compatibility_status": "debug_only_legacy",
+                "maintenance_role": "removable_html_compatibility_layer",
             },
             {
                 "path": "/app/ui/candidates",
                 "format": "text/html",
                 "purpose": "local candidate queue screen",
                 "compatibility_status": "debug_only_legacy",
+                "maintenance_role": "removable_html_compatibility_layer",
             },
             {
                 "path": "/app/ui/capture-clipboard",
                 "format": "form_post",
                 "purpose": "local HTML clipboard capture action",
                 "compatibility_status": "debug_only_legacy",
+                "maintenance_role": "removable_html_compatibility_layer",
             },
             {
                 "path": "/app/ui/daemon",
                 "format": "text/html",
                 "purpose": "local daemon panel screen",
                 "compatibility_status": "debug_only_legacy",
+                "maintenance_role": "removable_html_compatibility_layer",
             },
             {
                 "path": "/app/ui-state/*",
@@ -43,6 +47,7 @@ def build_app_contract() -> dict[str, Any]:
                     "cookie-backed local UI screen-state reads for the Bridge-hosted local shell"
                 ),
                 "compatibility_status": "debug_only_legacy",
+                "maintenance_role": "maintainer_debug_transport_seam",
             },
             {
                 "path": "/app/ui-action/*",
@@ -51,6 +56,7 @@ def build_app_contract() -> dict[str, Any]:
                     "cookie-backed local UI action writes for the Bridge-hosted local shell"
                 ),
                 "compatibility_status": "debug_only_legacy",
+                "maintenance_role": "maintainer_debug_transport_seam",
             },
         ],
         "read_surfaces": [
@@ -474,6 +480,20 @@ def build_app_contract() -> dict[str, Any]:
             "POST /app/ui-action/candidates/{id}/approve or /reject",
             "POST /app/ui-action/session/logout",
         ],
+        "html_shell_retirement_boundary": {
+            "status": "documented",
+            "governing_adr": "docs/adr/0029-server-rendered-app-ui-html-remains-removable-after-maintainer-parity.md",
+            "summary": (
+                "server-rendered `/app/ui` HTML is removable once native, CLI, and retained "
+                "maintainer/debug seams cover remaining debug, smoke, and handoff needs"
+            ),
+            "criteria": [
+                "routine operator startup, review, diagnostics, recovery, install, and handoff remain native-first without browser fallback",
+                "maintainer/debug reads and writes remain available through native views, CLI, or `/app/ui-state/*` and `/app/ui-action/*`",
+                "smoke and runbook material no longer prefers HTML-page navigation",
+                "handoff and troubleshooting no longer depend on HTML rendering specifically",
+            ],
+        },
         "screen_state_contracts": [
             {
                 "screen": "home",

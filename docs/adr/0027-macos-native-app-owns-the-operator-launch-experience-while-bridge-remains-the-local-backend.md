@@ -85,10 +85,30 @@ The expected macOS completion line now becomes:
 4. keep `/app/ui*` only for explicit debug/smoke/handoff use until the native path closes those
    remaining cases
 
+## Current Completion Snapshot
+
+As of 2026-06-30, the macOS line has materially advanced on this decision:
+
+1. routine startup now centers on the native app plus bundled/internal backend helpers
+2. install/update now includes repo-local and release-zip native app paths on top of the same local
+   CLI / Bridge runtime
+3. routine recovery and handoff/export now stay native-first, with browser compatibility disclosed
+   only when explicit debug/session conditions call for it
+
+The remaining completion work is mostly documentary/retirement governance:
+
+- decide separately when the server-rendered `/app/ui` HTML pages themselves can retire
+- keep `/app/ui-state/*` and `/app/ui-action/*` as maintainer-only debug seams unless a later ADR
+  removes them
+- keep Linux/Windows packaging paused while macOS closure is finished
+- decide later whether backend replacement is still worth the added architecture churn once the
+  native macOS operator flow is fully closed
+
 ## Related
 
 - `docs/adr/0013-macos-native-app-primary-ui-path.md`
 - `docs/adr/0014-app-ui-debug-only-compatibility-surface.md`
+- `docs/adr/0028-ui-state-ui-action-remain-maintainer-debug-seams-on-macos.md`
 - `docs/adr/0015-current-supported-operator-packaging-model.md`
 - `docs/adr/0009-resident-daemon-mvp-bridge-delegation.md`
 - `docs/architecture/resident-app-service-boundary.md`

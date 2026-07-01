@@ -1239,12 +1239,64 @@ final class AppModel: ObservableObject {
         if let evaluationLevel = summary.evaluationLevel {
             lines.append("\(strings.text(.evaluateLevel)): \(strings.evaluationLevelLabel(evaluationLevel))")
         }
+        if let proposalText = payloadClipboardText(title: strings.text(.proposal), payload: detailState.proposal) {
+            lines.append("")
+            lines.append(proposalText)
+        }
+        if let evaluation = detailState.evaluation,
+           let evaluationText = payloadClipboardText(title: strings.text(.evaluation), payload: evaluation)
+        {
+            lines.append("")
+            lines.append(evaluationText)
+        }
         if let content = detailState.content, !content.isEmpty {
             lines.append("")
-            lines.append(strings.text(.detail))
+            let contentTitle: String
+            switch summary.sourceType {
+            case "clipboard":
+                contentTitle = strings.text(.capturedText)
+            case "candidate_revision", "user_revision":
+                contentTitle = strings.text(.editedText)
+            default:
+                contentTitle = strings.text(.detail)
+            }
+            lines.append(contentTitle)
             lines.append(content)
         }
         return lines.isEmpty ? nil : lines.joined(separator: "\n")
+    }
+
+    private func payloadClipboardText(title: String, payload: [String: JSONValue]) -> String? {
+        guard !payload.isEmpty else { return nil }
+        let preferredOrder = ["summary", "add", "remove", "already_present", "items", "section", "operation", "parse_error"]
+        let keys = payload.keys.sorted { lhs, rhs in
+            let leftIndex = preferredOrder.firstIndex(of: lhs) ?? Int.max
+            let rightIndex = preferredOrder.firstIndex(of: rhs) ?? Int.max
+            if leftIndex != rightIndex {
+                return leftIndex < rightIndex
+            }
+            return lhs < rhs
+        }
+        var lines: [String] = [title]
+        for key in keys {
+            let value = payload[key]!
+            if case .null = value { continue }
+            if key == "summary", let summary = value.stringValue, !summary.isEmpty {
+                lines.append(summary)
+                continue
+            }
+            if let array = value.arrayValue, !array.isEmpty {
+                let items = array.map(\.displayText).filter { !$0.isEmpty && $0 != "null" }
+                guard !items.isEmpty else { continue }
+                lines.append("\(strings.fieldLabel(key)):")
+                lines.append(contentsOf: items.map { "• \($0)" })
+                continue
+            }
+            let text = value.displayText
+            guard !text.isEmpty, text != "null" else { continue }
+            lines.append("\(strings.fieldLabel(key)): \(text)")
+        }
+        return lines.count > 1 ? lines.joined(separator: "\n") : nil
     }
 
     func candidateDiffClipboardText() -> String? {

@@ -247,12 +247,9 @@ struct QueueAndDetailView: View {
                 } else {
                     detailHeader
                     reviewCommandDeck
-                    if let content = model.detailState?.content {
-                        bodySection(title: model.strings.text(.detail)) {
-                            Text(content)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                    }
+                    proposalSection
+                    evaluationSection
+                    contentSection
                     lowerPanelSection
                     evidenceDrilldownSection
                 }
@@ -397,6 +394,41 @@ struct QueueAndDetailView: View {
         }
     }
 
+    @ViewBuilder
+    private var proposalSection: some View {
+        if let proposal = model.detailState?.proposal, !proposal.isEmpty {
+            payloadSection(title: model.strings.text(.proposal), payload: proposal, emphasizeSummary: true)
+        }
+    }
+
+    @ViewBuilder
+    private var evaluationSection: some View {
+        if let evaluation = model.detailState?.evaluation, !evaluation.isEmpty {
+            payloadSection(title: model.strings.text(.evaluation), payload: evaluation, emphasizeSummary: false)
+        }
+    }
+
+    @ViewBuilder
+    private var contentSection: some View {
+        if let content = model.detailState?.content, !content.isEmpty {
+            bodySection(title: contentSectionTitle) {
+                Text(content)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
+    private var contentSectionTitle: String {
+        switch model.detailState?.uiSummary.sourceType {
+        case "clipboard":
+            model.strings.text(.capturedText)
+        case "candidate_revision", "user_revision":
+            model.strings.text(.editedText)
+        default:
+            model.strings.text(.detail)
+        }
+    }
+
     private func detailSummary(_ summary: CandidateUISummary) -> some View {
         GroupBox {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 8)], spacing: 8) {
@@ -410,6 +442,86 @@ struct QueueAndDetailView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func payloadSection(title: String, payload: [String: JSONValue], emphasizeSummary: Bool) -> some View {
+        GroupBox(title) {
+            VStack(alignment: .leading, spacing: 10) {
+                if emphasizeSummary, let summary = payload["summary"]?.stringValue, !summary.isEmpty {
+                    Text(summary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                ForEach(payloadRows(from: payload), id: \.id) { row in
+                    payloadRowView(row)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func payloadRows(from payload: [String: JSONValue]) -> [PayloadRow] {
+        let preferredOrder = ["summary", "add", "remove", "already_present", "items", "section", "operation", "parse_error"]
+        let keys = payload.keys.sorted { lhs, rhs in
+            let leftIndex = preferredOrder.firstIndex(of: lhs) ?? Int.max
+            let rightIndex = preferredOrder.firstIndex(of: rhs) ?? Int.max
+            if leftIndex != rightIndex {
+                return leftIndex < rightIndex
+            }
+            return lhs < rhs
+        }
+        return keys.compactMap { key in
+            guard key != "summary" else { return nil }
+            let value = payload[key]!
+            if case .null = value { return nil }
+            if let array = value.arrayValue, !array.isEmpty {
+                let items = array.map(\.displayText).filter { !$0.isEmpty && $0 != "null" }
+                guard !items.isEmpty else { return nil }
+                return .list(id: key, label: model.strings.fieldLabel(key), items: items)
+            }
+            let text = value.displayText
+            guard !text.isEmpty, text != "null" else { return nil }
+            return .value(id: key, label: model.strings.fieldLabel(key), value: text)
+        }
+    }
+
+    @ViewBuilder
+    private func payloadRowView(_ row: PayloadRow) -> some View {
+        switch row {
+        case let .value(_, label, value):
+            detailKeyValueRow(label: label, value: value)
+        case let .list(_, label, items):
+            VStack(alignment: .leading, spacing: 6) {
+                Text(label)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                ForEach(items, id: \.self) { item in
+                    Text("• \(item)")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+        }
+    }
+
+    private func detailKeyValueRow(label: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text(value)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private enum PayloadRow: Identifiable {
+        case value(id: String, label: String, value: String)
+        case list(id: String, label: String, items: [String])
+
+        var id: String {
+            switch self {
+            case let .value(id, _, _): return id
+            case let .list(id, _, _): return id
+            }
         }
     }
 

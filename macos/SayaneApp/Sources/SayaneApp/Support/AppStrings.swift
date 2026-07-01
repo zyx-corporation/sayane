@@ -102,6 +102,12 @@ struct AppStrings {
         case (.en, .topSections): return "Top Sections"
         case (.ja, .detail): return "候補詳細"
         case (.en, .detail): return "Candidate Detail"
+        case (.ja, .proposal): return "提案内容"
+        case (.en, .proposal): return "Proposal"
+        case (.ja, .evaluation): return "評価内容"
+        case (.en, .evaluation): return "Evaluation"
+        case (.ja, .capturedText): return "取り込みテキスト"
+        case (.en, .capturedText): return "Captured Text"
         case (.ja, .diff): return "差分"
         case (.en, .diff): return "Diff"
         case (.ja, .lineage): return "来歴"
@@ -737,6 +743,12 @@ struct AppStrings {
         case (.en, "remove"): return "Remove"
         case (.ja, "proposal_section"): return "提案セクション"
         case (.en, "proposal_section"): return "Proposal Section"
+        case (.ja, "summary"): return "要約"
+        case (.en, "summary"): return "Summary"
+        case (.ja, "items"): return "項目"
+        case (.en, "items"): return "Items"
+        case (.ja, "parse_error"): return "解析エラー"
+        case (.en, "parse_error"): return "Parse Error"
         case (.ja, "captured_at"): return "取り込み日時"
         case (.en, "captured_at"): return "Captured At"
         case (.ja, "current"): return "現在"
@@ -832,6 +844,10 @@ struct AppStrings {
         case (.en, "knowledge.preferences"): return "knowledge / preferences"
         case (.ja, "clipboard"): return "クリップボード"
         case (.en, "clipboard"): return "Clipboard"
+        case (.ja, "candidate_revision"): return "候補修正"
+        case (.en, "candidate_revision"): return "Candidate Revision"
+        case (.ja, "user_revision"): return "ユーザー修正"
+        case (.en, "user_revision"): return "User Revision"
         case (.ja, "add"): return "追加"
         case (.en, "add"): return "Add"
         case (.ja, "remove"): return "削除"
@@ -1571,7 +1587,7 @@ struct AppStrings {
         case appTitle, home, queue, daemon, refresh, refreshInProgress, retry, bootstrap, bootstrapInProgress, captureClipboard, openLogs, startBridge, startBridgeInProgress
         case status, nextActions, summaryCards, topReviewItems, topDaemonActions, reviewableCount
         case localVault, vaultPath, vaultSessions, activeSessions, sessionPurpose, expiresAt, idleExpiresAt, unlockNormal, unlockSensitive, unlockDeepPrivate, lockAll, unlockPolicies, recommendedSetup, supported, notSupported, vaultUnavailable, backend
-        case statusCounts, topSections, detail, diff, lineage, evaluate, approve, reject, revise
+        case statusCounts, topSections, detail, proposal, evaluation, capturedText, diff, lineage, evaluate, approve, reject, revise
         case operatorPhase, serviceTargets, launchAgent, clipboardEmpty, connectionProblem
         case sessionProblem, loading, none, error, bridgeHealthy, bridgeStartupFocus, bridgeDisconnectedShort, screenSummaryPending, homeStartupSummary, currentCandidate, editedText
         case changeReason, rejectReason, evaluateLevel, submit, cancel, supportedPath

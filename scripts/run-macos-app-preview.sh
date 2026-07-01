@@ -126,15 +126,6 @@ for module_name in required:
 PY
 }
 
-spawn_detached() {
-  local log_file="$1"
-  shift
-  (
-    cd "${ROOT}"
-    nohup "$@" >>"${log_file}" 2>&1 </dev/null &
-  ) >/dev/null 2>&1
-}
-
 run_init_if_needed() {
   if [[ -f "${HOME}/.sayane/profiles/default/sayane.profile.yaml" ]]; then
     return 0
@@ -239,7 +230,7 @@ launch_foreground() {
 launch_background() {
   mkdir -p "$(dirname "${APP_LOG_FILE}")"
   info "Launching SayaneApp in background"
-  spawn_detached "${APP_LOG_FILE}" "${EXECUTABLE_PATH}"
+  nohup "${EXECUTABLE_PATH}" >>"${APP_LOG_FILE}" 2>&1 </dev/null &
   sleep 2
   local pids
   pids="$(preview_pids)"

@@ -591,7 +591,7 @@ final class AppModel: ObservableObject {
     }
 
     var shouldPresentBlockingErrorView: Bool {
-        errorMessage != nil && hasLoadedInitialData
+        errorMessage != nil && hasLoadedInitialData && !currentScreenHasRenderableContent
     }
 
     var bridgeRecoveryHintTitle: String {
@@ -616,6 +616,17 @@ final class AppModel: ObservableObject {
             issue: bridgeRecoveryIssue.rawValue,
             startupAvailable: startupCommandText != nil
         )
+    }
+
+    private var currentScreenHasRenderableContent: Bool {
+        switch selectedScreen {
+        case .home:
+            return homeState != nil || health != nil
+        case .queue:
+            return queueState != nil || detailState != nil
+        case .daemon:
+            return daemonState != nil || health != nil
+        }
     }
 
     var bridgeRecoveryShowsTokenAction: Bool {

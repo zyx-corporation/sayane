@@ -453,6 +453,18 @@ import Testing
     model.hasLoadedInitialData = true
     #expect(model.shouldPresentBlockingErrorView)
 
+    model.selectedScreen = .queue
+    model.queueState = CandidateQueueScreenState(
+        kind: "resident_app_candidate_queue_screen_state",
+        reviewableCount: 1,
+        statusCounts: [:],
+        topSections: [],
+        items: [
+            CandidateItem(id: "cand-001", status: "pending", section: nil, content: nil, displaySummary: nil, proposalSection: nil, capturedAt: nil),
+        ]
+    )
+    #expect(model.shouldPresentBlockingErrorView == false)
+
     let daemonData = Data(#"""
     {
       "kind": "resident_app_daemon_panel_screen_state",

@@ -75,6 +75,7 @@ struct CandidateUISummary: Codable, Sendable {
     let evaluationLevel: Int?
     let rdeClass: String?
     let canApprove: Bool?
+    let actionGuidance: String?
 
     private enum CodingKeys: String, CodingKey {
         case status, section, operation
@@ -82,6 +83,7 @@ struct CandidateUISummary: Codable, Sendable {
         case evaluationLevel = "evaluation_level"
         case rdeClass = "rde_class"
         case canApprove = "can_approve"
+        case actionGuidance = "action_guidance"
     }
 }
 

@@ -42,9 +42,22 @@ def build_app_candidate_detail(payload: dict[str, Any]) -> dict[str, Any]:
         "evaluation_level": evaluation.get("level"),
         "rde_class": evaluation.get("rde_class"),
         "can_approve": allowed_actions["approve"],
+        "action_guidance": _detail_action_guidance(status, allowed_actions),
     }
     payload["allowed_actions"] = allowed_actions
     return payload
+
+
+def _detail_action_guidance(status: str, allowed_actions: dict[str, bool]) -> str:
+    if status == "pending":
+        return "evaluate_first"
+    if status == "evaluated":
+        return "ready_for_decision" if allowed_actions.get("approve") else "revise_or_recheck"
+    if status == "approved":
+        return "approved_complete"
+    if status == "rejected":
+        return "rejected_closed"
+    return "review_state_check"
 
 
 def build_app_candidate_diff(payload: dict[str, Any]) -> dict[str, Any]:

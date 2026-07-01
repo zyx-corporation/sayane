@@ -77,7 +77,7 @@ def test_build_candidate_queue_screen_state_preserves_counts() -> None:
 def test_build_candidate_detail_screen_state_exposes_actions() -> None:
     payload = build_candidate_detail_screen_state(
         {
-            "ui_summary": {"status": "evaluated"},
+            "ui_summary": {"status": "evaluated", "action_guidance": "ready_for_decision"},
             "allowed_actions": {"approve": True},
             "proposal": {"section": "knowledge.concepts"},
             "evaluation": {"level": 1},
@@ -87,6 +87,7 @@ def test_build_candidate_detail_screen_state_exposes_actions() -> None:
 
     assert payload["kind"] == "resident_app_candidate_detail_screen_state"
     assert payload["allowed_actions"]["approve"] is True
+    assert payload["ui_summary"]["action_guidance"] == "ready_for_decision"
     assert payload["diff_available"] is True
 
 

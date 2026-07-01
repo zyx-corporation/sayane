@@ -35,8 +35,23 @@ def test_build_app_candidate_detail_adds_ui_summary_and_allowed_actions() -> Non
 
     assert payload["ui_summary"]["section"] == "knowledge.concepts"
     assert payload["ui_summary"]["can_approve"] is True
+    assert payload["ui_summary"]["action_guidance"] == "ready_for_decision"
     assert payload["allowed_actions"]["approve"] is True
     assert payload["allowed_actions"]["revise"] is True
+
+
+def test_build_app_candidate_detail_sets_pending_action_guidance() -> None:
+    payload = build_app_candidate_detail(
+        {
+            "id": "c2",
+            "status": "pending",
+            "proposal": {"section": "knowledge.concepts", "operation": "add"},
+            "source": {"type": "clipboard"},
+            "evaluation": {},
+        }
+    )
+
+    assert payload["ui_summary"]["action_guidance"] == "evaluate_first"
 
 
 def test_build_app_candidate_diff_adds_ui_summary() -> None:

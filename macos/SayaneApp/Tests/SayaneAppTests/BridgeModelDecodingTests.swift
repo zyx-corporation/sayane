@@ -30,6 +30,7 @@ import Testing
         "section": "knowledge.concepts",
         "operation": "add",
         "source_type": "clipboard",
+        "action_guidance": "evaluate_first",
         "evaluation_level": null,
         "rde_class": null,
         "can_approve": false
@@ -58,6 +59,7 @@ import Testing
     """#.utf8)
     let payload = try JSONDecoder().decode(CandidateDetailScreenState.self, from: data)
     #expect(payload.uiSummary.status == "pending")
+    #expect(payload.uiSummary.actionGuidance == "evaluate_first")
     #expect(payload.evaluation == nil)
     #expect(payload.content == "clipboard note")
 }

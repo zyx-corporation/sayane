@@ -24,6 +24,8 @@ import Testing
     #expect(strings.tokenLabel("sqlite_development_local_vault") == "SQLite 開発用 Local Vault")
     #expect(strings.tokenLabel("sqlite_macos_keychain_vault") == "SQLite macOS keychain Vault")
     #expect(strings.tokenLabel("candidate_revision") == "候補修正")
+    #expect(strings.tokenLabel("evaluate_first") == "まず評価してから判断")
+    #expect(strings.tokenLabel("ready_for_decision") == "承認・修正・却下を判断可能")
     #expect(strings.tokenLabel("os_backed") == "OS保護")
     #expect(strings.tokenLabel("passphrase") == "パスフレーズ")
     #expect(strings.tokenLabel("test_only") == "テスト限定")
@@ -990,7 +992,8 @@ import Testing
             sourceType: "clipboard",
             evaluationLevel: 2,
             rdeClass: "recommended",
-            canApprove: true
+            canApprove: true,
+            actionGuidance: "evaluate_first"
         ),
         allowedActions: CandidateAllowedActions(
             evaluate: true,
@@ -1036,6 +1039,7 @@ import Testing
     #expect(model.candidateDetailClipboardText()?.contains("detail body") == true)
     #expect(model.candidateDetailClipboardText()?.contains("取り込みテキスト") == true)
     #expect(model.candidateDetailClipboardText()?.contains("利用可能な操作") == true)
+    #expect(model.candidateDetailClipboardText()?.contains("推奨アクション: まず評価してから判断") == true)
     #expect(model.candidateDetailClipboardText()?.contains("差分: 有効") == true)
     #expect(model.candidateDetailClipboardText()?.contains("承認: 有効") == true)
     #expect(model.candidateDiffClipboardText()?.contains("add one") == true)

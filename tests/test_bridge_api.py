@@ -1085,6 +1085,7 @@ def test_app_candidate_review_flow(
     assert detail_state_payload["allowed_actions"]["approve"] is False
     assert detail_state_payload["ui_summary"]["status"] == "pending"
     assert detail_state_payload["ui_summary"]["source_type"] == "clipboard"
+    assert detail_state_payload["ui_summary"]["action_guidance"] == "evaluate_first"
 
     diff = client.get(f"/app/candidates/{cid}/diff", headers=_auth(token))
     assert diff.status_code == 200

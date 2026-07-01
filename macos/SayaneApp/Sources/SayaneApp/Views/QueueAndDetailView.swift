@@ -296,6 +296,11 @@ struct QueueAndDetailView: View {
                             Text(detailHeaderSummaryText(summary))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
+                            if let actionGuidance = summary.actionGuidance, !actionGuidance.isEmpty {
+                                Text(model.strings.tokenLabel(actionGuidance))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                         Spacer()
                         VStack(alignment: .trailing, spacing: 6) {

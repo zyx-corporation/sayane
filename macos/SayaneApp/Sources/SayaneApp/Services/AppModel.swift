@@ -1236,6 +1236,9 @@ final class AppModel: ObservableObject {
         if let sourceType = summary.sourceType {
             lines.append("\(strings.fieldLabel("source_type")): \(strings.residentValueLabel(sourceType))")
         }
+        if let actionGuidance = summary.actionGuidance, !actionGuidance.isEmpty {
+            lines.append("\(strings.text(.suggestedAction)): \(strings.tokenLabel(actionGuidance))")
+        }
         if let evaluationLevel = summary.evaluationLevel {
             lines.append("\(strings.text(.evaluateLevel)): \(strings.evaluationLevelLabel(evaluationLevel))")
         }

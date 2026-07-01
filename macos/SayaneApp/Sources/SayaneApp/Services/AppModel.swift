@@ -833,11 +833,9 @@ final class AppModel: ObservableObject {
                 message: strings.captureActionMessage(id: response.id),
                 tone: .positive
             )
-            await loadQueueAndDetail()
-            if let id = queueState?.items.first?.id {
-                selectedCandidateID = id
-            }
+            selectedCandidateID = response.id
             selectedScreen = .queue
+            await loadQueueAndDetail()
             errorMessage = nil
         } catch {
             showActionFeedback(

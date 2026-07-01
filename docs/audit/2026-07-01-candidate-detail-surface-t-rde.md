@@ -44,7 +44,8 @@ Therefore, the detail screen must not visually collapse into "clipboard text vie
 The current native detail screen showed:
 
 - summary
-- action deck
+- proposal / evaluation ordering drift
+- action controls detached from the intended summary position
 - `content`
 - diff / lineage
 
@@ -100,12 +101,13 @@ Adopt the following rendering rule:
 1. keep `ui_summary` as the top summary surface
 2. render `proposal` as the first content section
 3. render `evaluation` as a separate section when present
-4. render `content` only after `proposal` / `evaluation`
-5. label `content` according to source semantics:
+4. render `allowed_actions` as a compact action-availability summary before the body text
+5. render `content` only after `proposal` / `evaluation` / action availability
+6. label `content` according to source semantics:
    - `clipboard` -> `取り込みテキスト`
    - `candidate_revision` / `user_revision` -> `修正文`
    - fallback -> `候補詳細`
-6. keep copy/export text aligned with the same semantic ordering
+7. keep copy/export text aligned with the same semantic ordering
 
 ## Classification
 
@@ -125,6 +127,7 @@ repair required
 
 - proposal content appears before raw/source body text
 - evaluation content appears as its own section when available
+- action availability appears before body text and stays bounded to `allowed_actions`
 - content heading reflects source semantics rather than assuming all detail is clipboard text
 - copy actions preserve the same semantic order
 - the UI no longer implies that `content` alone is the review target

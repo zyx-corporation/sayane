@@ -57,6 +57,7 @@ import Testing
     #expect(strings.text(.notSupported) == "未対応")
     #expect(strings.text(.vaultUnavailable) == "Local Vault はまだ通常ランタイムに接続されていません")
     #expect(strings.text(.backend) == "バックエンド")
+    #expect(strings.text(.actionAvailability) == "利用可能な操作")
     #expect(strings.text(.proposal) == "提案内容")
     #expect(strings.text(.evaluation) == "評価内容")
     #expect(strings.text(.capturedText) == "取り込みテキスト")
@@ -1034,6 +1035,9 @@ import Testing
 
     #expect(model.candidateDetailClipboardText()?.contains("detail body") == true)
     #expect(model.candidateDetailClipboardText()?.contains("取り込みテキスト") == true)
+    #expect(model.candidateDetailClipboardText()?.contains("利用可能な操作") == true)
+    #expect(model.candidateDetailClipboardText()?.contains("差分: 有効") == true)
+    #expect(model.candidateDetailClipboardText()?.contains("承認: 有効") == true)
     #expect(model.candidateDiffClipboardText()?.contains("add one") == true)
     #expect(model.candidateLineageClipboardText()?.contains("summary") == true)
 }

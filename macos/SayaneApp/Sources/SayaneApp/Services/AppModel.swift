@@ -1239,6 +1239,7 @@ final class AppModel: ObservableObject {
         if let evaluationLevel = summary.evaluationLevel {
             lines.append("\(strings.text(.evaluateLevel)): \(strings.evaluationLevelLabel(evaluationLevel))")
         }
+        lines.append("\(strings.text(.diff)): \(strings.text(detailState.diffAvailable ? .enabled : .disabled))")
         if let proposalText = payloadClipboardText(title: strings.text(.proposal), payload: detailState.proposal) {
             lines.append("")
             lines.append(proposalText)
@@ -1249,6 +1250,12 @@ final class AppModel: ObservableObject {
             lines.append("")
             lines.append(evaluationText)
         }
+        lines.append("")
+        lines.append(strings.text(.actionAvailability))
+        lines.append("\(strings.text(.evaluate)): \(strings.text(detailState.allowedActions.evaluate ? .enabled : .disabled))")
+        lines.append("\(strings.text(.approve)): \(strings.text(detailState.allowedActions.approve ? .enabled : .disabled))")
+        lines.append("\(strings.text(.reject)): \(strings.text(detailState.allowedActions.reject ? .enabled : .disabled))")
+        lines.append("\(strings.text(.revise)): \(strings.text(detailState.allowedActions.revise ? .enabled : .disabled))")
         if let content = detailState.content, !content.isEmpty {
             lines.append("")
             let contentTitle: String

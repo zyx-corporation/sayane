@@ -246,9 +246,9 @@ struct QueueAndDetailView: View {
                     )
                 } else {
                     detailHeader
-                    reviewCommandDeck
                     proposalSection
                     evaluationSection
+                    actionAvailabilitySection
                     contentSection
                     lowerPanelSection
                     evidenceDrilldownSection
@@ -374,9 +374,22 @@ struct QueueAndDetailView: View {
         }
     }
 
-    private var reviewCommandDeck: some View {
-        GroupBox {
+    private var actionAvailabilitySection: some View {
+        GroupBox(model.strings.text(.actionAvailability)) {
             VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 8) {
+                    ForEach(actionReadinessItems) { item in
+                        StatusBadge(
+                            text: item.label,
+                            tone: item.enabled ? .positive : .neutral
+                        )
+                    }
+                    StatusBadge(
+                        text: "\(model.strings.text(.diff)) · \(stateLabel(model.detailState?.diffAvailable ?? false))",
+                        tone: (model.detailState?.diffAvailable ?? false) ? .caution : .neutral
+                    )
+                    Spacer()
+                }
                 HStack(spacing: 8) {
                     ForEach(reviewActionItems) { item in
                         reviewActionButton(item)
@@ -440,6 +453,10 @@ struct QueueAndDetailView: View {
                 if let evaluationLevel = summary.evaluationLevel {
                     summaryChip(label: model.strings.text(.evaluateLevel), value: model.strings.evaluationLevelLabel(evaluationLevel))
                 }
+                summaryChip(
+                    label: model.strings.text(.diff),
+                    value: stateLabel(model.detailState?.diffAvailable ?? false)
+                )
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }

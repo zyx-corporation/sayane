@@ -102,6 +102,8 @@ struct AppStrings {
         case (.en, .topSections): return "Top Sections"
         case (.ja, .detail): return "候補詳細"
         case (.en, .detail): return "Candidate Detail"
+        case (.ja, .actionAvailability): return "利用可能な操作"
+        case (.en, .actionAvailability): return "Available Actions"
         case (.ja, .proposal): return "提案内容"
         case (.en, .proposal): return "Proposal"
         case (.ja, .evaluation): return "評価内容"
@@ -1587,7 +1589,7 @@ struct AppStrings {
         case appTitle, home, queue, daemon, refresh, refreshInProgress, retry, bootstrap, bootstrapInProgress, captureClipboard, openLogs, startBridge, startBridgeInProgress
         case status, nextActions, summaryCards, topReviewItems, topDaemonActions, reviewableCount
         case localVault, vaultPath, vaultSessions, activeSessions, sessionPurpose, expiresAt, idleExpiresAt, unlockNormal, unlockSensitive, unlockDeepPrivate, lockAll, unlockPolicies, recommendedSetup, supported, notSupported, vaultUnavailable, backend
-        case statusCounts, topSections, detail, proposal, evaluation, capturedText, diff, lineage, evaluate, approve, reject, revise
+        case statusCounts, topSections, detail, actionAvailability, proposal, evaluation, capturedText, diff, lineage, evaluate, approve, reject, revise
         case operatorPhase, serviceTargets, launchAgent, clipboardEmpty, connectionProblem
         case sessionProblem, loading, none, error, bridgeHealthy, bridgeStartupFocus, bridgeDisconnectedShort, screenSummaryPending, homeStartupSummary, currentCandidate, editedText
         case changeReason, rejectReason, evaluateLevel, submit, cancel, supportedPath

@@ -405,6 +405,17 @@ import Testing
 }
 
 @MainActor
+@Test func appModelHidesRecoveredBridgeFailureBannerWhenHealthy() {
+    let model = AppModel()
+    model.health = HealthResponse(status: "ok", version: "1.0.14", sourceUpdatedAt: nil, component: "resident-app-bridge")
+    model.actionTitle = model.strings.text(.actionFailed)
+    model.actionMessage = model.strings.text(.sessionProblem)
+    model.actionTone = .critical
+
+    #expect(model.shouldShowActionFeedbackBanner == false)
+}
+
+@MainActor
 @Test func appModelBuildsBridgeRecoveryGuidance() {
     let model = AppModel()
 

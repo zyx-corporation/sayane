@@ -7,9 +7,9 @@ struct RootView: View {
     var body: some View {
         HSplitView {
             sidebar
-                .frame(minWidth: 236, idealWidth: 236, maxWidth: 236, maxHeight: .infinity, alignment: .topLeading)
+                .frame(minWidth: 224, idealWidth: 224, maxWidth: 224, alignment: .topLeading)
             detailPane
-                .frame(minWidth: 844, idealWidth: 844, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .frame(minWidth: 776, idealWidth: 776, maxWidth: .infinity, alignment: .topLeading)
         }
         .toolbar {
             ToolbarItemGroup {
@@ -102,9 +102,8 @@ struct RootView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .topLeading)
-            Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
         .background(detailBackgroundColor)
     }
 

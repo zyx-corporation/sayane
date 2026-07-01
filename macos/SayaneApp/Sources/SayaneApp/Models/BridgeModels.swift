@@ -55,7 +55,7 @@ struct CandidateDetailScreenState: Codable, Sendable {
     let uiSummary: CandidateUISummary
     let allowedActions: CandidateAllowedActions
     let proposal: [String: JSONValue]
-    let evaluation: [String: JSONValue]
+    let evaluation: [String: JSONValue]?
     let content: String?
     let diffAvailable: Bool
 

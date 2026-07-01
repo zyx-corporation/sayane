@@ -21,6 +21,47 @@ import Testing
     #expect(payload.topSections.first?.section == "knowledge.concepts")
 }
 
+@Test func detailStateDecodesNullEvaluationPayload() throws {
+    let data = Data(#"""
+    {
+      "kind": "resident_app_candidate_detail_screen_state",
+      "ui_summary": {
+        "status": "pending",
+        "section": "knowledge.concepts",
+        "operation": "add",
+        "source_type": "clipboard",
+        "evaluation_level": null,
+        "rde_class": null,
+        "can_approve": false
+      },
+      "allowed_actions": {
+        "evaluate": true,
+        "approve": false,
+        "reject": true,
+        "revise": true,
+        "show_diff": true
+      },
+      "proposal": {
+        "section": "knowledge.concepts",
+        "operation": "add",
+        "add": ["clipboard note"],
+        "items": [],
+        "remove": [],
+        "already_present": [],
+        "summary": "clipboard note",
+        "parse_error": null
+      },
+      "evaluation": null,
+      "content": "clipboard note",
+      "diff_available": true
+    }
+    """#.utf8)
+    let payload = try JSONDecoder().decode(CandidateDetailScreenState.self, from: data)
+    #expect(payload.uiSummary.status == "pending")
+    #expect(payload.evaluation == nil)
+    #expect(payload.content == "clipboard note")
+}
+
 @Test func daemonStateDecodesOperatorPhasePayload() throws {
     let data = Data(#"""
     {

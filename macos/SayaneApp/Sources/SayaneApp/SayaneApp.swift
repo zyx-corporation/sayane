@@ -3,6 +3,9 @@ import SwiftUI
 
 @MainActor
 enum WindowSizing {
+    static let minimumWindowWidth: CGFloat = 1000
+    static let minimumWindowHeight: CGFloat = 160
+
     static func fitAllWindows() {
         for window in NSApp.windows {
             fit(window)
@@ -14,11 +17,11 @@ enum WindowSizing {
         contentView.layoutSubtreeIfNeeded()
         let fitting = contentView.fittingSize
         guard fitting.width > 0, fitting.height > 0 else { return }
-        window.minSize = NSSize(width: 1080, height: 160)
+        window.minSize = NSSize(width: minimumWindowWidth, height: minimumWindowHeight)
         window.setContentSize(
             NSSize(
-                width: max(1080, fitting.width),
-                height: max(160, fitting.height)
+                width: max(minimumWindowWidth, fitting.width),
+                height: max(minimumWindowHeight, fitting.height)
             )
         )
     }
@@ -57,7 +60,7 @@ struct SayaneApp: App {
     var body: some Scene {
         WindowGroup {
             RootView(model: model)
-                .frame(minWidth: 1080)
+                .frame(minWidth: WindowSizing.minimumWindowWidth)
         }
         .windowResizability(.contentSize)
     }

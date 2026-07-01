@@ -37,9 +37,9 @@ struct QueueAndDetailView: View {
     var body: some View {
         HSplitView {
             queuePane
-                .frame(minWidth: 320, idealWidth: 320, maxWidth: 320)
+                .frame(minWidth: 300, idealWidth: 300, maxWidth: 300)
             detailPane
-                .frame(minWidth: 520, idealWidth: 640)
+                .frame(minWidth: 540, idealWidth: 620)
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .navigationTitle(model.strings.text(.queue))

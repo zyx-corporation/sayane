@@ -426,13 +426,7 @@ final class AppModel: ObservableObject {
     var shouldShowActionFeedbackBanner: Bool {
         guard actionTitle != nil, actionMessage != nil else { return false }
         if let health, ["ok", "healthy"].contains(health.status.lowercased()) {
-            let hiddenTitles = Set([
-                strings.text(.connectionProblem),
-                strings.text(.startBridge),
-                strings.text(.bootstrap),
-                strings.text(.retry)
-            ])
-            if let actionTitle, hiddenTitles.contains(actionTitle), actionTone != .positive {
+            if isBridgeRecoveryFeedbackHiddenWhenHealthy {
                 return false
             }
         }
@@ -1596,19 +1590,35 @@ final class AppModel: ObservableObject {
         actionShowsProgress = showsProgress
     }
 
+    private var isBridgeRecoveryFeedbackHiddenWhenHealthy: Bool {
+        guard actionTone != .positive else { return false }
+        let hiddenTitles = Set([
+            strings.text(.connectionProblem),
+            strings.text(.startBridge),
+            strings.text(.bootstrap),
+            strings.text(.retry),
+            strings.text(.actionFailed)
+        ])
+        if let actionTitle, hiddenTitles.contains(actionTitle) {
+            return true
+        }
+        guard let actionMessage else { return false }
+        let hiddenMessages = [
+            strings.text(.sessionProblem),
+            strings.text(.bridgeNotConnected),
+            strings.bridgeStartupSummary()
+        ]
+        return hiddenMessages.contains(where: { !$0.isEmpty && actionMessage.contains($0) })
+    }
+
     private func clearRecoveredBridgeErrorState() {
         guard let health else { return }
         guard ["ok", "healthy"].contains(health.status.lowercased()) else { return }
         errorMessage = nil
         lastBridgeLaunchFailure = nil
-        let bridgeFeedbackTitles = Set([
-            strings.text(.connectionProblem),
-            strings.text(.startBridge),
-            strings.text(.bootstrap),
-            strings.text(.retry),
-            strings.text(.refresh)
-        ])
-        if let actionTitle, bridgeFeedbackTitles.contains(actionTitle) || actionTitle == strings.text(.actionFailed) {
+        if isBridgeRecoveryFeedbackHiddenWhenHealthy
+            || actionTitle == strings.text(.refresh)
+        {
             dismissActionFeedback()
         }
     }

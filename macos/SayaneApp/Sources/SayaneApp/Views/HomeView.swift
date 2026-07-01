@@ -17,10 +17,9 @@ struct HomeView: View {
                     diagnosticsPromptCard
                 }
             }
-            Spacer(minLength: 0)
         }
         .padding(18)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
         .background(Color(NSColor.underPageBackgroundColor))
         .navigationTitle(model.strings.text(.home))
         .sheet(isPresented: $showsDiagnosticsSheet) {
